@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プール入水チェッカー Pro</title>
+<style>
+  :root{
+    --accent:#1D7ED8;
+    --accent-dark:#155FA6;
+    --accent-soft:#EAF3FC;
+    --bg:#F7F5F0;
+    --ok:#1E9E55;
+    --cond:#E8930C;
+    --ng:#D8402A;
+    --ink:#2B3440;
+    --muted:#7A8494;
+    --line:#E4E0D8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg);color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6;}
+  body{-webkit-text-size-adjust:100%;}
+  button{font-family:inherit;}
+
+  /* ---------- ヘッダー ---------- */
+  header.app-header{
+    background:var(--accent);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;
+    flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  header.app-header h1{font-size:1.1rem;font-weight:700;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  header.app-header a.back{
+    color:#fff;text-decoration:none;background:rgba(255,255,255,.18);padding:8px 12px;border-radius:10px;
+    font-size:.85rem;white-space:nowrap;
+  }
+  header.app-header a.back:active{background:rgba(255,255,255,.32);}
+  .pro-badge{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--accent);
+    border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+  .year-select{width:auto;min-width:100px;font-family:inherit;font-size:.95rem;font-weight:700;padding:7px 10px;
+    border-radius:10px;border:none;background:#fff;color:var(--accent);}
+
+  /* 常時表示の注記 */
+  .caution-bar{
+    background:#FFF4DC;color:#6B4A00;border-bottom:1px solid #EFD9A6;font-size:.86rem;font-weight:700;
+    padding:8px 14px;text-align:center;
+  }
+  .top-sticky{position:sticky;top:0;z-index:50;
+  }
+
+  main{max-width:1080px;margin:0 auto;padding:14px 12px 60px;}
+
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;-webkit-overflow-scrolling:touch;}
+  .tab{flex:0 0 auto;border:none;border-radius:12px;padding:10px 16px;font-size:.95rem;cursor:pointer;
+    background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.06);white-space:nowrap;}
+  .tab.active{background:var(--accent);color:#fff;font-weight:700;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .grid2{display:grid;gap:14px;}
+  @media(min-width:860px){ .grid2{grid-template-columns:1fr 1fr;} .full{grid-column:1 / -1;} }
+
+  .card{background:#FFF;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:18px;margin-bottom:14px;}
+  .grid2 .card{margin-bottom:0;}
+  .card h2{font-size:1.05rem;color:var(--accent-dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .card h2 .sub{font-size:.78rem;color:var(--muted);font-weight:500;}
+  .card h3{font-size:.95rem;color:var(--accent-dark);margin:14px 0 8px;}
+  .hint{font-size:.82rem;color:var(--muted);margin-top:8px;line-height:1.7;}
+
+  /* ---------- 入力 ---------- */
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .field{flex:1;min-width:130px;}
+  .field label,.flabel{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:4px;}
+  .req{color:var(--ng);font-size:.75rem;margin-left:4px;}
+  input[type="date"],input[type="time"],input[type="text"],input[type="number"].plain,select.plain,textarea{
+    width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:1rem;background:#FDFCFA;font-family:inherit;color:var(--ink);
+  }
+  textarea{min-height:90px;line-height:1.6;resize:vertical;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:var(--accent);}
+  .invalid{border-color:var(--ng)!important;background:#FCF0EE!important;}
+
+  .stepper{display:flex;align-items:stretch;gap:6px;}
+  .stepper button{width:56px;min-height:56px;border:none;border-radius:12px;background:var(--accent-soft);color:var(--accent-dark);
+    font-size:1.5rem;font-weight:800;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;}
+  .stepper button:active{background:var(--accent);color:#fff;}
+  .stepper input{flex:1;min-width:70px;text-align:center;font-size:1.7rem;font-weight:800;border:1.5px solid var(--line);
+    border-radius:12px;background:#FDFCFA;color:var(--ink);padding:6px 2px;font-family:inherit;width:100%;}
+  .unit-label{font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between;}
+  .unit-label .val-unit{color:var(--accent);}
+
+  details.optional{margin-top:6px;border-top:1px dashed var(--line);padding-top:10px;}
+  details.optional summary{cursor:pointer;font-size:.9rem;font-weight:700;color:var(--accent);padding:6px 0;list-style:none;}
+  details.optional summary::-webkit-details-marker{display:none;}
+  details.optional summary::before{content:"▸ ";}
+  details.optional[open] summary::before{content:"▾ ";}
+
+  .weather-btns,.final-btns{display:flex;gap:8px;}
+  .weather-btns button,.final-btns button{flex:1;min-height:52px;border:1.5px solid var(--line);border-radius:12px;background:#FDFCFA;
+    font-size:1rem;font-weight:700;cursor:pointer;color:var(--ink);touch-action:manipulation;}
+  .weather-btns button.sel{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .final-btns button[data-f="◎"].sel{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .final-btns button[data-f="△"].sel{background:var(--cond);border-color:var(--cond);color:#fff;}
+  .final-btns button[data-f="✕"].sel{background:var(--ng);border-color:var(--ng);color:#fff;}
+
+  /* ---------- 判定 ---------- */
+  .judge-box{border-radius:16px;padding:20px 16px;text-align:center;margin-bottom:14px;border:3px solid var(--line);background:#FDFCFA;}
+  .judge-box .mark{font-size:4.2rem;font-weight:900;line-height:1.1;}
+  .judge-box .verdict{font-size:1.5rem;font-weight:800;margin-top:2px;}
+  .judge-box.j-ok{border-color:var(--ok);background:#F0FAF4;}
+  .judge-box.j-ok .mark,.judge-box.j-ok .verdict{color:var(--ok);}
+  .judge-box.j-cond{border-color:var(--cond);background:#FEF7EC;}
+  .judge-box.j-cond .mark,.judge-box.j-cond .verdict{color:var(--cond);}
+  .judge-box.j-ng{border-color:var(--ng);background:#FCF0EE;}
+  .judge-box.j-ng .mark,.judge-box.j-ng .verdict{color:var(--ng);}
+  .judge-box.j-none .mark,.judge-box.j-none .verdict{color:var(--muted);}
+  .judge-reasons{margin-top:10px;text-align:left;display:inline-block;font-size:.95rem;line-height:1.7;}
+  .judge-reasons li{list-style:none;padding-left:1.2em;text-indent:-1.2em;}
+  .judge-sub{margin-top:8px;font-size:.88rem;background:#fff;border-radius:10px;padding:8px 10px;border:1px dashed var(--line);text-align:left;}
+  .judge-note{font-size:.8rem;color:var(--muted);margin-top:8px;}
+
+  .override-box{background:#FCF0EE;border:1.5px solid #F2C9C1;border-radius:12px;padding:12px;margin-top:10px;}
+  .override-box .ttl{font-weight:800;color:var(--ng);font-size:.9rem;margin-bottom:6px;}
+  .measure-box{background:#FEF7EC;border:1.5px solid #F3DDB5;border-radius:12px;padding:12px;margin-top:10px;}
+  .measure-box .ttl{font-weight:800;color:#9A5F00;font-size:.9rem;margin-bottom:6px;}
+  .check-label{display:flex;align-items:center;gap:8px;font-size:.95rem;cursor:pointer;padding:5px 0;}
+  .check-label input{width:22px;height:22px;flex:0 0 auto;}
+  .err-msg{color:var(--ng);font-weight:700;font-size:.9rem;margin-top:8px;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:52px;padding:10px 18px;border:none;border-radius:12px;
+    font-size:1.05rem;font-weight:800;cursor:pointer;touch-action:manipulation;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:active{background:var(--accent-dark);}
+  .btn-ghost{background:var(--accent-soft);color:var(--accent-dark);}
+  .btn-line{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-warn{background:#FCF0EE;color:var(--ng);}
+  .btn.small{min-height:44px;padding:6px 14px;font-size:.92rem;}
+  .btn.confirming{background:var(--ng)!important;color:#fff!important;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn-row .btn{flex:1;min-width:140px;}
+
+  /* ---------- 大画面 ---------- */
+  .bigview{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:4vmin;text-align:center;}
+  .bigview.show{display:flex;}
+  .bigview .bv-mark{font-size:22vmin;font-weight:900;line-height:1;}
+  .bigview .bv-verdict{font-size:8vmin;font-weight:900;margin-top:1vmin;}
+  .bigview .bv-temps{font-size:5vmin;font-weight:800;margin-top:2.5vmin;}
+  .bigview .bv-reason{font-size:3.2vmin;margin-top:2vmin;max-width:80vw;line-height:1.6;}
+  .bigview .bv-date{font-size:3vmin;color:var(--muted);margin-top:2vmin;}
+  .bigview .bv-caution{font-size:2.6vmin;color:#6B4A00;background:#FFF4DC;border-radius:10px;padding:1vmin 2vmin;margin-top:2.5vmin;font-weight:700;}
+  .bigview.j-ok .bv-mark,.bigview.j-ok .bv-verdict{color:var(--ok);}
+  .bigview.j-cond .bv-mark,.bigview.j-cond .bv-verdict{color:var(--cond);}
+  .bigview.j-ng .bv-mark,.bigview.j-ng .bv-verdict{color:var(--ng);}
+  .bigview .bv-close{position:absolute;top:16px;right:16px;min-height:48px;padding:8px 20px;border-radius:12px;border:none;background:#fff;
+    font-size:1rem;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+
+  /* ---------- 表 ---------- */
+  .table-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+  .table-tools select{padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;font-size:1rem;background:#FDFCFA;font-family:inherit;min-height:48px;}
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;}
+  table.rec{width:100%;border-collapse:collapse;font-size:.88rem;min-width:980px;}
+  table.rec th,table.rec td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;vertical-align:top;}
+  table.rec th{background:#F2F7FC;color:var(--accent-dark);font-size:.8rem;}
+  table.rec td.wrap{white-space:normal;text-align:left;min-width:180px;max-width:280px;}
+  table.rec tr:last-child td{border-bottom:none;}
+  table.rec tr.ov td{background:#FFF9F7;}
+  .mark-ok{color:var(--ok);font-weight:900;}
+  .mark-cond{color:var(--cond);font-weight:900;}
+  .mark-ng{color:var(--ng);font-weight:900;}
+  .tag{display:inline-block;font-size:.72rem;font-weight:800;border-radius:6px;padding:0 6px;margin-left:4px;}
+  .tag-ov{background:var(--ng);color:#fff;}
+  .tag-free{background:#E8E5DE;color:#555;}
+  .mini-btn{min-height:38px;padding:4px 12px;border-radius:9px;border:none;cursor:pointer;font-size:.85rem;font-weight:700;touch-action:manipulation;}
+  .mini-edit{background:var(--accent-soft);color:var(--accent-dark);}
+  .mini-del{background:#FCF0EE;color:var(--ng);}
+  .mini-del.confirming{background:var(--ng);color:#fff;}
+  .empty-note{color:var(--muted);text-align:center;padding:20px 8px;font-size:.95rem;}
+
+  /* ---------- 学年・時間帯 ---------- */
+  .sess-list{display:flex;flex-direction:column;gap:8px;}
+  .sess{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#FDFCFA;border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+  .sess .s-main{flex:1 1 220px;font-weight:700;}
+  .sess .s-sub{font-size:.82rem;color:var(--muted);font-weight:500;}
+  .day-head{font-weight:800;color:var(--accent-dark);margin:12px 0 6px;}
+
+  /* ---------- 統計 ---------- */
+  .stats-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .stat-tile{flex:1;min-width:110px;background:#FDFCFA;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;}
+  .stat-tile .num{font-size:1.9rem;font-weight:900;}
+  .stat-tile .lbl{font-size:.78rem;color:var(--muted);font-weight:700;margin-top:2px;}
+  .stat-tile.t-ok .num{color:var(--ok);}
+  .stat-tile.t-cond .num{color:var(--cond);}
+  .stat-tile.t-ng .num{color:var(--ng);}
+  .stat-tile.t-all .num{color:var(--accent);}
+  .stat-tile.t-ov .num{color:#8E4FB8;}
+  .chart-wrap{width:100%;overflow-x:auto;}
+  .chart-wrap svg{display:block;width:100%;height:auto;min-width:320px;}
+  .chart-legend{display:flex;gap:16px;font-size:.8rem;color:var(--muted);margin-top:6px;flex-wrap:wrap;}
+  .lg-cur::before{content:"●";color:var(--accent);margin-right:4px;}
+  .lg-prev::before{content:"●";color:#A7AFBA;margin-right:4px;}
+  .lg-limit::before{content:"─";color:var(--ng);font-weight:900;margin-right:4px;}
+
+  /* ---------- 設定 ---------- */
+  .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+  .setting-item label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:4px;line-height:1.4;}
+  .setting-item .stepper button{width:46px;min-height:46px;font-size:1.2rem;}
+  .setting-item .stepper input{font-size:1.15rem;min-width:56px;}
+  .list-edit{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+  .list-edit .li{display:flex;gap:8px;align-items:center;background:#FDFCFA;border:1px solid var(--line);border-radius:10px;padding:6px 10px;}
+  .list-edit .li span{flex:1;}
+  .add-row{display:flex;gap:8px;}
+  .add-row input{flex:1;}
+  .ph-list{font-size:.8rem;color:var(--muted);line-height:1.8;}
+  .ph-list code{background:var(--accent-soft);color:var(--accent-dark);border-radius:5px;padding:0 5px;font-family:inherit;}
+
+  .comm-block{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;background:#FDFCFA;}
+  .comm-block h3{margin-top:0;}
+  .comm-block textarea{min-height:110px;background:#fff;}
+
+  .migrate-box{background:#FFF8E8;border:1.5px solid #F0E2BF;border-radius:12px;padding:12px 30px 12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative;}
+  .migrate-box .x{position:absolute;right:8px;top:6px;border:none;background:none;font-size:1rem;color:#a08a50;cursor:pointer;}
+
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 22px;
+    border-radius:14px;font-size:.95rem;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:200;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:90vw;text-align:center;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- 印刷 ---------- */
+  #printArea{display:none;}
+  @media print{
+    body{background:#fff;}
+    header.app-header,main,#toast,.bigview,.note-link{display:none !important;}
+    .top-sticky{position:static;}
+    .caution-bar{position:static;background:#fff;border:none;font-size:8.5pt;color:#000;}
+    #printArea{display:block;font-size:10pt;color:#000;}
+    #printArea h1{font-size:15pt;text-align:center;margin-bottom:2pt;letter-spacing:.3em;}
+    #printArea .p-sub{text-align:center;font-size:11pt;margin-bottom:8pt;}
+    #printArea .p-meta{display:flex;justify-content:space-between;font-size:9pt;margin-bottom:6pt;}
+    #printArea table{width:100%;border-collapse:collapse;}
+    #printArea th,#printArea td{border:1px solid #333;padding:3pt 3.5pt;text-align:center;font-size:8.5pt;}
+    #printArea th{background:#EFEFEF;}
+    #printArea td.p-memo{text-align:left;}
+    #printArea .p-foot{margin-top:6pt;font-size:8pt;line-height:1.6;}
+    #printArea .p-stats{margin-top:6pt;font-size:9.5pt;font-weight:bold;}
+    #printArea .month-block{page-break-after:always;}
+    #printArea .month-block:last-child{page-break-after:auto;}
+  }
+  @page{size:A4 landscape;margin:10mm;}
+</style>
+</head>
+<body>
+
+<div class="top-sticky">
+<header class="app-header">
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>🏊 プール入水チェッカー<span class="pro-badge">PRO</span></h1>
+  <select class="year-select" id="yearSel" aria-label="表示する年度"></select>
+</header>
+<div class="caution-bar" id="cautionBar">⚠ 判定は判断の材料です。最終判断は学校の基準と現場の状況で行ってください</div>
+</div>
+
+<main>
+  <div id="migrateBox" class="migrate-box" style="display:none"></div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="measure">📝 測定・判断</button>
+    <button class="tab" data-tab="records">📒 記録簿</button>
+    <button class="tab" data-tab="sessions">🧒 学年・時間帯</button>
+    <button class="tab" data-tab="comm">✉️ 連絡文</button>
+    <button class="tab" data-tab="summary">📈 まとめ・引き継ぎ</button>
+    <button class="tab" data-tab="settings">⚙️ せってい</button>
+  </nav>
+
+  <!-- ================= 測定・判断 ================= -->
+  <section class="panel active" id="panel-measure">
+    <div class="grid2">
+      <div class="card">
+        <h2>📝 測定 <span class="sub">水温・気温を入れると自動で判定します</span></h2>
+        <div class="row">
+          <div class="field"><label for="inDate">日付</label><input type="date" id="inDate"></div>
+          <div class="field"><label for="inTime">時刻</label><input type="time" id="inTime"></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <div class="unit-label"><span>水温</span><span class="val-unit">℃</span></div>
+            <div class="stepper">
+              <button type="button" data-step="water" data-d="-0.5" aria-label="水温を下げる">−</button>
+              <input type="number" id="inWater" step="0.1" inputmode="decimal" value="24.0">
+              <button type="button" data-step="water" data-d="0.5" aria-label="水温を上げる">＋</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="unit-label"><span>気温</span><span class="val-unit">℃</span></div>
+            <div class="stepper">
+              <button type="button" data-step="air" data-d="-0.5" aria-label="気温を下げる">−</button>
+              <input type="number" id="inAir" step="0.1" inputmode="decimal" value="28.0">
+              <button type="button" data-step="air" data-d="0.5" aria-label="気温を上げる">＋</button>
+            </div>
+          </div>
+        </div>
+        <details class="optional" id="optDetails">
+          <summary>くわしい記録（WBGT・天気・塩素・メモ）</summary>
+          <div class="row" style="margin-top:10px;">
+            <div class="field">
+              <div class="unit-label"><span>WBGT（暑さ指数・任意）</span><span class="val-unit">℃</span></div>
+              <div class="stepper">
+                <button type="button" data-step="wbgt" data-d="-0.5" aria-label="WBGTを下げる">−</button>
+                <input type="number" id="inWbgt" step="0.1" inputmode="decimal" placeholder="--">
+                <button type="button" data-step="wbgt" data-d="0.5" aria-label="WBGTを上げる">＋</button>
+              </div>
+            </div>
+            <div class="field">
+              <div class="unit-label"><span>残留塩素（任意）</span><span class="val-unit">mg/L</span></div>
+              <div class="stepper">
+                <button type="button" data-step="cl" data-d="-0.1" aria-label="塩素濃度を下げる">−</button>
+                <input type="number" id="inCl" step="0.1" inputmode="decimal" placeholder="--">
+                <button type="button" data-step="cl" data-d="0.1" aria-label="塩素濃度を上げる">＋</button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>天気（任意）</label>
+              <div class="weather-btns" id="weatherBtns">
+                <button type="button" data-w="晴">☀️ 晴</button>
+                <button type="button" data-w="曇">☁️ 曇</button>
+                <button type="button" data-w="雨">🌧️ 雨</button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="inWatcher">監視者・メモ（任意）</label>
+              <input type="text" id="inWatcher" placeholder="例）監視：山田・佐藤">
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>🔍 アプリの判定</h2>
+        <div class="judge-box j-none" id="judgeBox">
+          <div class="mark" id="judgeMark">--</div>
+          <div class="verdict" id="judgeVerdict">水温と気温を入力してください</div>
+          <ul class="judge-reasons" id="judgeReasons"></ul>
+          <div class="judge-sub" id="judgeSub" style="display:none;"></div>
+          <div class="judge-note">この判定は材料です。決めるのは人です。</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btnBig">📺 大画面表示</button>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>🧑‍🏫 判断と記録 <span class="sub">その場で入れてください。あとからまとめて入れない</span></h2>
+        <datalist id="staffList"></datalist>
+        <div class="row">
+          <div class="field"><label for="inMeasuredBy">測った人</label><input type="text" id="inMeasuredBy" list="staffList" placeholder="名簿から選ぶ／入力"></div>
+          <div class="field"><label for="inDecidedBy">判断した人<span class="req">必須</span></label><input type="text" id="inDecidedBy" list="staffList" placeholder="名簿から選ぶ／入力"></div>
+          <div class="field"><label for="inCheckedBy">確認した人</label><input type="text" id="inCheckedBy" list="staffList" placeholder="名簿から選ぶ／入力"></div>
+        </div>
+        <div class="flabel">最終判断 <span style="font-weight:500">（はじめはアプリの判定と同じ。違う判断をしたら押しかえる）</span></div>
+        <div class="final-btns" id="finalBtns">
+          <button type="button" data-f="◎">◎ 実施</button>
+          <button type="button" data-f="△">△ 条件付きで実施</button>
+          <button type="button" data-f="✕">✕ 中止</button>
+        </div>
+        <div class="override-box" id="overrideBox" style="display:none;">
+          <div class="ttl" id="overrideTtl">アプリの判定と違う判断です。理由を一行書いてください（必須）</div>
+          <input type="text" id="inOverride" placeholder="例）雷鳴が聞こえた／見学多数・監視2名のため">
+          <div class="hint" id="overrideWarn" style="display:none;color:var(--ng);font-weight:700;">判定が✕の日に実施する場合は、自治体・学校の基準を必ず確認してください。</div>
+        </div>
+        <div class="measure-box" id="measureBox" style="display:none;">
+          <div class="ttl">条件付きで実施するとき、講じた措置</div>
+          <div id="measureChecks"></div>
+          <input type="text" id="inMeasureNote" placeholder="そのほかの措置（自由記述・任意）" style="margin-top:6px;">
+        </div>
+        <div class="err-msg" id="saveErr"></div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" id="btnSave">✔ この判断を記録する</button>
+        </div>
+        <div class="btn-row" id="editModeRow" style="display:none;margin-top:10px;">
+          <button class="btn btn-primary" id="btnUpdate">✎ 記録を更新する</button>
+          <button class="btn btn-line" id="btnCancelEdit">やめる</button>
+        </div>
+        <div class="btn-row" id="afterSaveRow" style="display:none;margin-top:10px;">
+          <button class="btn btn-ghost" id="btnGoSess">🧒 学年・時間帯を入れる</button>
+          <button class="btn btn-ghost" id="btnGoComm">✉️ 連絡文を作る</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 記録簿 ================= -->
+  <section class="panel" id="panel-records">
+    <div class="card">
+      <h2>📒 記録簿（プール日誌） <span class="sub" id="recYearLabel"></span></h2>
+      <div class="table-tools">
+        <select id="monthSel" aria-label="表示する月"></select>
+        <button class="btn btn-ghost small" id="btnPrint">🖨 印刷（日誌として提出）</button>
+        <button class="btn btn-line small" id="btnCsv">📋 CSVコピー</button>
+      </div>
+      <div class="table-scroll">
+        <table class="rec">
+          <thead><tr>
+            <th>日付</th><th>時刻</th><th>天気</th><th>水温</th><th>気温</th><th>WBGT</th><th>塩素</th>
+            <th>判定</th><th>最終判断</th><th>測定／判断／確認</th><th>理由・措置</th><th>学年・時間（見学）</th><th>操作</th>
+          </tr></thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-note" id="emptyNote">この年度の記録はまだありません。</div>
+      <p class="hint">赤い行は、アプリの判定と違う最終判断をした記録です。「無料版」の印は無料版から引き継いだ記録（判断者なし）です。</p>
+    </div>
+  </section>
+
+  <!-- ================= 学年・時間帯 ================= -->
+  <section class="panel" id="panel-sessions">
+    <div class="card">
+      <h2>🧒 学年・時間帯ごとの入水 <span class="sub">どの学年が、何時間目に、どの測定をもとに入ったか</span></h2>
+      <div class="row">
+        <div class="field"><label for="sDate">日付</label><input type="date" id="sDate"></div>
+        <div class="field" style="flex:2;min-width:220px;"><label for="sRec">もとにした測定</label><select class="plain" id="sRec"></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="sGrade">学年・学級</label><input type="text" id="sGrade" list="gradeList" placeholder="例）4年"></div>
+        <datalist id="gradeList"><option value="1年"><option value="2年"><option value="3年"><option value="4年"><option value="5年"><option value="6年"><option value="1・2年"><option value="特別支援学級"></datalist>
+        <div class="field"><label for="sPeriod">時間目</label><input type="text" id="sPeriod" placeholder="例）3-4"></div>
+        <div class="field">
+          <div class="unit-label"><span>見学の人数</span><span class="val-unit">人</span></div>
+          <div class="stepper">
+            <button type="button" data-obs="-1" aria-label="見学を減らす">−</button>
+            <input type="number" id="sObs" min="0" step="1" inputmode="numeric" value="0">
+            <button type="button" data-obs="1" aria-label="見学を増やす">＋</button>
+          </div>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:0;">見学は<b>人数だけ</b>記録します。名前や理由は記録しません。</p>
+      <div class="err-msg" id="sessErr"></div>
+      <div class="btn-row" style="margin-top:10px;"><button class="btn btn-primary" id="btnAddSess">＋ この入水を記録する</button></div>
+    </div>
+    <div class="card">
+      <h2>この年度の入水記録</h2>
+      <div id="sessView"></div>
+    </div>
+  </section>
+
+  <!-- ================= 連絡文 ================= -->
+  <section class="panel" id="panel-comm">
+    <div class="card">
+      <h2>✉️ 連絡用の文章 <span class="sub">記録した内容から作ります。貼る前に一度読んでください</span></h2>
+      <div class="row">
+        <div class="field"><label for="cDate">日付</label><select class="plain" id="cDate"></select></div>
+        <div class="field" style="flex:2;min-width:220px;"><label for="cRec">もとにする記録</label><select class="plain" id="cRec"></select></div>
+      </div>
+      <div id="commView"></div>
+      <p class="hint">文のひな形は「せってい」で学校に合わせて直せます。</p>
+    </div>
+  </section>
+
+  <!-- ================= まとめ・引き継ぎ ================= -->
+  <section class="panel" id="panel-summary">
+    <div class="card">
+      <h2>📈 シーズンの集計 <span class="sub" id="sumYearLabel"></span></h2>
+      <div class="stats-grid">
+        <div class="stat-tile t-ok"><div class="num" id="stOk">0</div><div class="lbl">◎ 実施した日</div></div>
+        <div class="stat-tile t-cond"><div class="num" id="stCond">0</div><div class="lbl">△ 条件付きの日</div></div>
+        <div class="stat-tile t-ng"><div class="num" id="stNg">0</div><div class="lbl">✕ 中止の日</div></div>
+        <div class="stat-tile t-ov"><div class="num" id="stOv">0</div><div class="lbl">判定と違う判断</div></div>
+        <div class="stat-tile t-all"><div class="num" id="stAll">0</div><div class="lbl">測定回数</div></div>
+      </div>
+      <p class="hint" style="margin-top:0;">日数は、その日の最後の測定の<b>最終判断</b>で数えます。</p>
+      <h3>水温の推移（前の年度と重ねて表示）</h3>
+      <div class="chart-wrap" id="chartWrap"></div>
+      <div class="chart-legend">
+        <span class="lg-cur" id="lgCur">この年度の水温</span>
+        <span class="lg-prev" id="lgPrev">前の年度の水温</span>
+        <span class="lg-limit">水温基準ライン</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📦 翌年への引き継ぎ</h2>
+      <p class="hint" style="margin-top:0;">実施・条件付き・中止の日数、中止理由の内訳、判定と違う判断をした日の一覧、多かった措置、設定していた基準を、一つの文章にまとめます。</p>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-primary" id="btnHandover">📦 引き継ぎ用にまとめる</button>
+      </div>
+      <div id="handoverArea" style="display:none;margin-top:12px;">
+        <textarea id="handoverText" style="min-height:360px;" readonly></textarea>
+        <div class="btn-row" style="margin-top:8px;"><button class="btn btn-ghost small" id="btnCopyHandover">📋 コピー</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= せってい ================= -->
+  <section class="panel" id="panel-settings">
+    <div class="card">
+      <h2>⚙️ 判定の基準 <span class="sub">必ず自治体・学校の基準に合わせてください（自動保存）</span></h2>
+      <div class="settings-grid">
+        <div class="setting-item"><label>水温の下限（℃）<br><small>これ未満は中止</small></label>
+          <div class="stepper"><button type="button" data-set="waterMin" data-d="-0.5">−</button><input type="number" id="setWaterMin" step="0.1" inputmode="decimal"><button type="button" data-set="waterMin" data-d="0.5">＋</button></div></div>
+        <div class="setting-item"><label>水温＋気温の下限（℃）<br><small>これ未満は中止</small></label>
+          <div class="stepper"><button type="button" data-set="sumMin" data-d="-1">−</button><input type="number" id="setSumMin" step="0.5" inputmode="decimal"><button type="button" data-set="sumMin" data-d="1">＋</button></div></div>
+        <div class="setting-item"><label>低学年の推奨水温（℃）<br><small>補助表示に使用</small></label>
+          <div class="stepper"><button type="button" data-set="lowGradeMin" data-d="-0.5">−</button><input type="number" id="setLowGradeMin" step="0.1" inputmode="decimal"><button type="button" data-set="lowGradeMin" data-d="0.5">＋</button></div></div>
+        <div class="setting-item"><label>WBGT 厳重警戒（℃）<br><small>これ以上は条件付き</small></label>
+          <div class="stepper"><button type="button" data-set="wbgtCaution" data-d="-0.5">−</button><input type="number" id="setWbgtCaution" step="0.1" inputmode="decimal"><button type="button" data-set="wbgtCaution" data-d="0.5">＋</button></div></div>
+        <div class="setting-item"><label>WBGT 運動中止（℃）<br><small>これ以上は中止</small></label>
+          <div class="stepper"><button type="button" data-set="wbgtStop" data-d="-0.5">−</button><input type="number" id="setWbgtStop" step="0.1" inputmode="decimal"><button type="button" data-set="wbgtStop" data-d="0.5">＋</button></div></div>
+        <div class="setting-item" style="display:flex;align-items:flex-end;"><button class="btn btn-line" id="btnResetSet" style="width:100%;">初期値に戻す</button></div>
+      </div>
+      <p class="hint">初期値は一般的な目安で、学校の定めに代わるものではありません。基準を学校の定めより緩く設定しないでください。記録には、そのときの基準もいっしょに残ります。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>👥 職員名簿 <span class="sub">「測った人・判断した人・確認した人」の候補</span></h2>
+        <div class="list-edit" id="staffEdit"></div>
+        <div class="add-row"><input type="text" id="newStaff" placeholder="例）山田（体育主任）"><button class="btn btn-primary small" id="btnAddStaff">追加</button></div>
+      </div>
+      <div class="card">
+        <h2>✅ 条件付き実施の措置 <span class="sub">学校に合わせて足したり消したり</span></h2>
+        <div class="list-edit" id="measureEdit"></div>
+        <div class="add-row"><input type="text" id="newMeasure" placeholder="例）入水前に体調を確認した"><button class="btn btn-primary small" id="btnAddMeasure">追加</button></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>✉️ 連絡文のひな形</h2>
+      <div class="ph-list">使える差し込み：<code>{日付}</code> <code>{時刻}</code> <code>{水温}</code> <code>{気温}</code> <code>{WBGT}</code> <code>{判定}</code> <code>{最終判断}</code> <code>{実施一覧}</code> <code>{中止理由}</code> <code>{判断理由}</code> <code>{措置}</code> <code>{判断者}</code> <code>{測定者}</code> <code>{確認者}</code> <code>{見学人数}</code></div>
+      <h3>職員向け</h3><textarea id="tplStaff"></textarea>
+      <h3>中止時の学級連絡・保護者向け</h3><textarea id="tplParent"></textarea>
+      <h3>管理職への報告</h3><textarea id="tplAdmin" style="min-height:200px;"></textarea>
+      <div class="btn-row" style="margin-top:10px;"><button class="btn btn-line small" id="btnResetTpl">ひな形を初期値に戻す</button></div>
+    </div>
+
+    <div class="card">
+      <h2>🗂 データの書き出し・読みこみ <span class="sub">担当が替わるとき・端末を替えるとき</span></h2>
+      <div class="btn-row">
+        <button class="btn btn-ghost small" id="btnExport">📤 書き出し</button>
+        <button class="btn btn-ghost small" id="btnImport">📥 読みこみ</button>
+      </div>
+      <div id="dataArea" style="margin-top:10px"></div>
+      <p class="hint">記録・職員名簿・措置の項目・基準・ひな形をまとめて一つの文字列にします。記録はこの端末のブラウザの中だけに保存され、外部には送信されません。プールの記録は一台の端末に集めてください。無料版のデータは消さずに残してあります。</p>
+      <h3>この年度の記録を削除</h3>
+      <button class="btn btn-warn small" id="btnClearYear">🗑 表示中の年度の記録を削除</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ 大画面表示 ============ -->
+<div class="bigview" id="bigview" role="dialog" aria-label="判定の大画面表示">
+  <button class="bv-close" id="bvClose">✕ とじる</button>
+  <div class="bv-mark" id="bvMark">--</div>
+  <div class="bv-verdict" id="bvVerdict"></div>
+  <div class="bv-temps" id="bvTemps"></div>
+  <div class="bv-reason" id="bvReason"></div>
+  <div class="bv-date" id="bvDate"></div>
+  <div class="bv-caution">判定は判断の材料です。最終判断は学校の基準と現場の状況で行ってください</div>
+</div>
+
+<div id="printArea"></div>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 定数・状態 ---------- */
+  var STORAGE_KEY = "bo10pro_pool_v1";       // Pro版（記録・入水・名簿・措置・設定・ひな形を1キーに）
+  var FREE_REC = "bo10_pool_records";         // 無料版（読むだけ・消さない）
+  var FREE_SET = "bo10_pool_settings";        // 無料版（読むだけ・消さない）
+  var DEF_SET = { waterMin:22, sumMin:50, lowGradeMin:23, wbgtCaution:28, wbgtStop:31 };
+  var DEF_MEASURES = [
+    "休憩・水分補給を増やした",
+    "入水時間を短くした",
+    "泳ぐ内容を軽くした（泳ぎ込みを避けた）",
+    "低学年に見学の選択肢を用意した",
+    "監視者を増やした"
+  ];
+  var DEF_TPL = {
+    staff: "【{日付}】本日のプール：{実施一覧}／水温{水温}℃・気温{気温}℃\n{措置}",
+    parent: "{日付}\n本日は{中止理由}ため、水泳学習は中止しました。\n水着などの持ち物は、そのまま持ち帰ります。",
+    admin: "【プール入水の判断報告】{日付} {時刻}測定\n水温{水温}℃／気温{気温}℃／WBGT {WBGT}\nアプリの判定：{判定}\n最終判断：{最終判断}\n判断した人：{判断者}（測定：{測定者}／確認：{確認者}）\n判断の理由：{判断理由}\n措置：{措置}\n入水：{実施一覧}（見学 計{見学人数}人）"
+  };
+
+  var DB = null;             // {version, settings, records, sessions, staff, measures, templates}
+  var settings = null;       // = DB.settings（judge() が参照する）
+  var weather = "";
+  var finalMark = null;      // 画面で選んでいる最終判断
+  var finalTouched = false;  // 手で最終判断を変えたか
+  var editingId = null;
+  var lastSavedId = null;
+  var curYear = null;
+  var migrateInfo = null;
+  var toastTimer = null;
+  var confirmTimers = {};
+
+  function $(id){ return document.getElementById(id); }
+  function uid(p){ return (p||"r") + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+  }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function fmt1(n){ return (Math.round(n * 10) / 10).toFixed(1); }
+  function numOrNull(el){
+    var v = parseFloat(el.value);
+    return isNaN(v) ? null : Math.round(v * 10) / 10;
+  }
+  function numVal(v){ var n = parseFloat(v); return (v === null || v === "" || isNaN(n)) ? null : Math.round(n*10)/10; }
+  function pad2(n){ return (n < 10 ? "0" : "") + n; }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+  }
+  function nowTimeStr(){
+    var d = new Date();
+    return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
+  var YOUBI = ["日","月","火","水","木","金","土"];
+  function dateJp(iso){
+    var p = String(iso).split("-");
+    if(p.length !== 3) return iso;
+    var d = new Date(+p[0], +p[1]-1, +p[2]);
+    return (+p[1]) + "/" + (+p[2]) + "（" + YOUBI[d.getDay()] + "）";
+  }
+  function isDate(s){ return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+  function fyOf(iso){ var y = +iso.slice(0,4), m = +iso.slice(5,7); return m >= 4 ? y : y - 1; }  // 4月始まり
+  function verdictOf(m){ return m === "◎" ? "実施" : m === "△" ? "条件付きで実施" : m === "✕" ? "中止" : "--"; }
+  function markCls(m){ return m === "◎" ? "mark-ok" : m === "△" ? "mark-cond" : "mark-ng"; }
+
+  /* ---------- 保存 ---------- */
+  function readJSON(key){
+    try{
+      var raw = localStorage.getItem(key);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ return null; }
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+    catch(e){ toast("保存に失敗しました（容量オーバーの可能性）"); }
+  }
+
+  /* ---------- 判定ロジック（無料版と同じ） ---------- */
+  function judge(water, air, wbgt, wx){
+    var s = settings;
+    if(water === null || air === null){
+      return { mark:"--", cls:"j-none", verdict:"水温と気温を入力してください", reasons:[], sub:"" };
+    }
+    var sum = Math.round((water + air) * 10) / 10;
+    var reasons = [];
+    var ngReasons = [];
+    var condReasons = [];
+
+    if(wbgt !== null && wbgt >= s.wbgtStop){
+      ngReasons.push("WBGTが" + fmt1(wbgt) + "℃で「運動は原則中止」（" + fmt1(s.wbgtStop) + "℃以上）です。熱中症の危険が非常に高い状態です。");
+    }
+    if(water < s.waterMin){
+      ngReasons.push("水温" + fmt1(water) + "℃が基準（" + fmt1(s.waterMin) + "℃以上）に達していません。");
+    }
+    if(sum < s.sumMin){
+      ngReasons.push("水温＋気温が" + fmt1(sum) + "℃で、基準（" + fmt1(s.sumMin) + "℃以上）に達していません。");
+    }
+    if(wbgt !== null && wbgt >= s.wbgtCaution && wbgt < s.wbgtStop){
+      condReasons.push("WBGTが" + fmt1(wbgt) + "℃で「厳重警戒」（" + fmt1(s.wbgtCaution) + "℃以上）です。激しい泳ぎ込みは避け、休憩と水分補給をこまめに。");
+    }
+    if(wx === "雨"){
+      condReasons.push("雨天です。視界の確保と、雷の兆候があれば直ちに退水する体制を。");
+    }
+
+    var mark, cls, verdict;
+    if(ngReasons.length){
+      mark = "✕"; cls = "j-ng"; verdict = "中止";
+      reasons = ngReasons.concat(condReasons);
+    }else if(condReasons.length){
+      mark = "△"; cls = "j-cond"; verdict = "条件付きで実施";
+      reasons = condReasons;
+      reasons.push("水温" + fmt1(water) + "℃・水温＋気温" + fmt1(sum) + "℃で、温度の基準は満たしています。");
+    }else{
+      mark = "◎"; cls = "j-ok"; verdict = "実施できます";
+      reasons = [
+        "水温" + fmt1(water) + "℃ ≧ 基準" + fmt1(s.waterMin) + "℃",
+        "水温＋気温 " + fmt1(sum) + "℃ ≧ 基準" + fmt1(s.sumMin) + "℃"
+      ];
+      if(wbgt !== null){
+        reasons.push("WBGT " + fmt1(wbgt) + "℃（中止基準" + fmt1(s.wbgtStop) + "℃未満）");
+      }
+    }
+
+    var sub = "";
+    if(mark !== "✕" && water < s.lowGradeMin){
+      sub = "🧒 低学年への配慮：水温が" + fmt1(s.lowGradeMin) + "℃未満（現在" + fmt1(water) + "℃）です。低学年は入水時間を短くする・見学の選択肢を用意するなど、より慎重に判断してください。";
+    }
+    return { mark:mark, cls:cls, verdict:verdict, reasons:reasons, sub:sub };
+  }
+
+  /* 中止の原因（連絡文・内訳用。判定そのものは judge() のみ） */
+  function ngCauses(r){
+    var s = r.crit || settings;
+    var out = [];
+    if(r.water == null || r.air == null) return out;
+    var sum = Math.round((r.water + r.air) * 10) / 10;
+    if(r.wbgt != null && r.wbgt >= s.wbgtStop) out.push({ key:"wbgt", label:"暑さ指数（WBGT）が運動中止の基準以上", phrase:"暑さ指数が高く、熱中症の危険が大きい" });
+    if(r.water < s.waterMin) out.push({ key:"water", label:"水温が基準未満", phrase:"水温が低い" });
+    if(sum < s.sumMin) out.push({ key:"sum", label:"水温＋気温が基準未満", phrase: r.water < s.waterMin ? "水温・気温が低い" : "気温が低い" });
+    return out;
+  }
+  function isOverride(r){ return r.finalMark && r.mark && r.finalMark !== r.mark; }
+  function joinReason(t){
+    t = String(t || "").trim().replace(/[。．.、，,]+$/, "");
+    if(!t) return "";
+    if(/ため$/.test(t)) return t.replace(/ため$/, "");
+    return /[たいるすぬうくつむぐぶ]$/.test(t) ? t : t + "の";
+  }
+  function cancelPhrase(r){
+    if(r.finalMark !== "✕") return "";
+    if(isOverride(r) && r.overrideReason) return joinReason(r.overrideReason);
+    var c = ngCauses(r);
+    if(c.length){
+      var water = c.filter(function(x){ return x.key === "water"; }).length;
+      var parts = c.filter(function(x){ return !(water && x.key === "sum"); }).map(function(x){ return x.phrase; });
+      return parts.join("うえ、");
+    }
+    return r.overrideReason ? joinReason(r.overrideReason) : "安全上の理由の";
+  }
+
+  /* ---------- データ整形 ---------- */
+  function normSettings(s){
+    var o = Object.assign({}, DEF_SET);
+    if(s && typeof s === "object"){
+      Object.keys(DEF_SET).forEach(function(k){ var v = parseFloat(s[k]); if(!isNaN(v)) o[k] = Math.round(v*10)/10; });
+    }
+    return o;
+  }
+  function normRec(r){
+    if(!r || typeof r !== "object" || !isDate(r.date)) return null;
+    var mark = (r.mark === "◎" || r.mark === "△" || r.mark === "✕") ? r.mark : null;
+    var water = numVal(r.water), air = numVal(r.air);
+    if(!mark && water != null && air != null){ mark = judge(water, air, numVal(r.wbgt), r.weather || "").mark; }
+    if(!mark) return null;
+    var fm = (r.finalMark === "◎" || r.finalMark === "△" || r.finalMark === "✕") ? r.finalMark : mark;
+    return {
+      id: typeof r.id === "string" && r.id ? r.id : uid("r"),
+      date: r.date, time: typeof r.time === "string" ? r.time : "",
+      water: water, air: air, wbgt: numVal(r.wbgt), cl: numVal(r.cl),
+      weather: typeof r.weather === "string" ? r.weather : "",
+      watcher: typeof r.watcher === "string" ? r.watcher : "",
+      mark: mark, verdict: typeof r.verdict === "string" ? r.verdict : "",
+      reasons: Array.isArray(r.reasons) ? r.reasons.map(String) : [],
+      finalMark: fm,
+      overrideReason: typeof r.overrideReason === "string" ? r.overrideReason : "",
+      measuredBy: typeof r.measuredBy === "string" ? r.measuredBy : "",
+      decidedBy: typeof r.decidedBy === "string" ? r.decidedBy : "",
+      checkedBy: typeof r.checkedBy === "string" ? r.checkedBy : "",
+      measures: Array.isArray(r.measures) ? r.measures.map(String) : [],
+      measureNote: typeof r.measureNote === "string" ? r.measureNote : "",
+      crit: r.crit ? normSettings(r.crit) : null,
+      fromFree: !!r.fromFree
+    };
+  }
+  function normSess(s){
+    if(!s || typeof s !== "object" || !isDate(s.date)) return null;
+    var n = parseInt(s.observers, 10);
+    return {
+      id: typeof s.id === "string" && s.id ? s.id : uid("s"),
+      date: s.date,
+      period: String(s.period == null ? "" : s.period),
+      grade: String(s.grade == null ? "" : s.grade),
+      recordId: typeof s.recordId === "string" ? s.recordId : "",
+      observers: isNaN(n) || n < 0 ? 0 : n
+    };
+  }
+  function normDB(d){
+    var o = {
+      version: 1,
+      settings: normSettings(d.settings),
+      records: [], sessions: [],
+      staff: Array.isArray(d.staff) ? d.staff.map(String).filter(function(x){ return x.trim(); }) : [],
+      measures: [],
+      templates: Object.assign({}, DEF_TPL)
+    };
+    settings = o.settings;
+    (Array.isArray(d.records) ? d.records : []).forEach(function(r){ var n = normRec(r); if(n) o.records.push(n); });
+    (Array.isArray(d.sessions) ? d.sessions : []).forEach(function(s){ var n = normSess(s); if(n) o.sessions.push(n); });
+    if(Array.isArray(d.measures)){
+      d.measures.forEach(function(m){
+        if(m && typeof m === "object" && m.label) o.measures.push({ id: String(m.id || uid("m")), label: String(m.label), off: !!m.off });
+      });
+    }else{
+      o.measures = DEF_MEASURES.map(function(l, i){ return { id: "m" + (i+1), label: l, off:false }; });
+    }
+    if(d.templates && typeof d.templates === "object"){
+      ["staff","parent","admin"].forEach(function(k){ if(typeof d.templates[k] === "string") o.templates[k] = d.templates[k]; });
+    }
+    return o;
+  }
+  function sortRecords(){
+    DB.records.sort(function(a,b){
+      var ka = a.date + " " + (a.time || ""), kb = b.date + " " + (b.time || "");
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+  }
+
+  /* 無料版の記録を Pro の記録に（判断者は空・最終判断＝判定） */
+  function freeToPro(arr, freeSettings){
+    var out = [];
+    (Array.isArray(arr) ? arr : []).forEach(function(r){
+      var n = normRec(r);
+      if(!n) return;
+      n.fromFree = true;
+      n.crit = normSettings(freeSettings || settings);
+      if(!n.reasons.length && n.water != null && n.air != null){
+        var keep = settings; settings = n.crit;
+        var j = judge(n.water, n.air, n.wbgt, n.weather);
+        settings = keep;
+        if(j.mark === n.mark) n.reasons = j.reasons;
+      }
+      out.push(n);
+    });
+    return out;
+  }
+
+  function load(){
+    var d = readJSON(STORAGE_KEY);
+    if(!d || typeof d !== "object" || !Array.isArray(d.records)){
+      // 初回起動：同じブラウザに無料版の記録・しきい値があれば引き継ぐ（無料版のキーは消さない）
+      var freeRecs = readJSON(FREE_REC);
+      var freeSet = readJSON(FREE_SET);
+      DB = normDB({ settings: freeSet });
+      if(Array.isArray(freeRecs) && freeRecs.length){
+        DB.records = freeToPro(freeRecs, DB.settings);
+        migrateInfo = { records: DB.records.length, settings: !!(freeSet && typeof freeSet === "object") };
+      }else if(freeSet && typeof freeSet === "object"){
+        migrateInfo = { records: 0, settings: true };
+      }
+    }else{
+      DB = normDB(d);
+    }
+    settings = DB.settings;
+    sortRecords();
+  }
+
+  /* ---------- 共通 ---------- */
+  function copyText(txt, okMsg){
+    function exec(){
+      var ta = document.createElement("textarea");
+      ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try{ ok = document.execCommand("copy"); }catch(e){}
+      document.body.removeChild(ta);
+      return ok;
+    }
+    function fin(ok){ toast(ok ? (okMsg || "コピーしました") : "枠の中から手動でコピーしてください"); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ fin(true); }, function(){ fin(exec()); });
+    }else fin(exec());
+  }
+  function armConfirm(btn, key, onConfirm, label){
+    if(btn.dataset.armed === "1"){
+      delete btn.dataset.armed;
+      if(confirmTimers[key]) clearTimeout(confirmTimers[key]);
+      btn.classList.remove("confirming");
+      if(btn.dataset.orig){ btn.textContent = btn.dataset.orig; delete btn.dataset.orig; }
+      onConfirm();
+    }else{
+      btn.dataset.armed = "1";
+      btn.dataset.orig = btn.textContent;
+      btn.textContent = label || "もう一度押すと削除";
+      btn.classList.add("confirming");
+      confirmTimers[key] = setTimeout(function(){
+        delete btn.dataset.armed;
+        if(btn.dataset.orig){ btn.textContent = btn.dataset.orig; delete btn.dataset.orig; }
+        btn.classList.remove("confirming");
+      }, 3000);
+    }
+  }
+  function findRec(id){ for(var i=0;i<DB.records.length;i++){ if(DB.records[i].id === id) return DB.records[i]; } return null; }
+  function measureLabel(id){ for(var i=0;i<DB.measures.length;i++){ if(DB.measures[i].id === id) return DB.measures[i].label; } return ""; }
+  function measuresText(r){
+    var arr = r.measures.map(measureLabel).filter(Boolean);
+    if(r.measureNote) arr.push(r.measureNote);
+    return arr.join("、");
+  }
+  function periodJp(p){
+    p = String(p || "").trim();
+    if(!p) return "";
+    return p.replace(/[-－ー〜~、,]/g, "・").replace(/時間目$/, "") + "時間目";
+  }
+  function yearRecs(y){ return DB.records.filter(function(r){ return fyOf(r.date) === y; }); }
+  function yearSess(y){ return DB.sessions.filter(function(s){ return fyOf(s.date) === y; }); }
+  function latestPerDate(recs){
+    var map = {};
+    recs.forEach(function(r){
+      if(!map[r.date] || (r.time || "") >= (map[r.date].time || "")) map[r.date] = r;
+    });
+    return Object.keys(map).sort().map(function(k){ return map[k]; });
+  }
+  function recLabel(r){
+    return (r.time || "--:--") + " 測定　水温" + (r.water != null ? fmt1(r.water) : "--") + "℃・気温" + (r.air != null ? fmt1(r.air) : "--") +
+      "℃　判定" + r.mark + "→最終" + r.finalMark + (r.decidedBy ? "（" + r.decidedBy + "）" : "");
+  }
+  function sessStatus(s){
+    var r = findRec(s.recordId);
+    if(!r) return "（測定なし）";
+    return r.finalMark === "◎" ? "実施" : r.finalMark === "△" ? "条件付きで実施" : "中止";
+  }
+
+  /* ---------- 測定・判断 ---------- */
+  function currentInput(){
+    return {
+      date: $("inDate").value || todayStr(),
+      time: $("inTime").value || nowTimeStr(),
+      water: numOrNull($("inWater")),
+      air: numOrNull($("inAir")),
+      wbgt: numOrNull($("inWbgt")),
+      cl: numOrNull($("inCl")),
+      weather: weather,
+      watcher: $("inWatcher").value.trim()
+    };
+  }
+  var lastJudge = null;
+  function renderJudge(){
+    var c = currentInput();
+    var j = judge(c.water, c.air, c.wbgt, c.weather);
+    lastJudge = j;
+    $("judgeBox").className = "judge-box " + j.cls;
+    $("judgeMark").textContent = j.mark;
+    $("judgeVerdict").textContent = j.verdict;
+    $("judgeReasons").innerHTML = j.reasons.map(function(r){ return "<li>・" + esc(r) + "</li>"; }).join("");
+    var sub = $("judgeSub");
+    if(j.sub){ sub.style.display = "block"; sub.textContent = j.sub; }
+    else{ sub.style.display = "none"; sub.textContent = ""; }
+    if(!finalTouched) finalMark = (j.mark === "--") ? null : j.mark;
+    renderFinal();
+  }
+  function renderFinal(){
+    var j = lastJudge;
+    var btns = $("finalBtns").querySelectorAll("button");
+    for(var i=0;i<btns.length;i++) btns[i].classList.toggle("sel", btns[i].getAttribute("data-f") === finalMark);
+    var ov = !!(j && j.mark !== "--" && finalMark && finalMark !== j.mark);
+    $("overrideBox").style.display = ov ? "block" : "none";
+    if(ov) $("overrideTtl").textContent = "判定は「" + j.mark + " " + j.verdict + "」、最終判断は「" + finalMark + " " + verdictOf(finalMark) + "」です。理由を一行書いてください（必須）";
+    $("overrideWarn").style.display = (ov && j.mark === "✕" && finalMark !== "✕") ? "block" : "none";
+    var showM = !!(j && (j.mark === "△" || finalMark === "△")) && finalMark !== "✕";
+    $("measureBox").style.display = showM ? "block" : "none";
+  }
+  function renderMeasureChecks(checked){
+    checked = checked || [];
+    var list = DB.measures.filter(function(m){ return !m.off || checked.indexOf(m.id) >= 0; });
+    $("measureChecks").innerHTML = list.map(function(m){
+      return '<label class="check-label"><input type="checkbox" value="' + esc(m.id) + '"' + (checked.indexOf(m.id) >= 0 ? " checked" : "") + '> ' + esc(m.label) + "</label>";
+    }).join("") || '<div class="hint">「せってい」で措置の項目を入れてください。</div>';
+  }
+  function checkedMeasures(){
+    var out = [];
+    var cbs = $("measureChecks").querySelectorAll("input[type=checkbox]");
+    for(var i=0;i<cbs.length;i++) if(cbs[i].checked) out.push(cbs[i].value);
+    return out;
+  }
+  function clearInvalid(){
+    ["inDecidedBy","inOverride"].forEach(function(id){ $(id).classList.remove("invalid"); });
+    $("saveErr").textContent = "";
+  }
+
+  function saveCurrent(asUpdate){
+    clearInvalid();
+    var c = currentInput();
+    if(c.water === null || c.air === null){ toast("水温と気温を入力してください"); $("saveErr").textContent = "水温と気温を入力してください。"; return; }
+    var j = judge(c.water, c.air, c.wbgt, c.weather);
+    var fm = finalMark || j.mark;
+    var decidedBy = $("inDecidedBy").value.trim();
+    var ovReason = $("inOverride").value.trim();
+    var errs = [];
+    if(!decidedBy){ errs.push("「判断した人」を入れてください。"); $("inDecidedBy").classList.add("invalid"); }
+    if(fm !== j.mark && !ovReason){ errs.push("アプリの判定と違う判断です。理由を一行書いてください。"); $("inOverride").classList.add("invalid"); }
+    if(errs.length){ $("saveErr").textContent = errs.join(" "); toast(errs[0]); return; }
+
+    var showM = (j.mark === "△" || fm === "△") && fm !== "✕";
+    var old = asUpdate && editingId ? findRec(editingId) : null;
+    var rec = {
+      id: old ? old.id : uid("r"),
+      date: c.date, time: c.time,
+      water: c.water, air: c.air, wbgt: c.wbgt, cl: c.cl,
+      weather: c.weather, watcher: c.watcher,
+      mark: j.mark, verdict: j.verdict, reasons: j.reasons.slice(),
+      finalMark: fm,
+      overrideReason: fm !== j.mark ? ovReason : "",
+      measuredBy: $("inMeasuredBy").value.trim(),
+      decidedBy: decidedBy,
+      checkedBy: $("inCheckedBy").value.trim(),
+      measures: showM ? checkedMeasures() : [],
+      measureNote: showM ? $("inMeasureNote").value.trim() : "",
+      crit: normSettings(settings),
+      fromFree: false
+    };
+    if(old){
+      var idx = DB.records.indexOf(old);
+      DB.records[idx] = rec;
+      exitEditMode();
+      toast("記録を更新しました");
+    }else{
+      DB.records.push(rec);
+      toast(fm + " " + dateJp(c.date) + " " + c.time + " の記録を保存しました");
+    }
+    lastSavedId = rec.id;
+    sortRecords();
+    save();
+    // 次の測定用にリセット（人の欄は残す）
+    finalTouched = false;
+    $("inOverride").value = "";
+    $("inMeasureNote").value = "";
+    renderMeasureChecks([]);
+    $("afterSaveRow").style.display = "flex";
+    var y = fyOf(rec.date);
+    if(y !== curYear){ curYear = y; }
+    renderAll();
+  }
+
+  function enterEditMode(id){
+    var r = findRec(id);
+    if(!r) return;
+    editingId = id;
+    $("inDate").value = r.date;
+    $("inTime").value = r.time || "";
+    $("inWater").value = r.water != null ? fmt1(r.water) : "";
+    $("inAir").value = r.air != null ? fmt1(r.air) : "";
+    $("inWbgt").value = r.wbgt != null ? fmt1(r.wbgt) : "";
+    $("inCl").value = r.cl != null ? fmt1(r.cl) : "";
+    $("inWatcher").value = r.watcher || "";
+    $("inMeasuredBy").value = r.measuredBy || "";
+    $("inDecidedBy").value = r.decidedBy || "";
+    $("inCheckedBy").value = r.checkedBy || "";
+    $("inOverride").value = r.overrideReason || "";
+    $("inMeasureNote").value = r.measureNote || "";
+    setWeather(r.weather || "");
+    if(r.wbgt != null || r.cl != null || r.weather || r.watcher) $("optDetails").open = true;
+    renderMeasureChecks(r.measures);
+    finalMark = r.finalMark; finalTouched = true;
+    $("editModeRow").style.display = "flex";
+    $("btnSave").style.display = "none";
+    $("afterSaveRow").style.display = "none";
+    clearInvalid();
+    renderJudge();
+    if(r.crit && JSON.stringify(normSettings(r.crit)) !== JSON.stringify(normSettings(settings))){
+      $("saveErr").textContent = "※ この記録をしたときと今とで判定の基準が違います。更新すると、今の基準で判定しなおします。";
+    }
+    showTab("measure");
+    toast(dateJp(r.date) + " の記録を編集中です");
+    try{ window.scrollTo({top:0, behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); }
+  }
+  function exitEditMode(){
+    editingId = null;
+    $("editModeRow").style.display = "none";
+    $("btnSave").style.display = "";
+  }
+  function deleteRec(id){
+    DB.records = DB.records.filter(function(r){ return r.id !== id; });
+    DB.sessions.forEach(function(s){ if(s.recordId === id) s.recordId = ""; });
+    if(editingId === id) exitEditMode();
+    save(); renderAll();
+    toast("記録を削除しました（その測定にひもづく入水記録は「測定なし」になります）");
+  }
+
+  /* ---------- 年度 ---------- */
+  function yearsList(){
+    var set = {};
+    DB.records.forEach(function(r){ set[fyOf(r.date)] = true; });
+    DB.sessions.forEach(function(s){ set[fyOf(s.date)] = true; });
+    set[fyOf(todayStr())] = true;
+    return Object.keys(set).map(Number).sort(function(a,b){ return b - a; });
+  }
+  function renderYearSel(){
+    var ys = yearsList();
+    if(curYear === null || ys.indexOf(curYear) < 0){
+      var ty = fyOf(todayStr());
+      curYear = yearRecs(ty).length || !DB.records.length ? ty : fyOf(DB.records[DB.records.length-1].date);
+    }
+    $("yearSel").innerHTML = ys.map(function(y){ return '<option value="' + y + '">' + y + "年度</option>"; }).join("");
+    $("yearSel").value = String(curYear);
+  }
+
+  /* ---------- 記録簿 ---------- */
+  function monthsOf(recs){
+    var set = {};
+    recs.forEach(function(r){ set[r.date.slice(0,7)] = true; });
+    return Object.keys(set).sort();
+  }
+  function renderMonthSel(){
+    var sel = $("monthSel");
+    var cur = sel.value;
+    var ms = monthsOf(yearRecs(curYear));
+    var html = '<option value="all">この年度すべて</option>';
+    ms.forEach(function(m){ var p = m.split("-"); html += '<option value="' + m + '">' + (+p[0]) + "年" + (+p[1]) + "月</option>"; });
+    sel.innerHTML = html;
+    sel.value = (cur && (cur === "all" || ms.indexOf(cur) >= 0)) ? cur : (ms.indexOf(todayStr().slice(0,7)) >= 0 ? todayStr().slice(0,7) : "all");
+  }
+  function filteredRecords(){
+    var m = $("monthSel").value;
+    var recs = yearRecs(curYear);
+    if(!m || m === "all") return recs;
+    return recs.filter(function(r){ return r.date.slice(0,7) === m; });
+  }
+  function sessOfRec(id){ return DB.sessions.filter(function(s){ return s.recordId === id; }); }
+  function sessShort(list){
+    return list.map(function(s){ return periodJp(s.period) + " " + s.grade + (s.observers ? "（見学" + s.observers + "）" : ""); }).join("／");
+  }
+  function reasonCell(r){
+    var parts = [];
+    if(isOverride(r)) parts.push("理由：" + r.overrideReason);
+    var m = measuresText(r);
+    if(m) parts.push("措置：" + m);
+    if(r.watcher) parts.push("メモ：" + r.watcher);
+    return parts.join(" ／ ");
+  }
+  function renderTable(){
+    var recs = filteredRecords();
+    $("recYearLabel").textContent = curYear + "年度（4月〜翌3月）";
+    $("emptyNote").style.display = recs.length ? "none" : "block";
+    $("recBody").innerHTML = recs.map(function(r){
+      var people = [r.measuredBy || "—", r.decidedBy || "—", r.checkedBy || "—"].join("／");
+      return '<tr class="' + (isOverride(r) ? "ov" : "") + '">' +
+        "<td>" + esc(dateJp(r.date)) + (r.fromFree ? '<span class="tag tag-free">無料版</span>' : "") + "</td>" +
+        "<td>" + esc(r.time || "--") + "</td>" +
+        "<td>" + esc(r.weather || "--") + "</td>" +
+        "<td>" + (r.water != null ? fmt1(r.water) + "℃" : "--") + "</td>" +
+        "<td>" + (r.air != null ? fmt1(r.air) + "℃" : "--") + "</td>" +
+        "<td>" + (r.wbgt != null ? fmt1(r.wbgt) : "--") + "</td>" +
+        "<td>" + (r.cl != null ? fmt1(r.cl) : "--") + "</td>" +
+        '<td class="' + markCls(r.mark) + '">' + esc(r.mark) + "</td>" +
+        '<td class="' + markCls(r.finalMark) + '">' + esc(r.finalMark) + (isOverride(r) ? '<span class="tag tag-ov">判定と違う</span>' : "") + "</td>" +
+        "<td>" + esc(people) + "</td>" +
+        '<td class="wrap">' + esc(reasonCell(r)) + "</td>" +
+        '<td class="wrap">' + esc(sessShort(sessOfRec(r.id))) + "</td>" +
+        "<td>" +
+          '<button class="mini-btn mini-edit" data-edit="' + esc(r.id) + '">編集</button> ' +
+          '<button class="mini-btn mini-del" data-del="' + esc(r.id) + '">削除</button>' +
+        "</td></tr>";
+    }).join("");
+  }
+
+  /* ---------- CSV ---------- */
+  function csvEsc(s){
+    s = String(s == null ? "" : s);
+    if(/[",\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function buildCsv(){
+    var head = ["日付","時刻","天気","水温(℃)","気温(℃)","WBGT(℃)","残留塩素(mg/L)","判定","判定内容","最終判断","判定と違う判断","判断の理由",
+      "測った人","判断した人","確認した人","措置","学年・時間目（見学人数）","監視者・メモ"];
+    var lines = [head.join(",")];
+    filteredRecords().forEach(function(r){
+      lines.push([
+        r.date, r.time || "", r.weather || "",
+        r.water != null ? fmt1(r.water) : "", r.air != null ? fmt1(r.air) : "",
+        r.wbgt != null ? fmt1(r.wbgt) : "", r.cl != null ? fmt1(r.cl) : "",
+        r.mark, r.verdict || "", r.finalMark, isOverride(r) ? "あり" : "", r.overrideReason || "",
+        r.measuredBy, r.decidedBy, r.checkedBy, measuresText(r), sessShort(sessOfRec(r.id)), r.watcher || ""
+      ].map(csvEsc).join(","));
+    });
+    return lines.join("\n");
+  }
+
+  /* ---------- 印刷 ---------- */
+  function critText(s){
+    return "水温" + fmt1(s.waterMin) + "℃以上 かつ 水温＋気温" + fmt1(s.sumMin) + "℃以上で実施可。WBGT" + fmt1(s.wbgtStop) +
+      "℃以上は運動原則中止。WBGT" + fmt1(s.wbgtCaution) + "℃以上は厳重警戒（条件付き実施）。低学年推奨水温" + fmt1(s.lowGradeMin) + "℃以上。";
+  }
+  function buildPrint(){
+    var m = $("monthSel").value;
+    var months = (m && m !== "all") ? [m] : monthsOf(yearRecs(curYear));
+    var area = $("printArea");
+    if(!months.length){ area.innerHTML = "<p>記録がありません。</p>"; return; }
+    var html = "";
+    months.forEach(function(mon){
+      var recs = DB.records.filter(function(r){ return r.date.slice(0,7) === mon; });
+      if(!recs.length) return;
+      var p = mon.split("-");
+      var days = latestPerDate(recs);
+      var ok=0, cond=0, ng=0;
+      days.forEach(function(r){ if(r.finalMark==="◎") ok++; else if(r.finalMark==="△") cond++; else ng++; });
+      html += '<div class="month-block"><h1>プール日誌（使用記録簿）</h1>';
+      html += '<div class="p-sub">' + (+p[0]) + "年" + (+p[1]) + "月</div>";
+      html += '<div class="p-meta"><span>学校名：＿＿＿＿＿＿＿＿＿＿＿＿</span><span>管理責任者印：＿＿＿＿</span><span>出力日：' + esc(todayStr()) + "</span></div>";
+      html += "<table><thead><tr><th>日付</th><th>時刻</th><th>天気</th><th>水温<br>(℃)</th><th>気温<br>(℃)</th><th>WBGT<br>(℃)</th><th>残留塩素<br>(mg/L)</th>" +
+        "<th>判定</th><th>最終<br>判断</th><th>判断者</th><th>測定／確認</th><th>理由・措置</th><th>学年・時間目（見学）</th></tr></thead><tbody>";
+      recs.forEach(function(r){
+        html += "<tr><td>" + esc(dateJp(r.date)) + "</td><td>" + esc(r.time || "") + "</td><td>" + esc(r.weather || "") + "</td>" +
+          "<td>" + (r.water != null ? fmt1(r.water) : "") + "</td><td>" + (r.air != null ? fmt1(r.air) : "") + "</td>" +
+          "<td>" + (r.wbgt != null ? fmt1(r.wbgt) : "") + "</td><td>" + (r.cl != null ? fmt1(r.cl) : "") + "</td>" +
+          "<td>" + esc(r.mark) + "</td><td>" + esc(r.finalMark + " " + verdictOf(r.finalMark)) + "</td>" +
+          "<td>" + esc(r.decidedBy) + "</td><td>" + esc((r.measuredBy || "") + (r.checkedBy ? "／" + r.checkedBy : "")) + "</td>" +
+          '<td class="p-memo">' + esc(reasonCell(r)) + '</td><td class="p-memo">' + esc(sessShort(sessOfRec(r.id))) + "</td></tr>";
+      });
+      html += "</tbody></table>";
+      html += '<div class="p-stats">今月の集計（最終判断）：実施 ' + ok + " 日 ／ 条件付き " + cond + " 日 ／ 中止 " + ng + " 日（測定 " + recs.length + " 回）</div>";
+      html += '<div class="p-foot">判定基準（現在の設定）：' + critText(settings) + "<br>アプリの判定は判断の材料です。最終判断は学校の基準と現場の状況で行っています。見学は人数のみ記録。</div></div>";
+    });
+    area.innerHTML = html || "<p>記録がありません。</p>";
+  }
+
+  /* ---------- 学年・時間帯 ---------- */
+  function renderSessRecSel(){
+    var d = $("sDate").value;
+    var recs = DB.records.filter(function(r){ return r.date === d; });
+    var sel = $("sRec");
+    var cur = sel.value;
+    sel.innerHTML = recs.length
+      ? recs.map(function(r){ return '<option value="' + esc(r.id) + '">' + esc(recLabel(r)) + "</option>"; }).join("")
+      : '<option value="">この日の測定はまだありません</option>';
+    if(cur && recs.some(function(r){ return r.id === cur; })) sel.value = cur;
+    else if(recs.length) sel.value = recs[recs.length-1].id;
+  }
+  function renderSessView(){
+    var list = yearSess(curYear).slice().sort(function(a,b){
+      var ka = a.date + " " + a.period, kb = b.date + " " + b.period;
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+    if(!list.length){ $("sessView").innerHTML = '<div class="empty-note">この年度の入水記録はまだありません。</div>'; return; }
+    var html = "", lastD = "";
+    list.forEach(function(s){
+      if(s.date !== lastD){ html += '<div class="day-head">' + esc(dateJp(s.date)) + "</div>"; lastD = s.date; }
+      var r = findRec(s.recordId);
+      html += '<div class="sess"><div class="s-main">' + esc(periodJp(s.period) + " " + s.grade + " " + sessStatus(s)) +
+        '<div class="s-sub">もとにした測定：' + esc(r ? recLabel(r) : "（削除された測定）") + "　見学 " + s.observers + " 人</div></div>" +
+        '<button class="mini-btn mini-del" data-delsess="' + esc(s.id) + '">削除</button></div>';
+    });
+    $("sessView").innerHTML = html;
+  }
+  function addSession(){
+    $("sessErr").textContent = "";
+    var d = $("sDate").value, rid = $("sRec").value, g = $("sGrade").value.trim(), p = $("sPeriod").value.trim();
+    var n = parseInt($("sObs").value, 10);
+    var errs = [];
+    if(!isDate(d)) errs.push("日付を入れてください。");
+    if(!rid) errs.push("この日の測定を先に記録してください。");
+    if(!g) errs.push("学年・学級を入れてください。");
+    if(!p) errs.push("時間目を入れてください。");
+    if(errs.length){ $("sessErr").textContent = errs.join(" "); toast(errs[0]); return; }
+    DB.sessions.push({ id: uid("s"), date: d, period: p, grade: g, recordId: rid, observers: isNaN(n) || n < 0 ? 0 : n });
+    save();
+    $("sObs").value = "0";
+    curYear = fyOf(d);
+    renderAll();
+    toast(dateJp(d) + " " + periodJp(p) + " " + g + " を記録しました");
+  }
+
+  /* ---------- 連絡文 ---------- */
+  function fillTpl(kind, r){
+    var tpl = DB.templates[kind];
+    var ss = DB.sessions.filter(function(s){ return s.date === r.date; });
+    var mine = ss.filter(function(s){ return s.recordId === r.id; });
+    var useList = mine.length ? mine : ss;
+    var list = useList.map(function(s){ return periodJp(s.period) + " " + s.grade + " " + sessStatus(s); }).join("、");
+    if(!list) list = verdictOf(r.finalMark) + "（学年・時間帯は未入力）";
+    var obs = useList.reduce(function(a, s){ return a + (s.observers || 0); }, 0);
+    var judgeReason = isOverride(r) ? r.overrideReason
+      : (r.finalMark === "✕" ? ngCauses(r).map(function(c){ return c.label; }).join("、") || "判定どおり" : "判定どおり");
+    var m = measuresText(r);
+    var map = {
+      "日付": dateJp(r.date), "時刻": r.time || "",
+      "水温": r.water != null ? fmt1(r.water) : "--", "気温": r.air != null ? fmt1(r.air) : "--",
+      "WBGT": r.wbgt != null ? fmt1(r.wbgt) + "℃" : "未測定",
+      "判定": r.mark + " " + (r.verdict || verdictOf(r.mark)),
+      "最終判断": r.finalMark + " " + verdictOf(r.finalMark),
+      "実施一覧": list, "中止理由": cancelPhrase(r), "判断理由": judgeReason,
+      "措置": m ? (kind === "admin" ? m : "措置：" + m) : (kind === "admin" ? "なし" : ""),
+      "判断者": r.decidedBy || "（未記入）", "測定者": r.measuredBy || "—", "確認者": r.checkedBy || "—",
+      "見学人数": String(obs)
+    };
+    var out = tpl.replace(/\{([^{}]+)\}/g, function(all, k){ return Object.prototype.hasOwnProperty.call(map, k) ? map[k] : all; });
+    return out.split("\n").filter(function(line, i, arr){ return line.trim() !== "" || (i > 0 && i < arr.length - 1 && arr[i-1].trim() !== ""); }).join("\n").trim();
+  }
+  function commTexts(r){
+    return {
+      staff: fillTpl("staff", r),
+      parent: r.finalMark === "✕" ? fillTpl("parent", r) : "",
+      admin: fillTpl("admin", r)
+    };
+  }
+  function renderCommSel(prefId){
+    var dates = Object.keys(yearRecs(curYear).reduce(function(a, r){ a[r.date] = 1; return a; }, {})).sort().reverse();
+    var cd = $("cDate"), cur = cd.value;
+    if(prefId){ var pr = findRec(prefId); if(pr) cur = pr.date; }
+    cd.innerHTML = dates.length ? dates.map(function(d){ return '<option value="' + d + '">' + esc(dateJp(d)) + "（" + d.slice(0,4) + "）</option>"; }).join("")
+      : '<option value="">記録がありません</option>';
+    if(cur && dates.indexOf(cur) >= 0) cd.value = cur;
+    renderCommRecSel(prefId);
+  }
+  function renderCommRecSel(prefId){
+    var d = $("cDate").value;
+    var recs = DB.records.filter(function(r){ return r.date === d; });
+    var sel = $("cRec"), cur = prefId || sel.value;
+    sel.innerHTML = recs.length ? recs.map(function(r){ return '<option value="' + esc(r.id) + '">' + esc(recLabel(r)) + "</option>"; }).join("") : '<option value="">--</option>';
+    if(cur && recs.some(function(r){ return r.id === cur; })) sel.value = cur;
+    else if(recs.length) sel.value = recs[recs.length-1].id;
+    renderCommView();
+  }
+  function renderCommView(){
+    var r = findRec($("cRec").value);
+    var v = $("commView");
+    if(!r){ v.innerHTML = '<div class="empty-note">記録を選ぶと、連絡文ができます。</div>'; return; }
+    var t = commTexts(r);
+    var blocks = [
+      ["staff", "👩‍🏫 職員向けの連絡", t.staff, ""],
+      ["parent", "🏠 中止時の学級連絡・保護者向け", t.parent, r.finalMark === "✕" ? "" : "この記録は「中止」ではないため、作りません。"],
+      ["admin", "🗂 管理職への報告", t.admin, ""]
+    ];
+    v.innerHTML = blocks.map(function(b){
+      return '<div class="comm-block"><h3>' + b[1] + "</h3>" +
+        (b[3] ? '<div class="hint" style="margin:0;">' + esc(b[3]) + "</div>"
+          : '<textarea id="comm_' + b[0] + '">' + esc(b[2]) + '</textarea><div class="btn-row" style="margin-top:8px;"><button class="btn btn-primary small" data-copycomm="' + b[0] + '">📋 コピー</button></div>') +
+        "</div>";
+    }).join("");
+  }
+
+  /* ---------- まとめ・グラフ ---------- */
+  function renderStats(){
+    var recs = yearRecs(curYear);
+    var days = latestPerDate(recs);
+    var ok=0, cond=0, ng=0;
+    days.forEach(function(r){ if(r.finalMark === "◎") ok++; else if(r.finalMark === "△") cond++; else ng++; });
+    $("stOk").textContent = ok; $("stCond").textContent = cond; $("stNg").textContent = ng;
+    $("stOv").textContent = recs.filter(isOverride).length;
+    $("stAll").textContent = recs.length;
+    $("sumYearLabel").textContent = curYear + "年度";
+    $("lgCur").textContent = curYear + "年度の水温";
+    $("lgPrev").textContent = (curYear - 1) + "年度の水温";
+    renderChart(days, latestPerDate(yearRecs(curYear - 1)));
+  }
+  function dayIdx(iso){   // 4/1 を 0 とした、その年度内の日数（年をまたがず重ねるため）
+    var y = fyOf(iso);
+    var d = new Date(+iso.slice(0,4), +iso.slice(5,7)-1, +iso.slice(8,10));
+    return Math.round((d - new Date(y, 3, 1)) / 86400000);
+  }
+  function renderChart(cur, prev){
+    var wrap = $("chartWrap");
+    var curW = cur.filter(function(r){ return r.water != null; });
+    var prevW = prev.filter(function(r){ return r.water != null; });
+    if(curW.length + prevW.length < 2){
+      wrap.innerHTML = '<div class="empty-note">記録が2日分以上たまると、水温の推移グラフが表示されます。</div>';
+      return;
+    }
+    var all = curW.concat(prevW);
+    var xs = all.map(function(r){ return dayIdx(r.date); });
+    var xMin = Math.min.apply(null, xs) - 2, xMax = Math.max.apply(null, xs) + 2;
+    var W = 760, H = 260, padL = 40, padR = 14, padT = 16, padB = 34;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var vals = all.map(function(r){ return r.water; }); vals.push(settings.waterMin);
+    var yMin = Math.floor(Math.min.apply(null, vals)) - 2, yMax = Math.ceil(Math.max.apply(null, vals)) + 2;
+    if(yMax - yMin < 6) yMax = yMin + 6;
+    function x(i){ return padL + plotW * (i - xMin) / Math.max(1, (xMax - xMin)); }
+    function y(v){ return padT + plotH * (1 - (v - yMin) / (yMax - yMin)); }
+    var svg = '<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="水温の推移（前の年度と比較）">';
+    var stepY = Math.max(1, Math.round((yMax - yMin) / 5));
+    for(var v = yMin; v <= yMax; v += stepY){
+      svg += '<line x1="' + padL + '" y1="' + y(v) + '" x2="' + (W - padR) + '" y2="' + y(v) + '" stroke="#E4E0D8"/>';
+      svg += '<text x="' + (padL - 6) + '" y="' + (y(v) + 4) + '" font-size="11" fill="#7A8494" text-anchor="end">' + v + "</text>";
+    }
+    var ly = y(settings.waterMin);
+    svg += '<line x1="' + padL + '" y1="' + ly + '" x2="' + (W - padR) + '" y2="' + ly + '" stroke="#D8402A" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    svg += '<text x="' + (W - padR) + '" y="' + (ly - 5) + '" font-size="10" fill="#D8402A" text-anchor="end">基準 ' + fmt1(settings.waterMin) + "℃</text>";
+    // 月の区切り
+    for(var mo = 0; mo < 12; mo++){
+      var md = new Date(2001, 3 + mo, 1), base = new Date(2001, 3, 1);
+      var di = Math.round((md - base) / 86400000);
+      if(di < xMin || di > xMax) continue;
+      svg += '<line x1="' + x(di) + '" y1="' + padT + '" x2="' + x(di) + '" y2="' + (H - padB) + '" stroke="#EFEBE3"/>';
+      svg += '<text x="' + x(di) + '" y="' + (H - 10) + '" font-size="11" fill="#7A8494" text-anchor="middle">' + (md.getMonth() + 1) + "/1</text>";
+    }
+    function line(recs, color, dash){
+      if(!recs.length) return "";
+      var pts = recs.map(function(r){ return [x(dayIdx(r.date)), y(r.water)]; });
+      var d = pts.map(function(p, i){ return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+      var out = '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round"' + (dash ? ' stroke-dasharray="5 4"' : "") + "/>";
+      pts.forEach(function(p){ out += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.5" fill="' + color + '"/>'; });
+      return out;
+    }
+    svg += line(prevW, "#A7AFBA", true);
+    svg += line(curW, "#1D7ED8", false);
+    svg += "</svg>";
+    wrap.innerHTML = svg;
+  }
+
+  function buildHandover(){
+    var y = curYear;
+    var recs = yearRecs(y);
+    var days = latestPerDate(recs);
+    var ok=0, cond=0, ng=0;
+    days.forEach(function(r){ if(r.finalMark === "◎") ok++; else if(r.finalMark === "△") cond++; else ng++; });
+    var L = [];
+    L.push("■ プール入水の記録　" + y + "年度　引き継ぎ用まとめ");
+    L.push("作成日：" + todayStr());
+    if(recs.length){ L.push("期間：" + recs[0].date + " 〜 " + recs[recs.length-1].date + "（測定 " + recs.length + " 回・" + days.length + " 日）"); }
+    L.push("");
+    L.push("【1】日数（その日の最後の測定の最終判断で集計）");
+    L.push("　実施 " + ok + " 日／条件付きで実施 " + cond + " 日／中止 " + ng + " 日");
+    var ss = yearSess(y);
+    if(ss.length){
+      var obs = ss.reduce(function(a, s){ return a + s.observers; }, 0);
+      L.push("　学年・時間帯の入水記録 " + ss.length + " 件（見学 のべ " + obs + " 人）");
+    }
+    L.push("");
+    L.push("【2】中止理由の内訳（中止の日）");
+    var cnt = {}, order = [];
+    function add(k){ if(!cnt[k]){ cnt[k] = 0; order.push(k); } cnt[k]++; }
+    days.filter(function(r){ return r.finalMark === "✕"; }).forEach(function(r){
+      if(isOverride(r)) add("判定と違う判断で中止（" + (r.overrideReason || "理由なし") + "）");
+      else{
+        var c = ngCauses(r);
+        if(c.length) c.forEach(function(x){ add(x.label); }); else add("その他");
+      }
+    });
+    if(order.length) order.sort(function(a,b){ return cnt[b] - cnt[a]; }).forEach(function(k){ L.push("　・" + k + "：" + cnt[k] + " 日"); });
+    else L.push("　（中止の日はありません）");
+    L.push("");
+    L.push("【3】アプリの判定と違う判断をした日");
+    var ovs = recs.filter(isOverride);
+    if(ovs.length){
+      ovs.forEach(function(r){
+        L.push("　・" + dateJp(r.date) + " " + (r.time || "") + "　判定" + r.mark + " → 最終" + r.finalMark + "　水温" + fmt1(r.water) + "℃・気温" + fmt1(r.air) + "℃" +
+          (r.wbgt != null ? "・WBGT" + fmt1(r.wbgt) : "") + "　理由：" + (r.overrideReason || "（なし）") + (r.decidedBy ? "　判断：" + r.decidedBy : ""));
+      });
+    }else L.push("　（ありません）");
+    L.push("");
+    L.push("【4】条件付きで実施したときに多かった措置");
+    var mc = {}, morder = [];
+    recs.forEach(function(r){
+      r.measures.forEach(function(id){ var l = measureLabel(id); if(!l) return; if(!mc[l]){ mc[l] = 0; morder.push(l); } mc[l]++; });
+    });
+    if(morder.length) morder.sort(function(a,b){ return mc[b] - mc[a]; }).forEach(function(l){ L.push("　・" + l + "：" + mc[l] + " 回"); });
+    else L.push("　（記録された措置はありません）");
+    var notes = recs.filter(function(r){ return r.measureNote; }).map(function(r){ return dateJp(r.date) + " " + r.measureNote; });
+    if(notes.length) L.push("　そのほか：" + notes.join("／"));
+    L.push("");
+    L.push("【5】設定していた判定基準");
+    L.push("　" + critText(settings));
+    var crits = {};
+    recs.forEach(function(r){ if(r.crit) crits[JSON.stringify(r.crit)] = r.crit; });
+    if(Object.keys(crits).length > 1) L.push("　※ シーズン中に基準を変更しています（記録ごとに当時の基準を保存しています）。");
+    var noDec = recs.filter(function(r){ return !r.decidedBy; }).length;
+    if(noDec) L.push("　※ 判断者が空欄の記録が " + noDec + " 件あります（無料版から引き継いだ記録など）。");
+    L.push("");
+    L.push("※ アプリの判定は判断の材料です。最終判断は学校の基準と現場の状況で行ってください。基準値は自治体・学校の定めが優先します。");
+    return L.join("\n");
+  }
+
+  /* ---------- 大画面 ---------- */
+  function openBig(){
+    var c = currentInput();
+    var j = lastJudge || judge(c.water, c.air, c.wbgt, c.weather);
+    $("bigview").className = "bigview show " + j.cls;
+    $("bvMark").textContent = j.mark;
+    $("bvVerdict").textContent = j.verdict;
+    $("bvTemps").textContent = (c.water != null && c.air != null)
+      ? "水温 " + fmt1(c.water) + "℃　気温 " + fmt1(c.air) + "℃" + (c.wbgt != null ? "　WBGT " + fmt1(c.wbgt) + "℃" : "") : "";
+    $("bvReason").textContent = j.reasons.join("　");
+    $("bvDate").textContent = dateJp(c.date) + " " + c.time + (j.sub ? "　※" + j.sub : "");
+    try{
+      if(document.documentElement.requestFullscreen){
+        var p = document.documentElement.requestFullscreen();
+        if(p && p.catch) p.catch(function(){});
+      }
+    }catch(e){}
+  }
+  function closeBig(){
+    $("bigview").className = "bigview";
+    try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); }catch(e){}
+  }
+
+  /* ---------- 設定 ---------- */
+  var SET_FIELDS = [["waterMin","setWaterMin"],["sumMin","setSumMin"],["lowGradeMin","setLowGradeMin"],["wbgtCaution","setWbgtCaution"],["wbgtStop","setWbgtStop"]];
+  function renderSettings(){ SET_FIELDS.forEach(function(f){ $(f[1]).value = fmt1(settings[f[0]]); }); }
+  function readSettingsFromUI(){
+    SET_FIELDS.forEach(function(f){ var v = parseFloat($(f[1]).value); if(!isNaN(v)) settings[f[0]] = Math.round(v * 10) / 10; });
+    save(); renderSettings(); renderJudge(); renderStats();
+  }
+  function renderStaff(){
+    $("staffList").innerHTML = DB.staff.map(function(n){ return '<option value="' + esc(n) + '">'; }).join("");
+    $("staffEdit").innerHTML = DB.staff.map(function(n, i){
+      return '<div class="li"><span>' + esc(n) + '</span><button class="mini-btn mini-del" data-delstaff="' + i + '">削除</button></div>';
+    }).join("") || '<div class="hint" style="margin:0;">まだ入っていません。</div>';
+  }
+  function renderMeasureEdit(){
+    var act = DB.measures.filter(function(m){ return !m.off; });
+    $("measureEdit").innerHTML = act.map(function(m){
+      return '<div class="li"><span>' + esc(m.label) + '</span><button class="mini-btn mini-del" data-delmeasure="' + esc(m.id) + '">削除</button></div>';
+    }).join("") || '<div class="hint" style="margin:0;">項目がありません。</div>';
+  }
+  function renderTpl(){
+    $("tplStaff").value = DB.templates.staff;
+    $("tplParent").value = DB.templates.parent;
+    $("tplAdmin").value = DB.templates.admin;
+  }
+
+  /* ---------- 天気 ---------- */
+  function setWeather(w){
+    weather = w;
+    var btns = $("weatherBtns").querySelectorAll("button");
+    for(var i=0;i<btns.length;i++) btns[i].classList.toggle("sel", btns[i].getAttribute("data-w") === w);
+  }
+
+  /* ---------- タブ ---------- */
+  var curTab = "measure";
+  function showTab(t){
+    curTab = t;
+    var tabs = $("tabs").querySelectorAll(".tab");
+    for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle("active", tabs[i].getAttribute("data-tab") === t);
+    var ps = document.querySelectorAll(".panel");
+    for(var k=0;k<ps.length;k++) ps[k].classList.toggle("active", ps[k].id === "panel-" + t);
+  }
+
+  /* ---------- 引き継ぎ通知 ---------- */
+  function renderMigrateBox(){
+    var mb = $("migrateBox");
+    if(!migrateInfo){ mb.style.display = "none"; return; }
+    mb.style.display = "";
+    mb.innerHTML = '<button class="x" aria-label="閉じる">✕</button>' +
+      '🏊 <b>無料版のデータを引き継ぎました。</b><br>' +
+      (migrateInfo.records ? "同じブラウザに入っていた記録（" + migrateInfo.records + "件）を読みこみました。無料版の記録には判断者が入っていないので、記録簿では「無料版」の印がついています。" : "") +
+      (migrateInfo.settings ? "無料版で設定していた判定の基準も、そのまま使っています。" : "") +
+      "<br>無料版のデータはそのまま残っているので、しばらく両方を開いて確かめてもだいじょうぶです。" +
+      "<br>次は「⚙️ せってい」で、基準が自治体・学校の定めと合っているか確かめ、職員名簿を入れてください。";
+    mb.querySelector(".x").addEventListener("click", function(){ migrateInfo = null; renderMigrateBox(); });
+  }
+
+  /* ---------- 全体描画 ---------- */
+  function renderAll(){
+    renderYearSel();
+    renderMigrateBox();
+    renderMonthSel();
+    renderTable();
+    renderStats();
+    renderStaff();
+    renderMeasureEdit();
+    renderSessRecSel();
+    renderSessView();
+    renderCommSel();
+    renderJudge();
+  }
+
+  /* ---------- イベント ---------- */
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if(!(t instanceof HTMLElement)) return;
+    var step = t.getAttribute("data-step");
+    if(step){
+      var map = { water:"inWater", air:"inAir", wbgt:"inWbgt", cl:"inCl" };
+      var input = $(map[step]);
+      var cur = parseFloat(input.value);
+      if(isNaN(cur)) cur = step === "water" ? 22 : step === "air" ? 28 : step === "wbgt" ? 28 : 0.4;
+      else cur += parseFloat(t.getAttribute("data-d"));
+      if(step === "cl" && cur < 0) cur = 0;
+      input.value = fmt1(cur);
+      renderJudge();
+      return;
+    }
+    var set = t.getAttribute("data-set");
+    if(set){
+      var sin = null;
+      SET_FIELDS.forEach(function(f){ if(f[0] === set) sin = $(f[1]); });
+      if(sin){
+        var cv = parseFloat(sin.value);
+        if(isNaN(cv)) cv = DEF_SET[set];
+        sin.value = fmt1(cv + parseFloat(t.getAttribute("data-d")));
+        readSettingsFromUI();
+      }
+      return;
+    }
+    var obs = t.getAttribute("data-obs");
+    if(obs){
+      var n = parseInt($("sObs").value, 10); if(isNaN(n)) n = 0;
+      n += parseInt(obs, 10); if(n < 0) n = 0;
+      $("sObs").value = String(n);
+      return;
+    }
+    var eid = t.getAttribute("data-edit");
+    if(eid){ enterEditMode(eid); return; }
+    var did = t.getAttribute("data-del");
+    if(did){ armConfirm(t, "del" + did, function(){ deleteRec(did); }, "本当に？"); return; }
+    var dsid = t.getAttribute("data-delsess");
+    if(dsid){
+      armConfirm(t, "ds" + dsid, function(){
+        DB.sessions = DB.sessions.filter(function(s){ return s.id !== dsid; });
+        save(); renderAll(); toast("入水記録を削除しました");
+      }, "本当に？");
+      return;
+    }
+    var dst = t.getAttribute("data-delstaff");
+    if(dst !== null && dst !== undefined && dst !== ""){
+      DB.staff.splice(+dst, 1); save(); renderStaff(); return;
+    }
+    var dm = t.getAttribute("data-delmeasure");
+    if(dm){
+      var used = DB.records.some(function(r){ return r.measures.indexOf(dm) >= 0; });
+      if(used){ DB.measures.forEach(function(m){ if(m.id === dm) m.off = true; }); }
+      else DB.measures = DB.measures.filter(function(m){ return m.id !== dm; });
+      save(); renderMeasureEdit(); renderMeasureChecks(checkedMeasures());
+      toast(used ? "項目を消しました（過去の記録の表示には残ります）" : "項目を消しました");
+      return;
+    }
+    var cc = t.getAttribute("data-copycomm");
+    if(cc){ copyText($("comm_" + cc).value, "コピーしました。貼る前に一度読んでください"); return; }
+  });
+
+  $("tabs").addEventListener("click", function(ev){
+    var b = ev.target.closest ? ev.target.closest(".tab") : null;
+    if(b) showTab(b.getAttribute("data-tab"));
+  });
+  $("yearSel").addEventListener("change", function(){ curYear = +this.value; renderAll(); });
+
+  ["inDate","inTime","inWater","inAir","inWbgt","inCl"].forEach(function(id){ $(id).addEventListener("input", renderJudge); });
+  $("weatherBtns").addEventListener("click", function(ev){
+    var b = ev.target.closest ? ev.target.closest("button") : null;
+    if(!b) return;
+    var w = b.getAttribute("data-w");
+    setWeather(weather === w ? "" : w);
+    renderJudge();
+  });
+  $("finalBtns").addEventListener("click", function(ev){
+    var b = ev.target.closest ? ev.target.closest("button") : null;
+    if(!b) return;
+    finalMark = b.getAttribute("data-f");
+    finalTouched = true;
+    renderFinal();
+  });
+  $("inDecidedBy").addEventListener("input", function(){ this.classList.remove("invalid"); });
+  $("inOverride").addEventListener("input", function(){ this.classList.remove("invalid"); });
+
+  $("btnSave").addEventListener("click", function(){ saveCurrent(false); });
+  $("btnUpdate").addEventListener("click", function(){ saveCurrent(true); });
+  $("btnCancelEdit").addEventListener("click", function(){
+    exitEditMode(); finalTouched = false; clearInvalid(); renderJudge(); toast("編集をやめました");
+  });
+  $("btnGoSess").addEventListener("click", function(){
+    var r = findRec(lastSavedId);
+    if(r){ $("sDate").value = r.date; renderSessRecSel(); $("sRec").value = r.id; }
+    showTab("sessions");
+  });
+  $("btnGoComm").addEventListener("click", function(){
+    renderCommSel(lastSavedId);
+    showTab("comm");
+  });
+
+  $("btnBig").addEventListener("click", openBig);
+  $("bvClose").addEventListener("click", closeBig);
+  $("bigview").addEventListener("click", function(ev){ if(ev.target === this) closeBig(); });
+  document.addEventListener("keydown", function(ev){ if(ev.key === "Escape" && $("bigview").classList.contains("show")) closeBig(); });
+
+  $("monthSel").addEventListener("change", renderTable);
+  $("btnCsv").addEventListener("click", function(){
+    if(!filteredRecords().length){ toast("コピーする記録がありません"); return; }
+    copyText(buildCsv(), "CSVをコピーしました（表計算ソフトに貼り付けできます）");
+  });
+  $("btnPrint").addEventListener("click", function(){
+    if(!yearRecs(curYear).length){ toast("印刷する記録がありません"); return; }
+    buildPrint(); window.print();
+  });
+  window.addEventListener("beforeprint", buildPrint);
+
+  $("sDate").addEventListener("change", renderSessRecSel);
+  $("btnAddSess").addEventListener("click", addSession);
+
+  $("cDate").addEventListener("change", function(){ renderCommRecSel(); });
+  $("cRec").addEventListener("change", renderCommView);
+
+  $("btnHandover").addEventListener("click", function(){
+    $("handoverText").value = buildHandover();
+    $("handoverArea").style.display = "block";
+  });
+  $("btnCopyHandover").addEventListener("click", function(){ copyText($("handoverText").value, "引き継ぎ用のまとめをコピーしました"); });
+
+  SET_FIELDS.forEach(function(f){ $(f[1]).addEventListener("change", readSettingsFromUI); });
+  $("btnResetSet").addEventListener("click", function(){
+    Object.assign(settings, DEF_SET);
+    save(); renderSettings(); renderJudge(); renderStats();
+    toast("基準を初期値に戻しました（学校の基準と合っているか確かめてください）");
+  });
+  $("btnAddStaff").addEventListener("click", function(){
+    var v = $("newStaff").value.trim();
+    if(!v) return;
+    if(DB.staff.indexOf(v) < 0) DB.staff.push(v);
+    $("newStaff").value = "";
+    save(); renderStaff();
+  });
+  $("btnAddMeasure").addEventListener("click", function(){
+    var v = $("newMeasure").value.trim();
+    if(!v) return;
+    DB.measures.push({ id: uid("m"), label: v, off:false });
+    $("newMeasure").value = "";
+    save(); renderMeasureEdit(); renderMeasureChecks(checkedMeasures());
+  });
+  [["tplStaff","staff"],["tplParent","parent"],["tplAdmin","admin"]].forEach(function(p){
+    $(p[0]).addEventListener("change", function(){ DB.templates[p[1]] = this.value; save(); renderCommView(); toast("ひな形を保存しました"); });
+  });
+  $("btnResetTpl").addEventListener("click", function(){
+    armConfirm(this, "tpl", function(){
+      DB.templates = Object.assign({}, DEF_TPL); save(); renderTpl(); renderCommView(); toast("ひな形を初期値に戻しました");
+    }, "もう一度押すと初期値に戻します");
+  });
+
+  $("btnExport").addEventListener("click", function(){
+    var area = $("dataArea");
+    var txt = JSON.stringify(DB);
+    area.innerHTML = '<p class="hint" style="margin:0 0 6px;">下の文字列をコピーして保存するか、次の担当者に渡してください。</p>' +
+      '<textarea id="exportText" readonly style="min-height:120px;"></textarea>' +
+      '<div class="btn-row" style="margin-top:8px;"><button class="btn btn-primary small" id="btnCopyExport">コピー</button><button class="btn btn-line small" id="btnCloseData">閉じる</button></div>';
+    $("exportText").value = txt;
+    $("btnCopyExport").addEventListener("click", function(){ copyText(txt, "書き出した文字列をコピーしました"); });
+    $("btnCloseData").addEventListener("click", function(){ area.innerHTML = ""; });
+  });
+  $("btnImport").addEventListener("click", function(){
+    var area = $("dataArea");
+    area.innerHTML = '<p class="hint" style="margin:0 0 6px;">書き出した文字列を貼りつけてください。<b>上書き</b>は今のデータ全体を置きかえます。<b>追加</b>は、今のデータに無い記録だけを足します（名簿・措置も足します。基準とひな形は今のまま）。無料版の記録の文字列も「追加」で読みこめます。</p>' +
+      '<textarea id="importText" placeholder="ここに貼りつけ" style="min-height:120px;"></textarea>' +
+      '<div class="btn-row" style="margin-top:8px;"><button class="btn btn-warn small" id="btnImpOver">上書きで読みこむ</button><button class="btn btn-primary small" id="btnImpAdd">追加で読みこむ</button><button class="btn btn-line small" id="btnCloseData2">閉じる</button></div>' +
+      '<div class="err-msg" id="importErr"></div>';
+    function parse(){
+      var txt = $("importText").value.trim();
+      if(!txt){ $("importErr").textContent = "テキストが空です。"; return null; }
+      try{ return JSON.parse(txt); }catch(e){ $("importErr").textContent = "読みこめませんでした。書き出した文字列か確認してください。"; return null; }
+    }
+    $("btnImpOver").addEventListener("click", function(){
+      var d = parse(); if(!d) return;
+      if(!(d && typeof d === "object" && Array.isArray(d.records))){ $("importErr").textContent = "Pro版で書き出した文字列ではありません（無料版の記録は「追加」で読みこめます）。"; return; }
+      armConfirm(this, "impOver", function(){
+        DB = normDB(d); settings = DB.settings; sortRecords(); curYear = null;
+        save(); renderSettings(); renderTpl(); renderMeasureChecks([]); renderAll(); area.innerHTML = "";
+        toast("読みこみました（記録 " + DB.records.length + " 件）");
+      }, "もう一度押すと、今のデータを置きかえます");
+    });
+    $("btnImpAdd").addEventListener("click", function(){
+      var d = parse(); if(!d) return;
+      var addRecs = [], addSess = [];
+      if(Array.isArray(d)){ addRecs = freeToPro(d, settings); }
+      else if(d && typeof d === "object" && Array.isArray(d.records)){
+        var src = normDB(d); settings = DB.settings;
+        var idMap = {};
+        src.measures.forEach(function(m){
+          var hit = DB.measures.filter(function(x){ return x.label === m.label; })[0];
+          if(hit){ idMap[m.id] = hit.id; if(hit.off && !m.off) hit.off = false; }
+          else{ var nid = DB.measures.some(function(x){ return x.id === m.id; }) ? uid("m") : m.id; DB.measures.push({ id:nid, label:m.label, off:m.off }); idMap[m.id] = nid; }
+        });
+        addRecs = src.records.map(function(r){ r.measures = r.measures.map(function(id){ return idMap[id] || id; }); return r; });
+        addSess = src.sessions;
+        src.staff.forEach(function(n){ if(DB.staff.indexOf(n) < 0) DB.staff.push(n); });
+      }else{ $("importErr").textContent = "読みこめませんでした。書き出した文字列か確認してください。"; return; }
+      var have = {};
+      DB.records.forEach(function(r){ have[r.id] = true; });
+      var nR = 0, nS = 0;
+      addRecs.forEach(function(r){ if(!have[r.id]){ DB.records.push(r); have[r.id] = true; nR++; } });
+      var haveS = {};
+      DB.sessions.forEach(function(s){ haveS[s.id] = true; });
+      addSess.forEach(function(s){ if(!haveS[s.id]){ DB.sessions.push(s); nS++; } });
+      sortRecords(); save(); renderAll(); area.innerHTML = "";
+      toast("記録 " + nR + " 件・入水 " + nS + " 件を足しました");
+    });
+    $("btnCloseData2").addEventListener("click", function(){ area.innerHTML = ""; });
+  });
+  $("btnClearYear").addEventListener("click", function(){
+    var y = curYear;
+    armConfirm(this, "clearYear", function(){
+      var ids = {};
+      DB.records.forEach(function(r){ if(fyOf(r.date) === y) ids[r.id] = true; });
+      DB.records = DB.records.filter(function(r){ return !ids[r.id]; });
+      DB.sessions = DB.sessions.filter(function(s){ return fyOf(s.date) !== y; });
+      exitEditMode(); save(); curYear = null; renderAll();
+      toast(y + "年度の記録を削除しました");
+    }, "もう一度押すと" + y + "年度の記録を削除します");
+  });
+
+  /* ---------- 初期化 ---------- */
+  load();
+  save();   // 初回（＝引き継ぎ直後）にすぐ書きこむ。これをしないと毎回無料版から読み直してしまう
+  $("inDate").value = todayStr();
+  $("inTime").value = nowTimeStr();
+  $("sDate").value = todayStr();
+  renderSettings();
+  renderTpl();
+  renderMeasureChecks([]);
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

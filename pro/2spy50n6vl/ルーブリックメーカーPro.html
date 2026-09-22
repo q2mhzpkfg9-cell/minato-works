@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ルーブリックメーカー Pro</title>
+<style>
+  :root{
+    --accent:#16A085;
+    --accent-dark:#117A65;
+    --bg:#F7F5F0;
+    --card:#FFFFFF;
+    --ink:#333333;
+    --sub:#888888;
+    --line:#E4E0D8;
+    --danger:#E05B4B;
+    --child:#E08A2E;
+    --child-soft:#FFF4E6;
+    --selfhi:#E08A2E;
+    --teachhi:#3A7BD5;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-size:16px;line-height:1.6;
+  }
+  /* ===== header ===== */
+  header.appbar{
+    position:sticky;top:0;z-index:50;
+    background:var(--accent);color:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 14px;
+  }
+  header.appbar h1{font-size:1.1rem;margin:0;font-weight:700;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  header.appbar a.back{
+    color:#fff;text-decoration:none;background:rgba(255,255,255,.18);
+    padding:8px 12px;border-radius:10px;font-size:.85rem;white-space:nowrap;font-weight:600;
+  }
+  header.appbar a.back:active{background:rgba(255,255,255,.32);}
+  .pro-badge{
+    display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;
+    background:#fff;color:var(--accent);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;
+  }
+  nav.tabs{display:flex;gap:6px;padding:10px 16px 0;max-width:1100px;margin:0 auto;}
+  nav.tabs button{
+    flex:1;border-radius:12px 12px 0 0;background:#E9E5DC;color:#777;font-weight:700;min-height:46px;
+  }
+  nav.tabs button.active{background:var(--accent);color:#fff;}
+  main{max-width:1100px;margin:0 auto;padding:12px 16px 80px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:16px;margin-bottom:16px;}
+  .card h2{font-size:1.02rem;margin:0 0 10px;color:var(--accent-dark);}
+  /* ===== buttons ===== */
+  button{
+    font-family:inherit;font-size:.95rem;cursor:pointer;
+    border:none;border-radius:12px;padding:12px 16px;
+    background:#EFECE5;color:var(--ink);font-weight:600;min-height:44px;
+    transition:filter .15s, transform .05s;
+  }
+  button:hover{filter:brightness(.96);}
+  button:active{transform:scale(.97);}
+  button.primary{background:var(--accent);color:#fff;}
+  button.primary:hover{background:var(--accent-dark);filter:none;}
+  button.ghost{background:transparent;border:1.5px solid var(--line);}
+  button.danger{background:#FBEAE7;color:var(--danger);}
+  button.mini{min-height:32px;padding:4px 8px;font-size:.8rem;border-radius:8px;}
+  button.small{min-height:38px;padding:6px 12px;font-size:.85rem;}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .toolbar .spacer{flex:1;}
+  /* ===== meta inputs ===== */
+  .meta-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  @media(min-width:640px){ .meta-grid{grid-template-columns:2fr 1fr 1fr 2fr;} }
+  .field label{display:block;font-size:.78rem;color:var(--sub);font-weight:700;margin-bottom:4px;letter-spacing:.05em;}
+  .field input, input.txt, select.txt, textarea.txt{
+    width:100%;font-family:inherit;font-size:1rem;
+    padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;
+    background:#FCFBF8;color:var(--ink);
+  }
+  textarea.txt{min-height:120px;resize:vertical;line-height:1.7;}
+  .field input:focus,input.txt:focus,textarea.txt:focus{outline:2px solid var(--accent);border-color:var(--accent);}
+  #inpTitle{font-size:1.1rem;font-weight:700;}
+  /* ===== segment ===== */
+  .seg{display:inline-flex;background:#EFECE5;border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap;}
+  .seg button{min-height:36px;padding:6px 12px;font-size:.85rem;background:transparent;color:#777;border-radius:9px;}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .seg button.on.child{background:var(--child);}
+  .lbl{font-size:.8rem;color:var(--sub);font-weight:700;}
+  /* ===== table ===== */
+  .table-scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+  table.rubric{border-collapse:collapse;width:100%;min-width:620px;table-layout:fixed;}
+  table.rubric th,table.rubric td{border:1.5px solid var(--line);vertical-align:top;padding:0;}
+  table.rubric thead th{background:rgba(22,160,133,.09);}
+  table.rubric th.col-kanten{width:180px;background:#F3F1EA;}
+  .th-inner{display:flex;align-items:center;gap:4px;padding:8px;}
+  .level-name{flex:1;min-width:40px;font-weight:700;text-align:center;padding:6px;border-radius:8px;outline:none;}
+  .level-name:focus{background:#fff;box-shadow:0 0 0 2px var(--accent);}
+  .btn-delcol{background:transparent;border:none;color:#B9B4A8;min-height:28px;padding:2px 6px;border-radius:8px;font-size:.9rem;line-height:1;}
+  .btn-delcol:hover{color:var(--danger);background:#FBEAE7;}
+  .layer-tag{display:block;font-size:.66rem;font-weight:800;letter-spacing:.05em;padding:4px 10px 0;color:var(--accent-dark);}
+  .layer-tag.child{color:var(--child);}
+  td.cell .cell-edit{min-height:84px;padding:10px;outline:none;white-space:pre-wrap;word-break:break-word;font-size:.92rem;}
+  td.cell.both .cell-edit{min-height:60px;padding-top:4px;}
+  td.cell .cell-edit.child{background:var(--child-soft);}
+  td.cell .cell-edit:focus{box-shadow:inset 0 0 0 2px var(--accent);border-radius:4px;}
+  td.cell .cell-edit.child:focus{box-shadow:inset 0 0 0 2px var(--child);}
+  td.cell .cell-edit:empty::before{content:"タップして入力（見取りの言葉）";color:#C8C3B7;}
+  td.cell .cell-edit.child:empty::before{content:"タップして入力（子どもが次にやること）";color:#D9B98F;}
+  td.kanten{background:#FCFBF8;}
+  .kanten-inner{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:100px;}
+  .kanten-top{display:flex;gap:6px;align-items:flex-start;}
+  .btn-emoji{min-height:36px;min-width:36px;padding:0;font-size:1.15rem;background:#F1EEE7;border-radius:10px;flex:none;}
+  .kanten-name{flex:1;font-weight:700;outline:none;padding:6px;border-radius:8px;min-height:36px;font-size:.95rem;}
+  .kanten-name:focus{background:#fff;box-shadow:0 0 0 2px var(--accent);}
+  .kanten-name:empty::before{content:"観点名";color:#C8C3B7;font-weight:400;}
+  .row-ctrls{display:flex;gap:4px;margin-top:auto;}
+  .row-ctrls button{min-height:30px;min-width:34px;padding:2px 6px;font-size:.85rem;background:#EFECE5;border-radius:8px;color:#7A7568;}
+  .row-ctrls button:disabled{opacity:.3;cursor:default;}
+  .row-ctrls button.del:hover{color:var(--danger);background:#FBEAE7;}
+  .table-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .preset-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;}
+  .chip{background:#F1EEE7;border-radius:999px;padding:8px 14px;min-height:38px;font-size:.85rem;}
+  .chip:hover{background:rgba(22,160,133,.15);}
+  .chip.on{background:var(--accent);color:#fff;}
+  .opt-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+  .switch{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:.9rem;font-weight:600;}
+  .switch input{display:none;}
+  .switch .knob{width:46px;height:26px;border-radius:999px;background:#DAD6CC;position:relative;transition:background .2s;flex:none;}
+  .switch .knob::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .switch input:checked + .knob{background:var(--accent);}
+  .switch input:checked + .knob::after{left:23px;}
+  /* ===== emoji popover ===== */
+  #emojiPop{position:absolute;z-index:100;background:#fff;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:10px;display:none;grid-template-columns:repeat(6,44px);gap:4px;}
+  #emojiPop.open{display:grid;}
+  #emojiPop button{min-height:44px;min-width:44px;padding:0;font-size:1.3rem;background:transparent;border-radius:10px;}
+  #emojiPop button:hover{background:#F1EEE7;}
+  #emojiPop button.none{font-size:.75rem;color:var(--sub);}
+  /* ===== modal ===== */
+  #overlay{position:fixed;inset:0;background:rgba(40,38,32,.45);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;}
+  #overlay.open{display:flex;}
+  #modal{background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:100%;max-width:600px;padding:20px;margin-top:4vh;}
+  #modal h2{margin:0 0 4px;font-size:1.1rem;}
+  #modal h3{margin:16px 0 6px;font-size:.95rem;color:var(--accent-dark);}
+  #modal .modal-sub{font-size:.85rem;color:var(--sub);margin:0 0 14px;}
+  .tpl-item,.doc-item{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;}
+  .tpl-item{cursor:pointer;transition:border-color .15s,background .15s;}
+  .tpl-item:hover{border-color:var(--accent);background:rgba(22,160,133,.05);}
+  .tpl-emoji{font-size:1.6rem;flex:none;}
+  .tpl-body{flex:1;min-width:0;}
+  .tpl-body .t{font-weight:700;}
+  .tpl-body .d{font-size:.8rem;color:var(--sub);}
+  .tag{display:inline-block;font-size:.7rem;font-weight:700;border-radius:6px;padding:0 6px;margin-right:4px;background:#E6F4F1;color:var(--accent-dark);}
+  .tag.g{background:#EEF0FA;color:#4A56A0;}
+  .tag.u{background:#F4F1EA;color:#7A7568;}
+  .doc-btns{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
+  .doc-btns button{min-height:38px;padding:6px 10px;font-size:.82rem;border-radius:10px;}
+  .modal-close-row{display:flex;justify-content:flex-end;margin-top:8px;}
+  .empty-note{color:var(--sub);text-align:center;padding:24px 0;font-size:.9rem;}
+  .list-filter{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+  /* ===== toast ===== */
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:12px 22px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:300;max-width:88vw;text-align:center;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .hint{font-size:.78rem;color:var(--sub);margin-top:8px;line-height:1.6;}
+  .save-state{font-size:.78rem;color:var(--sub);}
+  .msg{font-size:.82rem;font-weight:700;margin-top:8px;min-height:1.2em;}
+  .msg.ok{color:var(--accent-dark);} .msg.ng{color:var(--danger);}
+  .migrate-box{background:#FFF8E8;border:1.5px solid #F0E2BF;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;}
+  .io-area{min-height:100px;font-size:.75rem !important;line-height:1.5;font-family:ui-monospace,Menlo,monospace !important;}
+  /* ===== みとり ===== */
+  .ev-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .ev-bar select.txt{width:auto;min-width:120px;}
+  table.ev{border-collapse:collapse;width:100%;font-size:.88rem;}
+  table.ev th,table.ev td{border:1px solid var(--line);padding:0;text-align:center;}
+  table.ev thead th{background:#F3F1EA;padding:6px 6px;font-size:.78rem;min-width:84px;}
+  table.ev th.nm,table.ev td.nm{position:sticky;left:0;background:#fff;z-index:1;text-align:left;padding:6px 10px;white-space:nowrap;font-weight:700;min-width:96px;}
+  table.ev thead th.nm{background:#F3F1EA;z-index:2;}
+  .evc{width:100%;min-height:48px;border-radius:0;background:transparent;padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+  .evc .v{font-size:1.1rem;font-weight:800;line-height:1.1;}
+  .evc .o{font-size:.66rem;color:var(--sub);font-weight:700;}
+  .evc.empty .v{color:#D5D0C4;}
+  .evc.set{background:rgba(22,160,133,.1);}
+  .evc.set.self{background:var(--child-soft);}
+  .evc.gap{box-shadow:inset 0 0 0 2px #E05B4B;}
+  .diff-card{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .diff-card.marked{border-color:#E05B4B;background:#FFF8F6;}
+  .diff-card .who{font-weight:800;display:flex;align-items:center;gap:6px;}
+  .mark{background:#E05B4B;color:#fff;border-radius:6px;font-size:.7rem;padding:0 6px;}
+  .dl{font-size:.85rem;margin-top:4px;line-height:1.7;}
+  .dl .k{font-weight:800;font-size:.75rem;border-radius:6px;padding:0 6px;margin-right:4px;}
+  .dl .k.s{background:var(--child-soft);color:var(--selfhi);}
+  .dl .k.t{background:#EAF1FC;color:var(--teachhi);}
+  .roster-panel{border:1.5px dashed var(--line);border-radius:12px;padding:12px;margin-top:10px;}
+  .copy-preview{white-space:pre-wrap;background:#FAF8F4;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:.85rem;line-height:1.7;margin-top:10px;display:none;}
+  .hide-btn.on{background:var(--accent);color:#fff;}
+  /* ===================== PRINT ===================== */
+  #printArea{display:none;}
+  @page{size:A4 landscape;margin:12mm;}
+  @media print{
+    body{background:#fff;}
+    body > *:not(#printArea){display:none !important;}
+    #printArea{display:block;color:#000;}
+    .p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:4mm;border-bottom:2.5px solid #000;padding-bottom:2.5mm;}
+    .p-title{font-size:19pt;font-weight:700;margin:0;}
+    .p-kind{font-size:9pt;border:1pt solid #000;border-radius:3pt;padding:0 2mm;margin-left:3mm;vertical-align:middle;font-weight:400;}
+    .p-meta{font-size:10pt;margin-top:1mm;color:#222;}
+    .p-name{font-size:12pt;white-space:nowrap;flex:none;}
+    table.p-table{border-collapse:collapse;width:100%;table-layout:fixed;}
+    table.p-table th,table.p-table td{border:1.2pt solid #000;padding:2.2mm 2.5mm;vertical-align:top;font-size:10.5pt;line-height:1.55;word-break:break-word;}
+    table.p-table thead th{background:#EFEFEF;text-align:center;font-size:11.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    table.p-table th.pk{width:17%;}
+    table.p-table th.psc{width:13%;}
+    td.pkc{font-weight:700;background:#FAFAFA;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    td.pscc{text-align:center;color:#555;font-size:10.5pt;letter-spacing:.1em;}
+    .p-next{margin-top:2mm;border-top:.8pt dashed #777;padding-top:1mm;font-size:8pt;color:#333;}
+    .p-line{border-bottom:.8pt solid #888;height:6.5mm;}
+    tr{page-break-inside:avoid;}
+    .p-foot{margin-top:3mm;font-size:8.5pt;color:#666;text-align:right;}
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>📋 ルーブリックメーカー<span class="pro-badge">PRO</span></h1>
+</header>
+
+<nav class="tabs">
+  <button id="tabMake" class="active">つくる</button>
+  <button id="tabEval">みとり</button>
+  <button id="tabSettings">せってい</button>
+</nav>
+
+<main>
+  <!-- ================= つくる ================= -->
+  <section class="view active" id="viewMake">
+    <div class="card">
+      <div class="toolbar">
+        <button class="primary" id="btnSave">💾 保存</button>
+        <button id="btnList">📚 保存一覧</button>
+        <button id="btnTpl">📦 テンプレート</button>
+        <button id="btnNew">🆕 新規作成</button>
+        <button id="btnShare">🔗 学年で共有</button>
+        <span class="spacer"></span>
+        <span class="save-state" id="saveState"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="meta-grid">
+        <div class="field"><label for="inpTitle">タイトル</label><input id="inpTitle" type="text" placeholder="例：スピーチ発表 評価表"></div>
+        <div class="field"><label for="inpGrade">学年</label><input id="inpGrade" type="text" placeholder="例：3年"></div>
+        <div class="field"><label for="inpSubject">教科</label><input id="inpSubject" type="text" placeholder="例：国語"></div>
+        <div class="field"><label for="inpUnit">単元・メモ</label><input id="inpUnit" type="text" placeholder="例：「わたしの町のじまん」発表会"></div>
+      </div>
+      <p class="hint">教科・学年・単元は、保存一覧での絞り込みと検索に使われます。</p>
+    </div>
+
+    <div class="card">
+      <div class="preset-row">
+        <span class="lbl">段階プリセット：</span>
+        <button class="chip" data-preset="A,B,C">A / B / C</button>
+        <button class="chip" data-preset="S,A,B,C">S / A / B / C</button>
+        <button class="chip" data-preset="◎,○,△">◎ / ○ / △</button>
+        <button class="chip" data-preset="よくできた,できた,もうすこし">よくできた / できた / もうすこし</button>
+      </div>
+      <div class="preset-row">
+        <span class="lbl">表示する欄：</span>
+        <div class="seg" id="layerSeg">
+          <button data-l="teacher" class="on">👩‍🏫 教師用</button>
+          <button data-l="child" class="child">🧒 子ども用</button>
+          <button data-l="both">両方ならべる</button>
+        </div>
+      </div>
+      <div class="table-scroller">
+        <table class="rubric" id="rubricTable"></table>
+      </div>
+      <div class="table-foot">
+        <button id="btnAddRow">＋ 観点（行）を追加</button>
+        <button id="btnAddCol">＋ 段階（列）を追加</button>
+      </div>
+      <p class="hint">セルをタップすると直接編集できます。各マスには「教師用（見取りの言葉）」と「子ども用（次にやること）」の2つの欄があります。子ども用は、Cの欄から書くのがおすすめです。</p>
+    </div>
+
+    <div class="card">
+      <div class="opt-row" style="margin-bottom:14px;">
+        <label class="switch"><input type="checkbox" id="optName"><span class="knob"></span>名前記入欄（なまえ＿＿＿）</label>
+        <label class="switch"><input type="checkbox" id="optSelf"><span class="knob"></span>自己評価チェック列</label>
+      </div>
+      <div class="toolbar">
+        <button class="primary" id="btnPrintT">🖨 教師用で印刷（A4横）</button>
+        <button class="primary" id="btnPrintC" style="background:var(--child);">🖨 子ども用で印刷（A4横）</button>
+        <button id="btnMd">📋 Markdownをコピー</button>
+      </div>
+      <p class="hint">子ども用で刷ると、子ども用の欄の言葉が並び、各段階の下に「わたしの次の一歩」を書く欄（2行）が付きます。子ども用の欄が空のマスは空白で刷られます。</p>
+    </div>
+  </section>
+
+  <!-- ================= みとり ================= -->
+  <section class="view" id="viewEval">
+    <div class="card" id="evNeedSave" style="display:none;">
+      <h2>まず、このルーブリックを保存してください</h2>
+      <p class="hint">評価の記録は、保存したルーブリックごとに残ります。</p>
+      <button class="primary" id="btnSaveForEval" style="margin-top:8px;">💾 保存してはじめる</button>
+    </div>
+
+    <div id="evMain">
+      <div class="card">
+        <h2 id="evTitle"></h2>
+        <div class="ev-bar">
+          <span class="lbl">名簿</span>
+          <select class="txt" id="rosterSel"></select>
+          <button class="small" id="btnRosterEdit">✏️ 名簿を編集</button>
+          <button class="small" id="btnRosterNew">＋ 新しい名簿</button>
+        </div>
+        <div class="roster-panel" id="rosterPanel" style="display:none;">
+          <div class="field" style="margin-bottom:8px;"><label for="rosterName">名簿の名前</label><input id="rosterName" type="text" maxlength="20" placeholder="例：3年2組"></div>
+          <textarea class="txt" id="rosterText" placeholder="1行に1名&#10;あおき たろう&#10;いしだ はなこ"></textarea>
+          <div class="toolbar" style="margin-top:8px;">
+            <button class="primary small" id="btnRosterApply">名簿を反映</button>
+            <button class="small" id="btnRosterClose">とじる</button>
+            <span class="spacer"></span>
+            <button class="danger small" id="btnRosterDel">この名簿を削除</button>
+          </div>
+          <p class="hint">同じ名前の子は、これまでの評価記録を引き継ぎます。名簿は、ほかのルーブリックでも使い回せます。</p>
+        </div>
+        <div class="ev-bar" style="margin-top:12px;">
+          <span class="lbl">回</span>
+          <select class="txt" id="roundSel"></select>
+          <button class="small" id="btnRoundAdd">＋ 回を追加</button>
+          <button class="small danger" id="btnRoundDel">この回を削除</button>
+          <span class="spacer" style="flex:1"></span>
+          <button class="small hide-btn" id="hideBtn">👁 かくす</button>
+        </div>
+        <p class="hint">中間・最終など、評価を何回かに分けて残せます（例：1回目＝練習のあと、2回目＝発表のあと）。</p>
+      </div>
+
+      <div class="card">
+        <div class="ev-bar" style="margin-bottom:10px;">
+          <div class="seg" id="evModeSeg">
+            <button data-m="self" class="on child">🧒 子どもの自己評価</button>
+            <button data-m="teacher">👩‍🏫 先生の見取り</button>
+          </div>
+        </div>
+        <div class="table-scroller"><table class="ev" id="evTable"></table></div>
+        <p class="hint">マスをタップするたびに段階が変わります（A→B→C→空→A…）。小さな文字は、もう一方の評価です。赤い枠は、ずれが大きいマスです。<br>おすすめの順番：子どもの自己評価を先に入れて、先生の見取りはそのあとで。</p>
+      </div>
+
+      <div class="card">
+        <div class="ev-bar" style="justify-content:space-between;">
+          <h2 style="margin:0;">🔍 ずれ一覧</h2>
+          <label class="switch"><input type="checkbox" id="optMarkedOnly"><span class="knob"></span>印の子だけ</label>
+        </div>
+        <p class="hint" id="diffNote"></p>
+        <div id="diffList" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>📝 振り返り用にコピー</h2>
+        <div class="ev-bar">
+          <select class="txt" id="copySel"></select>
+          <button class="primary small" id="btnCopyRef">📋 振り返り用にコピー</button>
+        </div>
+        <div class="copy-preview" id="copyPreview"></div>
+        <p class="hint">個人面談や、子どもとの短い振り返りの前に手元に置くメモです。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= せってい ================= -->
+  <section class="view" id="viewSettings">
+    <div class="migrate-box" id="migrateBox" style="display:none;"></div>
+
+    <div class="card">
+      <h2>🔍 ずれ一覧の印</h2>
+      <div class="ev-bar">
+        <span class="lbl">ずれが</span>
+        <div class="seg" id="thSeg">
+          <button data-t="1">1段階</button><button data-t="2">2段階</button><button data-t="3">3段階</button>
+        </div>
+        <span class="lbl">以上の子に印を付ける</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📦 データの書き出し・読みこみ <span class="hint">全データ</span></h2>
+      <p class="hint" style="margin-bottom:8px;">「書き出す」を押すと、保存したルーブリック・名簿・評価記録のすべてが一つの文字列になります。自分あてにメールしておけば、端末を替えたときや年度末の保管に使えます。</p>
+      <div class="toolbar">
+        <button class="ghost small" id="exportBtn">⬆️ 書き出す</button>
+        <button class="small" id="copyJsonBtn">📋 コピー</button>
+      </div>
+      <textarea class="txt io-area" id="ioArea" spellcheck="false" placeholder="ここに書き出したデータが出ます／ここに貼りつけて読みこむ" style="margin-top:10px;"></textarea>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="primary small" id="importAddBtn">⬇️ 追加で読みこむ</button>
+        <button class="danger small" id="importOverBtn">⬇️ 上書きで読みこむ</button>
+      </div>
+      <p class="msg" id="ioMsg"></p>
+      <p class="hint">「追加」はいまのデータを残したまま足します。「上書き」はいまのデータをすべて置き換えます（2回押すと実行）。<br>記録はすべてこの端末（ブラウザ）の中にだけ保存されます。外部に送信されることはありません。</p>
+    </div>
+  </section>
+</main>
+
+<div id="emojiPop"></div>
+<div id="overlay"><div id="modal"></div></div>
+<div id="printArea"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+(function(){
+
+  /* ================= storage ================= */
+  var STORE    = "bo10pro_rubric_v1";
+  var LS_DOCS  = "bo10_rubric_docs";   // 無料版（読むだけ・消さない）
+  var LS_DRAFT = "bo10_rubric_draft";  // 無料版（読むだけ・消さない）
+  var SHARE_PREFIX = "RUBRIC1-";
+
+  var EMOJIS = ["🎤","📖","✏️","📝","🔍","🧪","📊","💬","🗣️","👂","🤝","💡","🎨","🎵","🏃","⭐","🌟","😊","👍","🙌","🧠","📚","🖐","❤️"];
+
+  var state = null;          // 編集中のルーブリック（下書き）
+  var emojiTargetRow = -1;
+
+  function uid(){ return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function lsGet(key){
+    try{ var raw = localStorage.getItem(key); return raw === null ? null : JSON.parse(raw); }catch(e){ return null; }
+  }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  function blankRow(n){ var cells=[]; for(var i=0;i<n;i++) cells.push({teacher:"", child:""}); return {id:uid(), emoji:"", name:"", cells:cells}; }
+  function blankState(){
+    return {id:null, title:"", grade:"", subject:"", unit:"", levels:["A","B","C"],
+            rows:[blankRow(3), blankRow(3), blankRow(3)], options:{showName:true, showSelf:true}, rosterId:null};
+  }
+
+  /* ================= templates（Cの欄は無料版と同じ「採点表」の書き方のまま） ================= */
+  var TEMPLATES = [
+    {
+      emoji:"🎤", name:"スピーチ発表", desc:"声・内容・話し方・聞く態度の4観点",
+      data:{
+        title:"スピーチ発表 評価表", grade:"", subject:"国語", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🎤", name:"声の大きさ", cells:[
+            "教室のすみまで聞こえる声で、はっきりと話すことができる",
+            "近くの人に聞こえる声で話すことができる",
+            "声が小さく、聞き取りにくいところがある"]},
+          {emoji:"📝", name:"内容", cells:[
+            "伝えたいことがはっきりしていて、理由や例を入れて話すことができる",
+            "伝えたいことを順序よく話すことができる",
+            "伝えたいことがまとまっていない"]},
+          {emoji:"👀", name:"話し方・態度", cells:[
+            "聞き手のほうを見て、姿勢よく堂々と話すことができる",
+            "ときどき聞き手のほうを見て話すことができる",
+            "原稿や下ばかり見て話している"]},
+          {emoji:"👂", name:"聞く態度", cells:[
+            "友だちの発表を最後まで聞き、感想や質問を伝えることができる",
+            "友だちの発表を静かに聞くことができる",
+            "発表を聞いていないときがある"]}
+        ]
+      }
+    },
+    {
+      emoji:"📖", name:"音読", desc:"声・正確さ・工夫・姿勢の4観点",
+      data:{
+        title:"音読 評価表", grade:"", subject:"国語", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🔊", name:"声の大きさ・はっきりさ", cells:[
+            "教室全体に届く声で、一音一音はっきり読むことができる",
+            "聞き取れる声の大きさで読むことができる",
+            "声が小さく、聞き取りにくい"]},
+          {emoji:"📖", name:"正確さ", cells:[
+            "言葉のまとまりに気をつけて、すらすらと正しく読むことができる",
+            "少しつかえるところはあるが、正しく読むことができる",
+            "読みまちがいやとばし読みが多い"]},
+          {emoji:"🎭", name:"読み方の工夫", cells:[
+            "場面の様子や気持ちに合わせて、速さや強さを工夫して読むことができる",
+            "句読点に気をつけて、間をとって読むことができる",
+            "同じ調子のまま読んでいる"]},
+          {emoji:"🧍", name:"姿勢・持ち方", cells:[
+            "背すじをのばし、本を正しく持って最後まで読むことができる",
+            "正しい姿勢を意識して読むことができる",
+            "姿勢がくずれたまま読んでいる"]}
+        ]
+      }
+    },
+    {
+      emoji:"✏️", name:"ノートづくり", desc:"ていねいさ・見やすさ・自分の考えの3観点＋基本",
+      data:{
+        title:"ノートづくり 評価表", grade:"", subject:"", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"✏️", name:"文字のていねいさ", cells:[
+            "とめ・はね・はらいに気をつけて、ていねいな文字で書くことができる",
+            "読みやすい文字で書くことができる",
+            "文字が乱れていて読みにくい"]},
+          {emoji:"📐", name:"見やすさ（見出し・線）", cells:[
+            "見出しや色分け、定規の線を使って、あとで見返しやすくまとめることができる",
+            "行やマスをそろえて書くことができる",
+            "つめこみすぎていて、どこに何があるかわかりにくい"]},
+          {emoji:"💡", name:"自分の考え", cells:[
+            "気づいたこと・考えたこと・ぎもんを自分の言葉で書き加えることができる",
+            "先生や友だちの考えをメモすることができる",
+            "板書を写すだけになっている"]},
+          {emoji:"📅", name:"日付・ページ", cells:[
+            "毎時間、日付・ページ・めあてをそろえて書くことができる",
+            "日付やめあてをだいたい書くことができる",
+            "日付やめあてが書かれていないことが多い"]}
+        ]
+      }
+    },
+    {
+      emoji:"🔍", name:"自由研究", desc:"課題・調べ方・まとめ方・考察の4観点",
+      data:{
+        title:"自由研究 評価表", grade:"", subject:"理科", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🔍", name:"課題の設定", cells:[
+            "身のまわりのふしぎから、自分で調べたい課題を見つけることができる",
+            "興味のあることから課題を決めることができる",
+            "課題がはっきりしないまま進めている"]},
+          {emoji:"🧪", name:"調べ方", cells:[
+            "予想を立て、実験や観察の方法を工夫して、くり返し確かめることができる",
+            "本やインターネット、実験などで調べることができる",
+            "調べた方法や回数が少なく、たしかめが足りない"]},
+          {emoji:"📊", name:"まとめ方", cells:[
+            "表・グラフ・写真・図を使って、見る人に伝わるようにまとめることができる",
+            "調べたことを順序よくまとめることができる",
+            "調べたことがばらばらで、まとまっていない"]},
+          {emoji:"💬", name:"考察・ふり返り", cells:[
+            "結果からわかったことと、新しいぎもんや次に調べたいことを書くことができる",
+            "結果からわかったことを書くことができる",
+            "結果を書いただけで、わかったことがない"]}
+        ]
+      }
+    },
+    {
+      emoji:"🗣️", name:"話し合い活動", desc:"発言・聞き方・つなげ方・協力の4観点",
+      data:{
+        title:"話し合い活動 評価表", grade:"", subject:"", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🗣️", name:"自分の考えを話す", cells:[
+            "理由をつけて、自分の考えをわかりやすく話すことができる",
+            "自分の考えを話すことができる",
+            "自分から考えを話すことができない"]},
+          {emoji:"👂", name:"友だちの話を聞く", cells:[
+            "話す人のほうを見て、うなずきながら最後まで聞くことができる",
+            "友だちの話を静かに聞くことができる",
+            "話の途中で口をはさんだり、よそ見をしたりする"]},
+          {emoji:"🔗", name:"考えをつなげる", cells:[
+            "「〜さんに付け足して」「〜とちがって」など、友だちの考えとつなげて話すことができる",
+            "友だちの考えに賛成・反対を伝えることができる",
+            "自分の考えを言うだけになっている"]},
+          {emoji:"🤝", name:"協力してまとめる", cells:[
+            "みんなの考えのよいところを合わせて、グループの考えをまとめることができる",
+            "グループの話し合いに参加してまとめに協力できる",
+            "話し合いに参加できていない"]}
+        ]
+      }
+    }
+  ];
+
+  function normCell(c){
+    if(typeof c === "string") return {teacher:c, child:""};           // 無料版の文字列セル → 教師用へ
+    if(c && typeof c === "object") return {teacher:String(c.teacher||""), child:String(c.child||"")};
+    return {teacher:"", child:""};
+  }
+  function normalize(d){
+    var b = blankState();
+    if(!d || !Array.isArray(d.levels) || !Array.isArray(d.rows)) return b;
+    b.id = d.id || null;
+    b.title = d.title || ""; b.grade = d.grade || "";
+    b.subject = d.subject || ""; b.unit = d.unit || "";
+    b.levels = d.levels.map(String).slice(0,6);
+    if(b.levels.length < 2) b.levels = ["A","B","C"];
+    b.rows = d.rows.map(function(r){
+      r = r || {};
+      var cells = Array.isArray(r.cells) ? r.cells.map(normCell) : [];
+      while(cells.length < b.levels.length) cells.push({teacher:"", child:""});
+      cells.length = b.levels.length;
+      return {id: r.id || uid(), emoji: r.emoji || "", name: r.name || "", cells: cells};
+    });
+    if(b.rows.length < 1) b.rows = [blankRow(b.levels.length)];
+    b.options = {showName: !d.options || d.options.showName !== false, showSelf: !d.options || d.options.showSelf !== false};
+    b.rosterId = d.rosterId || null;
+    if(d.updatedAt) b.updatedAt = d.updatedAt;
+    return b;
+  }
+  function normalizeDB(p){
+    var db = {docs:[], draft:null, rosters:[], records:{}, settings:{threshold:2, layer:"teacher", hidden:false}};
+    if(!p || typeof p !== "object") return db;
+    if(Array.isArray(p.docs)) db.docs = p.docs.filter(function(d){ return d && d.id; }).map(normalize);
+    if(p.draft) db.draft = normalize(p.draft);
+    if(Array.isArray(p.rosters)) db.rosters = p.rosters.filter(function(r){ return r && r.id; }).map(function(r){
+      return {id:r.id, name:String(r.name||"名簿"), students:(Array.isArray(r.students)?r.students:[]).filter(function(s){ return s && s.id; }).map(function(s){ return {id:s.id, name:String(s.name||"")}; })};
+    });
+    if(p.records && typeof p.records === "object") db.records = p.records;
+    if(p.settings && typeof p.settings === "object"){
+      var t = +p.settings.threshold; if(t>=1 && t<=3) db.settings.threshold = t;
+      if(["teacher","child","both"].indexOf(p.settings.layer) >= 0) db.settings.layer = p.settings.layer;
+      db.settings.hidden = !!p.settings.hidden;
+    }
+    return db;
+  }
+
+  var migrated = 0;
+  var DB = lsGet(STORE);
+  if(!DB || typeof DB !== "object" || !Array.isArray(DB.docs)){
+    // 初回起動：無料版の保存一覧と下書きを読みこむ（無料版のキーは消さない）
+    var fDocs = lsGet(LS_DOCS), fDraft = lsGet(LS_DRAFT);
+    DB = {docs:[], draft:null};
+    if(Array.isArray(fDocs)){ DB.docs = fDocs.filter(function(d){ return d && Array.isArray(d.levels) && Array.isArray(d.rows); }).map(function(d){ var x = clone(d); if(!x.id) x.id = uid(); return x; }); }
+    if(fDraft && Array.isArray(fDraft.levels) && Array.isArray(fDraft.rows)) DB.draft = fDraft;
+    migrated = DB.docs.length + (DB.draft ? 1 : 0);
+  }
+  DB = normalizeDB(DB);
+  function save(){
+    DB.draft = state;
+    try{ localStorage.setItem(STORE, JSON.stringify(DB)); return true; }
+    catch(e){ toast("保存できませんでした（容量オーバーの可能性）"); return false; }
+  }
+
+  /* ================= dom refs ================= */
+  var $ = function(id){ return document.getElementById(id); };
+  var tableEl = $("rubricTable"), overlay = $("overlay"), modal = $("modal"), emojiPop = $("emojiPop");
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function setMsg(el, text, ok){ el.textContent = text; el.className = "msg " + (ok ? "ok" : "ng"); }
+  function arm(btn, label, fn){
+    if(btn.dataset.armed === "1"){ btn.dataset.armed = ""; fn(); return; }
+    var orig = btn.textContent; btn.dataset.armed = "1"; btn.textContent = label;
+    setTimeout(function(){ if(btn.isConnected && btn.dataset.armed === "1"){ btn.dataset.armed = ""; btn.textContent = orig; } }, 2800);
+  }
+  function copyText(text, okMsg){
+    function fallback(){
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+      document.body.appendChild(ta); ta.select(); var ok = false;
+      try{ ok = document.execCommand("copy"); }catch(e){}
+      document.body.removeChild(ta); toast(ok ? okMsg : "コピーできませんでした");
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ toast(okMsg); }).catch(fallback); }
+    else fallback();
+  }
+
+  /* ================= render: meta ================= */
+  function renderMeta(){
+    $("inpTitle").value = state.title; $("inpGrade").value = state.grade;
+    $("inpSubject").value = state.subject; $("inpUnit").value = state.unit;
+    $("optName").checked = state.options.showName; $("optSelf").checked = state.options.showSelf;
+  }
+  function updateSaveState(){
+    $("saveState").textContent = state.id ? "保存済みルーブリックを編集中（自動下書きあり）" : "未保存（下書きは自動保存中）";
+  }
+
+  /* ================= render: table ================= */
+  function cellEditor(ri, ci, layer, text){
+    return '<div class="cell-edit'+(layer==="child"?" child":"")+'" contenteditable="true" data-row="'+ri+'" data-col="'+ci+'" data-layer="'+layer+'" spellcheck="false">'+esc(text)+"</div>";
+  }
+  function renderTable(){
+    var layer = DB.settings.layer, h = "<thead><tr>";
+    h += '<th class="col-kanten"><div class="th-inner" style="justify-content:center;font-weight:700;">観点</div></th>';
+    state.levels.forEach(function(lv, ci){
+      h += '<th><div class="th-inner"><div class="level-name" contenteditable="true" data-level="'+ci+'" spellcheck="false">'+esc(lv)+'</div>' +
+        (state.levels.length > 2 ? '<button class="btn-delcol" data-delcol="'+ci+'" title="この列を削除" aria-label="列を削除">✕</button>' : '') + "</div></th>";
+    });
+    h += "</tr></thead><tbody>";
+    state.rows.forEach(function(row, ri){
+      h += "<tr>";
+      h += '<td class="kanten"><div class="kanten-inner"><div class="kanten-top">' +
+          '<button class="btn-emoji" data-emoji-row="'+ri+'" title="絵文字を選ぶ">'+(row.emoji ? esc(row.emoji) : "＋")+'</button>' +
+          '<div class="kanten-name" contenteditable="true" data-rowname="'+ri+'" spellcheck="false">'+esc(row.name)+'</div></div>' +
+        '<div class="row-ctrls">' +
+          '<button data-moveup="'+ri+'" title="上へ" '+(ri===0?"disabled":"")+'>▲</button>' +
+          '<button data-movedown="'+ri+'" title="下へ" '+(ri===state.rows.length-1?"disabled":"")+'>▼</button>' +
+          '<button class="del" data-delrow="'+ri+'" title="この行を削除" '+(state.rows.length<=1?"disabled":"")+'>✕</button>' +
+        "</div></div></td>";
+      row.cells.forEach(function(c, ci){
+        if(layer === "both"){
+          h += '<td class="cell both"><span class="layer-tag">教師用</span>'+cellEditor(ri,ci,"teacher",c.teacher)+
+               '<span class="layer-tag child" style="background:var(--child-soft);">子ども用</span>'+cellEditor(ri,ci,"child",c.child)+"</td>";
+        }else{
+          h += '<td class="cell">'+cellEditor(ri,ci,layer,c[layer])+"</td>";
+        }
+      });
+      h += "</tr>";
+    });
+    h += "</tbody>";
+    tableEl.innerHTML = h;
+    Array.prototype.forEach.call($("layerSeg").children, function(b){ b.classList.toggle("on", b.dataset.l === layer); });
+  }
+  function renderAll(){ renderMeta(); renderTable(); updateSaveState(); renderEval(); renderSettings(); }
+
+  /* ================= table events ================= */
+  var draftTimer = null;
+  function autosaveDraft(){ clearTimeout(draftTimer); draftTimer = setTimeout(function(){ save(); updateSaveState(); }, 300); }
+
+  tableEl.addEventListener("input", function(e){
+    var t = e.target;
+    if(t.dataset.row !== undefined && t.dataset.col !== undefined){
+      state.rows[+t.dataset.row].cells[+t.dataset.col][t.dataset.layer] = t.innerText.replace(/ /g," ");
+    }else if(t.dataset.rowname !== undefined){
+      state.rows[+t.dataset.rowname].name = t.innerText.replace(/\n/g," ").trim();
+    }else if(t.dataset.level !== undefined){
+      state.levels[+t.dataset.level] = t.innerText.replace(/\n/g," ").trim();
+    }
+    autosaveDraft();
+  });
+  tableEl.addEventListener("paste", function(e){
+    var t = e.target;
+    if(t.isContentEditable){ e.preventDefault(); document.execCommand("insertText", false, (e.clipboardData || window.clipboardData).getData("text/plain")); }
+  });
+  tableEl.addEventListener("keydown", function(e){
+    var t = e.target;
+    if(e.key === "Enter" && (t.dataset.rowname !== undefined || t.dataset.level !== undefined)){ e.preventDefault(); t.blur(); }
+  });
+  tableEl.addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if(!btn) return;
+    if(btn.dataset.emojiRow !== undefined){ openEmojiPop(+btn.dataset.emojiRow, btn); return; }
+    if(btn.dataset.delcol !== undefined){
+      var ci = +btn.dataset.delcol;
+      if(state.levels.length <= 2){ toast("段階は2つ以上必要です"); return; }
+      state.levels.splice(ci,1);
+      state.rows.forEach(function(r){ r.cells.splice(ci,1); });
+      shiftRecordsForDeletedLevel(ci);
+      renderTable(); autosaveDraft(); toast("列を削除しました");
+      return;
+    }
+    if(btn.dataset.delrow !== undefined){
+      if(state.rows.length <= 1) return;
+      var removed = state.rows.splice(+btn.dataset.delrow,1)[0];
+      renderTable(); autosaveDraft(); toast("「"+(removed.name || "観点")+"」の行を削除しました");
+      return;
+    }
+    if(btn.dataset.moveup !== undefined){
+      var i = +btn.dataset.moveup;
+      if(i > 0){ var tmp = state.rows[i-1]; state.rows[i-1] = state.rows[i]; state.rows[i] = tmp; renderTable(); autosaveDraft(); }
+      return;
+    }
+    if(btn.dataset.movedown !== undefined){
+      var j = +btn.dataset.movedown;
+      if(j < state.rows.length-1){ var tmp2 = state.rows[j+1]; state.rows[j+1] = state.rows[j]; state.rows[j] = tmp2; renderTable(); autosaveDraft(); }
+      return;
+    }
+  });
+  $("layerSeg").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    DB.settings.layer = b.dataset.l; save(); renderTable();
+  });
+
+  $("btnAddRow").addEventListener("click", function(){ state.rows.push(blankRow(state.levels.length)); renderTable(); autosaveDraft(); });
+  $("btnAddCol").addEventListener("click", function(){
+    if(state.levels.length >= 6){ toast("段階は最大6つまでです"); return; }
+    state.levels.push("新");
+    state.rows.forEach(function(r){ r.cells.push({teacher:"", child:""}); });
+    renderTable(); autosaveDraft();
+  });
+  document.querySelectorAll(".chip[data-preset]").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      var names = chip.dataset.preset.split(","), old = state.levels.length;
+      state.levels = names.slice();
+      state.rows.forEach(function(r){
+        while(r.cells.length < names.length) r.cells.push({teacher:"", child:""});
+        r.cells.length = names.length;
+      });
+      renderTable(); autosaveDraft();
+      toast("段階を「"+names.join(" / ")+"」にしました" + (old !== names.length ? "（列数が変わりました）" : ""));
+    });
+  });
+
+  [["inpTitle","title"],["inpGrade","grade"],["inpSubject","subject"],["inpUnit","unit"]].forEach(function(p){
+    $(p[0]).addEventListener("input", function(){ state[p[1]] = this.value; autosaveDraft(); });
+  });
+  $("optName").addEventListener("change", function(){ state.options.showName = this.checked; autosaveDraft(); });
+  $("optSelf").addEventListener("change", function(){ state.options.showSelf = this.checked; autosaveDraft(); });
+
+  /* ================= emoji popover ================= */
+  function buildEmojiPop(){
+    var h = '<button class="none" data-pick="">なし</button>';
+    EMOJIS.forEach(function(em){ h += '<button data-pick="'+em+'">'+em+"</button>"; });
+    emojiPop.innerHTML = h;
+  }
+  function openEmojiPop(rowIdx, anchor){
+    emojiTargetRow = rowIdx; emojiPop.classList.add("open");
+    var r = anchor.getBoundingClientRect(), popW = 300;
+    var left = Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - popW - 8);
+    emojiPop.style.left = Math.max(8, left) + "px";
+    emojiPop.style.top = (r.bottom + window.scrollY + 6) + "px";
+  }
+  function closeEmojiPop(){ emojiPop.classList.remove("open"); emojiTargetRow = -1; }
+  emojiPop.addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if(!btn) return;
+    if(emojiTargetRow >= 0 && state.rows[emojiTargetRow]){ state.rows[emojiTargetRow].emoji = btn.dataset.pick || ""; renderTable(); autosaveDraft(); }
+    closeEmojiPop();
+  });
+  document.addEventListener("click", function(e){
+    if(emojiPop.classList.contains("open") && !emojiPop.contains(e.target) && !e.target.closest(".btn-emoji")) closeEmojiPop();
+  });
+
+  /* ================= modal ================= */
+  function openModal(html){ modal.innerHTML = html; overlay.classList.add("open"); }
+  function closeModal(){ overlay.classList.remove("open"); modal.innerHTML = ""; }
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) closeModal(); });
+
+  $("btnTpl").addEventListener("click", function(){
+    var h = "<h2>📦 テンプレートから作る</h2><p class=\"modal-sub\">選ぶと今の内容が置きかわります（下書きは上書きされます）。子ども用の欄は空なので、Cの欄から書いてみてください。</p>";
+    TEMPLATES.forEach(function(t, i){
+      h += '<div class="tpl-item" data-tpl="'+i+'"><span class="tpl-emoji">'+t.emoji+'</span><div class="tpl-body"><div class="t">'+esc(t.name)+'</div><div class="d">'+esc(t.desc)+"</div></div></div>";
+    });
+    h += '<div class="modal-close-row"><button class="ghost" data-close="1">とじる</button></div>';
+    openModal(h);
+  });
+
+  /* ================= 保存一覧（教科で絞り込み・タイトル検索・更新日順） ================= */
+  var listSubject = "__all", listQuery = "";
+  function renderDocsModal(){
+    var docs = DB.docs.slice().sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
+    var subs = [];
+    docs.forEach(function(d){ var s = d.subject || "（教科なし）"; if(subs.indexOf(s) < 0) subs.push(s); });
+    if(listSubject !== "__all" && subs.indexOf(listSubject) < 0) listSubject = "__all";
+    var h = "<h2>📚 保存したルーブリック</h2><p class=\"modal-sub\">この端末（ブラウザ）に保存されています。新しく更新した順に並びます。</p>";
+    h += '<div class="list-filter"><input class="txt" id="listSearch" type="search" placeholder="タイトル・単元で検索" value="'+esc(listQuery)+'">';
+    h += '<div class="preset-row" style="margin:0;"><button class="chip'+(listSubject==="__all"?" on":"")+'" data-lsub="__all">すべて</button>';
+    subs.forEach(function(s){ h += '<button class="chip'+(listSubject===s?" on":"")+'" data-lsub="'+esc(s)+'">'+esc(s)+'</button>'; });
+    h += '</div></div><div id="docsBox">'+docsHtml(docs)+'</div>';
+    h += '<div class="modal-close-row"><button class="ghost" data-close="1">とじる</button></div>';
+    openModal(h);
+    $("listSearch").addEventListener("input", function(){ listQuery = this.value; $("docsBox").innerHTML = docsHtml(docs); });
+  }
+  function docsHtml(docs){
+    var q = listQuery.trim().toLowerCase();
+    var list = docs.filter(function(d){
+      if(listSubject !== "__all" && (d.subject || "（教科なし）") !== listSubject) return false;
+      if(q && ((d.title||"")+" "+(d.unit||"")).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    if(!DB.docs.length) return '<div class="empty-note">まだ保存されたルーブリックはありません。<br>「💾 保存」を押すとここに並びます。</div>';
+    if(!list.length) return '<div class="empty-note">条件に合うルーブリックがありません。</div>';
+    var h = "";
+    list.forEach(function(d){
+      var isCurrent = d.id === state.id;
+      h += '<div class="doc-item"><div class="tpl-body">' +
+        '<div class="t">'+esc(d.title || "無題")+(isCurrent ? ' <span style="color:var(--accent);font-size:.75rem;">（編集中）</span>' : "")+"</div>" +
+        '<div class="d">'+(d.subject?'<span class="tag">'+esc(d.subject)+'</span>':"")+(d.grade?'<span class="tag g">'+esc(d.grade)+'</span>':"")+(d.unit?'<span class="tag u">'+esc(d.unit)+'</span>':"")+
+        "観点" + d.rows.length + "・" + fmtDate(d.updatedAt) + "更新</div></div>" +
+        '<div class="doc-btns"><button class="primary" data-open="'+d.id+'">開く</button><button data-dup="'+d.id+'">複製</button><button class="danger" data-del="'+d.id+'">削除</button></div></div>';
+    });
+    return h;
+  }
+  $("btnList").addEventListener("click", renderDocsModal);
+
+  modal.addEventListener("click", function(e){
+    if(e.target.closest("[data-close]")){ closeModal(); return; }
+    var tpl = e.target.closest(".tpl-item");
+    if(tpl){
+      var t = TEMPLATES[+tpl.dataset.tpl], d = clone(t.data);
+      d.id = null; d.options = {showName: state.options.showName, showSelf: state.options.showSelf};
+      state = normalize(d);
+      renderAll(); autosaveDraft(); closeModal();
+      toast("テンプレート「"+t.name+"」を読み込みました");
+      return;
+    }
+    var btn = e.target.closest("button"); if(!btn) return;
+    if(btn.dataset.lsub !== undefined){ listSubject = btn.dataset.lsub; renderDocsModal(); return; }
+    if(btn.dataset.open !== undefined){
+      var doc = findDoc(btn.dataset.open);
+      if(doc){ state = normalize(clone(doc)); renderAll(); autosaveDraft(); closeModal(); toast("「"+(state.title||"無題")+"」を開きました"); }
+      return;
+    }
+    if(btn.dataset.dup !== undefined){
+      var src = findDoc(btn.dataset.dup);
+      if(src){
+        var copy = clone(src);
+        copy.id = uid(); copy.title = (copy.title || "無題") + "（コピー）"; copy.updatedAt = Date.now();
+        copy.rows.forEach(function(r){ r.id = uid(); }); // 評価記録は複製しない
+        DB.docs.unshift(copy); save(); renderDocsModal(); toast("複製しました");
+      }
+      return;
+    }
+    if(btn.dataset.del !== undefined){
+      var id = btn.dataset.del;
+      arm(btn, "本当に削除？", function(){
+        DB.docs = DB.docs.filter(function(x){ return x.id !== id; });
+        delete DB.records[id];
+        if(state.id === id){ state.id = null; }
+        save(); renderDocsModal(); updateSaveState(); renderEval(); toast("削除しました");
+      });
+      return;
+    }
+    if(btn.id === "btnShareCopy"){ copyText($("shareOut").value, "共有用の文字列をコピーしました"); return; }
+    if(btn.id === "btnShareImport"){ importShare($("shareIn").value); return; }
+  });
+  function findDoc(id){ for(var i=0;i<DB.docs.length;i++) if(DB.docs[i].id === id) return DB.docs[i]; return null; }
+
+  /* ================= save / new ================= */
+  function saveCurrent(){
+    if(!state.title){ state.title = "無題のルーブリック"; $("inpTitle").value = state.title; }
+    var snap = clone(state); snap.updatedAt = Date.now();
+    var existed = false;
+    if(state.id){
+      for(var i=0;i<DB.docs.length;i++) if(DB.docs[i].id === state.id){ DB.docs[i] = snap; existed = true; }
+    }else{ snap.id = state.id = uid(); }
+    if(!existed) DB.docs.unshift(snap);
+    state.updatedAt = snap.updatedAt;
+    save(); updateSaveState();
+    return existed;
+  }
+  $("btnSave").addEventListener("click", function(){ var up = saveCurrent(); toast((up ? "上書き保存しました：" : "保存しました：") + state.title); renderEval(); });
+  $("btnNew").addEventListener("click", function(){
+    var opts = {showName: state.options.showName, showSelf: state.options.showSelf};
+    state = blankState(); state.options = opts;
+    renderAll(); autosaveDraft(); toast("新しいルーブリックを作成しました");
+  });
+  function fmtDate(ts){
+    if(!ts) return "";
+    var d = new Date(ts);
+    return (d.getMonth()+1) + "/" + d.getDate() + " " + ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
+  }
+
+  /* ================= 共有（1ルーブリック・名簿と評価は含めない） ================= */
+  function b64enc(str){ return btoa(unescape(encodeURIComponent(str))); }
+  function b64dec(str){ return decodeURIComponent(escape(atob(str))); }
+  function shareString(doc){
+    var d = {title:doc.title, grade:doc.grade, subject:doc.subject, unit:doc.unit, levels:doc.levels,
+             rows:doc.rows.map(function(r){ return {emoji:r.emoji, name:r.name, cells:r.cells}; }), options:doc.options};
+    return SHARE_PREFIX + b64enc(JSON.stringify(d));
+  }
+  function importShare(raw){
+    raw = String(raw||"").replace(/\s+/g,"");
+    if(raw.indexOf(SHARE_PREFIX) !== 0){ toast("共有用の文字列ではないようです（RUBRIC1- ではじまる文字列を貼ってください）"); return; }
+    var d;
+    try{ d = JSON.parse(b64dec(raw.slice(SHARE_PREFIX.length))); }catch(e){ toast("文字列が途中で切れているか、こわれています"); return; }
+    if(!d || !Array.isArray(d.levels) || !Array.isArray(d.rows)){ toast("ルーブリックのデータが見つかりません"); return; }
+    d.id = null; d.rosterId = null;
+    d.rows.forEach(function(r){ r.id = null; });
+    state = normalize(d);
+    saveCurrent();
+    renderAll(); closeModal();
+    toast("「"+state.title+"」を読みこんで保存しました");
+  }
+  $("btnShare").addEventListener("click", function(){
+    var h = "<h2>🔗 学年で共有</h2><p class=\"modal-sub\">いま開いているルーブリックの表の中身だけを、文字列にします。名簿や評価の記録は含まれません。</p>";
+    h += "<h3>書き出す（送る側）</h3><textarea class=\"txt io-area\" id=\"shareOut\" readonly>"+esc(shareString(state))+"</textarea>";
+    h += '<div class="toolbar" style="margin-top:6px;"><button class="primary small" id="btnShareCopy">📋 コピー</button></div>';
+    h += "<h3>読みこむ（受け取る側）</h3><textarea class=\"txt io-area\" id=\"shareIn\" placeholder=\"RUBRIC1- ではじまる文字列を貼りつけ\"></textarea>";
+    h += '<div class="toolbar" style="margin-top:6px;"><button class="primary small" id="btnShareImport">⬇️ 読みこんで保存</button></div>';
+    h += '<p class="hint">読みこむと、新しいルーブリックとして保存一覧に追加されます（いまのルーブリックは消えません）。子ども用の欄は、クラスに合わせて書き換えてかまいません。</p>';
+    h += '<div class="modal-close-row"><button class="ghost" data-close="1">とじる</button></div>';
+    openModal(h);
+  });
+
+  /* ================= markdown ================= */
+  function mdEsc(s){ return String(s || "").replace(/\|/g,"｜").replace(/\r?\n+/g," / ").trim(); }
+  function buildMarkdown(){
+    var md = "# " + (state.title || "ルーブリック") + "\n\n";
+    var meta = [state.grade ? "学年: " + state.grade : "", state.subject ? "教科: " + state.subject : "", state.unit ? "単元: " + state.unit : ""].filter(Boolean).join("　");
+    if(meta) md += meta + "\n\n";
+    function table(layer){
+      var t = "| 観点 | " + state.levels.map(mdEsc).join(" | ") + " |\n|" + new Array(state.levels.length + 2).join(" --- |") + "\n";
+      state.rows.forEach(function(r){ t += "| " + (r.emoji ? r.emoji + " " : "") + mdEsc(r.name) + " | " + r.cells.map(function(c){ return mdEsc(c[layer]); }).join(" | ") + " |\n"; });
+      return t;
+    }
+    md += table("teacher");
+    var hasChild = state.rows.some(function(r){ return r.cells.some(function(c){ return c.child.trim(); }); });
+    if(hasChild) md += "\n## 子ども用（次にやること）\n\n" + table("child");
+    return md;
+  }
+  $("btnMd").addEventListener("click", function(){ copyText(buildMarkdown(), "Markdownをコピーしました（週案などに貼れます）"); });
+
+  /* ================= print ================= */
+  var printMode = "teacher";
+  function buildPrint(){
+    var child = printMode === "child", h = '<div class="p-head"><div><h2 class="p-title">' + esc(state.title || "ルーブリック評価表") +
+      '<span class="p-kind">'+(child ? "子ども用" : "教師用")+'</span></h2>';
+    var meta = [state.grade, state.subject, state.unit].filter(Boolean).join("　／　");
+    if(meta) h += '<div class="p-meta">' + esc(meta) + "</div>";
+    h += "</div>";
+    if(state.options.showName) h += '<div class="p-name">なまえ＿＿＿＿＿＿＿＿＿＿</div>';
+    h += '</div><table class="p-table"><thead><tr><th class="pk">観点</th>';
+    state.levels.forEach(function(lv){ h += "<th>" + esc(lv) + "</th>"; });
+    if(state.options.showSelf) h += '<th class="psc">自己評価</th>';
+    h += "</tr></thead><tbody>";
+    state.rows.forEach(function(r){
+      h += '<tr><td class="pkc">' + (r.emoji ? esc(r.emoji) + " " : "") + esc(r.name) + "</td>";
+      r.cells.forEach(function(c){
+        h += "<td>" + esc(child ? c.child : c.teacher).replace(/\n/g,"<br>");
+        if(child) h += '<div class="p-next">わたしの次の一歩<div class="p-line"></div><div class="p-line"></div></div>';
+        h += "</td>";
+      });
+      if(state.options.showSelf) h += '<td class="pscc">' + state.levels.map(esc).join(" ・ ") + "</td>";
+      h += "</tr>";
+    });
+    h += '</tbody></table><div class="p-foot">ルーブリックメーカー Pro で作成</div>';
+    $("printArea").innerHTML = h;
+  }
+  $("btnPrintT").addEventListener("click", function(){ printMode = "teacher"; buildPrint(); window.print(); });
+  $("btnPrintC").addEventListener("click", function(){ printMode = "child"; buildPrint(); window.print(); });
+  window.addEventListener("beforeprint", buildPrint);
+
+  /* ================= みとり：名簿 ================= */
+  function findRoster(id){ for(var i=0;i<DB.rosters.length;i++) if(DB.rosters[i].id === id) return DB.rosters[i]; return null; }
+  function curRoster(){
+    var r = findRoster(state.rosterId);
+    if(!r && DB.rosters.length){ r = DB.rosters[0]; state.rosterId = r.id; syncDocRoster(); }
+    return r;
+  }
+  function syncDocRoster(){ var d = findDoc(state.id); if(d) d.rosterId = state.rosterId; }
+  function renderRosterSel(){
+    var sel = $("rosterSel"), r = curRoster(), h = "";
+    if(!DB.rosters.length) h = '<option value="">（名簿がありません）</option>';
+    DB.rosters.forEach(function(x){ h += '<option value="'+x.id+'"'+(r && r.id===x.id?" selected":"")+'>'+esc(x.name)+'（'+x.students.length+'名）</option>'; });
+    sel.innerHTML = h;
+  }
+  $("rosterSel").addEventListener("change", function(){ state.rosterId = this.value || null; syncDocRoster(); save(); renderEval(); });
+  function openRosterPanel(r){
+    $("rosterPanel").style.display = "block";
+    $("rosterPanel").dataset.rid = r ? r.id : "";
+    $("rosterName").value = r ? r.name : "";
+    $("rosterText").value = r ? r.students.map(function(s){ return s.name; }).join("\n") : "";
+    $("btnRosterDel").style.display = r ? "" : "none";
+    $("rosterText").focus();
+  }
+  $("btnRosterEdit").addEventListener("click", function(){ var r = curRoster(); if(!r){ openRosterPanel(null); return; } openRosterPanel(r); });
+  $("btnRosterNew").addEventListener("click", function(){ openRosterPanel(null); });
+  $("btnRosterClose").addEventListener("click", function(){ $("rosterPanel").style.display = "none"; });
+  $("btnRosterApply").addEventListener("click", function(){
+    var lines = $("rosterText").value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
+    if(!lines.length){ toast("名簿が空です。1行に1名入力してください"); return; }
+    var rid = $("rosterPanel").dataset.rid, r = rid ? findRoster(rid) : null;
+    var name = $("rosterName").value.trim();
+    if(!r){ r = {id:uid(), name:name || ("名簿"+(DB.rosters.length+1)), students:[]}; DB.rosters.push(r); }
+    else if(name) r.name = name;
+    var byName = {}, used = {};
+    r.students.forEach(function(s){ if(!(s.name in byName)) byName[s.name] = s.id; });
+    r.students = lines.map(function(n){
+      var id = byName[n];
+      if(id && !used[id]){ used[id] = true; return {id:id, name:n}; }
+      return {id:uid(), name:n};
+    });
+    state.rosterId = r.id; syncDocRoster();
+    save(); $("rosterPanel").style.display = "none"; renderEval();
+    toast("「"+r.name+"」"+r.students.length+"名を反映しました");
+  });
+  $("btnRosterDel").addEventListener("click", function(){
+    var rid = $("rosterPanel").dataset.rid, r = findRoster(rid); if(!r) return;
+    arm(this, "記録ごと削除？", function(){
+      DB.rosters = DB.rosters.filter(function(x){ return x.id !== rid; });
+      Object.keys(DB.records).forEach(function(k){ if(DB.records[k]) delete DB.records[k][rid]; });
+      DB.docs.forEach(function(d){ if(d.rosterId === rid) d.rosterId = null; });
+      if(state.rosterId === rid) state.rosterId = null;
+      save(); $("rosterPanel").style.display = "none"; renderEval(); toast("名簿を削除しました");
+    });
+  });
+
+  /* ================= みとり：記録 =================
+     DB.records[rubricId][rosterId] = {cur:0, rounds:[{id, name, data:{studentId:{rowId:{self, teacher, at}}}}]}
+     self / teacher は段階の番号（0 = いちばん上の段階） */
+  var evMode = "self";
+  function recBox(create){
+    if(!state.id) return null;
+    var r = curRoster(); if(!r) return null;
+    if(!DB.records[state.id]){ if(!create) return null; DB.records[state.id] = {}; }
+    var box = DB.records[state.id][r.id];
+    if(!box || !Array.isArray(box.rounds) || !box.rounds.length){
+      if(!create) return null;
+      box = DB.records[state.id][r.id] = {cur:0, rounds:[{id:uid(), name:"1回目", data:{}}]};
+    }
+    if(!(box.cur >= 0 && box.cur < box.rounds.length)) box.cur = 0;
+    return box;
+  }
+  function curRound(create){ var b = recBox(create); return b ? b.rounds[b.cur] : null; }
+  function lvOK(v){ return typeof v === "number" && v >= 0 && v < state.levels.length; }
+  function getVal(round, sid, rid){
+    var s = round && round.data[sid] && round.data[sid][rid];
+    return {self: s && lvOK(s.self) ? s.self : null, teacher: s && lvOK(s.teacher) ? s.teacher : null};
+  }
+  function lvName(v){ return v == null ? "—" : (state.levels[v] || "—"); }
+  function shiftRecordsForDeletedLevel(ci){
+    if(!state.id || !DB.records[state.id]) return;
+    var byRoster = DB.records[state.id];
+    Object.keys(byRoster).forEach(function(rk){
+      (byRoster[rk].rounds || []).forEach(function(rd){
+        Object.keys(rd.data).forEach(function(sid){
+          Object.keys(rd.data[sid]).forEach(function(rid){
+            var c = rd.data[sid][rid];
+            ["self","teacher"].forEach(function(k){
+              if(typeof c[k] !== "number") return;
+              if(c[k] === ci) c[k] = null; else if(c[k] > ci) c[k]--;
+            });
+          });
+        });
+      });
+    });
+  }
+  function displayName(r, i){ return DB.settings.hidden ? (i+1)+"番" : r.students[i].name; }
+
+  function renderEval(){
+    var need = !state.id;
+    $("evNeedSave").style.display = need ? "" : "none";
+    $("evMain").style.display = need ? "none" : "";
+    if(need) return;
+    $("evTitle").textContent = "📋 " + (state.title || "無題") + (state.subject ? "（"+state.subject+"）" : "");
+    renderRosterSel();
+    $("hideBtn").classList.toggle("on", DB.settings.hidden);
+    $("hideBtn").textContent = DB.settings.hidden ? "👁 名前を出す" : "👁 かくす";
+    Array.prototype.forEach.call($("evModeSeg").children, function(b){ b.classList.toggle("on", b.dataset.m === evMode); });
+    var r = curRoster();
+    var box = recBox(!!r);
+    var rh = "";
+    if(box) box.rounds.forEach(function(rd, i){ rh += '<option value="'+i+'"'+(i===box.cur?" selected":"")+'>'+esc(rd.name)+'</option>'; });
+    $("roundSel").innerHTML = rh || '<option>—</option>';
+    $("btnRoundDel").style.display = (box && box.rounds.length > 1) ? "" : "none";
+    renderEvTable(r, box);
+    renderDiff(r, box);
+    renderCopySel(r);
+  }
+  function renderEvTable(r, box){
+    var t = $("evTable");
+    if(!r || !r.students.length){
+      t.innerHTML = '<tbody><tr><td style="padding:18px;color:#999;">「✏️ 名簿を編集」か「＋ 新しい名簿」で、名簿を貼りつけてください（1行に1名）。</td></tr></tbody>';
+      return;
+    }
+    var round = box.rounds[box.cur], th = DB.settings.threshold;
+    var h = '<thead><tr><th class="nm">名前</th>';
+    state.rows.forEach(function(row){ h += '<th>'+esc((row.emoji?row.emoji+" ":"")+(row.name||"観点"))+'</th>'; });
+    h += '</tr></thead><tbody>';
+    r.students.forEach(function(s, i){
+      h += '<tr><td class="nm">'+esc(displayName(r, i))+'</td>';
+      state.rows.forEach(function(row){
+        var v = getVal(round, s.id, row.id), mine = v[evMode], other = evMode === "self" ? v.teacher : v.self;
+        var gap = v.self != null && v.teacher != null && Math.abs(v.self - v.teacher) >= th;
+        h += '<td><button class="evc '+(mine==null?"empty":"set "+evMode)+(gap?" gap":"")+'" data-sid="'+s.id+'" data-rid="'+row.id+'">'+
+             '<span class="v">'+(mine==null?"・":esc(lvName(mine)))+'</span>'+
+             '<span class="o">'+(other==null?"":(evMode==="self"?"先":"自")+" "+esc(lvName(other)))+'</span></button></td>';
+      });
+      h += '</tr>';
+    });
+    t.innerHTML = h + '</tbody>';
+  }
+  $("evTable").addEventListener("click", function(e){
+    var b = e.target.closest(".evc"); if(!b) return;
+    var round = curRound(true); if(!round) return;
+    var sid = b.dataset.sid, rid = b.dataset.rid;
+    if(!round.data[sid]) round.data[sid] = {};
+    var c = round.data[sid][rid] || (round.data[sid][rid] = {self:null, teacher:null, at:0});
+    var v = lvOK(c[evMode]) ? c[evMode] : null;
+    c[evMode] = (v == null) ? 0 : (v + 1 < state.levels.length ? v + 1 : null);
+    c.at = Date.now();
+    save(); renderEval();
+  });
+  $("evModeSeg").addEventListener("click", function(e){ var b = e.target.closest("button"); if(!b) return; evMode = b.dataset.m; renderEval(); });
+  $("roundSel").addEventListener("change", function(){ var box = recBox(true); if(box){ box.cur = +this.value; save(); renderEval(); } });
+  $("btnRoundAdd").addEventListener("click", function(){
+    var box = recBox(true); if(!box){ toast("先に名簿を登録してください"); return; }
+    box.rounds.push({id:uid(), name:(box.rounds.length+1)+"回目", data:{}});
+    box.cur = box.rounds.length - 1;
+    save(); renderEval(); toast(box.rounds[box.cur].name+"を追加しました");
+  });
+  $("btnRoundDel").addEventListener("click", function(){
+    var box = recBox(false); if(!box || box.rounds.length <= 1) return;
+    arm(this, "本当に削除？", function(){
+      var nm = box.rounds[box.cur].name;
+      box.rounds.splice(box.cur, 1); box.cur = Math.max(0, box.cur - 1);
+      save(); renderEval(); toast(nm+"を削除しました");
+    });
+  });
+  $("hideBtn").addEventListener("click", function(){ DB.settings.hidden = !DB.settings.hidden; save(); renderEval(); });
+
+  /* ================= ずれ一覧 ================= */
+  function diffsFor(round, sid){
+    var selfHi = [], teachHi = [], max = 0;
+    state.rows.forEach(function(row){
+      var v = getVal(round, sid, row.id);
+      if(v.self == null || v.teacher == null || v.self === v.teacher) return;
+      var d = Math.abs(v.self - v.teacher);
+      if(d > max) max = d;
+      var item = {row:row, self:v.self, teacher:v.teacher, d:d};
+      if(v.self < v.teacher) selfHi.push(item); else teachHi.push(item);   // 番号が小さい＝上の段階
+    });
+    return {selfHi:selfHi, teachHi:teachHi, max:max};
+  }
+  function rowLabel(row){ return row.name || "観点"; }
+  function renderDiff(r, box){
+    var list = $("diffList"), th = DB.settings.threshold, onlyMarked = $("optMarkedOnly").checked;
+    if(!r || !r.students.length || !box){ list.innerHTML = ""; $("diffNote").textContent = "名簿を登録して、自己評価と先生の見取りを入れると、ここに出ます。"; return; }
+    var round = box.rounds[box.cur], h = "", nMarked = 0, nAny = 0;
+    r.students.forEach(function(s, i){
+      var df = diffsFor(round, s.id);
+      if(!df.selfHi.length && !df.teachHi.length) return;
+      nAny++;
+      var marked = df.max >= th; if(marked) nMarked++;
+      if(onlyMarked && !marked) return;
+      h += '<div class="diff-card'+(marked?" marked":"")+'"><div class="who">'+esc(displayName(r, i))+(marked?'<span class="mark">ずれ'+df.max+'段階</span>':"")+'</div>';
+      if(df.selfHi.length) h += '<div class="dl"><span class="k s">自己評価のほうが高い</span>'+df.selfHi.map(function(x){ return esc(rowLabel(x.row))+"（自 "+esc(lvName(x.self))+" ／ 先 "+esc(lvName(x.teacher))+"）"; }).join("、")+'</div>';
+      if(df.teachHi.length) h += '<div class="dl"><span class="k t">先生の見取りのほうが高い</span>'+df.teachHi.map(function(x){ return esc(rowLabel(x.row))+"（自 "+esc(lvName(x.self))+" ／ 先 "+esc(lvName(x.teacher))+"）"; }).join("、")+'</div>';
+      h += '</div>';
+    });
+    list.innerHTML = h || '<p class="hint">'+(nAny ? "印の付く子はいません。" : "まだずれはありません（両方の評価が入った観点だけを比べます）。")+'</p>';
+    $("diffNote").textContent = box.rounds[box.cur].name+"：ずれのある子 "+nAny+"人、うち "+th+"段階以上（印）"+nMarked+"人。印の子とだけ話せば足ります。";
+  }
+  $("optMarkedOnly").addEventListener("change", function(){ renderEval(); });
+
+  /* ================= 振り返り用テキスト ================= */
+  function renderCopySel(r){
+    var sel = $("copySel"), cur = sel.value, h = "";
+    if(r) r.students.forEach(function(s, i){ h += '<option value="'+s.id+'">'+esc(displayName(r, i))+'</option>'; });
+    sel.innerHTML = h || '<option value="">（名簿がありません）</option>';
+    if(cur && r && r.students.some(function(s){ return s.id === cur; })) sel.value = cur;
+  }
+  function reflectionText(sid){
+    var r = curRoster(), box = recBox(false); if(!r || !box) return "";
+    var st = null; r.students.forEach(function(s){ if(s.id === sid) st = s; }); if(!st) return "";
+    var round = box.rounds[box.cur], df = diffsFor(round, sid);
+    var meta = [state.grade, state.subject, state.unit].filter(Boolean).join("・");
+    var t = "【振り返りメモ】" + st.name + " さん\n";
+    t += "ルーブリック：" + (state.title || "無題") + (meta ? "（" + meta + "）" : "") + "　" + round.name + "\n\n";
+    t += "■ 観点ごとの評価（自己評価 ／ 先生の見取り）\n";
+    state.rows.forEach(function(row){ var v = getVal(round, sid, row.id); t += "・" + rowLabel(row) + "：自分 " + lvName(v.self) + " ／ 先生 " + lvName(v.teacher) + "\n"; });
+    t += "\n■ ずれていた観点\n";
+    if(!df.selfHi.length && !df.teachHi.length) t += "・なし（または、まだ両方の評価がそろっていません）\n";
+    df.selfHi.forEach(function(x){ t += "・" + rowLabel(x.row) + "：自己評価のほうが高い（自分 " + lvName(x.self) + " → 先生 " + lvName(x.teacher) + "）。どこを見てほしかったか聞いてみる\n"; });
+    df.teachHi.forEach(function(x){ t += "・" + rowLabel(x.row) + "：先生の見取りのほうが高い（自分 " + lvName(x.self) + " → 先生 " + lvName(x.teacher) + "）。できていたところを具体的に伝える\n"; });
+    t += "\n■ 次の一歩（子ども用の欄より）\n";
+    var any = false;
+    state.rows.forEach(function(row){
+      var v = getVal(round, sid, row.id), lv = v.teacher != null ? v.teacher : v.self;
+      if(lv == null) return;
+      var txt = (row.cells[lv] && row.cells[lv].child || "").trim();
+      t += "・" + rowLabel(row) + "（いま " + lvName(lv) + "）：" + (txt ? txt.replace(/\n+/g," ") : "（子ども用の欄が未記入）") + "\n";
+      any = true;
+    });
+    if(!any) t += "・（評価がまだ入っていません）\n";
+    t += "\nこの記録は評定のためではなく、次の一歩を一緒に考えるためのものです。";
+    return t;
+  }
+  $("btnCopyRef").addEventListener("click", function(){
+    var sid = $("copySel").value;
+    if(!sid){ toast("子どもを選んでください"); return; }
+    var t = reflectionText(sid);
+    if(!t){ toast("まだ評価の記録がありません"); return; }
+    $("copyPreview").style.display = "block"; $("copyPreview").textContent = t;
+    copyText(t, "振り返り用メモをコピーしました");
+  });
+  $("btnSaveForEval").addEventListener("click", function(){ saveCurrent(); renderEval(); toast("保存しました：" + state.title); });
+
+  /* ================= せってい ================= */
+  function renderSettings(){
+    Array.prototype.forEach.call($("thSeg").children, function(b){ b.classList.toggle("on", +b.dataset.t === DB.settings.threshold); });
+  }
+  $("thSeg").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    DB.settings.threshold = +b.dataset.t; save(); renderSettings(); renderEval();
+  });
+  $("exportBtn").addEventListener("click", function(){
+    save();
+    $("ioArea").value = JSON.stringify({app:"rubric-maker-pro", version:1, exportedAt:new Date().toISOString(), data:DB});
+    setMsg($("ioMsg"), "✅ 書き出しました（ルーブリック"+DB.docs.length+"件・名簿"+DB.rosters.length+"件）。この文字列を保存してください", true);
+  });
+  $("copyJsonBtn").addEventListener("click", function(){
+    if(!$("ioArea").value.trim()){ setMsg($("ioMsg"), "先に「書き出す」を押してください", false); return; }
+    copyText($("ioArea").value, "コピーしました");
+  });
+  function parseAll(){
+    var raw = $("ioArea").value.trim();
+    if(!raw){ setMsg($("ioMsg"), "読みこむデータを貼りつけてください", false); return null; }
+    var p; try{ p = JSON.parse(raw); }catch(e){ setMsg($("ioMsg"), "データの形式が正しくありません（共有用の RUBRIC1- 文字列は「つくる」→「学年で共有」から読みこみます）", false); return null; }
+    if(p && p.data && Array.isArray(p.data.docs)) p = p.data;
+    if(!p || !Array.isArray(p.docs)){ setMsg($("ioMsg"), "このアプリで書き出したデータではないようです", false); return null; }
+    return normalizeDB(p);
+  }
+  $("importOverBtn").addEventListener("click", function(){
+    var inc = parseAll(); if(!inc) return;
+    arm(this, "本当に上書き？", function(){
+      DB = inc;
+      state = DB.draft || (DB.docs[0] ? normalize(clone(DB.docs[0])) : blankState());
+      save(); renderAll();
+      setMsg($("ioMsg"), "✅ 上書きで読みこみました（ルーブリック"+DB.docs.length+"件・名簿"+DB.rosters.length+"件）", true);
+    });
+  });
+  $("importAddBtn").addEventListener("click", function(){
+    var inc = parseAll(); if(!inc) return;
+    var rosterMap = {}, nd = 0, nr = 0;
+    inc.rosters.forEach(function(r){
+      var nid = findRoster(r.id) ? uid() : r.id;
+      rosterMap[r.id] = nid; r.id = nid; DB.rosters.push(r); nr++;
+    });
+    inc.docs.forEach(function(d){
+      var oldId = d.id, nid = findDoc(oldId) ? uid() : oldId;
+      d.id = nid;
+      if(d.rosterId && rosterMap[d.rosterId]) d.rosterId = rosterMap[d.rosterId];
+      var recs = inc.records[oldId];
+      if(recs && typeof recs === "object"){
+        var mapped = {};
+        Object.keys(recs).forEach(function(rk){ mapped[rosterMap[rk] || rk] = recs[rk]; });
+        DB.records[nid] = mapped;
+      }
+      DB.docs.push(d); nd++;
+    });
+    save(); renderAll();
+    setMsg($("ioMsg"), "✅ 追加で読みこみました（ルーブリック"+nd+"件・名簿"+nr+"件を追加）", true);
+  });
+
+  /* ================= tabs ================= */
+  var tabs = {tabMake:"viewMake", tabEval:"viewEval", tabSettings:"viewSettings"};
+  Object.keys(tabs).forEach(function(tid){
+    $(tid).addEventListener("click", function(){
+      Object.keys(tabs).forEach(function(t){ $(t).classList.toggle("active", t===tid); $(tabs[t]).classList.toggle("active", t===tid); });
+      if(tid === "tabEval") renderEval();
+      window.scrollTo(0,0);
+    });
+  });
+
+  /* ================= toast ================= */
+  var toastTimer = null;
+  function toast(msg){
+    var el = $("toast"); el.textContent = msg; el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2400);
+  }
+
+  /* ================= init ================= */
+  buildEmojiPop();
+  if(DB.draft){ state = DB.draft; }
+  else{ var d0 = clone(TEMPLATES[0].data); d0.id = null; state = normalize(d0); }
+  // 引き継ぎ直後（初回）にいちど書き込む。しないと保存操作まで毎回無料版から読み直してしまう
+  save();
+  if(migrated){
+    var mb = $("migrateBox");
+    mb.style.display = "";
+    mb.innerHTML = "📋 <b>無料版のデータを引き継ぎました。</b><br>同じブラウザに入っていた保存済みルーブリック（"+DB.docs.length+"件）と下書きを読みこんでいます。"+
+      "これまでのマスの文章は「教師用」の欄に入っています。無料版のデータはそのまま残っているので、しばらく両方を開いて確かめてもだいじょうぶです。";
+    setTimeout(function(){ toast("無料版のデータを引き継ぎました（くわしくは「せってい」）"); }, 300);
+  }
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>走順くみわけメーカー Pro</title>
+<style>
+  :root{
+    --bg:#F7F5F0;
+    --card:#FFFFFF;
+    --accent:#E63946;
+    --accent-soft:#FDECEE;
+    --ink:#333333;
+    --ink-sub:#777777;
+    --line:#E8E4DC;
+    --ok:#2A9D8F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{font-size:16px;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  header{
+    position:sticky;top:0;z-index:50;
+    background:var(--accent);color:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+    padding:10px 14px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  header h1{font-size:1.1rem;font-weight:700;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  header a.back{
+    text-decoration:none;color:#fff;font-size:.85rem;
+    padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.18);white-space:nowrap;
+  }
+  header a.back:active{background:rgba(255,255,255,.32);}
+  .pro-badge{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--accent);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+  main{max-width:960px;margin:0 auto;padding:16px 14px 80px;}
+  .card{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:18px 16px;margin-bottom:16px;}
+  .card h2{font-size:1rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .card h2 .step{background:var(--accent);color:#fff;border-radius:999px;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;flex:none;}
+  .tagpro{font-size:.68rem;font-weight:800;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 6px;}
+  .hint{font-size:.8rem;color:var(--ink-sub);margin-bottom:8px;}
+  textarea#inputArea{width:100%;min-height:170px;resize:vertical;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:1rem;font-family:inherit;line-height:1.7;background:#FCFBF8;}
+  textarea#inputArea:focus{outline:none;border-color:var(--accent);}
+  textarea.io{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:12px;padding:10px;font-family:inherit;font-size:.85rem;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:inherit;font-size:1rem;font-weight:600;padding:12px 20px;border-radius:12px;background:#fff;border:1.5px solid var(--line);color:var(--ink);min-height:48px;transition:transform .05s;}
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.4;cursor:default;}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(230,57,70,.3);}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--ink-sub);font-weight:500;}
+  .btn.small{padding:8px 14px;min-height:40px;font-size:.9rem;}
+  .btn.tiny{padding:3px 10px;min-height:30px;font-size:.8rem;border-radius:8px;}
+  .btn.big{width:100%;font-size:1.15rem;padding:16px;}
+  .btn.confirming{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:560px){.settings-grid{grid-template-columns:1fr;}}
+  .field label.fname{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--ink-sub);}
+  select,input[type="text"],input[type="date"]{width:100%;font-family:inherit;font-size:1rem;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;min-height:48px;}
+  select:focus,input[type="text"]:focus,input[type="date"]:focus{outline:none;border-color:var(--accent);}
+  .seg{display:flex;background:#F0EDE6;border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap;}
+  .seg button{flex:1;border:none;background:transparent;font-family:inherit;padding:10px 8px;border-radius:9px;font-size:.92rem;font-weight:600;color:var(--ink-sub);cursor:pointer;min-height:44px;white-space:nowrap;}
+  .seg button.on{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+  .toggle{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:6px 0;min-height:44px;}
+  .toggle .tk{width:52px;height:30px;border-radius:999px;background:#DDD8CE;position:relative;flex:none;transition:background .15s;}
+  .toggle .tk::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s;}
+  .toggle input{display:none;}
+  .toggle input:checked + .tk{background:var(--accent);}
+  .toggle input:checked + .tk::after{left:25px;}
+  .toggle .tl{font-size:.95rem;font-weight:600;}
+  .msg{border-radius:12px;padding:10px 14px;font-size:.9rem;margin-top:10px;display:none;}
+  .msg.show{display:block;}
+  .msg.ok{background:#E7F5F2;color:#1F7A6F;}
+  .msg.err{background:var(--accent-soft);color:#B22633;}
+  #resultSec{display:none;}
+  #resultSec.show{display:block;}
+  .groups-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .gcard{background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:14px;border-top:5px solid var(--accent);}
+  .gcard.girl{border-top-color:#457B9D;}
+  .gcard h3{font-size:1.05rem;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
+  .gcard h3 .gsub{font-size:.75rem;color:var(--ink-sub);font-weight:500;}
+  .clsmix{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.75rem;color:var(--ink-sub);margin-bottom:8px;}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:3px;vertical-align:-1px;}
+  .lane{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;margin-bottom:6px;background:#FAF8F4;border:1.5px solid transparent;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;min-height:50px;}
+  .lane .laneno{flex:none;width:34px;height:34px;border-radius:8px;background:#fff;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;color:var(--ink-sub);}
+  .lane .lname{flex:1;font-weight:600;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lane .ltime{flex:none;font-size:.82rem;color:var(--ink-sub);font-variant-numeric:tabular-nums;}
+  .lane .lg{flex:none;font-size:.72rem;padding:2px 7px;border-radius:999px;background:#EEF3F7;color:#457B9D;}
+  .lane .lg.boy{background:var(--accent-soft);color:var(--accent);}
+  .lane .lc{flex:none;font-size:.72rem;padding:2px 7px;border-radius:999px;color:#fff;}
+  .lane .up{flex:none;font-size:.75rem;color:var(--ok);font-weight:800;}
+  .lane.empty{opacity:.45;cursor:default;}
+  .lane.absent{background:#F1F1F1;}
+  .lane.absent .lname{color:#AAA;text-decoration:line-through;}
+  .lane.absent .lname::before{content:"欠席 ";text-decoration:none;color:var(--accent);font-size:.8rem;}
+  .lane.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 2px rgba(230,57,70,.15);}
+  .lane.dragover{border-color:var(--ok);background:#E7F5F2;}
+  .absentees{font-size:.82rem;color:var(--ink-sub);border-top:1px dashed var(--line);padding-top:6px;margin-top:4px;}
+  .absentees div{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;}
+  .swapbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:999px;font-size:.9rem;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:60;display:none;max-width:92vw;text-align:center;}
+  .swapbar.show{display:block;}
+  #toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-size:.9rem;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;}
+  #toast.show{opacity:1;}
+  table.readlist{width:100%;border-collapse:collapse;font-size:.95rem;}
+  table.readlist th,table.readlist td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;}
+  table.readlist th{font-size:.8rem;color:var(--ink-sub);font-weight:600;}
+  table.readlist td.gcell{font-weight:700;color:var(--accent);white-space:nowrap;}
+  table.readlist tr.grouphead td{background:#FAF8F4;}
+  .plist{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .pitem{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#FAF8F4;border-radius:12px;padding:10px 12px;}
+  .pitem .pname{font-weight:700;flex:1;min-width:120px;}
+  .pitem .pmeta{font-size:.75rem;color:var(--ink-sub);width:100%;order:3;}
+  .saverow{display:flex;gap:10px;margin-top:6px;}
+  .saverow input{flex:1;}
+  .migrate-box{background:#FFF8E8;border:1.5px solid #F0E2BF;border-radius:12px;padding:12px 30px 12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative;}
+  .migrate-box .x{position:absolute;right:8px;top:6px;border:none;background:none;font-size:1rem;color:#a08a50;cursor:pointer;}
+  /* time log */
+  .logtop{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;}
+  .logtop .field{min-width:180px;}
+  table.logt{width:100%;border-collapse:collapse;font-size:.92rem;}
+  table.logt th,table.logt td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:middle;}
+  table.logt th{font-size:.78rem;color:var(--ink-sub);}
+  table.logt input{width:6.5em;min-height:38px;padding:6px 8px;font-size:1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;}
+  table.logt .hist{font-size:.78rem;color:var(--ink-sub);}
+  table.logt .up{color:var(--ok);font-weight:800;}
+  /* muster */
+  #muster{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;flex-direction:column;padding:16px;overflow:auto;}
+  #muster.show{display:flex;}
+  .m-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .m-title{font-size:1rem;font-weight:700;color:var(--ink-sub);}
+  .m-now{background:#fff;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:22px 18px;text-align:center;margin-bottom:14px;border-top:8px solid var(--accent);}
+  .m-now .m-gname{font-size:clamp(2.2rem,9vw,4rem);font-weight:800;color:var(--accent);line-height:1.2;}
+  .m-now .m-label{font-size:.9rem;color:var(--ink-sub);font-weight:700;letter-spacing:.2em;}
+  .m-runners{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px;}
+  .m-runner{background:#FAF8F4;border-radius:14px;padding:12px 16px;min-width:130px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer;}
+  .m-runner.empty{opacity:.5;}
+  .m-runner .mr-lane{font-size:.78rem;color:var(--ink-sub);font-weight:700;}
+  .m-runner .mr-name{font-size:clamp(1.3rem,5vw,2rem);font-weight:800;}
+  .m-next{background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:14px 16px;margin-bottom:14px;}
+  .m-next .mn-label{font-size:.85rem;font-weight:700;color:var(--ok);margin-bottom:6px;}
+  .m-next .mn-names{font-size:1.1rem;font-weight:600;line-height:1.9;}
+  .m-hint{font-size:.78rem;color:var(--ink-sub);text-align:center;margin-bottom:8px;}
+  .m-nav{display:flex;gap:10px;margin-top:auto;padding-top:10px;}
+  .m-nav .btn{flex:1;font-size:1.1rem;}
+  /* print */
+  #printArea,#printCards{display:none;}
+  .ccard{border:1px dashed #999;height:34mm;padding:3mm 4mm;display:flex;flex-direction:column;justify-content:center;overflow:hidden;break-inside:avoid;page-break-inside:avoid;}
+  .ccard .cc-h{font-size:7pt;color:#777;letter-spacing:.1em;}
+  .ccard .cc-g{font-size:15pt;font-weight:800;line-height:1.25;}
+  .ccard .cc-n{font-size:11pt;font-weight:600;}
+  .cards-grid{display:grid;grid-template-columns:repeat(3,1fr);}
+  @media print{
+    @page{size:A4;margin:8mm;}
+    body{background:#fff;}
+    header,main,.swapbar,#muster,#toast,.note-link{display:none !important;}
+    body:not(.p-cards) #printArea{display:block;padding:0;font-size:11pt;}
+    body.p-cards #printCards{display:block;}
+    #printArea h1{font-size:15pt;margin-bottom:2mm;}
+    #printArea .pdate{font-size:9pt;color:#555;margin-bottom:4mm;}
+    #printArea table{width:100%;border-collapse:collapse;margin-bottom:5mm;page-break-inside:avoid;}
+    #printArea caption{text-align:left;font-weight:700;font-size:12pt;padding:1.5mm 0;}
+    #printArea th,#printArea td{border:1px solid #999;padding:1.8mm 2.5mm;text-align:left;}
+    #printArea th{background:#F0EDE6;font-size:9pt;}
+    #printArea td.num{width:14mm;text-align:center;font-weight:700;}
+    #printArea td.tm{width:22mm;color:#555;}
+    .cards-page{page-break-after:always;break-after:page;}
+    .cards-page:last-child{page-break-after:auto;break-after:auto;}
+  }
+  @media(max-width:560px){
+    header h1{font-size:.98rem;}
+    .card{padding:15px 13px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>🏃 走順くみわけメーカー<span class="pro-badge">PRO</span></h1>
+</header>
+
+<main>
+  <div class="migrate-box" id="migrateTop" style="display:none"></div>
+
+  <!-- STEP1 入力 -->
+  <section class="card">
+    <h2><span class="step">1</span>名前とタイムを貼り付け</h2>
+    <p class="hint">1行に「名前 タイム(秒) 男/女 クラス」。区切りはスペース・タブ・カンマOK。男女・クラスは任意です。クラスは「1組」「2組」「3-2」「3年2組」の形で書くと読み取ります。タイム未入力の子は末尾の組に入ります。<br>例：やまだ 9.8 男 1組　／　さとう,10.2,女,2組　／　たなか 3組（タイムなし）</p>
+    <textarea id="inputArea" placeholder="やまだ 9.8 男 1組&#10;さとう 10.2 女 2組&#10;すずき 9.5 男 1組&#10;たなか 3組"></textarea>
+    <div class="btnrow">
+      <button class="btn small" id="btnSample" type="button">サンプルを入れる</button>
+      <button class="btn small ghost" id="btnClear" type="button">クリア</button>
+    </div>
+    <div class="msg" id="parseMsg"></div>
+  </section>
+
+  <!-- STEP2 設定 -->
+  <section class="card">
+    <h2><span class="step">2</span>くみわけ設定</h2>
+    <div class="settings-grid">
+      <div class="field">
+        <label class="fname">1組あたりの人数（レーン数）</label>
+        <select id="laneCount">
+          <option value="3">3人</option>
+          <option value="4">4人</option>
+          <option value="5" selected>5人</option>
+          <option value="6">6人</option>
+          <option value="7">7人</option>
+          <option value="8">8人</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fname">組分け方式</label>
+        <div class="seg" id="segMethod">
+          <button type="button" data-v="even" class="on">実力均等（接戦）</button>
+          <button type="button" data-v="shuffle">シャッフル</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fname">レーンの決め方</label>
+        <div class="seg" id="segLane">
+          <button type="button" data-v="center" class="on">速い子が中央</button>
+          <button type="button" data-v="inside">速い順に内側から</button>
+          <button type="button" data-v="random">ランダム</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fname">男女</label>
+        <label class="toggle">
+          <input type="checkbox" id="chkGender">
+          <span class="tk"></span>
+          <span class="tl">男女別に分ける</span>
+        </label>
+      </div>
+      <div class="field">
+        <label class="fname">学年合同 <span class="tagpro">Pro</span></label>
+        <label class="toggle">
+          <input type="checkbox" id="chkMix">
+          <span class="tk"></span>
+          <span class="tl">クラスを混ぜる（同じクラスが1つの組に偏らないように）</span>
+        </label>
+      </div>
+      <div class="field">
+        <label class="fname">組分けに使うタイム <span class="tagpro">Pro</span></label>
+        <div class="seg" id="segSource">
+          <button type="button" data-v="latest" class="on">最新</button>
+          <button type="button" data-v="best">いちばん良い</button>
+          <button type="button" data-v="avg">平均</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:8px">「クラスを混ぜる」は、接戦を保つために、タイムの近い子どうし（0.5秒以内）だけを隣の組と入れ替えます。タイムは下の「タイムの記録簿」の記録も使います。</p>
+    <div class="btnrow">
+      <button class="btn primary big" id="btnGenerate" type="button">🏁 くみわけ実行！</button>
+    </div>
+    <div class="msg" id="genMsg"></div>
+  </section>
+
+  <!-- STEP3 結果 -->
+  <section id="resultSec">
+    <section class="card">
+      <h2><span class="step">3</span>結果（タップ2回で入れかえ・ドラッグでも移動OK・長押しで欠席）</h2>
+      <div class="btnrow" style="margin-top:0;margin-bottom:10px;">
+        <button class="btn primary" id="btnMuster" type="button">📣 招集モード</button>
+        <button class="btn" id="btnPrint" type="button">🖨 印刷する</button>
+        <button class="btn" id="btnCards" type="button">🎫 招集カードを印刷</button>
+        <button class="btn small ghost" id="btnReshuffle" type="button">↻ もう一度くみわけ</button>
+      </div>
+      <div class="btnrow" style="margin-top:0;margin-bottom:10px;">
+        <button class="btn small" id="btnOrderShuffle" type="button">🔀 出走順をシャッフル</button>
+        <button class="btn small ghost" id="btnOrderReset" type="button">元に戻す（速い順）</button>
+        <span class="hint" id="orderState" style="align-self:center;margin:0"></span>
+      </div>
+      <div class="settings-grid" style="margin-bottom:12px">
+        <div class="field">
+          <label class="fname">欠席にしたとき <span class="tagpro">Pro</span></label>
+          <div class="seg" id="segAbsent">
+            <button type="button" data-v="keep" class="on">空きレーンのまま走る</button>
+            <button type="button" data-v="fill">近いタイムの組から詰める</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="fname">印刷・読み上げ一覧 <span class="tagpro">Pro</span></label>
+          <label class="toggle">
+            <input type="checkbox" id="chkHideTime">
+            <span class="tk"></span>
+            <span class="tl">タイムを表示しない</span>
+          </label>
+        </div>
+      </div>
+      <p class="hint">名前を長押しすると「欠席」になります（もう一度長押しで取り消し）。当日は「空きレーンのまま」がおすすめです。↑はタイムが前回より縮んだ子です。</p>
+      <div class="groups-wrap" id="groupsWrap"></div>
+    </section>
+
+    <section class="card">
+      <h2>📋 出走順よみあげ一覧</h2>
+      <p class="hint">アナウンス・招集係用。上から順に読み上げできます（欠席の子は出ません）。</p>
+      <div style="overflow-x:auto;">
+        <table class="readlist" id="readList"></table>
+      </div>
+    </section>
+  </section>
+
+  <!-- タイムの記録簿 -->
+  <section class="card">
+    <h2>⏱ タイムの記録簿 <span class="tagpro">Pro</span></h2>
+    <p class="hint">練習日を選んで、名前の横にタイムを入れます（空欄にすると消えます）。貼り付けたタイムは最初の記録として数えます。記録を入れたら「くみわけ実行」を押し直すと反映されます。</p>
+    <div class="logtop">
+      <div class="field"><label class="fname">練習日</label><input type="date" id="logDate"></div>
+      <button class="btn small ghost" id="btnDelDate" type="button">この日の記録を消す</button>
+    </div>
+    <div style="overflow-x:auto;"><table class="logt" id="logTable"></table></div>
+  </section>
+
+  <!-- 保存 -->
+  <section class="card">
+    <h2>💾 パターン保存（学年別など）</h2>
+    <p class="hint">いまの名簿・設定・くみわけ結果に名前を付けて保存できます。入力内容は自動でも保存されています。</p>
+    <div class="saverow">
+      <input type="text" id="patName" placeholder="例：3年生・学年合同">
+      <button class="btn small" id="btnSavePat" type="button">保存</button>
+    </div>
+    <div class="msg" id="patMsg"></div>
+    <div class="plist" id="patList"></div>
+  </section>
+
+  <!-- 設定・データ -->
+  <section class="card">
+    <h2>⚙ 設定・データ <span class="tagpro">Pro</span></h2>
+    <div class="migrate-box" id="migrateBox" style="display:none"></div>
+    <p class="hint">名簿・設定・組分け・タイムの記録・保存パターンを一つの文字列として書き出せます。学年の先生に渡せば、同じ組分けをそのまま開けます。データはこの端末のブラウザの中だけに保存されます。無料版のデータは消さずに残してあります。</p>
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn small" id="btnExport" type="button">📤 書き出し</button>
+      <button class="btn small" id="btnImport" type="button">📥 読みこみ</button>
+    </div>
+    <div id="dataArea" style="margin-top:10px"></div>
+  </section>
+</main>
+
+<div class="swapbar" id="swapBar">入れかえたい相手をタップしてください（もう一度タップで解除）</div>
+<div id="toast"></div>
+
+<!-- 招集モード -->
+<div id="muster" role="dialog" aria-label="招集モード">
+  <div class="m-top">
+    <span class="m-title">📣 招集モード</span>
+    <button class="btn small" id="btnMusterClose" type="button">✕ とじる</button>
+  </div>
+  <div class="m-now">
+    <div class="m-label">いまはしる くみ</div>
+    <div class="m-gname" id="mGname">第1組</div>
+    <div class="m-runners" id="mRunners"></div>
+  </div>
+  <div class="m-next">
+    <div class="mn-label">▶ つぎのくみ（じゅんびしてね）</div>
+    <div class="mn-names" id="mNext"></div>
+  </div>
+  <div class="m-hint">名前を長押しすると欠席にできます</div>
+  <div class="m-nav">
+    <button class="btn" id="btnMPrev" type="button">← まえの組</button>
+    <button class="btn primary" id="btnMNext" type="button">つぎの組 →</button>
+  </div>
+</div>
+
+<!-- 印刷用 -->
+<div id="printArea"></div>
+<div id="printCards"></div>
+
+<script>
+(function(){
+  "use strict";
+  var STORAGE_KEY = "bo10pro_sojun_v1";
+  var LS_LAST = "bo10_sojun_last";      // 無料版（読むだけ・消さない）
+  var LS_PATS = "bo10_sojun_patterns";  // 無料版（読むだけ・消さない）
+  var MIX_TOL = 0.5;    // クラスを混ぜるとき、入れ替えてよいタイム差（秒）
+  var WIDTH_TOL = 0.2;  // 組内のタイム幅が、もとの幅より広がってよい上限（秒）
+  var CLS_COLORS = ["#E63946","#457B9D","#2A9D8F","#E9A23B","#8E6CC7","#D16BA5","#5C8A3A","#B5651D","#3D5A80","#9C6644","#6D6875","#118AB2"];
+
+  var state = {
+    method:"even", laneMode:"center", byGender:false, laneCount:5,
+    mixClass:false, timeSource:"latest", absentMode:"keep", hideTime:false, orderShuffled:false,
+    groups:[],   // [{label, prefix, rank, girl, runners:[runner|null], absentees:[{runner,lane,moved}]}]
+    musterIdx:0
+  };
+  var DB = { version:1, current:null, patterns:{}, timeLog:{}, logDate:"" };
+  var selected = null;
+  var migrateInfo = null;
+  var suppressClickUntil = 0;
+  var confirmTimers = {};
+
+  function $(id){ return document.getElementById(id); }
+  var inputArea = $("inputArea"), parseMsg = $("parseMsg"), genMsg = $("genMsg");
+  var groupsWrap = $("groupsWrap"), readList = $("readList"), resultSec = $("resultSec");
+  var swapBar = $("swapBar"), patMsg = $("patMsg");
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function showMsg(el, text, type){
+    el.textContent = text;
+    el.className = "msg show " + (type || "ok");
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.className = "msg"; }, 4000);
+  }
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove("show"); }, 2800);
+  }
+  function isObj(o){ return o && typeof o === "object" && !Array.isArray(o); }
+  function pad(n){ return (n<10?"0":"") + n; }
+  function todayStr(){ var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function armConfirm(btn, key, onConfirm, label){
+    if(btn.dataset.armed === "1"){
+      delete btn.dataset.armed;
+      if(confirmTimers[key]) clearTimeout(confirmTimers[key]);
+      onConfirm();
+    }else{
+      btn.dataset.armed = "1";
+      var orig = btn.textContent;
+      btn.textContent = label || "もう一度押すと実行";
+      btn.classList.add("confirming");
+      confirmTimers[key] = setTimeout(function(){
+        delete btn.dataset.armed; btn.textContent = orig; btn.classList.remove("confirming");
+      }, 3000);
+    }
+  }
+  function copyText(txt){
+    var fin = function(ok){ toast(ok ? "コピーしました" : "下の枠から手動でコピーしてください"); };
+    var fallback = function(){
+      try{
+        var ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); var ok = document.execCommand("copy"); document.body.removeChild(ta); return ok;
+      }catch(e){ return false; }
+    };
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ fin(true); }, function(){ fin(fallback()); });
+        return;
+      }
+    }catch(e){}
+    fin(fallback());
+  }
+
+  // ---------- parse ----------
+  function parseInput(text){
+    var runners = [], errors = 0;
+    String(text || "").split(/\r?\n/).forEach(function(line){
+      var t = line.trim();
+      if(!t) return;
+      var parts = t.split(/[\s,、，\t]+/).filter(function(p){ return p !== ""; });
+      if(parts.length === 0) return;
+      var name = null, time = null, gender = null, cls = null;
+      parts.forEach(function(p){
+        var g = normGender(p);
+        var c = normClass(p);
+        var n = parseTime(p);
+        if(g && gender === null){ gender = g; }
+        else if(c && cls === null){ cls = c; }
+        else if(n !== null && time === null){ time = n; }
+        else if(name === null){ name = p; }
+        else { name += " " + p; }
+      });
+      if(name === null){ errors++; return; }
+      runners.push({ name: name, time: time, gender: gender, cls: cls });
+    });
+    return { runners: runners, errors: errors };
+  }
+  function normGender(p){
+    if(/^(男|男子|M|m|♂|おとこ)$/.test(p)) return "男";
+    if(/^(女|女子|F|f|W|w|♀|おんな)$/.test(p)) return "女";
+    return null;
+  }
+  function z2h(s){ return s.replace(/[０-９．－]/g, function(c){ return c === "－" ? "-" : String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }); }
+  function normClass(p){
+    var s = z2h(p);
+    if(/^(\d+|[一二三四五六七八九十]+|[A-Za-zＡ-Ｚ])組$/.test(s)) return s;
+    if(/^[1-6一二三四五六]年(\d+|[一二三四五六七八九十]+)組$/.test(s)) return s;
+    if(/^[1-6一二三四五六]-\d{1,2}$/.test(s)) return s;
+    return null;
+  }
+  function parseTime(p){
+    var m = z2h(p.replace(/秒$/, ""));
+    if(/^\d+(\.\d+)?$/.test(m)){
+      var v = parseFloat(m);
+      if(v > 0 && v < 999) return v;
+    }
+    return null;
+  }
+
+  // ---------- タイムの記録簿 ----------
+  function timeValues(name, baseTime){
+    var vals = [];
+    if(baseTime != null) vals.push(baseTime);
+    (DB.timeLog[name] || []).slice().sort(function(a,b){ return a.date.localeCompare(b.date); })
+      .forEach(function(e){ if(typeof e.time === "number") vals.push(e.time); });
+    return vals;
+  }
+  function effectiveTime(name, baseTime){
+    var v = timeValues(name, baseTime);
+    if(!v.length) return null;
+    if(state.timeSource === "best") return Math.min.apply(null, v);
+    if(state.timeSource === "avg"){
+      var s = 0; v.forEach(function(x){ s += x; });
+      return Math.round(s / v.length * 100) / 100;
+    }
+    return v[v.length - 1];
+  }
+  // 前回より縮んだ秒数（縮んでいなければ 0）
+  function improvement(name, baseTime){
+    var v = timeValues(name, baseTime);
+    if(v.length < 2) return 0;
+    var d = v[v.length - 2] - v[v.length - 1];
+    return d > 0 ? Math.round(d * 100) / 100 : 0;
+  }
+
+  // ---------- grouping ----------
+  function shuffleArr(a){
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function laneOrderCenter(n){
+    var center = Math.ceil(n / 2), order = [center], d = 1;
+    while(order.length < n){
+      if(center + d <= n) order.push(center + d);
+      if(order.length < n && center - d >= 1) order.push(center - d);
+      d++;
+    }
+    return order;
+  }
+  function assignLanes(chunk, n){
+    var lanes = new Array(n).fill(null);
+    var order;
+    if(state.laneMode === "center"){ order = laneOrderCenter(n); }
+    else if(state.laneMode === "inside"){ order = []; for(var i = 1; i <= n; i++) order.push(i); }
+    else { order = shuffleArr(laneOrderCenter(n).slice()); }
+    chunk.forEach(function(r, idx){ lanes[order[idx] - 1] = r; });
+    return lanes;
+  }
+  function byTime(a, b){
+    if(a.time === null && b.time === null) return 0;
+    if(a.time === null) return 1;
+    if(b.time === null) return -1;
+    return a.time - b.time;
+  }
+  function clsPenalty(chunk){
+    var c = {}, p = 0;
+    chunk.forEach(function(r){ if(r.cls){ c[r.cls] = (c[r.cls] || 0) + 1; } });
+    Object.keys(c).forEach(function(k){ p += c[k] * (c[k] - 1) / 2; });
+    return p;
+  }
+  function chunkWidth(chunk){
+    var ts = chunk.filter(function(r){ return r.time !== null; }).map(function(r){ return r.time; });
+    if(ts.length < 2) return 0;
+    return Math.max.apply(null, ts) - Math.min.apply(null, ts);
+  }
+  // 同じクラスが1つの組に集中しないよう、となりの組とだけ入れ替える局所探索
+  function mixClasses(chunks, useTime){
+    var origW = chunks.map(chunkWidth);
+    for(var pass = 0; pass < 60; pass++){
+      var improved = false;
+      for(var i = 0; i + 1 < chunks.length; i++){
+        var A = chunks[i], B = chunks[i + 1];
+        var limit = Math.max(origW[i], origW[i + 1]) + WIDTH_TOL;
+        for(var a = 0; a < A.length; a++){
+          for(var b = 0; b < B.length; b++){
+            var ra = A[a], rb = B[b];
+            if(ra.cls === rb.cls) continue;
+            if(useTime){
+              if((ra.time === null) !== (rb.time === null)) continue;
+              if(ra.time !== null && Math.abs(ra.time - rb.time) > MIX_TOL) continue;
+            }
+            var before = clsPenalty(A) + clsPenalty(B);
+            A[a] = rb; B[b] = ra;
+            var after = clsPenalty(A) + clsPenalty(B);
+            var widthOk = !useTime || (chunkWidth(A) <= limit + 1e-9 && chunkWidth(B) <= limit + 1e-9);
+            if(after < before && widthOk){ improved = true; }
+            else { A[a] = ra; B[b] = rb; }
+          }
+        }
+      }
+      if(!improved) break;
+    }
+    return chunks;
+  }
+  function buildGroups(runners, prefix, girl){
+    var arr = runners.slice();
+    if(state.method === "shuffle") shuffleArr(arr);
+    else arr.sort(byTime);
+    var n = state.laneCount;
+    var total = arr.length;
+    var gcount = Math.ceil(total / n);
+    var sizes = [];
+    for(var i = 0; i < gcount; i++) sizes.push(n);
+    var rest = gcount * n - total;
+    var gi = gcount - 1;
+    while(rest > 0 && gcount > 0){
+      if(sizes[gi] > 2 || gcount === 1){ sizes[gi]--; rest--; }
+      gi--; if(gi < 0) gi = gcount - 1;
+    }
+    var chunks = [], pos = 0;
+    sizes.forEach(function(size){
+      var c = arr.slice(pos, pos + size); pos += size;
+      if(c.length) chunks.push(c);
+    });
+    if(state.mixClass) mixClasses(chunks, state.method !== "shuffle");
+    return chunks.map(function(chunk, idx){
+      if(state.method !== "shuffle") chunk.sort(byTime);
+      return { label: prefix + "第" + (idx + 1) + "組", prefix: prefix, rank: idx, girl: !!girl, runners: assignLanes(chunk, n), absentees: [] };
+    });
+  }
+  function generate(){
+    var parsed = parseInput(inputArea.value);
+    if(parsed.runners.length === 0){
+      showMsg(genMsg, "名簿が読み取れませんでした。1行に1人ずつ入力してください。", "err");
+      return;
+    }
+    state.laneCount = parseInt($("laneCount").value, 10) || 5;
+    state.byGender = $("chkGender").checked;
+    state.mixClass = $("chkMix").checked;
+    var runners = parsed.runners.map(function(r){
+      return { name: r.name, baseTime: r.time, time: effectiveTime(r.name, r.time), gender: r.gender, cls: r.cls };
+    });
+    var groups = [];
+    if(state.byGender){
+      var boys = runners.filter(function(r){ return r.gender !== "女"; });
+      var girls = runners.filter(function(r){ return r.gender === "女"; });
+      if(girls.length === 0){
+        showMsg(genMsg, "「女」の指定が1人もいないため、男女別にできません（全員まとめて分けました）。", "err");
+        groups = buildGroups(runners, "", false);
+      } else {
+        groups = buildGroups(boys, "男子", false).concat(buildGroups(girls, "女子", true));
+      }
+    } else {
+      groups = buildGroups(runners, "", false);
+    }
+    state.groups = groups;
+    state.orderShuffled = false;
+    state.musterIdx = 0;
+    selected = null;
+    renderAll();
+    var noTime = runners.filter(function(r){ return r.time === null; }).length;
+    var m = runners.length + "人を" + groups.length + "組に分けました";
+    if(noTime > 0) m += "（タイムなし" + noTime + "人は末尾の組）";
+    if(state.mixClass && !runners.some(function(r){ return r.cls; })) m += "。※クラスの表記が見つからないため、クラスは混ぜていません";
+    showMsg(genMsg, m + "。", "ok");
+    saveLast();
+    try{ resultSec.scrollIntoView({ behavior: "smooth", block: "start" }); }catch(e){}
+  }
+
+  // ---------- 出走順シャッフル ----------
+  function prefixes(){
+    var out = [];
+    state.groups.forEach(function(g){ if(out.indexOf(g.prefix) < 0) out.push(g.prefix); });
+    return out;
+  }
+  function relabel(){
+    var cnt = {};
+    state.groups.forEach(function(g){
+      cnt[g.prefix] = (cnt[g.prefix] || 0) + 1;
+      g.label = g.prefix + "第" + cnt[g.prefix] + "組";
+    });
+  }
+  function shuffleOrder(){
+    if(state.groups.length < 2){ toast("組が2つ以上あるときに使えます"); return; }
+    var before = state.groups.map(function(g){ return g.prefix + g.rank; }).join(",");
+    var out, tries = 0;
+    do{
+      out = [];
+      prefixes().forEach(function(p){
+        out = out.concat(shuffleArr(state.groups.filter(function(g){ return g.prefix === p; })));
+      });
+      tries++;
+    }while(out.map(function(g){ return g.prefix + g.rank; }).join(",") === before && tries < 8);
+    state.groups = out;
+    state.orderShuffled = true;
+    relabel(); selected = null; state.musterIdx = 0;
+    renderAll(); saveLast();
+    toast("何組目に走るかだけを入れ替えました（組の中身とレーンはそのまま）");
+  }
+  function resetOrder(){
+    var out = [];
+    prefixes().forEach(function(p){
+      out = out.concat(state.groups.filter(function(g){ return g.prefix === p; }).sort(function(a, b){ return a.rank - b.rank; }));
+    });
+    state.groups = out;
+    state.orderShuffled = false;
+    relabel(); selected = null; state.musterIdx = 0;
+    renderAll(); saveLast();
+    toast("速い順に戻しました");
+  }
+
+  // ---------- 欠席 ----------
+  function findGroup(prefix, rank){
+    for(var i = 0; i < state.groups.length; i++){
+      if(state.groups[i].prefix === prefix && state.groups[i].rank === rank) return state.groups[i];
+    }
+    return null;
+  }
+  function presentCount(g){ return g.runners.filter(function(r){ return r && !r.absent; }).length; }
+  function toggleAbsent(gi, li){
+    var grp = state.groups[gi];
+    var r = grp && grp.runners[li];
+    if(!r) return;
+    suppressClickUntil = Date.now() + 500;
+    selected = null; swapBar.classList.remove("show");
+    if(r.absent){
+      delete r.absent;
+      toast(r.name + " さんの欠席を取り消しました");
+    }else if(state.absentMode === "keep"){
+      r.absent = true;
+      toast(r.name + " さんを欠席にしました（空きレーンのまま）");
+    }else{
+      fillAbsent(grp, li);
+    }
+    renderAll(); if($("muster").classList.contains("show")) renderMuster();
+    saveLast();
+  }
+  function fillAbsent(grp, li){
+    var r = grp.runners[li];
+    grp.runners[li] = null;
+    var rec = { runner: r, lane: li, moved: null };
+    grp.absentees.push(rec);
+    // タイムが最も近い「となりの組」（速さの順でとなり）の端の子を1人移す
+    var best = null;
+    [grp.rank - 1, grp.rank + 1].forEach(function(rk){
+      var d = findGroup(grp.prefix, rk);
+      if(!d || presentCount(d) < 2) return;
+      var cands = [];
+      d.runners.forEach(function(x, xl){ if(x && !x.absent) cands.push({ r: x, l: xl }); });
+      cands.sort(function(a, b){ return byTime(a.r, b.r); });
+      var edge = rk < grp.rank ? cands[cands.length - 1] : cands[0];
+      var diff = (edge.r.time === null || r.time === null) ? (rk > grp.rank ? 900 : 999) : Math.abs(edge.r.time - r.time);
+      if(!best || diff < best.diff) best = { g: d, l: edge.l, r: edge.r, diff: diff };
+    });
+    if(best){
+      best.g.runners[best.l] = null;
+      grp.runners[li] = best.r;
+      rec.moved = { name: best.r.name, fromRank: best.g.rank, fromLane: best.l };
+      toast(r.name + " さんを欠席にし、" + best.g.label + "の " + best.r.name + " さんを " + grp.label + " の" + (li + 1) + "レーンへ移しました");
+    }else{
+      toast(r.name + " さんを欠席にしました（移せる子がいないため空きレーンのまま）");
+    }
+  }
+  function undoFill(gi, ai){
+    var grp = state.groups[gi];
+    var rec = grp.absentees[ai];
+    if(!rec) return;
+    grp.absentees.splice(ai, 1);
+    var mv = rec.moved;
+    if(mv){
+      var d = findGroup(grp.prefix, mv.fromRank);
+      var cur = grp.runners[rec.lane];
+      if(d && !d.runners[mv.fromLane] && cur && cur.name === mv.name){
+        d.runners[mv.fromLane] = cur;
+        grp.runners[rec.lane] = rec.runner;
+        toast(rec.runner.name + " さんを戻し、" + mv.name + " さんも元の組に戻しました");
+        renderAll(); saveLast(); return;
+      }
+    }
+    if(!grp.runners[rec.lane]){ grp.runners[rec.lane] = rec.runner; }
+    else{
+      var empty = grp.runners.indexOf(null);
+      if(empty < 0){
+        grp.absentees.splice(ai, 0, rec);
+        toast("この組に空きレーンがないため戻せません。先に誰かを入れかえてください");
+        return;
+      }
+      grp.runners[empty] = rec.runner;
+    }
+    toast(rec.runner.name + " さんの欠席を取り消しました");
+    renderAll(); saveLast();
+  }
+  function bindLongPress(el, fn){
+    var t = null, sx = 0, sy = 0;
+    el.addEventListener("pointerdown", function(e){
+      sx = e.clientX; sy = e.clientY;
+      clearTimeout(t);
+      t = setTimeout(fn, 600);
+    });
+    el.addEventListener("pointermove", function(e){
+      if(Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 10) clearTimeout(t);
+    });
+    ["pointerup", "pointerleave", "pointercancel", "dragstart"].forEach(function(ev){
+      el.addEventListener(ev, function(){ clearTimeout(t); });
+    });
+    el.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  }
+
+  // ---------- render ----------
+  function timeLabel(r){
+    if(r.time === null || r.time === undefined) return "未計測";
+    var s = String(r.time);
+    return r.time.toFixed(s.indexOf(".") >= 0 ? Math.min(2, s.split(".")[1].length) : 1) + "秒";
+  }
+  function classColors(){
+    var list = [];
+    state.groups.forEach(function(g){
+      g.runners.concat(g.absentees.map(function(a){ return a.runner; })).forEach(function(r){
+        if(r && r.cls && list.indexOf(r.cls) < 0) list.push(r.cls);
+      });
+    });
+    list.sort(function(a, b){ return a.localeCompare(b, "ja", { numeric: true }); });
+    var map = {};
+    list.forEach(function(c, i){ map[c] = CLS_COLORS[i % CLS_COLORS.length]; });
+    return map;
+  }
+  function renderAll(){
+    renderGroups();
+    renderReadList();
+    renderPrint();
+    renderCards();
+    renderLog();
+    resultSec.className = state.groups.length ? "show" : "";
+    $("orderState").textContent = state.groups.length ? (state.orderShuffled ? "いまの出走順：シャッフル済み" : "いまの出走順：速い順") : "";
+    syncSeg($("segAbsent"), state.absentMode);
+    $("chkHideTime").checked = !!state.hideTime;
+  }
+  function renderGroups(){
+    groupsWrap.innerHTML = "";
+    var colors = classColors();
+    state.groups.forEach(function(g, gi){
+      var card = document.createElement("div");
+      card.className = "gcard" + (g.girl ? " girl" : "");
+      var cnt = presentCount(g);
+      var h = document.createElement("h3");
+      h.innerHTML = esc(g.label) + ' <span class="gsub">' + cnt + "人" + (state.orderShuffled ? "（速さ" + (g.rank + 1) + "番目）" : "") + "</span>";
+      card.appendChild(h);
+      var mix = {};
+      g.runners.forEach(function(r){ if(r && !r.absent && r.cls) mix[r.cls] = (mix[r.cls] || 0) + 1; });
+      var mk = Object.keys(mix).sort(function(a, b){ return a.localeCompare(b, "ja", { numeric: true }); });
+      if(mk.length){
+        var md = document.createElement("div");
+        md.className = "clsmix";
+        md.innerHTML = mk.map(function(k){ return '<span><span class="dot" style="background:' + colors[k] + '"></span>' + esc(k) + " " + mix[k] + "</span>"; }).join("");
+        card.appendChild(md);
+      }
+      g.runners.forEach(function(r, li){
+        var lane = document.createElement("div");
+        lane.className = "lane" + (r ? (r.absent ? " absent" : "") : " empty");
+        lane.dataset.g = gi; lane.dataset.l = li;
+        var inner = '<span class="laneno">' + (li + 1) + "</span>";
+        if(r){
+          inner += '<span class="lname">' + esc(r.name) + "</span>";
+          var up = improvement(r.name, r.baseTime);
+          if(up > 0) inner += '<span class="up" title="前回より' + up + '秒縮みました">↑' + up + "</span>";
+          if(r.cls) inner += '<span class="lc" style="background:' + colors[r.cls] + '">' + esc(r.cls) + "</span>";
+          if(r.gender) inner += '<span class="lg' + (r.gender === "男" ? " boy" : "") + '">' + r.gender + "</span>";
+          inner += '<span class="ltime">' + esc(timeLabel(r)) + "</span>";
+          lane.draggable = true;
+          bindLongPress(lane, function(){ toggleAbsent(gi, li); });
+        } else {
+          inner += '<span class="lname" style="color:#BBB;font-weight:500;">（空き）</span>';
+        }
+        lane.innerHTML = inner;
+        if(selected && selected.g === gi && selected.l === li) lane.classList.add("selected");
+        lane.addEventListener("click", function(){ onLaneTap(gi, li); });
+        lane.addEventListener("dragstart", function(e){
+          if(!state.groups[gi].runners[li]){ e.preventDefault(); return; }
+          e.dataTransfer.setData("text/plain", gi + "," + li);
+          e.dataTransfer.effectAllowed = "move";
+        });
+        lane.addEventListener("dragover", function(e){ e.preventDefault(); lane.classList.add("dragover"); });
+        lane.addEventListener("dragleave", function(){ lane.classList.remove("dragover"); });
+        lane.addEventListener("drop", function(e){
+          e.preventDefault(); lane.classList.remove("dragover");
+          var d = e.dataTransfer.getData("text/plain").split(",");
+          var sg = parseInt(d[0], 10), sl = parseInt(d[1], 10);
+          if(isNaN(sg) || isNaN(sl)) return;
+          doSwap(sg, sl, gi, li);
+        });
+        card.appendChild(lane);
+      });
+      if(g.absentees.length){
+        var ab = document.createElement("div");
+        ab.className = "absentees";
+        ab.innerHTML = g.absentees.map(function(a, ai){
+          return '<div>欠席：' + esc(a.runner.name) + (a.moved ? "（" + esc(a.moved.name) + " さんが代わりに入りました）" : "") +
+            ' <button class="btn tiny" data-ai="' + ai + '" type="button">もどす</button></div>';
+        }).join("");
+        ab.querySelectorAll("button[data-ai]").forEach(function(b){
+          b.addEventListener("click", function(){ undoFill(gi, parseInt(b.dataset.ai, 10)); });
+        });
+        card.appendChild(ab);
+      }
+      groupsWrap.appendChild(card);
+    });
+  }
+  function onLaneTap(g, l){
+    if(Date.now() < suppressClickUntil) return;
+    if(!selected){
+      if(!state.groups[g].runners[l]) return;
+      selected = { g: g, l: l };
+      swapBar.classList.add("show");
+      renderGroups();
+      return;
+    }
+    if(selected.g === g && selected.l === l){
+      selected = null;
+      swapBar.classList.remove("show");
+      renderGroups();
+      return;
+    }
+    doSwap(selected.g, selected.l, g, l);
+  }
+  function doSwap(g1, l1, g2, l2){
+    if(g1 === g2 && l1 === l2) return;
+    var A = state.groups[g1].runners, B = state.groups[g2].runners;
+    var t = A[l1]; A[l1] = B[l2]; B[l2] = t;
+    selected = null;
+    swapBar.classList.remove("show");
+    renderAll();
+    saveLast();
+  }
+  function renderReadList(){
+    var ht = state.hideTime;
+    var html = "<thead><tr><th>組</th><th>レーン</th><th>なまえ</th>" + (ht ? "" : "<th>タイム</th>") + "</tr></thead><tbody>";
+    state.groups.forEach(function(g){
+      var first = true;
+      g.runners.forEach(function(r, li){
+        if(!r || r.absent) return;
+        html += "<tr" + (first ? ' class="grouphead"' : "") + ">";
+        html += '<td class="gcell">' + (first ? esc(g.label) : "") + "</td>";
+        html += "<td>" + (li + 1) + "</td><td>" + esc(r.name) + (r.gender ? "（" + r.gender + "）" : "") + (r.cls ? " " + esc(r.cls) : "") + "</td>" + (ht ? "" : "<td>" + esc(timeLabel(r)) + "</td>") + "</tr>";
+        first = false;
+      });
+    });
+    html += "</tbody>";
+    readList.innerHTML = html;
+  }
+  function renderPrint(){
+    var d = new Date(), ht = state.hideTime;
+    var html = "<h1>🏃 走順・組分け表</h1><p class='pdate'>" +
+      d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日作成　1組" + state.laneCount + "レーン</p>";
+    state.groups.forEach(function(g){
+      html += "<table><caption>" + esc(g.label) + "</caption><tr><th style='width:14mm;'>レーン</th><th>なまえ</th>" + (ht ? "" : "<th style='width:22mm;'>タイム</th>") + "</tr>";
+      g.runners.forEach(function(r, li){
+        var show = r && !r.absent;
+        html += "<tr><td class='num'>" + (li + 1) + "</td><td>" +
+          (show ? esc(r.name) + (r.gender ? "（" + r.gender + "）" : "") + (r.cls ? "　" + esc(r.cls) : "") : "") + "</td>" +
+          (ht ? "" : "<td class='tm'>" + (show ? esc(timeLabel(r)) : "") + "</td>") + "</tr>";
+      });
+      html += "</table>";
+    });
+    $("printArea").innerHTML = html;
+  }
+  // 招集カード：一人一枚「〇組目・〇レーン」（タイムは常に出さない）
+  function cardItems(){
+    var items = [];
+    state.groups.forEach(function(g){
+      var no = g.label.replace(/^.*第(\d+)組$/, "$1");
+      g.runners.forEach(function(r, li){
+        if(!r || r.absent) return;
+        items.push({ name: r.name, where: (g.prefix ? g.prefix + " " : "") + no + "組目・" + (li + 1) + "レーン" });
+      });
+    });
+    return items;
+  }
+  function renderCards(){
+    var items = cardItems(), html = "";
+    for(var i = 0; i < items.length; i += 24){
+      html += '<div class="cards-page"><div class="cards-grid">' + items.slice(i, i + 24).map(function(it){
+        return '<div class="ccard"><div class="cc-h">✂ しょうしゅうカード</div><div class="cc-g">' + esc(it.where) + '</div><div class="cc-n">' + esc(it.name) + "</div></div>";
+      }).join("") + "</div></div>";
+    }
+    $("printCards").innerHTML = html;
+  }
+
+  // ---------- muster mode ----------
+  function renderMuster(){
+    if(!state.groups.length) return;
+    if(state.musterIdx < 0) state.musterIdx = 0;
+    if(state.musterIdx >= state.groups.length) state.musterIdx = state.groups.length - 1;
+    var gi = state.musterIdx, g = state.groups[gi];
+    $("mGname").textContent = g.label;
+    var wrap = $("mRunners");
+    wrap.innerHTML = "";
+    g.runners.forEach(function(r, li){
+      if(!r || r.absent) return;
+      var div = document.createElement("div");
+      div.className = "m-runner";
+      div.innerHTML = '<div class="mr-lane">' + (li + 1) + "レーン</div><div class='mr-name'>" + esc(r.name) + "</div>";
+      bindLongPress(div, function(){ toggleAbsent(gi, li); });
+      wrap.appendChild(div);
+    });
+    var next = state.groups[gi + 1];
+    if(next){
+      var names = next.runners.filter(function(r){ return r && !r.absent; }).map(function(r){ return esc(r.name); }).join("　");
+      $("mNext").innerHTML = "<strong>" + esc(next.label) + "</strong>：" + names;
+    } else {
+      $("mNext").textContent = "これが最後の組です 🎉";
+    }
+    $("btnMPrev").disabled = gi === 0;
+    $("btnMNext").disabled = gi >= state.groups.length - 1;
+  }
+
+  // ---------- timelog render ----------
+  function renderLog(){
+    var date = DB.logDate || todayStr();
+    $("logDate").value = date;
+    var names = [], seen = {};
+    parseInput(inputArea.value).runners.forEach(function(r){ if(!seen[r.name]){ seen[r.name] = true; names.push(r); } });
+    var tb = $("logTable");
+    if(!names.length){ tb.innerHTML = '<tr><td class="hint">「1」に名簿を貼り付けると、ここに一覧が出ます。</td></tr>'; return; }
+    var html = "<thead><tr><th>なまえ</th><th>" + esc(date.slice(5).replace("-", "/")) + " のタイム</th><th>これまで</th><th>組分けに使う</th></tr></thead><tbody>";
+    names.forEach(function(r, i){
+      var entry = (DB.timeLog[r.name] || []).filter(function(e){ return e.date === date; })[0];
+      var vals = timeValues(r.name, r.time);
+      var up = improvement(r.name, r.time);
+      var eff = effectiveTime(r.name, r.time);
+      html += "<tr><td><strong>" + esc(r.name) + "</strong>" + (r.cls ? ' <span class="hist">' + esc(r.cls) + "</span>" : "") + "</td>" +
+        '<td><input type="text" inputmode="decimal" data-i="' + i + '" value="' + (entry ? entry.time : "") + '" placeholder="秒"></td>' +
+        '<td class="hist">' + (vals.length ? vals.join(" → ") : "—") + (up > 0 ? ' <span class="up">↑' + up + "</span>" : "") + "</td>" +
+        "<td>" + (eff === null ? "—" : eff + "秒") + "</td></tr>";
+    });
+    tb.innerHTML = html + "</tbody>";
+    tb.querySelectorAll("input[data-i]").forEach(function(inp){
+      inp.addEventListener("change", function(){
+        var r = names[parseInt(inp.dataset.i, 10)];
+        var v = parseTime(inp.value.trim());
+        var list = (DB.timeLog[r.name] || []).filter(function(e){ return e.date !== date; });
+        if(v !== null) list.push({ date: date, time: v });
+        else if(inp.value.trim() !== "") toast("タイムは数字で入れてください（例 10.4）");
+        list.sort(function(a, b){ return a.date.localeCompare(b.date); });
+        if(list.length) DB.timeLog[r.name] = list; else delete DB.timeLog[r.name];
+        save(); renderLog(); renderGroups();
+      });
+    });
+  }
+
+  // ---------- storage ----------
+  function currentData(){
+    return {
+      input: inputArea.value,
+      method: state.method,
+      laneMode: state.laneMode,
+      byGender: $("chkGender").checked,
+      laneCount: parseInt($("laneCount").value, 10) || 5,
+      groups: state.groups,
+      mixClass: $("chkMix").checked,
+      timeSource: state.timeSource,
+      absentMode: state.absentMode,
+      hideTime: state.hideTime,
+      orderShuffled: state.orderShuffled
+    };
+  }
+  function normGroups(gs){
+    if(!Array.isArray(gs)) return [];
+    var cnt = {};
+    return gs.filter(isObj).map(function(g){
+      var label = typeof g.label === "string" ? g.label : "第1組";
+      var m = label.match(/^(.*?)第(\d+)組$/);
+      var prefix = typeof g.prefix === "string" ? g.prefix : (m ? m[1] : "");
+      cnt[prefix] = (cnt[prefix] || 0) + 1;
+      var runners = Array.isArray(g.runners) ? g.runners.map(function(r){
+        if(!isObj(r) || !r.name) return null;
+        var o = { name: String(r.name), time: typeof r.time === "number" ? r.time : null, gender: r.gender || null, cls: r.cls || null };
+        o.baseTime = typeof r.baseTime === "number" ? r.baseTime : (r.baseTime === null ? null : o.time);
+        if(r.absent) o.absent = true;
+        return o;
+      }) : [];
+      return {
+        label: label, prefix: prefix,
+        rank: typeof g.rank === "number" ? g.rank : cnt[prefix] - 1,
+        girl: !!g.girl, runners: runners,
+        absentees: Array.isArray(g.absentees) ? g.absentees.filter(function(a){ return isObj(a) && isObj(a.runner); }) : []
+      };
+    });
+  }
+  function applyData(d){
+    if(!isObj(d)) return;
+    inputArea.value = d.input || "";
+    state.method = d.method === "shuffle" ? "shuffle" : "even";
+    state.laneMode = ["center", "inside", "random"].indexOf(d.laneMode) >= 0 ? d.laneMode : "center";
+    state.laneCount = d.laneCount || 5;
+    state.groups = normGroups(d.groups);
+    state.mixClass = !!d.mixClass;
+    state.timeSource = ["latest", "best", "avg"].indexOf(d.timeSource) >= 0 ? d.timeSource : "latest";
+    state.absentMode = d.absentMode === "fill" ? "fill" : "keep";
+    state.hideTime = !!d.hideTime;
+    state.orderShuffled = !!d.orderShuffled;
+    state.musterIdx = 0;
+    selected = null;
+    $("laneCount").value = String(state.laneCount);
+    $("chkGender").checked = !!d.byGender;
+    $("chkMix").checked = state.mixClass;
+    syncSeg($("segMethod"), state.method);
+    syncSeg($("segLane"), state.laneMode);
+    syncSeg($("segSource"), state.timeSource);
+    renderAll();
+  }
+  function readJSON(key){
+    try{ var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+    catch(e){ toast("保存に失敗しました（容量オーバーの可能性）"); }
+  }
+  function saveLast(){ DB.current = currentData(); save(); }
+  function normPatterns(p){
+    var out = {};
+    if(!isObj(p)) return out;
+    Object.keys(p).forEach(function(k){ if(isObj(p[k]) && isObj(p[k].data)) out[k] = { savedAt: p[k].savedAt || 0, data: p[k].data }; });
+    return out;
+  }
+  function normDB(d){
+    return {
+      version: 1,
+      current: isObj(d.current) ? d.current : null,
+      patterns: normPatterns(d.patterns),
+      timeLog: isObj(d.timeLog) ? d.timeLog : {},
+      logDate: typeof d.logDate === "string" ? d.logDate : ""
+    };
+  }
+  function load(){
+    var d = readJSON(STORAGE_KEY);
+    if(!isObj(d)){
+      // 初回起動：同じブラウザに無料版のデータ（最後の入力と保存パターン）があれば引き継ぐ。無料版は消さない
+      d = { version: 1, current: null, patterns: {}, timeLog: {} };
+      var last = readJSON(LS_LAST), pats = normPatterns(readJSON(LS_PATS));
+      if(isObj(last)) d.current = last;
+      d.patterns = pats;
+      if(isObj(last) || Object.keys(pats).length){
+        var n = 0;
+        if(isObj(last)) n = parseInput(last.input).runners.length;
+        migrateInfo = { runners: n, groups: isObj(last) && Array.isArray(last.groups) ? last.groups.length : 0, pats: Object.keys(pats).length };
+      }
+    }
+    DB = normDB(d);
+    if(DB.current) applyData(DB.current);
+  }
+  function renderPatList(){
+    var pats = DB.patterns;
+    var keys = Object.keys(pats).sort(function(a, b){ return (pats[b].savedAt || 0) - (pats[a].savedAt || 0); });
+    var wrap = $("patList");
+    wrap.innerHTML = "";
+    if(keys.length === 0){
+      wrap.innerHTML = '<p class="hint">保存されたパターンはまだありません。</p>';
+      return;
+    }
+    keys.forEach(function(k){
+      var p = pats[k];
+      var item = document.createElement("div");
+      item.className = "pitem";
+      var d = new Date(p.savedAt || 0);
+      var cnt = 0;
+      (p.data.groups || []).forEach(function(g){ cnt += (g.runners || []).filter(Boolean).length; });
+      item.innerHTML =
+        '<span class="pname">' + esc(k) + "</span>" +
+        '<button class="btn small" data-act="load" type="button">よびだす</button>' +
+        '<button class="btn small ghost" data-act="del" type="button">削除</button>' +
+        '<span class="pmeta">' + (d.getMonth() + 1) + "/" + d.getDate() + " 保存" +
+        (cnt ? "・" + cnt + "人・" + (p.data.groups || []).length + "組" : "") + "</span>";
+      item.querySelector('[data-act="load"]').addEventListener("click", function(){
+        applyData(JSON.parse(JSON.stringify(p.data)));
+        saveLast();
+        showMsg(patMsg, "「" + k + "」をよびだしました。", "ok");
+        try{ window.scrollTo({ top: 0, behavior: "smooth" }); }catch(e){}
+      });
+      item.querySelector('[data-act="del"]').addEventListener("click", function(){
+        armConfirm(this, "pat_" + k, function(){
+          delete DB.patterns[k]; save(); renderPatList();
+          showMsg(patMsg, "「" + k + "」を削除しました。", "ok");
+        }, "ほんとうに削除？");
+      });
+      wrap.appendChild(item);
+    });
+  }
+  function renderMigrate(){
+    ["migrateBox", "migrateTop"].forEach(function(id){
+      var mb = $(id);
+      if(!migrateInfo){ mb.style.display = "none"; return; }
+      mb.style.display = "";
+      mb.innerHTML = '<button class="x" aria-label="閉じる">✕</button>🏃 <b>無料版のデータを引き継ぎました。</b><br>' +
+        "同じブラウザに入っていた最後の入力（" + migrateInfo.runners + "人" + (migrateInfo.groups ? "・" + migrateInfo.groups + "組" : "") + "）と、保存パターン（" + migrateInfo.pats + "件）を読みこんでいます。" +
+        "<br>無料版のデータはそのまま残っているので、しばらく両方を開いて確かめてもだいじょうぶです。";
+      mb.querySelector(".x").addEventListener("click", function(){ migrateInfo = null; renderMigrate(); });
+    });
+  }
+
+  // ---------- segmented controls ----------
+  function syncSeg(seg, val){
+    Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+      b.className = b.dataset.v === val ? "on" : "";
+    });
+  }
+  function bindSeg(seg, key, after){
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button");
+      if(!b) return;
+      state[key] = b.dataset.v;
+      syncSeg(seg, b.dataset.v);
+      saveLast();
+      if(after) after();
+    });
+  }
+
+  // ---------- events ----------
+  bindSeg($("segMethod"), "method");
+  bindSeg($("segLane"), "laneMode");
+  bindSeg($("segSource"), "timeSource", function(){ renderLog(); toast("「くみわけ実行」を押すと、このタイムで組み直します"); });
+  bindSeg($("segAbsent"), "absentMode");
+  $("chkHideTime").addEventListener("change", function(){ state.hideTime = this.checked; renderAll(); saveLast(); });
+  $("chkMix").addEventListener("change", saveLast);
+  $("btnGenerate").addEventListener("click", generate);
+  $("btnReshuffle").addEventListener("click", generate);
+  $("btnOrderShuffle").addEventListener("click", shuffleOrder);
+  $("btnOrderReset").addEventListener("click", resetOrder);
+  function doPrint(cards){
+    renderPrint(); renderCards();
+    if(cards) document.body.classList.add("p-cards");
+    var clean = function(){ document.body.classList.remove("p-cards"); };
+    window.onafterprint = clean;
+    setTimeout(function(){ window.print(); setTimeout(clean, 500); }, 50);
+  }
+  $("btnPrint").addEventListener("click", function(){ doPrint(false); });
+  $("btnCards").addEventListener("click", function(){
+    if(!cardItems().length){ toast("先にくみわけをしてください"); return; }
+    doPrint(true);
+  });
+  $("btnClear").addEventListener("click", function(){
+    inputArea.value = "";
+    inputArea.focus();
+    saveLast(); renderLog();
+  });
+  $("btnSample").addEventListener("click", function(){
+    inputArea.value = [
+      "やまだ 9.8 男 1組", "さとう 10.2 女 2組", "すずき 9.5 男 1組", "たなか 11.0 女 3組",
+      "いとう 10.5 男 2組", "わたなべ 9.9 女 1組", "こばやし 10.8 男 3組", "かとう 9.3 女 1組",
+      "よしだ 10.1 男 2組", "やまもと 11.4 女 3組", "なかむら 9.6 男 1組", "おがわ 10.4 女 2組",
+      "ささき 11.8 男 3組", "まつもと 10.0 女 2組", "いのうえ 9.2 男 1組", "きむら 10.9 女 3組",
+      "はやし 10.6 男 2組", "しみず 9.7 女 1組", "もり 11.2 男 3組", "あべ 10.3 女 2組",
+      "ふじた 男 3組", "おかだ 女 2組"
+    ].join("\n");
+    showMsg(parseMsg, "サンプル22人（3クラス）を入れました（最後の2人はタイムなし）。", "ok");
+    saveLast(); renderLog();
+  });
+  inputArea.addEventListener("input", function(){
+    clearTimeout(inputArea._t);
+    inputArea._t = setTimeout(function(){
+      var p = parseInput(inputArea.value);
+      if(p.runners.length > 0){
+        var noTime = p.runners.filter(function(r){ return r.time === null; }).length;
+        var gCnt = p.runners.filter(function(r){ return r.gender; }).length;
+        var cls = {};
+        p.runners.forEach(function(r){ if(r.cls) cls[r.cls] = 1; });
+        var m = p.runners.length + "人を読み取り中";
+        if(noTime) m += "（タイムなし" + noTime + "人）";
+        if(gCnt) m += "・男女指定" + gCnt + "人";
+        if(Object.keys(cls).length) m += "・クラス" + Object.keys(cls).length + "つ";
+        showMsg(parseMsg, m, "ok");
+      }
+      saveLast(); renderLog();
+    }, 400);
+  });
+  $("laneCount").addEventListener("change", saveLast);
+  $("chkGender").addEventListener("change", saveLast);
+  $("logDate").addEventListener("change", function(){ DB.logDate = this.value || todayStr(); save(); renderLog(); });
+  $("btnDelDate").addEventListener("click", function(){
+    var date = DB.logDate || todayStr();
+    armConfirm(this, "delDate", function(){
+      Object.keys(DB.timeLog).forEach(function(k){
+        DB.timeLog[k] = DB.timeLog[k].filter(function(e){ return e.date !== date; });
+        if(!DB.timeLog[k].length) delete DB.timeLog[k];
+      });
+      save(); renderLog(); renderGroups(); toast("この日の記録を消しました");
+    }, "もう一度押すと消します");
+  });
+  $("btnSavePat").addEventListener("click", function(){
+    var name = $("patName").value.trim();
+    if(!name){
+      showMsg(patMsg, "パターン名を入力してください。", "err");
+      $("patName").focus();
+      return;
+    }
+    DB.patterns[name] = { savedAt: Date.now(), data: JSON.parse(JSON.stringify(currentData())) };
+    save();
+    $("patName").value = "";
+    renderPatList();
+    showMsg(patMsg, "「" + name + "」として保存しました。", "ok");
+  });
+  $("btnExport").addEventListener("click", function(){
+    DB.current = currentData();
+    var txt = JSON.stringify({ app: "sojun-pro", version: 1, current: DB.current, patterns: DB.patterns, timeLog: DB.timeLog });
+    var area = $("dataArea");
+    area.innerHTML = '<p class="hint">下の文字列をコピーして保存・共有してください。</p><textarea class="io" id="exportText" readonly></textarea>' +
+      '<div class="btnrow"><button class="btn small" id="btnCopy" type="button">コピー</button><button class="btn small ghost" id="btnCloseData" type="button">閉じる</button></div>';
+    $("exportText").value = txt;
+    $("btnCopy").addEventListener("click", function(){ copyText(txt); });
+    $("btnCloseData").addEventListener("click", function(){ area.innerHTML = ""; });
+  });
+  $("btnImport").addEventListener("click", function(){
+    var area = $("dataArea");
+    area.innerHTML = '<p class="hint">書き出した文字列を貼りつけて「読みこむ」を押してください。<b>いまの名簿・組分け・タイムの記録・保存パターンが置きかわります。</b></p>' +
+      '<textarea class="io" id="importText" placeholder="ここに貼りつけ"></textarea>' +
+      '<div class="btnrow"><button class="btn small" id="btnDoImport" type="button">読みこむ</button><button class="btn small ghost" id="btnCloseData2" type="button">閉じる</button></div>' +
+      '<p id="importErr" style="color:#B22633;font-size:.85rem;margin-top:6px;"></p>';
+    $("btnDoImport").addEventListener("click", function(){
+      var txt = $("importText").value.trim(), err = $("importErr");
+      if(!txt){ err.textContent = "テキストが空です。"; return; }
+      var d;
+      try{ d = JSON.parse(txt); }catch(e){ err.textContent = "読みこめませんでした。書き出した文字列か確認してください。"; return; }
+      var isPro = isObj(d) && (isObj(d.current) || isObj(d.patterns) || isObj(d.timeLog));
+      var isFree = isObj(d) && typeof d.input === "string";
+      if(!isPro && !isFree){ err.textContent = "読みこめませんでした。書き出した文字列か確認してください。"; return; }
+      armConfirm(this, "import", function(){
+        if(isPro) DB = normDB(d);
+        else DB.current = d;
+        if(DB.current) applyData(DB.current); else applyData({});
+        save(); renderPatList();
+        area.innerHTML = "";
+        toast("読みこみました");
+      }, "もう一度押すと、いまのデータを置きかえます");
+    });
+    $("btnCloseData2").addEventListener("click", function(){ area.innerHTML = ""; });
+  });
+  // muster
+  $("btnMuster").addEventListener("click", function(){
+    if(!state.groups.length) return;
+    state.musterIdx = 0;
+    renderMuster();
+    $("muster").classList.add("show");
+  });
+  $("btnMusterClose").addEventListener("click", function(){ $("muster").classList.remove("show"); });
+  $("btnMPrev").addEventListener("click", function(){ state.musterIdx--; renderMuster(); });
+  $("btnMNext").addEventListener("click", function(){ state.musterIdx++; renderMuster(); });
+
+  // ---------- init ----------
+  load();
+  if(!DB.logDate) DB.logDate = todayStr();
+  DB.current = currentData();
+  save();   // 初回（＝引き継ぎ直後）にすぐ書きこむ。これをしないと毎回無料版から読み直してしまう
+  renderAll();
+  renderPatList();
+  renderMigrate();
+
+  // テスト用の窓口（画面の動作には関係しません）
+  window.__sojunPro = {
+    get DB(){ return DB; }, get state(){ return state; },
+    parseInput: parseInput, generate: generate, toggleAbsent: toggleAbsent, undoFill: undoFill,
+    shuffleOrder: shuffleOrder, resetOrder: resetOrder, clsPenalty: clsPenalty, cardItems: cardItems,
+    effectiveTime: effectiveTime, improvement: improvement, renderMuster: renderMuster
+  };
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

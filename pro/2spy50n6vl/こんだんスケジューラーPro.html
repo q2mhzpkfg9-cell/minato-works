@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>こんだんスケジューラー Pro</title>
+<style>
+:root{
+  --accent:#D4820A;
+  --accent-soft:#FBEEDB;
+  --bg:#F7F5F0;
+  --card:#FFFFFF;
+  --ink:#3A3530;
+  --sub:#8A8378;
+  --line:#E8E3DA;
+  --ok:#3E8E5A;
+  --ng:#C25450;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  line-height:1.6;
+  padding-bottom:60px;
+}
+header.appbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;background:var(--accent);color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+  position:sticky;top:0;z-index:20;
+}
+header.appbar h1{font-size:1.1rem;font-weight:700;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.appbar a.back{
+  color:#fff;text-decoration:none;font-size:.85rem;
+  padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.18);white-space:nowrap;
+}
+header.appbar a.back:active{background:rgba(255,255,255,.32)}
+.pro-badge{
+  display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;
+  background:#fff;color:var(--accent);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;
+}
+.class-select{
+  width:auto !important;min-width:90px;max-width:40vw;
+  font-family:inherit;font-size:.95rem !important;font-weight:700;
+  padding:7px 10px !important;border-radius:10px !important;border:none !important;
+  background:#fff !important;color:var(--accent) !important;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:16px}
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 16px}
+.tabs button{
+  flex:1;min-width:92px;border:none;cursor:pointer;
+  padding:12px 6px;border-radius:12px;font-size:.92rem;font-weight:700;
+  background:#EFEBE2;color:var(--sub);font-family:inherit;
+}
+.tabs button.pro{background:#F6E7CF;color:#9A5E06}
+.tabs button.active{background:var(--accent);color:#fff}
+.panel{display:none}
+.panel.active{display:block}
+.card{
+  background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);
+  padding:18px;margin-bottom:16px;
+}
+.card h2{font-size:1.05rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .num{
+  background:var(--accent);color:#fff;border-radius:50%;
+  width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:.85rem;flex-shrink:0;
+}
+.hint{font-size:.85rem;color:var(--sub);margin-bottom:10px}
+textarea,input[type=text],input[type=date],input[type=time],input[type=number],select{
+  font-family:inherit;font-size:1rem;color:var(--ink);
+  border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;
+  width:100%;
+}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+textarea{min-height:120px;resize:vertical}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:1rem;
+  padding:12px 20px;border-radius:12px;background:var(--accent);color:#fff;
+  min-height:48px;
+}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sub{background:#EFEBE2;color:var(--ink)}
+.btn.danger{background:#fff;color:var(--ng);border:1.5px solid var(--ng)}
+.btn.confirming{background:var(--ng) !important;color:#fff !important}
+.btn.small{min-height:38px;padding:6px 12px;font-size:.85rem;border-radius:10px}
+.btn.tiny{min-height:30px;padding:3px 9px;font-size:.78rem;border-radius:8px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+/* roster list */
+.fam-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.fam-row{
+  display:grid;grid-template-columns:2rem 1fr 1.4fr auto;gap:8px;align-items:center;
+  background:#FBFAF7;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;
+}
+.fam-row .no{color:var(--sub);font-size:.85rem;text-align:center}
+.fam-row input{padding:8px 10px;font-size:.95rem}
+.icon-btn{
+  border:none;background:none;cursor:pointer;font-size:1.1rem;color:var(--sub);
+  width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:active{background:#EFEBE2}
+/* days */
+.day-row{
+  background:#FBFAF7;border:1.5px solid var(--line);border-radius:12px;
+  padding:12px;margin-bottom:10px;
+}
+.day-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:8px;align-items:end}
+.day-grid label,.break-grid label{font-size:.75rem;color:var(--sub);display:block;margin-bottom:2px}
+.break-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-top:8px}
+.break-tag{font-size:.8rem;color:var(--sub);margin-top:8px}
+.slot-summary{
+  margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);
+  font-size:.92rem;font-weight:700;
+}
+.slot-summary.warn{background:#F9E2E1;color:var(--ng)}
+/* conditions table */
+.cond-table-wrap{overflow-x:auto}
+table.cond{border-collapse:collapse;width:100%;min-width:860px}
+table.cond th,table.cond td{
+  border-bottom:1px solid var(--line);padding:8px 6px;font-size:.9rem;text-align:left;vertical-align:top;
+}
+table.cond th{color:var(--sub);font-size:.8rem;font-weight:700;white-space:nowrap}
+.daychk{display:inline-flex;align-items:center;gap:4px;font-size:.85rem;cursor:pointer;user-select:none;padding:4px}
+.daychk input{width:20px;height:20px;accent-color:var(--accent);cursor:pointer}
+select.pref{width:auto;min-width:110px;padding:8px}
+.sib-row{display:grid;grid-template-columns:5.5em 8.6em 6.4em 9.5em auto;gap:4px;align-items:center;margin-bottom:4px}
+.sib-row input,.sib-row select{padding:6px 6px;font-size:.85rem;border-radius:8px}
+.sib-cand{font-size:.78rem;background:#EEF5EE;border:1px solid #CFE3D2;border-radius:8px;padding:4px 8px;margin:3px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+input.cond-memo{padding:6px 8px;font-size:.85rem;min-width:9em}
+/* schedule */
+.sched-day{margin-bottom:18px}
+.sched-day h3{
+  font-size:1rem;background:var(--accent-soft);border-radius:10px;padding:8px 12px;margin-bottom:8px;
+}
+table.sched{border-collapse:collapse;width:100%}
+table.sched th,table.sched td{border:1px solid var(--line);padding:8px 10px;font-size:.92rem}
+table.sched th{background:#FBFAF7;color:var(--sub);font-size:.8rem;width:9.5em;white-space:nowrap}
+td.slot-cell{cursor:pointer;position:relative;background:#fff;min-height:44px}
+td.slot-cell.empty{color:#B9B2A6;background:#FCFBF8}
+td.slot-cell.selected{outline:3px solid var(--accent);outline-offset:-3px;background:var(--accent-soft)}
+td.slot-cell .memo{font-size:.78rem;color:var(--sub);margin-left:6px}
+td.slot-cell .sib{font-size:.75rem;margin-left:6px;color:#3E6E8E;white-space:nowrap}
+td.slot-cell .sib.bad{color:var(--ng)}
+td.slot-cell .unset{
+  float:right;border:none;background:none;color:var(--sub);cursor:pointer;font-size:1rem;padding:2px 8px;border-radius:8px;
+}
+td.slot-cell .unset:active{background:#EFEBE2}
+td.break-cell{background:#F0EDE6;color:var(--sub);font-size:.85rem}
+.select-bar{
+  position:sticky;bottom:8px;z-index:15;
+  background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);margin-top:10px;font-size:.9rem;
+}
+.select-bar .btn{min-height:40px;padding:8px 14px;font-size:.9rem}
+.unassigned-box{border:1.5px dashed var(--ng);border-radius:12px;padding:12px;margin-top:14px;background:#FFF9F8}
+.unassigned-box h3{font-size:.95rem;color:var(--ng);margin-bottom:8px}
+.ufam{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  background:#fff;border:1.5px solid var(--line);margin-bottom:6px;cursor:pointer;flex-wrap:wrap;
+}
+.ufam.selected{outline:3px solid var(--accent);background:var(--accent-soft)}
+.ufam .reason{font-size:.8rem;color:var(--ng)}
+.badge{
+  display:inline-block;font-size:.72rem;font-weight:700;color:var(--accent);
+  background:var(--accent-soft);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle;
+}
+/* toast */
+#toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:.9rem;
+  opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* migrate */
+.migrate-box{background:#FFF8E8;border:1.5px solid #F0E2BF;border-radius:12px;padding:12px 30px 12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:6px;border:none;background:none;font-size:1rem;color:#a08a50;cursor:pointer}
+/* print blocks (screen preview) */
+.preview-box{border:1.5px solid var(--line);border-radius:12px;padding:14px;background:#fff;overflow-x:auto}
+.print-title{font-size:1.2rem;font-weight:700;text-align:center;margin-bottom:12px}
+.slips{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.slip{
+  border:1.6px dashed #9B958A;border-radius:6px;padding:12px 14px;
+  break-inside:avoid;page-break-inside:avoid;background:#fff;
+}
+.slip .slip-head{font-size:.72rem;color:var(--sub);letter-spacing:.05em}
+.slip .slip-name{font-size:1.05rem;font-weight:700;margin:2px 0}
+.slip .slip-time{font-size:1rem}
+.slip .slip-note{font-size:.8rem;color:var(--sub);margin-top:4px}
+/* survey */
+.sv-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.sv-opts label{font-size:.78rem;color:var(--sub);display:block}
+.chk-label{display:inline-flex;gap:6px;align-items:center;font-size:.9rem;cursor:pointer;margin-right:14px}
+.chk-label input{width:18px;height:18px;accent-color:var(--accent)}
+.sv-page{background:#fff}
+.survey{color:#222;padding:6mm 7mm;font-size:10.5pt;line-height:1.5}
+.sv-page.two .survey{height:136mm;overflow:hidden}
+.sv-page.two .survey + .survey{border-top:1.4px dashed #888}
+.sv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:2px solid #333;padding-bottom:3px;margin-bottom:5px}
+.sv-title{font-size:14pt;font-weight:700}
+.sv-name{font-size:10.5pt;white-space:nowrap}
+.sv-lead{font-size:9pt;margin-bottom:4px}
+.sv-sec{margin-top:5px}
+.sv-sec .sv-h{font-weight:700;font-size:10pt}
+table.sv-days{border-collapse:collapse;width:100%;margin-top:2px}
+table.sv-days td{border:1px solid #666;padding:2px 8px;font-size:10pt}
+table.sv-days td.mk{width:9em;text-align:center;letter-spacing:.6em}
+.sv-box{border:1px solid #666;height:12mm;margin-top:2px}
+.sv-foot{font-size:8.5pt;color:#555;margin-top:4px}
+.sv-screen-note{font-size:.8rem;color:var(--sub);margin-top:8px}
+.preview-box .sv-page{border:1px solid var(--line);margin-bottom:10px;max-width:210mm}
+/* today */
+.today-big{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.today-big .cell{background:var(--accent-soft);border-radius:14px;padding:12px 14px;text-align:center}
+.today-big .lab{font-size:.8rem;color:var(--sub);font-weight:700}
+.today-big .val{font-size:2.6rem;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
+.today-big .cell.late{background:#F9E2E1;color:var(--ng)}
+.today-big .cell.ok{background:#E3F1E7;color:var(--ok)}
+table.today{border-collapse:collapse;width:100%}
+table.today th,table.today td{border-bottom:1px solid var(--line);padding:8px 6px;font-size:.92rem;text-align:left;vertical-align:middle}
+table.today th{font-size:.78rem;color:var(--sub)}
+table.today tr.done td{color:var(--sub);background:#FAFAF7}
+table.today tr.now td{background:#FFF6E6}
+table.today .exp{font-weight:700}
+table.today .exp.late{color:var(--ng)}
+.hallway{position:fixed;inset:0;background:#1F1B16;color:#fff;z-index:900;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.hallway.show{display:flex}
+.hallway .hw-main{font-size:clamp(2.2rem,8vw,6rem);font-weight:800;line-height:1.3}
+.hallway .hw-num{color:#FFC75A}
+.hallway .hw-sub{font-size:clamp(1rem,2.6vw,1.8rem);margin-top:20px;opacity:.85}
+.hallway .hw-clock{font-size:clamp(1rem,2.4vw,1.6rem);margin-top:28px;opacity:.6;font-variant-numeric:tabular-nums}
+.hallway .hw-close{position:absolute;right:14px;top:14px;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:.9rem;cursor:pointer;font-family:inherit}
+/* memo */
+.memo-card{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FBFAF7}
+.memo-card .mh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.memo-grid{display:grid;grid-template-columns:9.5em 1fr 1fr;gap:6px}
+.memo-grid label{font-size:.72rem;color:var(--sub);display:block}
+.memo-grid input{padding:7px 8px;font-size:.9rem}
+textarea.out{min-height:130px;font-size:.85rem;margin-top:8px}
+/* class manage */
+.class-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.class-row input{flex:1}
+.class-row.active input{border-color:var(--accent)}
+.class-row .cnt{font-size:.8rem;color:var(--sub);white-space:nowrap}
+#printSchedule,#printSlips,#printSurvey{display:none}
+@media (max-width:640px){
+  .fam-row{grid-template-columns:1.6rem 1fr auto;grid-auto-rows:auto}
+  .fam-row input.memo-in{grid-column:2/4}
+  .day-grid{grid-template-columns:1fr 1fr;}
+  .day-grid .del-wrap{grid-column:2;text-align:right}
+  .slips{grid-template-columns:1fr}
+  .memo-grid{grid-template-columns:1fr}
+  .today-big .val{font-size:2rem}
+  html{font-size:15px}
+}
+@media print{
+  @page{size:A4;margin:8mm}
+  body{background:#fff;padding:0}
+  body>*{display:none !important}
+  body.p-schedule #printSchedule{display:block !important}
+  body.p-slips #printSlips{display:block !important}
+  body.p-survey #printSurvey{display:block !important}
+  #printSchedule,#printSlips{padding:8mm;font-size:10.5pt}
+  table.sched th,table.sched td{border:1px solid #888;padding:4px 8px}
+  .sched-day{page-break-inside:avoid;margin-bottom:14px}
+  .sched-day h3{background:none;border-bottom:2px solid #333;border-radius:0;padding:2px 4px}
+  td.slot-cell .unset{display:none}
+  .slips{grid-template-columns:repeat(2,1fr);gap:6px}
+  .sv-page{page-break-after:always;break-after:page}
+  .sv-page:last-child{page-break-after:auto;break-after:auto}
+  .sv-page.two .survey{height:138mm}
+}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>🗓️ こんだんスケジューラー<span class="pro-badge">PRO</span></h1>
+  <select class="class-select" id="classSelect" aria-label="クラスを切り替え"></select>
+</header>
+
+<div class="wrap">
+  <div id="migrateBox" class="migrate-box" style="display:none"></div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="roster" class="active">① 名簿</button>
+    <button data-tab="days">② 日程</button>
+    <button data-tab="cond">③ 希望条件</button>
+    <button data-tab="assign">④ 割付</button>
+    <button data-tab="output">⑤ 印刷</button>
+    <button data-tab="today" class="pro">⑥ 当日</button>
+    <button data-tab="memo" class="pro">⑦ メモ</button>
+    <button data-tab="settings" class="pro">⚙ 設定</button>
+  </nav>
+
+  <!-- ① 名簿 -->
+  <section class="panel active" id="panel-roster">
+    <div class="card">
+      <h2><span class="num">1</span>名簿の貼り付け</h2>
+      <p class="hint">1行に1名ずつ貼り付けて「名簿に追加」を押してください（例：たなか たろう）。追加後、各家庭にメモ（兄弟の学級名など）を書けます。兄弟の懇談時刻は「③ 希望条件」で入れます。</p>
+      <textarea id="pasteArea" placeholder="たなか たろう&#10;すずき はなこ&#10;さとう けん"></textarea>
+      <div class="btn-row">
+        <button class="btn" id="btnAddPaste">名簿に追加</button>
+        <button class="btn sub" id="btnAddOne">1名だけ追加</button>
+        <button class="btn sub" id="btnSample">サンプル名簿を入れる</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="num">2</span>登録済みの家庭 <span class="badge" id="famCount">0名</span></h2>
+      <p class="hint">名前とメモは直接書きかえられます。</p>
+      <div class="fam-list" id="famList"></div>
+      <div class="btn-row">
+        <button class="btn danger" id="btnClearFams">名簿を全削除</button>
+        <button class="btn danger" id="btnResetAll">このクラスのデータをリセット</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 日程 -->
+  <section class="panel" id="panel-days">
+    <div class="card">
+      <h2><span class="num">1</span>1件あたりの時間</h2>
+      <div style="display:flex;align-items:center;gap:10px;max-width:260px">
+        <input type="number" id="slotMin" min="5" max="60" step="5" value="10" style="width:110px">
+        <span style="font-weight:700">分きざみ</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="num">2</span>実施日</h2>
+      <p class="hint">日付・開始・終了を設定します。「＋休憩を追加」でその日の休憩枠（例 15:00〜15:10）を入れられます。日程が決まったら「⑤ 印刷」で希望調査票を印刷できます。</p>
+      <div id="dayList"></div>
+      <div class="btn-row"><button class="btn" id="btnAddDay">＋ 実施日を追加</button></div>
+      <div class="slot-summary" id="slotSummary"></div>
+    </div>
+  </section>
+
+  <!-- ③ 希望条件 -->
+  <section class="panel" id="panel-cond">
+    <div class="card">
+      <h2><span class="num">1</span>家庭ごとの希望</h2>
+      <p class="hint">希望調査票の 1〜4 と同じ順に並んでいます。回収した紙を上から入れてください。<br>
+      1 来られる日：チェックを外すと「その日は不可」　2 時間帯：前半／後半／最初の枠／最後の枠<br>
+      3 兄弟の懇談時刻：「前後に続けたい」は同じ日の直前・直後の枠を優先、「重ならなければよい」は重なる枠だけ避けます（どちらも重なる枠には入れません）。<br>
+      4 メモは一行だけ（名簿のメモと同じ欄です）。</p>
+      <div class="cond-table-wrap" id="condArea"></div>
+    </div>
+  </section>
+
+  <!-- ④ 割付 -->
+  <section class="panel" id="panel-assign">
+    <div class="card">
+      <h2><span class="num">1</span>自動割付</h2>
+      <p class="hint">条件の厳しい家庭から先に枠を決めます。兄弟の懇談時刻が入っている家庭は、重なる枠を避け、「前後に続けたい」なら同じ日の直前・直後→同じ日→ほかの日の順に探します。押すたびに組み合わせが変わります。</p>
+      <div class="btn-row">
+        <button class="btn" id="btnAssign">🎲 自動割付（シャッフル）</button>
+        <button class="btn sub" id="btnClearAssign">割付をすべて解除</button>
+      </div>
+      <div class="slot-summary" id="assignSummary" style="display:none"></div>
+    </div>
+    <div class="card">
+      <h2><span class="num">2</span>割付結果（タップで手動調整）</h2>
+      <p class="hint">枠を2つ続けてタップすると入れ替え（空き枠へタップで移動）。「×」でその家庭を外せます。未割付の家庭をタップ→空き枠をタップで配置できます。👫 は兄弟の懇談時刻（✓となり＝直前・直後、⚠＝重なっています）。</p>
+      <div id="schedArea"></div>
+      <div id="unassignedArea"></div>
+      <div class="select-bar" id="selectBar" style="display:none">
+        <span id="selectMsg"></span>
+        <button class="btn sub small" id="btnCancelSel">選択解除</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑤ 印刷 -->
+  <section class="panel" id="panel-output">
+    <div class="card">
+      <h2><span class="num">1</span>希望調査票 <span class="badge">Pro</span></h2>
+      <p class="hint">「② 日程」の実施日に合わせて自動で作ります。項目の順番（1 来られる日 → 2 時間帯 → 3 兄弟 → 4 連絡事項）は「③ 希望条件」の入力画面と同じです。</p>
+      <div class="sv-opts">
+        <div><label>見出し</label><input type="text" id="svTitle"></div>
+        <div><label>提出期限（空欄なら表示しません）</label><input type="text" id="svDeadline" placeholder="例：11月7日（金）"></div>
+      </div>
+      <label class="chk-label"><input type="checkbox" id="svTwoUp">A4に2面付け（切って配る）</label>
+      <label class="chk-label"><input type="checkbox" id="svShowTime" checked>各日の時間を載せる</label>
+      <div class="btn-row" style="margin:12px 0">
+        <button class="btn" id="btnPrintSurvey">🖨️ 希望調査票を印刷</button>
+      </div>
+      <div class="preview-box" id="prevSurvey"></div>
+    </div>
+    <div class="card">
+      <h2><span class="num">2</span>教師用 全体時間割表</h2>
+      <div class="btn-row" style="margin:0 0 12px">
+        <button class="btn" id="btnPrintSchedule">🖨️ 時間割表を印刷</button>
+      </div>
+      <div class="preview-box" id="prevSchedule"></div>
+    </div>
+    <div class="card">
+      <h2><span class="num">3</span>家庭配布用 お知らせ短冊</h2>
+      <p class="hint">切り取り線つきの短冊を全家庭分並べて印刷できます。下のメモ欄は全短冊に共通で入ります。</p>
+      <input type="text" id="slipNote" placeholder="例：場所：2年1組教室　／　上ばきをお持ちください">
+      <div class="btn-row" style="margin:12px 0">
+        <button class="btn" id="btnPrintSlips">🖨️ 短冊を印刷</button>
+      </div>
+      <div class="preview-box" id="prevSlips"></div>
+    </div>
+  </section>
+
+  <!-- ⑥ 当日 -->
+  <section class="panel" id="panel-today">
+    <div class="card">
+      <h2>⏱ 当日モード</h2>
+      <p class="hint">一家庭終わるごとに「おわり」をタップすると、以降の家庭の見込み時刻がずれて表示されます。「廊下に出す」で、待っている保護者向けに遅れの分数だけを大きく表示します（名前は出ません）。</p>
+      <div style="max-width:320px"><select id="todayDay"></select></div>
+      <div id="todayArea"></div>
+    </div>
+  </section>
+
+  <!-- ⑦ メモ -->
+  <section class="panel" id="panel-memo">
+    <div class="card">
+      <h2>📝 懇談メモ</h2>
+      <p class="hint">書くのは「話したこと」と「次に確かめること」だけ。家庭の事情の詳しい中身・保護者の印象・医学的な推測は書かないでください（次の担任に渡る可能性があります）。</p>
+      <div class="btn-row" style="margin:0 0 12px">
+        <button class="btn sub small" id="btnCopyAllMemo">📋 メモのある家庭をまとめてコピー</button>
+      </div>
+      <div id="memoOut"></div>
+      <div id="memoArea"></div>
+    </div>
+  </section>
+
+  <!-- ⚙ 設定 -->
+  <section class="panel" id="panel-settings">
+    <div class="card" id="classCard"></div>
+    <div class="card">
+      <h2>🗂 データの書き出し・読みこみ</h2>
+      <p class="hint">全クラスのデータを一つの文字列として書き出します。自分あてにメールしておけば、端末を替えたときや次の懇談で名簿を使い回すときに読みこめます。データはこの端末のブラウザの中だけに保存されます。無料版のデータは消さずに残してあります。</p>
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn sub small" id="btnExport">📤 書き出し</button>
+        <button class="btn sub small" id="btnImport">📥 読みこみ</button>
+      </div>
+      <div id="dataArea" style="margin-top:10px"></div>
+    </div>
+  </section>
+</div>
+
+<div class="hallway" id="hallway" aria-live="polite">
+  <button class="hw-close" id="hwClose">とじる</button>
+  <div class="hw-main" id="hwMain"></div>
+  <div class="hw-sub" id="hwSub"></div>
+  <div class="hw-clock" id="hwClock"></div>
+</div>
+
+<!-- print-only blocks -->
+<div id="printSchedule"></div>
+<div id="printSlips"></div>
+<div id="printSurvey"></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+var STORAGE_KEY = "bo10pro_kondan_v1";
+var FREE_KEY = "bo10_kondan_data";
+var MAX_CLASSES = 12;
+var HANDOFF_LINE = "このメモは、次に会う人がゼロから始めなくて済むように残すものです";
+var WEEK = ["日","月","火","水","木","金","土"];
+var PREFS = [
+  {v:"any",   label:"指定なし"},
+  {v:"early", label:"前半を希望"},
+  {v:"late",  label:"後半を希望"},
+  {v:"first", label:"最初の枠を希望"},
+  {v:"last",  label:"最後の枠を希望"}
+];
+var SIB_MODES = [
+  {v:"adjacent", label:"前後に続けたい"},
+  {v:"avoid",    label:"重ならなければよい"}
+];
+
+var DB = null;      // {version, classes:[{id,name,state}], currentClassId}
+var cls = null;
+var state = null;   // = cls.state（無料版と同じ構造＋Pro項目）
+var selection = null; // {type:'slot',key} | {type:'fam',id}
+var migrateInfo = null;
+var confirmTimers = {};
+var uid = function(){ return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); };
+
+/* ---------- 正規化 ---------- */
+function emptyState(){
+  return {families:[], days:[], slotMin:10, slipNote:"", assignments:{}, reasons:{},
+          dayLog:{}, survey:{title:"個人懇談 希望調査票", deadline:"", twoUp:false, showTime:true}};
+}
+function isObj(o){ return o && typeof o === "object" && !Array.isArray(o); }
+function normFamily(f){
+  if(!isObj(f)) f = {};
+  var o = {
+    id: f.id ? String(f.id) : uid(),
+    name: typeof f.name === "string" ? f.name : "",
+    memo: typeof f.memo === "string" ? f.memo : "",
+    ng: isObj(f.ng) ? f.ng : {},
+    pref: PREFS.some(function(p){ return p.v === f.pref; }) ? f.pref : "any",
+    siblings: [],
+    notes: {talked:"", next:"", date:""}
+  };
+  if(Array.isArray(f.siblings)){
+    f.siblings.forEach(function(s){
+      if(!isObj(s)) return;
+      o.siblings.push({
+        label: typeof s.label === "string" ? s.label : "",
+        date: typeof s.date === "string" ? s.date : "",
+        time: typeof s.time === "string" ? s.time : "",
+        mode: s.mode === "avoid" ? "avoid" : "adjacent"
+      });
+    });
+  }
+  if(isObj(f.notes)){
+    ["talked","next","date"].forEach(function(k){ if(typeof f.notes[k] === "string") o.notes[k] = f.notes[k]; });
+  }
+  return o;
+}
+function normState(d){
+  var s = emptyState();
+  if(!isObj(d)) return s;
+  s.families = Array.isArray(d.families) ? d.families.map(normFamily) : [];
+  s.days = Array.isArray(d.days) ? d.days.filter(isObj).map(function(x){
+    return {id: x.id ? String(x.id) : uid(), date: typeof x.date==="string" ? x.date : "",
+            start: typeof x.start==="string" ? x.start : "", end: typeof x.end==="string" ? x.end : "",
+            breaks: Array.isArray(x.breaks) ? x.breaks.filter(isObj) : []};
+  }) : [];
+  s.slotMin = (+d.slotMin > 0) ? +d.slotMin : 10;
+  s.slipNote = typeof d.slipNote === "string" ? d.slipNote : "";
+  s.assignments = isObj(d.assignments) ? d.assignments : {};
+  s.reasons = isObj(d.reasons) ? d.reasons : {};
+  s.dayLog = isObj(d.dayLog) ? d.dayLog : {};
+  if(isObj(d.survey)){
+    if(typeof d.survey.title === "string") s.survey.title = d.survey.title;
+    if(typeof d.survey.deadline === "string") s.survey.deadline = d.survey.deadline;
+    s.survey.twoUp = !!d.survey.twoUp;
+    s.survey.showTime = d.survey.showTime !== false;
+  }
+  return s;
+}
+function newClass(name, st){ return {id: uid(), name: name, state: st || emptyState()}; }
+function normDB(d){
+  var out = {version:1, classes:[], currentClassId:null};
+  if(isObj(d) && Array.isArray(d.classes)){
+    d.classes.slice(0, MAX_CLASSES).forEach(function(c){
+      if(!isObj(c)) return;
+      out.classes.push({id: c.id ? String(c.id) : uid(), name: (typeof c.name === "string" && c.name.trim()) ? c.name : "クラス", state: normState(c.state)});
+    });
+  }
+  if(!out.classes.length) out.classes.push(newClass("1組"));
+  out.currentClassId = (isObj(d) && d.currentClassId) ? d.currentClassId : out.classes[0].id;
+  return out;
+}
+
+/* ---------- storage ---------- */
+function readJSON(key){
+  try{
+    var raw = localStorage.getItem(key);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+  catch(e){ toast("保存に失敗しました（容量オーバーの可能性）"); }
+}
+function load(){
+  var d = readJSON(STORAGE_KEY);
+  if(!isObj(d) || !Array.isArray(d.classes) || !d.classes.length){
+    // 初回起動：同じブラウザに無料版のデータがあれば「1組」として引き継ぐ（無料版は消さない）
+    var first = newClass("1組");
+    var free = readJSON(FREE_KEY);
+    if(isObj(free) && (Array.isArray(free.families) || Array.isArray(free.days))){
+      first.state = normState(free);
+      migrateInfo = {fams: first.state.families.length, days: first.state.days.length,
+                     asg: Object.keys(first.state.assignments).length};
+    }
+    d = {version:1, classes:[first], currentClassId:first.id};
+  }
+  DB = normDB(d);
+  bindClass();
+}
+function bindClass(){
+  cls = null;
+  for(var i=0;i<DB.classes.length;i++) if(DB.classes[i].id === DB.currentClassId) cls = DB.classes[i];
+  if(!cls){ cls = DB.classes[0]; DB.currentClassId = cls.id; }
+  state = cls.state;
+  selection = null;
+}
+function switchClass(id){
+  DB.currentClassId = id;
+  bindClass();
+  cleanAssignments();
+  save();
+}
+
+/* ---------- helpers ---------- */
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function toMin(hm){
+  if(!hm || !/^\d{1,2}:\d{2}$/.test(hm)) return null;
+  var p = hm.split(":");
+  return (+p[0])*60 + (+p[1]);
+}
+function toHM(min){
+  min = Math.round(min);
+  var h = Math.floor(min/60), m = min%60;
+  return h + ":" + (m<10 ? "0"+m : m);
+}
+function pad(n){ return (n<10?"0":"") + n; }
+function todayStr(){ var t = new Date(); return t.getFullYear() + "-" + pad(t.getMonth()+1) + "-" + pad(t.getDate()); }
+function nowMin(){ var t = new Date(); return t.getHours()*60 + t.getMinutes() + t.getSeconds()/60; }
+function fmtDate(dateStr, long){
+  if(!dateStr) return "（日付未設定）";
+  var p = dateStr.split("-");
+  if(p.length !== 3) return dateStr;
+  var dt = new Date(+p[0], +p[1]-1, +p[2]);
+  var w = WEEK[dt.getDay()];
+  return (long ? (+p[0]) + "年" : "") + (+p[1]) + "月" + (+p[2]) + "日（" + w + "）";
+}
+function shortDate(dateStr){
+  if(!dateStr) return "";
+  var p = dateStr.split("-");
+  return p.length === 3 ? (+p[1]) + "/" + (+p[2]) : dateStr;
+}
+function toast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+}
+function famById(id, st){
+  st = st || state;
+  for(var i=0;i<st.families.length;i++) if(st.families[i].id===id) return st.families[i];
+  return null;
+}
+function dayById(id, st){
+  st = st || state;
+  for(var i=0;i<st.days.length;i++) if(st.days[i].id===id) return st.days[i];
+  return null;
+}
+function sortedDays(st){
+  st = st || state;
+  return st.days.slice().sort(function(a,b){
+    return (a.date||"9999").localeCompare(b.date||"9999");
+  });
+}
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  return arr;
+}
+function armConfirm(btn, key, onConfirm, label){
+  if(btn.dataset.armed === "1"){
+    delete btn.dataset.armed;
+    if(confirmTimers[key]) clearTimeout(confirmTimers[key]);
+    onConfirm();
+  }else{
+    btn.dataset.armed = "1";
+    var orig = btn.textContent;
+    btn.textContent = label || "もう一度押すと削除";
+    btn.classList.add("confirming");
+    confirmTimers[key] = setTimeout(function(){
+      delete btn.dataset.armed;
+      btn.textContent = orig;
+      btn.classList.remove("confirming");
+    }, 3000);
+  }
+}
+function execCopy(txt){
+  try{
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    var ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){ return false; }
+}
+function copyText(txt, okMsg){
+  var fin = function(ok){ toast(ok ? (okMsg||"コピーしました") : "下の枠から手動でコピーしてください"); };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ fin(true); }, function(){ fin(execCopy(txt)); });
+      return;
+    }
+  }catch(e){}
+  fin(execCopy(txt));
+}
+
+/* ---------- slots ---------- */
+function genDaySlots(day, st){
+  st = st || state;
+  var out = [];
+  var s = toMin(day.start), e = toMin(day.end), dur = st.slotMin;
+  if(s == null || e == null || !(dur > 0) || e <= s) return out;
+  var brs = (day.breaks||[]).map(function(b){
+    return {s:toMin(b.start), e:toMin(b.end)};
+  }).filter(function(b){ return b.s != null && b.e != null && b.e > b.s; });
+  var t = s, guard = 0;
+  while(t + dur <= e && guard++ < 500){
+    var hit = null;
+    for(var i=0;i<brs.length;i++){
+      if(t < brs[i].e && t + dur > brs[i].s){ hit = brs[i]; break; }
+    }
+    if(hit){ t = hit.e; continue; }
+    out.push({key: day.id + "_" + t, dayId: day.id, start: t, end: t + dur});
+    t += dur;
+  }
+  return out;
+}
+function genAllSlots(){
+  var all = [];
+  sortedDays().forEach(function(d){ all = all.concat(genDaySlots(d)); });
+  return all;
+}
+function cleanAssignments(){
+  var valid = {};
+  genAllSlots().forEach(function(s){ valid[s.key] = true; });
+  var famSeen = {};
+  Object.keys(state.assignments).forEach(function(k){
+    var fid = state.assignments[k];
+    if(!valid[k] || !famById(fid) || famSeen[fid]) delete state.assignments[k];
+    else famSeen[fid] = true;
+  });
+}
+function assignedFamIds(){
+  var set = {};
+  Object.keys(state.assignments).forEach(function(k){ set[state.assignments[k]] = k; });
+  return set; // famId -> slotKey
+}
+function prefOk(fam, slot, daySlots){
+  var idx = -1;
+  for(var i=0;i<daySlots.length;i++) if(daySlots[i].key === slot.key){ idx = i; break; }
+  if(idx < 0) return false;
+  var n = daySlots.length;
+  switch(fam.pref){
+    case "early": return idx < n/2;
+    case "late":  return idx >= n/2;
+    case "first": return idx === 0;
+    case "last":  return idx === n-1;
+    default: return true;
+  }
+}
+function prefLabel(v){
+  for(var i=0;i<PREFS.length;i++) if(PREFS[i].v===v) return PREFS[i].label;
+  return "指定なし";
+}
+// 家庭の割付（日付・時刻）を他クラスの state から引く
+function slotInfo(st, key){
+  if(!key) return null;
+  var i = key.lastIndexOf("_");
+  if(i < 0) return null;
+  var d = dayById(key.slice(0, i), st);
+  var t = +key.slice(i+1);
+  if(!d || isNaN(t)) return null;
+  return {date: d.date, start: t, end: t + st.slotMin};
+}
+
+/* ---------- 兄弟 ---------- */
+function validSibs(fam){
+  return (fam.siblings||[]).filter(function(s){ return s.date && toMin(s.time) != null; });
+}
+// 兄弟の懇談は、こちらの1枠と同じ長さとみなす
+function sibOverlap(sib, day, slot){
+  if(sib.date !== day.date) return false;
+  var t = toMin(sib.time), dur = state.slotMin;
+  return slot.start < t + dur && slot.end > t;
+}
+function sibGap(sib, day, slot){
+  if(sib.date !== day.date) return Infinity;
+  if(sibOverlap(sib, day, slot)) return -1;
+  var t = toMin(sib.time), dur = state.slotMin;
+  return Math.min(Math.abs(slot.start - (t + dur)), Math.abs(t - slot.end));
+}
+// 0=直前・直後　1=同じ日　2=ほかの日
+function sibTier(fam, day, slot){
+  var adj = validSibs(fam).filter(function(s){ return s.mode === "adjacent"; });
+  if(!adj.length) return 0;
+  var best = 2;
+  adj.forEach(function(s){
+    var g = sibGap(s, day, slot);
+    if(g >= 0 && g <= 5) best = Math.min(best, 0);
+    else if(g !== Infinity && g >= 0) best = Math.min(best, 1);
+  });
+  return best;
+}
+function sibClash(fam, day, slot){
+  return validSibs(fam).some(function(s){ return sibOverlap(s, day, slot); });
+}
+function sibBadge(fam, day, slot){
+  var sibs = validSibs(fam);
+  if(!sibs.length) return "";
+  var parts = sibs.map(function(s){
+    var g = sibGap(s, day, slot);
+    var mark = g === -1 ? "⚠重なり" : (s.mode === "adjacent" ? (g <= 5 ? "✓となり" : "") : "");
+    return (s.label ? s.label + " " : "") + shortDate(s.date) + " " + s.time + (mark ? " " + mark : "");
+  });
+  var bad = sibs.some(function(s){ return sibGap(s, day, slot) === -1; });
+  return '<span class="sib' + (bad ? " bad" : "") + '">👫 ' + esc(parts.join("／")) + '</span>';
+}
+function surname(name){
+  return String(name||"").trim().split(/[\s　]+/)[0] || "";
+}
+// 他クラスの同じ苗字の家庭（割付済み）を候補として返す
+function crossClassCandidates(fam){
+  var sn = surname(fam.name);
+  if(!sn || sn === "（名前を入力）") return [];
+  var out = [];
+  DB.classes.forEach(function(c){
+    if(c.id === cls.id) return;
+    var asg = {};
+    Object.keys(c.state.assignments).forEach(function(k){ asg[c.state.assignments[k]] = k; });
+    c.state.families.forEach(function(f){
+      if(surname(f.name) !== sn) return;
+      var info = slotInfo(c.state, asg[f.id]);
+      if(!info || !info.date) return;
+      var time = toHM(info.start);
+      if(time.length === 4) time = "0" + time;
+      var already = (fam.siblings||[]).some(function(s){ return s.date === info.date && toMin(s.time) === info.start; });
+      out.push({cls: c.name, name: f.name, date: info.date, time: time, already: already});
+    });
+  });
+  return out;
+}
+
+/* ---------- auto assign ---------- */
+function autoAssign(){
+  cleanAssignments();
+  var days = sortedDays();
+  var daySlotsMap = {};
+  var total = 0;
+  days.forEach(function(d){ daySlotsMap[d.id] = genDaySlots(d); total += daySlotsMap[d.id].length; });
+  if(total === 0){ toast("先に「② 日程」で実施日と時間を設定してください"); return; }
+  if(state.families.length === 0){ toast("先に「① 名簿」で家庭を登録してください"); return; }
+
+  state.assignments = {};
+  state.reasons = {};
+  var taken = {};
+
+  function candidatesFor(fam, requirePref, requireSib){
+    var c = [];
+    days.forEach(function(d){
+      if(fam.ng && fam.ng[d.id]) return;
+      daySlotsMap[d.id].forEach(function(s){
+        if(taken[s.key]) return;
+        if(requirePref && !prefOk(fam, s, daySlotsMap[d.id])) return;
+        if(requireSib && sibClash(fam, d, s)) return;
+        c.push({s:s, d:d});
+      });
+    });
+    return c;
+  }
+  function bestTier(fam, cands){
+    var min = 3;
+    cands.forEach(function(c){ c.tier = sibTier(fam, c.d, c.s); if(c.tier < min) min = c.tier; });
+    return cands.filter(function(c){ return c.tier === min; });
+  }
+
+  var order = shuffle(state.families.slice());
+  // 制約が厳しい家庭（候補が少ない）から先に決める。兄弟の「前後に続けたい」は、となりの枠の数で数える
+  var keyOf = {};
+  order.forEach(function(f){
+    var c = candidatesFor(f, true, true);
+    keyOf[f.id] = c.length ? bestTier(f, c).length : 0;
+  });
+  order.sort(function(a,b){ return keyOf[a.id] - keyOf[b.id]; });
+
+  order.forEach(function(fam){
+    var cands = candidatesFor(fam, true, true);
+    if(cands.length > 0){
+      var best = bestTier(fam, cands);
+      var pick = best[Math.floor(Math.random()*best.length)].s;
+      taken[pick.key] = true;
+      state.assignments[pick.key] = fam.id;
+      return;
+    }
+    // 理由の特定
+    var okDays = days.filter(function(d){ return !(fam.ng && fam.ng[d.id]); });
+    var reason;
+    if(okDays.length === 0){
+      reason = "すべての日が「不可」になっています";
+    }else if(candidatesFor(fam, false, false).length === 0){
+      reason = "来られる日（" + okDays.map(function(d){return fmtDate(d.date);}).join("・") + "）の枠がすべて埋まっています";
+    }else if(candidatesFor(fam, true, false).length > 0 || candidatesFor(fam, false, true).length === 0){
+      reason = "兄弟の時刻と重ならない空き枠がありません";
+    }else{
+      reason = "「" + prefLabel(fam.pref) + "」に合う空き枠がありません";
+    }
+    state.reasons[fam.id] = reason;
+  });
+
+  selection = null;
+  save();
+  renderAll();
+  var un = state.families.length - Object.keys(state.assignments).length;
+  toast(un === 0 ? "全" + state.families.length + "家庭を割り付けました！" : "割付完了（未割付 " + un + " 家庭あり）");
+}
+
+/* ---------- render: class select ---------- */
+function renderClassSelect(){
+  var sel = document.getElementById("classSelect");
+  sel.innerHTML = DB.classes.map(function(c){
+    return '<option value="' + esc(c.id) + '"' + (c.id===cls.id ? " selected" : "") + '>' + esc(c.name) + '</option>';
+  }).join("") + '<option value="__manage">＋ クラスの追加・管理</option>';
+}
+document.getElementById("classSelect").addEventListener("change", function(){
+  if(this.value === "__manage"){ showTab("settings"); renderClassSelect(); return; }
+  switchClass(this.value);
+  renderAll();
+  toast("🏫 " + cls.name + " に切り替えました");
+});
+function showTab(name){
+  document.querySelectorAll("#tabs button").forEach(function(x){ x.classList.toggle("active", x.getAttribute("data-tab") === name); });
+  document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+  document.getElementById("panel-" + name).classList.add("active");
+  if(name === "today") renderToday();
+  if(name === "memo") renderMemo();
+  try{ window.scrollTo({top:0, behavior:"smooth"}); }catch(e){}
+}
+
+/* ---------- render: roster ---------- */
+function renderRoster(){
+  var list = document.getElementById("famList");
+  document.getElementById("famCount").textContent = state.families.length + "名";
+  if(state.families.length === 0){
+    list.innerHTML = '<p class="hint">まだ登録がありません。上の欄から名簿を貼り付けてください。</p>';
+    return;
+  }
+  var html = "";
+  state.families.forEach(function(f, i){
+    html += '<div class="fam-row">'
+      + '<span class="no">' + (i+1) + '</span>'
+      + '<input type="text" class="name-in" data-id="' + f.id + '" value="' + esc(f.name) + '" placeholder="名前">'
+      + '<input type="text" class="memo-in" data-id="' + f.id + '" value="' + esc(f.memo) + '" placeholder="メモ（兄弟：1年2組 など）">'
+      + '<button class="icon-btn del-fam" data-id="' + f.id + '" title="削除" aria-label="削除">🗑️</button>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+  list.querySelectorAll(".name-in").forEach(function(el){
+    el.addEventListener("change", function(){
+      var f = famById(el.getAttribute("data-id"));
+      if(f){ f.name = el.value.trim() || f.name; save(); renderAll(); }
+    });
+  });
+  list.querySelectorAll(".memo-in").forEach(function(el){
+    el.addEventListener("change", function(){
+      var f = famById(el.getAttribute("data-id"));
+      if(f){ f.memo = el.value; save(); renderCond(); renderAssign(); renderOutput(); }
+    });
+  });
+  list.querySelectorAll(".del-fam").forEach(function(el){
+    el.addEventListener("click", function(){
+      var id = el.getAttribute("data-id");
+      state.families = state.families.filter(function(f){ return f.id !== id; });
+      Object.keys(state.assignments).forEach(function(k){
+        if(state.assignments[k] === id) delete state.assignments[k];
+      });
+      delete state.reasons[id];
+      if(selection && selection.type==="fam" && selection.id===id) selection = null;
+      save(); renderAll();
+      toast("削除しました");
+    });
+  });
+}
+
+/* ---------- render: days ---------- */
+function renderDays(){
+  document.getElementById("slotMin").value = state.slotMin;
+  var box = document.getElementById("dayList");
+  if(state.days.length === 0){
+    box.innerHTML = '<p class="hint">まだ実施日がありません。「＋ 実施日を追加」を押してください。</p>';
+  }else{
+    var html = "";
+    sortedDays().forEach(function(d){
+      html += '<div class="day-row" data-id="' + d.id + '">'
+        + '<div class="day-grid">'
+        + '<div><label>日付</label><input type="date" class="d-date" value="' + esc(d.date) + '"></div>'
+        + '<div><label>開始</label><input type="time" class="d-start" value="' + esc(d.start) + '"></div>'
+        + '<div><label>終了</label><input type="time" class="d-end" value="' + esc(d.end) + '"></div>'
+        + '<div class="del-wrap"><button class="icon-btn d-del" title="この日を削除" aria-label="この日を削除">🗑️</button></div>'
+        + '</div>';
+      (d.breaks||[]).forEach(function(b, bi){
+        html += '<div class="break-grid" data-bi="' + bi + '">'
+          + '<div><label>休憩 開始</label><input type="time" class="b-start" value="' + esc(b.start) + '"></div>'
+          + '<div><label>休憩 終了</label><input type="time" class="b-end" value="' + esc(b.end) + '"></div>'
+          + '<div><button class="btn sub small b-del">休憩を削除</button></div>'
+          + '</div>';
+      });
+      html += '<div class="break-tag"><button class="btn sub small d-addbreak">＋ 休憩を追加</button>'
+        + '　<span>この日の枠数：' + genDaySlots(d).length + '</span></div>'
+        + '</div>';
+    });
+    box.innerHTML = html;
+    box.querySelectorAll(".day-row").forEach(function(row){
+      var d = dayById(row.getAttribute("data-id"));
+      if(!d) return;
+      row.querySelector(".d-date").addEventListener("change", function(e){ d.date = e.target.value; onSlotsChanged(); });
+      row.querySelector(".d-start").addEventListener("change", function(e){ d.start = e.target.value; onSlotsChanged(); });
+      row.querySelector(".d-end").addEventListener("change", function(e){ d.end = e.target.value; onSlotsChanged(); });
+      row.querySelector(".d-del").addEventListener("click", function(){
+        state.days = state.days.filter(function(x){ return x.id !== d.id; });
+        state.families.forEach(function(f){ if(f.ng) delete f.ng[d.id]; });
+        onSlotsChanged();
+        toast("実施日を削除しました");
+      });
+      row.querySelector(".d-addbreak").addEventListener("click", function(){
+        d.breaks = d.breaks || [];
+        d.breaks.push({start:"15:00", end:"15:10"});
+        onSlotsChanged();
+      });
+      row.querySelectorAll(".break-grid").forEach(function(bg){
+        var bi = +bg.getAttribute("data-bi");
+        var b = (d.breaks||[])[bi];
+        if(!b) return;
+        bg.querySelector(".b-start").addEventListener("change", function(e){ b.start = e.target.value; onSlotsChanged(); });
+        bg.querySelector(".b-end").addEventListener("change", function(e){ b.end = e.target.value; onSlotsChanged(); });
+        bg.querySelector(".b-del").addEventListener("click", function(){
+          d.breaks.splice(bi,1); onSlotsChanged();
+        });
+      });
+    });
+  }
+  var total = genAllSlots().length;
+  var sm = document.getElementById("slotSummary");
+  var need = state.families.length;
+  var okEnough = total >= need;
+  sm.className = "slot-summary" + (okEnough ? "" : " warn");
+  sm.textContent = "枠数：全 " + total + " 枠　／　家庭数：" + need + " 家庭"
+    + (need === 0 ? "" : okEnough ? "　→ 足りています ✅" : "　→ " + (need-total) + " 枠 足りません ⚠️（希望を集める前に学年に相談を）");
+}
+function onSlotsChanged(){
+  cleanAssignments();
+  save();
+  renderAll();
+}
+
+/* ---------- render: conditions ---------- */
+function renderCond(){
+  var area = document.getElementById("condArea");
+  var days = sortedDays();
+  if(state.families.length === 0){
+    area.innerHTML = '<p class="hint">先に「① 名簿」で家庭を登録してください。</p>'; return;
+  }
+  if(days.length === 0){
+    area.innerHTML = '<p class="hint">先に「② 日程」で実施日を設定してください。</p>'; return;
+  }
+  var html = '<table class="cond"><thead><tr><th>名前</th><th>1 来られる日（外すと不可）</th><th>2 時間帯の希望</th><th>3 兄弟の懇談（学級・日付・時刻）</th><th>4 メモ（一行）</th></tr></thead><tbody>';
+  state.families.forEach(function(f){
+    html += '<tr><td style="white-space:nowrap;font-weight:700">' + esc(f.name) + '</td><td>';
+    days.forEach(function(d){
+      var checked = !(f.ng && f.ng[d.id]);
+      html += '<label class="daychk"><input type="checkbox" class="ng-chk" data-fam="' + f.id + '" data-day="' + d.id + '"'
+        + (checked ? " checked" : "") + '>' + esc(fmtDate(d.date)) + '</label> ';
+    });
+    html += '</td><td><select class="pref" data-fam="' + f.id + '">';
+    PREFS.forEach(function(p){
+      html += '<option value="' + p.v + '"' + (f.pref === p.v ? " selected" : "") + '>' + p.label + '</option>';
+    });
+    html += '</select></td><td>';
+    (f.siblings||[]).forEach(function(s, si){
+      html += '<div class="sib-row" data-fam="' + f.id + '" data-si="' + si + '">'
+        + '<input type="text" class="s-label" value="' + esc(s.label) + '" placeholder="4年2組">'
+        + '<input type="date" class="s-date" value="' + esc(s.date) + '">'
+        + '<input type="time" class="s-time" value="' + esc(s.time) + '">'
+        + '<select class="s-mode">' + SIB_MODES.map(function(m){
+            return '<option value="' + m.v + '"' + (s.mode === m.v ? " selected" : "") + '>' + m.label + '</option>';
+          }).join("") + '</select>'
+        + '<button class="btn sub tiny s-del" aria-label="兄弟の行を削除">✕</button></div>';
+    });
+    crossClassCandidates(f).forEach(function(c){
+      html += '<div class="sib-cand">候補：' + esc(c.cls) + '「' + esc(c.name) + '」' + esc(shortDate(c.date)) + ' ' + esc(c.time)
+        + (c.already ? '（入力済み）' : ' <button class="btn tiny s-cand" data-fam="' + f.id + '" data-label="' + esc(c.cls) + '" data-date="' + esc(c.date) + '" data-time="' + esc(c.time) + '">＋ この時刻を入れる</button>')
+        + '</div>';
+    });
+    html += '<button class="btn sub tiny s-add" data-fam="' + f.id + '">＋ 兄弟の時刻</button>';
+    html += '</td><td><input type="text" class="cond-memo" data-fam="' + f.id + '" value="' + esc(f.memo) + '" placeholder="一行だけ"></td></tr>';
+  });
+  html += "</tbody></table>";
+  area.innerHTML = html;
+  area.querySelectorAll(".ng-chk").forEach(function(el){
+    el.addEventListener("change", function(){
+      var f = famById(el.getAttribute("data-fam"));
+      if(!f) return;
+      f.ng = f.ng || {};
+      if(el.checked) delete f.ng[el.getAttribute("data-day")];
+      else f.ng[el.getAttribute("data-day")] = true;
+      save();
+    });
+  });
+  area.querySelectorAll("select.pref").forEach(function(el){
+    el.addEventListener("change", function(){
+      var f = famById(el.getAttribute("data-fam"));
+      if(f){ f.pref = el.value; save(); }
+    });
+  });
+  area.querySelectorAll("input.cond-memo").forEach(function(el){
+    el.addEventListener("change", function(){
+      var f = famById(el.getAttribute("data-fam"));
+      if(f){ f.memo = el.value; save(); renderRoster(); renderAssign(); renderOutput(); }
+    });
+  });
+  area.querySelectorAll(".sib-row").forEach(function(row){
+    var f = famById(row.getAttribute("data-fam"));
+    var s = f && f.siblings[+row.getAttribute("data-si")];
+    if(!s) return;
+    row.querySelector(".s-label").addEventListener("change", function(e){ s.label = e.target.value; save(); renderAssign(); });
+    row.querySelector(".s-date").addEventListener("change", function(e){ s.date = e.target.value; save(); renderAssign(); });
+    row.querySelector(".s-time").addEventListener("change", function(e){ s.time = e.target.value; save(); renderAssign(); });
+    row.querySelector(".s-mode").addEventListener("change", function(e){ s.mode = e.target.value; save(); renderAssign(); });
+    row.querySelector(".s-del").addEventListener("click", function(){
+      f.siblings.splice(+row.getAttribute("data-si"), 1); save(); renderCond(); renderAssign();
+    });
+  });
+  area.querySelectorAll(".s-add").forEach(function(b){
+    b.addEventListener("click", function(){
+      var f = famById(b.getAttribute("data-fam"));
+      if(!f) return;
+      var d0 = sortedDays()[0];
+      f.siblings.push({label:"", date: d0 ? d0.date : "", time:"", mode:"adjacent"});
+      save(); renderCond();
+    });
+  });
+  area.querySelectorAll(".s-cand").forEach(function(b){
+    b.addEventListener("click", function(){
+      var f = famById(b.getAttribute("data-fam"));
+      if(!f) return;
+      f.siblings.push({label:b.getAttribute("data-label"), date:b.getAttribute("data-date"), time:b.getAttribute("data-time"), mode:"adjacent"});
+      save(); renderCond(); renderAssign();
+      toast("兄弟の時刻を入れました（前後に続けたい）");
+    });
+  });
+}
+
+/* ---------- render: assignment / manual adjust ---------- */
+function scheduleTableHTML(interactive){
+  var days = sortedDays();
+  if(days.length === 0) return '<p class="hint">「② 日程」で実施日を設定すると、ここに時間割が表示されます。</p>';
+  var html = "";
+  days.forEach(function(d){
+    var slots = genDaySlots(d);
+    html += '<div class="sched-day"><h3>' + esc(fmtDate(d.date, true))
+      + '　' + esc(d.start || "") + '〜' + esc(d.end || "") + '</h3>';
+    if(slots.length === 0){
+      html += '<p class="hint">この日の枠がありません（開始・終了時刻を確認してください）。</p></div>';
+      return;
+    }
+    html += '<table class="sched"><tbody>';
+    var rows = slots.map(function(s){ return {type:"slot", s:s}; });
+    (d.breaks||[]).forEach(function(b){
+      var bs = toMin(b.start), be = toMin(b.end);
+      if(bs != null && be != null && be > bs) rows.push({type:"break", start:bs, end:be});
+    });
+    rows.sort(function(a,b){
+      var as = a.type==="slot" ? a.s.start : a.start;
+      var bs2 = b.type==="slot" ? b.s.start : b.start;
+      return as - bs2;
+    });
+    rows.forEach(function(r){
+      if(r.type === "break"){
+        html += '<tr><th>' + toHM(r.start) + '〜' + toHM(r.end) + '</th><td class="break-cell">☕ 休憩</td></tr>';
+        return;
+      }
+      var s = r.s;
+      var fid = state.assignments[s.key];
+      var f = fid ? famById(fid) : null;
+      var selClass = (interactive && selection && selection.type === "slot" && selection.key === s.key) ? " selected" : "";
+      html += '<tr><th>' + toHM(s.start) + '〜' + toHM(s.end) + '</th>';
+      if(f){
+        html += '<td class="slot-cell' + selClass + '"' + (interactive ? ' data-key="' + s.key + '"' : '') + '>'
+          + '<strong>' + esc(f.name) + '</strong>'
+          + (f.memo ? '<span class="memo">' + esc(f.memo) + '</span>' : '')
+          + sibBadge(f, d, s)
+          + (interactive ? '<button class="unset" data-key="' + s.key + '" title="この家庭を外す" aria-label="外す">×</button>' : '')
+          + '</td>';
+      }else{
+        html += '<td class="slot-cell empty' + selClass + '"' + (interactive ? ' data-key="' + s.key + '"' : '') + '>（空き）</td>';
+      }
+      html += "</tr>";
+    });
+    html += "</tbody></table></div>";
+  });
+  return html;
+}
+
+function renderAssign(){
+  cleanAssignments();
+  var area = document.getElementById("schedArea");
+  area.innerHTML = scheduleTableHTML(true);
+  area.querySelectorAll("td.slot-cell").forEach(function(td){
+    td.addEventListener("click", function(ev){
+      if(ev.target && ev.target.classList.contains("unset")) return;
+      handleSlotTap(td.getAttribute("data-key"));
+    });
+  });
+  area.querySelectorAll("button.unset").forEach(function(b){
+    b.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      var k = b.getAttribute("data-key");
+      var fid = state.assignments[k];
+      if(fid){
+        delete state.assignments[k];
+        state.reasons[fid] = "手動で枠から外しました（未割付）";
+        selection = null;
+        save(); renderAssign(); renderOutput(); renderSummary();
+        var f = famById(fid);
+        toast((f ? f.name : "") + " さんを枠から外しました");
+      }
+    });
+  });
+  var uArea = document.getElementById("unassignedArea");
+  var asg = assignedFamIds();
+  var un = state.families.filter(function(f){ return !asg[f.id]; });
+  if(un.length === 0){
+    uArea.innerHTML = state.families.length > 0 && Object.keys(state.assignments).length > 0
+      ? '<p class="hint" style="margin-top:12px">✅ 未割付の家庭はありません。</p>' : "";
+  }else{
+    var html = '<div class="unassigned-box"><h3>⚠️ 未割付の家庭（' + un.length + '）— タップして選び、空き枠をタップすると配置できます</h3>';
+    un.forEach(function(f){
+      var sel = (selection && selection.type === "fam" && selection.id === f.id) ? " selected" : "";
+      html += '<div class="ufam' + sel + '" data-fam="' + f.id + '">'
+        + '<strong>' + esc(f.name) + '</strong>'
+        + '<span class="reason">' + esc(state.reasons[f.id] || "未割付") + '</span></div>';
+    });
+    html += "</div>";
+    uArea.innerHTML = html;
+    uArea.querySelectorAll(".ufam").forEach(function(el){
+      el.addEventListener("click", function(){
+        var id = el.getAttribute("data-fam");
+        if(selection && selection.type === "fam" && selection.id === id) selection = null;
+        else selection = {type:"fam", id:id};
+        renderAssign();
+      });
+    });
+  }
+  renderSummary();
+  renderSelectBar();
+}
+
+function handleSlotTap(key){
+  if(!key) return;
+  if(selection && selection.type === "fam"){
+    var fid = selection.id;
+    var prev = state.assignments[key];
+    state.assignments[key] = fid;
+    delete state.reasons[fid];
+    if(prev) state.reasons[prev] = "入替により枠から外れました（未割付）";
+    selection = null;
+    save(); renderAssign(); renderOutput();
+    var f = famById(fid);
+    toast((f ? f.name : "") + " さんを配置しました" + (prev ? "（元の家庭は未割付になりました）" : ""));
+    return;
+  }
+  if(selection && selection.type === "slot"){
+    if(selection.key === key){ selection = null; renderAssign(); return; }
+    var a = selection.key, b = key;
+    var fa = state.assignments[a], fb = state.assignments[b];
+    if(!fa && !fb){ selection = {type:"slot", key:b}; renderAssign(); return; }
+    if(fa) state.assignments[b] = fa; else delete state.assignments[b];
+    if(fb) state.assignments[a] = fb; else delete state.assignments[a];
+    selection = null;
+    save(); renderAssign(); renderOutput();
+    toast(fa && fb ? "2つの枠を入れ替えました" : "空き枠へ移動しました");
+    return;
+  }
+  selection = {type:"slot", key:key};
+  renderAssign();
+}
+
+function renderSelectBar(){
+  var bar = document.getElementById("selectBar");
+  var msg = document.getElementById("selectMsg");
+  if(!selection){ bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+  if(selection.type === "slot"){
+    var fid = state.assignments[selection.key];
+    var f = fid ? famById(fid) : null;
+    msg.textContent = f
+      ? "「" + f.name + "」を選択中 → 入れ替え先の枠（または空き枠）をタップ"
+      : "空き枠を選択中 → 移動したい家庭の枠をタップ";
+  }else{
+    var f2 = famById(selection.id);
+    msg.textContent = "未割付「" + (f2 ? f2.name : "") + "」を選択中 → 配置したい枠をタップ";
+  }
+}
+
+function renderSummary(){
+  var el = document.getElementById("assignSummary");
+  var total = genAllSlots().length;
+  var asg = Object.keys(state.assignments).length;
+  if(state.families.length === 0 && total === 0){ el.style.display = "none"; return; }
+  el.style.display = "block";
+  var un = state.families.length - asg;
+  el.className = "slot-summary" + (un > 0 ? " warn" : "");
+  el.textContent = "割付済み " + asg + " ／ " + state.families.length + " 家庭　（枠 " + total + "・空き " + (total-asg) + "）"
+    + (un > 0 ? "　未割付 " + un : "");
+}
+
+/* ---------- render: output / print ---------- */
+function slipsHTML(){
+  var days = sortedDays();
+  var items = [];
+  days.forEach(function(d){
+    genDaySlots(d).forEach(function(s){
+      var fid = state.assignments[s.key];
+      if(!fid) return;
+      var f = famById(fid);
+      if(!f) return;
+      items.push({f:f, d:d, s:s});
+    });
+  });
+  if(items.length === 0) return '<p class="hint">割付が完了すると、ここに短冊が表示されます。</p>';
+  var note = state.slipNote;
+  var html = '<div class="slips">';
+  items.forEach(function(it){
+    html += '<div class="slip">'
+      + '<div class="slip-head">✂ 個人懇談のお知らせ</div>'
+      + '<div class="slip-name">' + esc(it.f.name) + ' さん</div>'
+      + '<div class="slip-time">' + esc(fmtDate(it.d.date)) + '　' + toHM(it.s.start) + '〜' + toHM(it.s.end) + '</div>'
+      + (note ? '<div class="slip-note">' + esc(note) + '</div>' : '')
+      + '</div>';
+  });
+  html += "</div>";
+  var asg = assignedFamIds();
+  var un = state.families.filter(function(f){ return !asg[f.id]; });
+  if(un.length > 0){
+    html += '<p class="hint" style="margin-top:10px">※ 未割付のため短冊なし：'
+      + un.map(function(f){ return esc(f.name); }).join("、") + '</p>';
+  }
+  return html;
+}
+function surveyOneHTML(){
+  var sv = state.survey;
+  var days = sortedDays();
+  var h = '<div class="survey">'
+    + '<div class="sv-head"><div class="sv-title">' + esc(sv.title || "個人懇談 希望調査票") + '</div>'
+    + '<div class="sv-name">' + esc(cls.name) + '　児童名（　　　　　　　　　　）</div></div>'
+    + '<p class="sv-lead">下の1〜4にご記入のうえ、' + (sv.deadline ? '<b>' + esc(sv.deadline) + '</b>までに' : '') + 'ご提出ください。</p>'
+    + '<div class="sv-sec"><div class="sv-h">1　来られる日（ご都合のよい日に○、悪い日に×）</div>';
+  if(days.length === 0){
+    h += '<p class="sv-lead">（実施日が未設定です）</p>';
+  }else{
+    h += '<table class="sv-days"><tbody>';
+    days.forEach(function(d){
+      h += '<tr><td>' + esc(fmtDate(d.date)) + (sv.showTime && d.start && d.end ? '　' + esc(d.start) + '〜' + esc(d.end) : '') + '</td><td class="mk">○・×</td></tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>'
+    + '<div class="sv-sec"><div class="sv-h">2　時間帯のご希望（一つに○）</div>'
+    + '<div>' + PREFS.map(function(p){ return '□ ' + esc(p.v === "any" ? "指定なし" : p.label.replace("を希望","")); }).join("　") + '</div></div>'
+    + '<div class="sv-sec"><div class="sv-h">3　同じ学校のきょうだいの懇談（決まっている場合）</div>'
+    + '<div>学級（　　年　　組）　日時（　　月　　日　　時　　分）　□ 前後に続けたい　□ 重ならなければよい</div></div>'
+    + '<div class="sv-sec"><div class="sv-h">4　連絡事項（ひとことでお書きください）</div><div class="sv-box"></div></div>'
+    + '<p class="sv-foot">※ できるだけご希望に沿うよう調整しますが、ご希望に添えない場合があります。</p>'
+    + '</div>';
+  return h;
+}
+function surveyHTML(){
+  var one = surveyOneHTML();
+  if(state.survey.twoUp) return '<div class="sv-page two">' + one + one + '</div>';
+  return '<div class="sv-page">' + one + '</div>';
+}
+function renderOutput(){
+  var schedHTML = '<div class="print-title">個人懇談 時間割表（' + esc(cls.name) + '）</div>' + scheduleTableHTML(false);
+  document.getElementById("prevSchedule").innerHTML = schedHTML;
+  document.getElementById("printSchedule").innerHTML = schedHTML;
+  var sHTML = slipsHTML();
+  document.getElementById("prevSlips").innerHTML = sHTML;
+  document.getElementById("printSlips").innerHTML = sHTML;
+  var sv = surveyHTML();
+  document.getElementById("prevSurvey").innerHTML = sv
+    + (state.survey.twoUp ? '<p class="sv-screen-note">2面付け：1枚に同じ調査票が2つ入ります。点線で切って配ってください。日程が多くて入りきらないときは1面にしてください。</p>' : '');
+  document.getElementById("printSurvey").innerHTML = sv;
+  document.getElementById("svTitle").value = state.survey.title;
+  document.getElementById("svDeadline").value = state.survey.deadline;
+  document.getElementById("svTwoUp").checked = !!state.survey.twoUp;
+  document.getElementById("svShowTime").checked = state.survey.showTime !== false;
+}
+
+function doPrint(mode){
+  renderOutput();
+  document.body.classList.add(mode);
+  var cleanup = function(){
+    document.body.classList.remove("p-schedule");
+    document.body.classList.remove("p-slips");
+    document.body.classList.remove("p-survey");
+  };
+  window.onafterprint = cleanup;
+  setTimeout(function(){
+    window.print();
+    setTimeout(cleanup, 500);
+  }, 50);
+}
+
+/* ---------- 当日モード ---------- */
+var todayDayId = null;
+function computeProgress(day){
+  var now = nowMin();
+  var log = state.dayLog || {};
+  var rows = [];
+  genDaySlots(day).forEach(function(s){
+    var fid = state.assignments[s.key];
+    var f = fid ? famById(fid) : null;
+    if(f) rows.push({s:s, f:f});
+  });
+  var prevEnd = null, cursor = -1, inProg = false;
+  rows.forEach(function(r, i){
+    var dur = r.s.end - r.s.start;
+    r.expStart = prevEnd == null ? r.s.start : Math.max(r.s.start, prevEnd);
+    r.done = typeof log[r.s.key] === "number";
+    if(r.done){
+      r.expEnd = log[r.s.key];
+    }else if(cursor < 0){
+      cursor = i;
+      inProg = now >= r.expStart;
+      r.expEnd = inProg ? Math.max(r.expStart + dur, now) : r.expStart + dur;
+    }else{
+      r.expEnd = r.expStart + dur;
+    }
+    prevEnd = r.expEnd;
+  });
+  var delay = 0, finished = rows.length > 0 && cursor < 0;
+  if(cursor >= 0){
+    var w = inProg ? cursor + 1 : cursor;
+    if(w < rows.length) delay = Math.max(0, rows[w].expStart - rows[w].s.start);
+    else delay = Math.max(0, rows[cursor].expEnd - rows[cursor].s.end);
+  }
+  return {rows: rows, cursor: cursor, inProg: inProg, delay: Math.round(delay), finished: finished, now: now};
+}
+function renderToday(){
+  var sel = document.getElementById("todayDay");
+  var days = sortedDays();
+  var area = document.getElementById("todayArea");
+  if(!days.length){
+    sel.innerHTML = ""; area.innerHTML = '<p class="hint" style="margin-top:10px">「② 日程」で実施日を設定してください。</p>'; return;
+  }
+  if(!todayDayId || !dayById(todayDayId)){
+    var t = todayStr();
+    var hit = days.filter(function(d){ return d.date === t; })[0];
+    todayDayId = (hit || days[0]).id;
+  }
+  sel.innerHTML = days.map(function(d){
+    return '<option value="' + d.id + '"' + (d.id === todayDayId ? " selected" : "") + '>' + esc(fmtDate(d.date)) + (d.date === todayStr() ? "（今日）" : "") + '</option>';
+  }).join("");
+  var day = dayById(todayDayId);
+  var p = computeProgress(day);
+  var h = '';
+  if(day.date && day.date !== todayStr()) h += '<p class="hint" style="margin-top:10px">※ 今日ではない日を表示しています。見込み時刻は、いまの時刻をもとに計算しています。</p>';
+  var delayTxt = p.finished ? "おわり" : (p.delay <= 0 ? "±0分" : "+" + p.delay + "分");
+  h += '<div class="today-big">'
+    + '<div class="cell"><div class="lab">いまの時刻</div><div class="val" id="tdClock">' + toHM(Math.floor(p.now)) + '</div></div>'
+    + '<div class="cell ' + (p.finished ? "ok" : p.delay >= 3 ? "late" : "ok") + '"><div class="lab">予定からの遅れ</div><div class="val">' + delayTxt + '</div></div>'
+    + '</div>';
+  h += '<div class="btn-row" style="margin:0 0 12px"><button class="btn" id="btnHallway">📺 廊下に出す</button>'
+    + '<button class="btn sub small" id="btnResetLog">この日の「おわり」を全部取り消す</button></div>';
+  if(!p.rows.length){
+    h += '<p class="hint">この日に割り付けられた家庭はありません。</p>';
+  }else{
+    h += '<table class="today"><thead><tr><th>予定</th><th>見込み</th><th>名前</th><th></th></tr></thead><tbody>';
+    p.rows.forEach(function(r, i){
+      var cls2 = r.done ? "done" : (i === p.cursor ? "now" : "");
+      var late = !r.done && r.expStart - r.s.start >= 1;
+      h += '<tr class="' + cls2 + '"><td>' + toHM(r.s.start) + '</td>'
+        + '<td class="exp' + (late ? " late" : "") + '">' + (r.done ? "✓ " + toHM(r.expEnd) + " 終了" : toHM(r.expStart) + (late ? "（+" + Math.round(r.expStart - r.s.start) + "）" : "")) + '</td>'
+        + '<td><strong>' + esc(r.f.name) + '</strong>' + (r.f.memo ? '<div style="font-size:.75rem;color:var(--sub)">' + esc(r.f.memo) + '</div>' : '') + '</td>'
+        + '<td style="text-align:right;white-space:nowrap">'
+        + (r.done ? '<button class="btn sub tiny td-undo" data-key="' + r.s.key + '">取り消し</button>'
+                  : '<button class="btn small td-done" data-key="' + r.s.key + '">おわり</button>')
+        + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    h += '<p class="hint" style="margin-top:10px">終わった家庭のメモは「⑦ メモ」で書けます。</p>';
+  }
+  area.innerHTML = h;
+  area.querySelectorAll(".td-done").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.dayLog[b.getAttribute("data-key")] = Math.round(nowMin());
+      save(); renderToday(); renderHallway();
+    });
+  });
+  area.querySelectorAll(".td-undo").forEach(function(b){
+    b.addEventListener("click", function(){
+      delete state.dayLog[b.getAttribute("data-key")];
+      save(); renderToday(); renderHallway();
+    });
+  });
+  document.getElementById("btnHallway").addEventListener("click", openHallway);
+  document.getElementById("btnResetLog").addEventListener("click", function(){
+    var self = this;
+    armConfirm(self, "resetLog", function(){
+      genDaySlots(day).forEach(function(s){ delete state.dayLog[s.key]; });
+      save(); renderToday(); toast("取り消しました");
+    }, "もう一度押すと取り消し");
+  });
+}
+function renderHallway(){
+  var hw = document.getElementById("hallway");
+  if(!hw.classList.contains("show")) return;
+  var day = dayById(todayDayId);
+  var p = day ? computeProgress(day) : {delay:0, finished:false, now:nowMin()};
+  var main = document.getElementById("hwMain"), sub = document.getElementById("hwSub");
+  if(p.finished){
+    main.textContent = "本日の懇談は終了しました";
+    sub.textContent = "ありがとうございました。";
+  }else if(p.delay <= 1){
+    main.innerHTML = "ほぼ予定どおりに<br>進んでいます";
+    sub.textContent = "お名前をお呼びするまで、少々お待ちください。";
+  }else{
+    main.innerHTML = 'ただいま 約<span class="hw-num">' + p.delay + '</span>分<br>遅れています';
+    sub.textContent = "お待たせして申し訳ありません。順番にお呼びします。";
+  }
+  document.getElementById("hwClock").textContent = "現在 " + toHM(Math.floor(p.now));
+}
+function openHallway(){
+  var hw = document.getElementById("hallway");
+  hw.classList.add("show");
+  renderHallway();
+  try{ if(hw.requestFullscreen) hw.requestFullscreen().catch(function(){}); }catch(e){}
+}
+document.getElementById("hwClose").addEventListener("click", function(){
+  document.getElementById("hallway").classList.remove("show");
+  try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); }catch(e){}
+});
+document.getElementById("todayDay").addEventListener("change", function(e){ todayDayId = e.target.value; renderToday(); });
+setInterval(function(){
+  if(document.getElementById("panel-today").classList.contains("active")) renderToday();
+  renderHallway();
+}, 15000);
+
+/* ---------- 懇談メモ ---------- */
+function memoDate(f){
+  if(f.notes && f.notes.date) return f.notes.date;
+  var info = slotInfo(state, assignedFamIds()[f.id]);
+  return info ? info.date : "";
+}
+function handoffText(f){
+  var d = memoDate(f);
+  return "【懇談メモ】" + f.name + "（" + cls.name + "）\n"
+    + "懇談の日付：" + (d ? fmtDate(d, true) : "（未記入）") + "\n"
+    + "話したこと：" + ((f.notes && f.notes.talked) || "（未記入）") + "\n"
+    + "次に確かめること：" + ((f.notes && f.notes.next) || "（未記入）") + "\n"
+    + HANDOFF_LINE;
+}
+function showOut(txt){
+  var o = document.getElementById("memoOut");
+  o.innerHTML = '<textarea class="out" readonly></textarea><div class="btn-row" style="margin-top:6px"><button class="btn sub tiny" id="btnCloseOut">閉じる</button></div>';
+  o.querySelector("textarea").value = txt;
+  document.getElementById("btnCloseOut").addEventListener("click", function(){ o.innerHTML = ""; });
+}
+function renderMemo(){
+  var area = document.getElementById("memoArea");
+  if(!state.families.length){ area.innerHTML = '<p class="hint">「① 名簿」で家庭を登録してください。</p>'; return; }
+  var asg = assignedFamIds();
+  var list = state.families.slice().sort(function(a,b){
+    var ia = slotInfo(state, asg[a.id]), ib = slotInfo(state, asg[b.id]);
+    var ka = ia ? ia.date + pad(Math.floor(ia.start/60)) + pad(ia.start%60) : "~";
+    var kb = ib ? ib.date + pad(Math.floor(ib.start/60)) + pad(ib.start%60) : "~";
+    return ka.localeCompare(kb);
+  });
+  var h = "";
+  list.forEach(function(f){
+    var info = slotInfo(state, asg[f.id]);
+    h += '<div class="memo-card" data-fam="' + f.id + '"><div class="mh"><div><strong>' + esc(f.name) + '</strong>'
+      + '<span style="font-size:.8rem;color:var(--sub);margin-left:8px">' + (info ? esc(fmtDate(info.date)) + ' ' + toHM(info.start) : "未割付") + '</span></div>'
+      + '<button class="btn small m-copy">📋 引き継ぎ用にコピー</button></div>'
+      + '<div class="memo-grid">'
+      + '<div><label>懇談の日付</label><input type="date" class="m-date" value="' + esc(memoDate(f)) + '"></div>'
+      + '<div><label>話したこと（一行）</label><input type="text" class="m-talked" value="' + esc(f.notes.talked) + '"></div>'
+      + '<div><label>次に確かめること（一行）</label><input type="text" class="m-next" value="' + esc(f.notes.next) + '"></div>'
+      + '</div></div>';
+  });
+  area.innerHTML = h;
+  area.querySelectorAll(".memo-card").forEach(function(card){
+    var f = famById(card.getAttribute("data-fam"));
+    if(!f) return;
+    card.querySelector(".m-date").addEventListener("change", function(e){ f.notes.date = e.target.value; save(); });
+    card.querySelector(".m-talked").addEventListener("input", function(e){ f.notes.talked = e.target.value; save(); });
+    card.querySelector(".m-next").addEventListener("input", function(e){ f.notes.next = e.target.value; save(); });
+    card.querySelector(".m-copy").addEventListener("click", function(){
+      var txt = handoffText(f);
+      showOut(txt);
+      copyText(txt, f.name + " さんのメモをコピーしました");
+    });
+  });
+}
+document.getElementById("btnCopyAllMemo").addEventListener("click", function(){
+  var fs = state.families.filter(function(f){ return f.notes.talked || f.notes.next; });
+  if(!fs.length){ toast("メモが入っている家庭がありません"); return; }
+  var txt = fs.map(handoffText).join("\n\n");
+  showOut(txt);
+  copyText(txt, fs.length + "家庭分をコピーしました");
+});
+
+/* ---------- 設定：クラス・データ ---------- */
+function renderSettings(){
+  var cc = document.getElementById("classCard");
+  var h = '<h2>🏫 クラス <span class="badge">' + DB.classes.length + ' / ' + MAX_CLASSES + '</span></h2>'
+    + '<p class="hint">ヘッダーのプルダウンで切り替えます。兄弟が別の組にいるときは、その組の割付時刻が「③ 希望条件」に候補として出ます（同じ苗字の家庭）。</p>';
+  DB.classes.forEach(function(c){
+    h += '<div class="class-row' + (c.id===cls.id ? ' active' : '') + '">'
+      + '<input type="text" maxlength="12" value="' + esc(c.name) + '" data-cid="' + esc(c.id) + '" aria-label="クラス名">'
+      + '<span class="cnt">' + c.state.families.length + '家庭</span>'
+      + (c.id!==cls.id ? '<button class="btn sub small" data-open="' + esc(c.id) + '">ひらく</button>' : '')
+      + (DB.classes.length>1 ? '<button class="btn danger small" data-rm="' + esc(c.id) + '">削除</button>' : '')
+      + '</div>';
+  });
+  h += '<div class="btn-row"><button class="btn small" id="btnAddClass"' + (DB.classes.length>=MAX_CLASSES ? ' disabled' : '') + '>＋ クラスを追加</button></div>';
+  cc.innerHTML = h;
+  cc.querySelectorAll("input[data-cid]").forEach(function(inp){
+    inp.addEventListener("change", function(){
+      var v = inp.value.trim() || "クラス";
+      DB.classes.forEach(function(c){ if(c.id===inp.getAttribute("data-cid")) c.name = v; });
+      save(); renderAll(); toast("クラス名を変更しました");
+    });
+  });
+  cc.querySelectorAll("[data-open]").forEach(function(b){
+    b.addEventListener("click", function(){ switchClass(b.getAttribute("data-open")); renderAll(); toast("🏫 " + cls.name + " に切り替えました"); });
+  });
+  cc.querySelectorAll("[data-rm]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-rm");
+      armConfirm(b, "rm_" + id, function(){
+        DB.classes = DB.classes.filter(function(c){ return c.id !== id; });
+        if(DB.currentClassId === id) DB.currentClassId = DB.classes[0].id;
+        bindClass(); save(); renderAll(); toast("クラスを削除しました");
+      }, "もう一度で削除");
+    });
+  });
+  document.getElementById("btnAddClass").addEventListener("click", function(){
+    if(DB.classes.length >= MAX_CLASSES){ toast("クラスは12個までです"); return; }
+    var c = newClass((DB.classes.length+1) + "組");
+    // 日程と時間は写しておく（同じ学年で同じ日程のことが多いため）
+    c.state.slotMin = state.slotMin;
+    c.state.days = state.days.map(function(d){ return {id: uid(), date: d.date, start: d.start, end: d.end, breaks: (d.breaks||[]).map(function(b){ return {start:b.start, end:b.end}; })}; });
+    DB.classes.push(c);
+    switchClass(c.id);
+    renderAll();
+    toast("「" + c.name + "」を追加しました（日程は前のクラスから写しています）");
+  });
+}
+document.getElementById("btnExport").addEventListener("click", function(){
+  var area = document.getElementById("dataArea");
+  var txt = JSON.stringify({app:"kondan-pro", version:1, classes:DB.classes, currentClassId:DB.currentClassId});
+  area.innerHTML = '<p class="hint">下の文字列をコピーして保存してください（全' + DB.classes.length + 'クラス）。</p>'
+    + '<textarea id="exportText" readonly></textarea>'
+    + '<div class="btn-row"><button class="btn small" id="btnCopy">コピー</button><button class="btn sub small" id="btnCloseData">閉じる</button></div>';
+  document.getElementById("exportText").value = txt;
+  document.getElementById("btnCopy").addEventListener("click", function(){ copyText(txt); });
+  document.getElementById("btnCloseData").addEventListener("click", function(){ area.innerHTML = ""; });
+});
+document.getElementById("btnImport").addEventListener("click", function(){
+  var area = document.getElementById("dataArea");
+  area.innerHTML = '<p class="hint">書き出した文字列を貼りつけて「読みこむ」を押してください。<b>いまの全クラスのデータが置きかわります。</b></p>'
+    + '<textarea id="importText" placeholder="ここに貼りつけ"></textarea>'
+    + '<div class="btn-row"><button class="btn small" id="btnDoImport">読みこむ</button><button class="btn sub small" id="btnCloseData2">閉じる</button></div>'
+    + '<p id="importErr" style="color:var(--ng);font-size:.85rem;margin-top:6px"></p>';
+  document.getElementById("btnDoImport").addEventListener("click", function(){
+    var txt = document.getElementById("importText").value.trim();
+    var errEl = document.getElementById("importErr");
+    if(!txt){ errEl.textContent = "テキストが空です。"; return; }
+    var d;
+    try{ d = JSON.parse(txt); }catch(e){ errEl.textContent = "読みこめませんでした。書き出した文字列か確認してください。"; return; }
+    if(isObj(d) && Array.isArray(d.classes) && d.classes.length){
+      armConfirm(this, "importAll", function(){
+        DB = normDB(d);
+        bindClass(); cleanAssignments();
+        save(); renderAll();
+        toast("読みこみました（" + DB.classes.length + "クラス）");
+      }, "もう一度押すと、いまのデータを置きかえます");
+    }else if(isObj(d) && (Array.isArray(d.families) || Array.isArray(d.days))){
+      if(DB.classes.length >= MAX_CLASSES){ errEl.textContent = "クラスが12個あるため足せません。"; return; }
+      var c = newClass((DB.classes.length+1) + "組", normState(d));
+      DB.classes.push(c);
+      switchClass(c.id); renderAll();
+      toast("「" + c.name + "」として足しました");
+    }else{
+      errEl.textContent = "読みこめませんでした。書き出した文字列か確認してください。";
+    }
+  });
+  document.getElementById("btnCloseData2").addEventListener("click", function(){ area.innerHTML = ""; });
+});
+
+/* ---------- 引き継ぎ通知 ---------- */
+function renderMigrateBox(){
+  var mb = document.getElementById("migrateBox");
+  if(!migrateInfo){ mb.style.display = "none"; return; }
+  mb.style.display = "";
+  mb.innerHTML = '<button class="x" aria-label="閉じる">✕</button>'
+    + '🗓️ <b>無料版のデータを引き継ぎました。</b><br>'
+    + '同じブラウザに入っていた名簿（' + migrateInfo.fams + '家庭）・実施日（' + migrateInfo.days + '日）'
+    + (migrateInfo.asg ? '・割付（' + migrateInfo.asg + '件）' : '') + 'を「1組」として読みこんでいます。'
+    + '<br>無料版のデータはそのまま残っているので、しばらく両方を開いて確かめてもだいじょうぶです。'
+    + '<br>次は「③ 希望条件」で兄弟の懇談時刻を入れると、自動割付がその前後の枠を優先します。';
+  mb.querySelector(".x").addEventListener("click", function(){ migrateInfo = null; renderMigrateBox(); });
+}
+
+/* ---------- render all ---------- */
+function renderAll(){
+  renderClassSelect();
+  renderMigrateBox();
+  renderRoster();
+  renderDays();
+  renderCond();
+  renderAssign();
+  renderOutput();
+  renderSettings();
+  if(document.getElementById("panel-today").classList.contains("active")) renderToday();
+  if(document.getElementById("panel-memo").classList.contains("active")) renderMemo();
+  document.getElementById("slipNote").value = state.slipNote;
+}
+
+/* ---------- events ---------- */
+document.getElementById("tabs").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-tab]");
+  if(!b) return;
+  showTab(b.getAttribute("data-tab"));
+});
+
+document.getElementById("btnAddPaste").addEventListener("click", function(){
+  var ta = document.getElementById("pasteArea");
+  var lines = ta.value.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+  if(lines.length === 0){ toast("名前を入力してから押してください"); return; }
+  lines.forEach(function(nm){ state.families.push(normFamily({name:nm})); });
+  ta.value = "";
+  save(); renderAll();
+  toast(lines.length + " 名を追加しました");
+});
+document.getElementById("btnAddOne").addEventListener("click", function(){
+  state.families.push(normFamily({name:"（名前を入力）"}));
+  save(); renderAll();
+});
+document.getElementById("btnSample").addEventListener("click", function(){
+  var names = ["あおき そら","いしだ ゆい","うえだ はると","おかだ みお","かとう れん",
+               "さいとう ひな","たむら いつき","なかの あかり","はやし そうた","まつい ことは",
+               "やまだ りく","わたなべ ほのか"];
+  names.forEach(function(nm){ state.families.push(normFamily({name:nm})); });
+  save(); renderAll();
+  toast("サンプル名簿 " + names.length + " 名を追加しました");
+});
+document.getElementById("btnClearFams").addEventListener("click", function(){
+  armConfirm(this, "clearFams", function(){
+    state.families = []; state.assignments = {}; state.reasons = {}; selection = null;
+    save(); renderAll();
+    toast("名簿を全削除しました");
+  }, "本当に全削除する（もう一度タップ）");
+});
+document.getElementById("btnResetAll").addEventListener("click", function(){
+  armConfirm(this, "resetClass", function(){
+    cls.state = emptyState();
+    state = cls.state;
+    selection = null;
+    save(); renderAll();
+    toast(cls.name + " のデータをリセットしました");
+  }, "本当にリセットする（もう一度タップ）");
+});
+
+document.getElementById("slotMin").addEventListener("change", function(e){
+  var v = +e.target.value;
+  state.slotMin = (v >= 1 && v <= 120) ? v : 10;
+  e.target.value = state.slotMin;
+  onSlotsChanged();
+});
+document.getElementById("btnAddDay").addEventListener("click", function(){
+  state.days.push({id:uid(), date:"", start:"13:30", end:"16:30", breaks:[]});
+  save(); renderAll();
+});
+
+document.getElementById("btnAssign").addEventListener("click", autoAssign);
+document.getElementById("btnClearAssign").addEventListener("click", function(){
+  state.assignments = {}; state.reasons = {}; selection = null;
+  save(); renderAll();
+  toast("割付をすべて解除しました");
+});
+document.getElementById("btnCancelSel").addEventListener("click", function(){
+  selection = null; renderAssign();
+});
+document.getElementById("slipNote").addEventListener("input", function(e){
+  state.slipNote = e.target.value;
+  save();
+  var sHTML = slipsHTML();
+  document.getElementById("prevSlips").innerHTML = sHTML;
+  document.getElementById("printSlips").innerHTML = sHTML;
+});
+document.getElementById("svTitle").addEventListener("change", function(e){ state.survey.title = e.target.value; save(); renderOutput(); });
+document.getElementById("svDeadline").addEventListener("change", function(e){ state.survey.deadline = e.target.value; save(); renderOutput(); });
+document.getElementById("svTwoUp").addEventListener("change", function(e){ state.survey.twoUp = e.target.checked; save(); renderOutput(); });
+document.getElementById("svShowTime").addEventListener("change", function(e){ state.survey.showTime = e.target.checked; save(); renderOutput(); });
+document.getElementById("btnPrintSurvey").addEventListener("click", function(){
+  if(!state.days.length){ toast("先に「② 日程」で実施日を設定してください"); return; }
+  doPrint("p-survey");
+});
+document.getElementById("btnPrintSchedule").addEventListener("click", function(){ doPrint("p-schedule"); });
+document.getElementById("btnPrintSlips").addEventListener("click", function(){ doPrint("p-slips"); });
+
+/* ---------- init ---------- */
+load();
+cleanAssignments();
+save();   // 初回（＝引き継ぎ直後）にすぐ書きこむ。これをしないと毎回無料版から読み直してしまう
+renderAll();
+
+// テスト用の窓口（画面の動作には関係しません）
+window.__kondanPro = {
+  get DB(){ return DB; }, get state(){ return state; },
+  autoAssign: autoAssign, computeProgress: computeProgress, handoffText: handoffText,
+  switchClass: function(id){ switchClass(id); renderAll(); }, showTab: showTab, famById: famById, dayById: dayById,
+  genDaySlots: genDaySlots, slotInfo: slotInfo, crossClassCandidates: crossClassCandidates, surveyHTML: surveyHTML
+};
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>さんすう5分プリント Pro</title>
+<style>
+:root{ --ink:#2b2b2b; --line:#444; }
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","YuGothic","Yu Gothic","Meiryo",sans-serif;
+  color:var(--ink);background:#eceff3;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+
+/* ===== 操作バー ===== */
+.bar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #d6dae0;
+  padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;font-size:14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.bar h1{font-size:16px;margin:0 8px 0 0;white-space:nowrap;}
+.bar .grp{display:flex;align-items:center;gap:6px;}
+.bar label{color:#555;white-space:nowrap;}
+.bar select,.bar input[type=number],.bar input[type=text]{font:inherit;padding:4px 6px;border:1px solid #c4cad2;border-radius:6px;background:#fff;}
+.bar input[type=number]{width:60px;}
+.bar input[type=text]{width:90px;}
+.bar input[type=range]{width:110px;vertical-align:middle;}
+.bar .val{display:inline-block;min-width:1.2em;text-align:center;font-weight:bold;color:#3f6fd8;}
+button{font:inherit;padding:6px 14px;border:1px solid #c4cad2;border-radius:8px;background:#fff;cursor:pointer;}
+button:hover{background:#f3f6fa;}
+button.primary{background:#3f6fd8;border-color:#3f6fd8;color:#fff;}
+button.primary:hover{background:#3560c0;}
+button.on{background:#ffe9a8;border-color:#e0be55;}
+.hint{color:#888;font-size:12px;flex-basis:100%;line-height:1.6;}
+.bar a.back{text-decoration:none;color:#3f6fd8;font-weight:bold;border:1px solid #c4cad2;border-radius:999px;padding:5px 12px;white-space:nowrap;background:#fff;}
+.bar .pro{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;background:#3f6fd8;color:#fff;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px;}
+.bar select#cls{font-weight:bold;color:#3f6fd8;max-width:180px;}
+button.sub{background:#f4f7fd;border-color:#b9c9ea;color:#2d56b0;}
+
+/* ===== Pro パネル ===== */
+.pro-panel{max-width:900px;margin:14px auto 0;padding:0 16px;font-size:14px;}
+.migrate-box{background:#FFF8E8;border:1.5px solid #F0E2BF;border-radius:12px;padding:12px 34px 12px 14px;line-height:1.7;margin-bottom:12px;position:relative;}
+.migrate-box .x{position:absolute;right:4px;top:2px;border:none;background:none;font-size:15px;color:#a08a50;cursor:pointer;}
+.ptabs{display:flex;gap:6px;flex-wrap:wrap;}
+.ptabs button{border-radius:10px 10px 0 0;border-bottom:none;background:#f3f5f8;}
+.ptabs button.on{background:#fff;color:#2d56b0;font-weight:bold;}
+.ptabs button.fold{margin-left:auto;border-radius:10px;border-bottom:1px solid #c4cad2;}
+.pbody{background:#fff;border:1px solid #c4cad2;border-radius:0 12px 12px 12px;padding:14px 16px;margin-bottom:6px;}
+.pbody h3{font-size:15px;margin:4px 0 10px;}
+.pbody .muted{color:#888;font-size:12px;line-height:1.7;}
+.hist{list-style:none;margin:0;padding:0;}
+.hist li{border-bottom:1px solid #eceff3;padding:9px 2px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;}
+.hist .hd{font-weight:bold;min-width:120px;}
+.hist .hs{color:#555;flex:1;min-width:200px;}
+.hist .res{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:#555;width:100%;}
+.hist .res input{width:52px;font:inherit;padding:3px 4px;border:1px solid #c4cad2;border-radius:6px;}
+.hist li.hit{background:#fffbe6;}
+.tag{display:inline-block;font-size:11px;border-radius:5px;padding:0 6px;background:#eef2fa;color:#3f5f9f;margin-left:4px;}
+.row2{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;margin:6px 0;}
+.row2 input[type=text],.row2 input[type=number],.row2 select{font:inherit;padding:4px 6px;border:1px solid #c4cad2;border-radius:6px;}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 10px;margin-top:6px;}
+.months label{display:flex;gap:6px;align-items:center;font-size:13px;}
+.months select{flex:1;font:inherit;padding:3px 4px;border:1px solid #c4cad2;border-radius:6px;}
+textarea.io{width:100%;min-height:110px;font:12px/1.5 monospace;border:1px solid #c4cad2;border-radius:8px;padding:8px;}
+button.armed{background:#d94f4f !important;color:#fff !important;border-color:#d94f4f !important;}
+/* できた数グラフ（同じ色相の濃淡：全問＝濃い／半分以上＝中／半分未満＝うすい） */
+.chart-g{margin:10px 0 16px;}
+.chart-g h4{font-size:14px;margin:0 0 6px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#555;margin:4px 0 10px;}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;}
+.cbar{display:grid;grid-template-columns:92px 1fr 52px;gap:6px;align-items:center;font-size:12px;margin:5px 0;color:#555;}
+.cbar .track{display:flex;gap:2px;height:18px;}
+.cbar .track span{display:block;height:100%;min-width:0;}
+.cbar .track span:first-child{border-radius:4px 0 0 4px;}
+.cbar .track span:last-child{border-radius:0 4px 4px 0;}
+.cbar .track span:only-child{border-radius:4px;}
+.cbar .pct{font-weight:bold;color:#2b2b2b;text-align:right;}
+.s-all{background:#2e7d4f;} .s-half{background:#7fbf95;} .s-less{background:#d3eadb;}
+.pair{border:1px solid #e0be55;background:#fffdf3;border-radius:10px;padding:8px 10px;margin:8px 0;}
+.pair .pt{font-weight:bold;font-size:13px;margin-bottom:4px;}
+
+/* ===== 答えの一覧（印刷用） ===== */
+#anslist{display:none;}
+.ansp{font-family:inherit;color:#222;}
+.ansp h2{font-size:16px;margin:0 0 2mm;}
+.ansp .meta{font-size:11px;color:#555;margin-bottom:3mm;}
+.ansp table{width:100%;border-collapse:collapse;font-size:11.5px;}
+.ansp th,.ansp td{border:0.3mm solid #999;padding:1.4mm 2mm;vertical-align:top;text-align:left;line-height:1.55;}
+.ansp th{background:#f0f0f0;font-size:11px;}
+.ansp td.no{text-align:center;font-weight:bold;width:10mm;}
+.ansp .it{display:inline-block;margin-right:3.2mm;white-space:nowrap;}
+.ansp .it b{color:#777;font-weight:normal;margin-right:0.6mm;}
+.pl.sm{font-size:1.75mm !important;letter-spacing:-0.1mm;}
+
+/* ===== 用紙 ===== */
+.sheets{padding:14mm 0;display:flex;flex-direction:column;align-items:center;gap:8mm;}
+.b4page{width:257mm;height:364mm;background:#fff;display:grid;
+  grid-template-columns:128mm 128mm;grid-template-rows:182mm 182mm;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+.b4page .sheet{box-shadow:none;outline:0.2mm dashed #c9c9c9;outline-offset:-0.1mm;}
+.sheet{width:128mm;height:182mm;background:#fff;padding:7mm 7mm 5mm;
+  box-shadow:0 2px 10px rgba(0,0,0,.15);position:relative;overflow:hidden;display:flex;flex-direction:column;}
+
+.head{display:flex;align-items:flex-end;gap:2mm;border-bottom:0.6mm solid var(--line);padding-bottom:1.5mm;}
+.head .ttl{font-size:5mm;font-weight:bold;letter-spacing:.3mm;white-space:nowrap;}
+.head .no{font-size:2.9mm;color:#666;border:0.3mm solid #bbb;border-radius:2mm;padding:0.3mm 1.6mm;white-space:nowrap;}
+.head .spacer{flex:1;}
+.head .nm{font-size:3.4mm;border-bottom:0.3mm solid #333;min-width:25mm;text-align:center;padding-bottom:0.6mm;}
+.head .nm b{font-weight:normal;color:#666;font-size:3mm;}
+
+.sec{margin-top:3mm;}
+.sec-t{font-size:3.8mm;font-weight:bold;background:#f0f0f0;border-left:1.2mm solid #666;padding:0.8mm 2mm;margin-bottom:2mm;}
+.sec-t span{font-weight:normal;font-size:3.1mm;color:#777;margin-left:2mm;}
+
+/* 計算のならび */
+.probs{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;row-gap:2.5mm;}
+.hbox{width:33.3%;text-align:center;}
+.hbox.w2{width:50%;}
+.hbox.w3{width:100%;}
+.hbox .hn{font-size:3.1mm;color:#666;margin-bottom:0.8mm;}
+.hissan,.wari{display:inline-grid;}
+.hissan .c,.wari .c{height:6mm;line-height:6mm;font-size:4.8mm;text-align:center;}
+.hissan .op{font-size:4.4mm;}
+.hissan .ln{grid-column:1/-1;border-top:0.5mm solid #333;height:0;}
+.hissan .ab,.wari .ab{height:6.2mm;border:0.25mm dashed #c8c8c8;background:#fcfcfc;
+  line-height:6.2mm;font-size:4.8mm;text-align:center;color:#c0392b;}
+.hissan .ib{height:6.2mm;border-bottom:0.2mm dotted #ddd;}
+.wari .dv{border-right:0.5mm solid #333;border-top-right-radius:3mm;}
+.wari .ov{border-top:0.5mm solid #333;}
+.amari{font-size:3.4mm;margin-top:0.8mm;}
+.yoko{font-size:4.2mm;line-height:8mm;}
+.yoko .ex{white-space:nowrap;}
+
+/* 問題行 */
+.q{font-size:3.9mm;line-height:8mm;margin-bottom:0.6mm;}
+.q .qn{color:#666;font-size:3.3mm;margin-right:1mm;}
+.blank{display:inline-block;border-bottom:0.35mm solid #333;min-width:9mm;height:6mm;line-height:6mm;
+  text-align:center;vertical-align:-1.4mm;margin:0 0.8mm;color:#c0392b;font-size:4.2mm;}
+.a{visibility:hidden;}
+body.show-ans .a{visibility:visible;}
+
+/* 分数 */
+.frac{display:inline-block;vertical-align:-2.2mm;text-align:center;font-size:3.4mm;line-height:1.2;margin:0 0.8mm;}
+.frac .fn{display:block;border-bottom:0.3mm solid #333;padding:0 1.2mm;}
+.frac .fd{display:block;padding:0 1.2mm;}
+.frac.bl{vertical-align:-3mm;}
+.frac.bl .fn,.frac.bl .fd{min-width:8mm;height:5mm;line-height:5mm;color:#c0392b;font-size:3.8mm;
+  border:0.25mm dashed #c8c8c8;background:#fcfcfc;}
+.frac.bl .fn{border-bottom:0.4mm solid #333;}
+
+/* 図 */
+.figs{display:flex;justify-content:space-around;align-items:flex-end;gap:2mm;margin-bottom:0.5mm;}
+.fig{text-align:center;}
+.fig svg{display:block;margin:0 auto;}
+.fig .cap{font-size:3.7mm;line-height:7mm;margin-top:0.5mm;}
+
+/* かんたんモード（ヒント） */
+.hissan .pl{font-size:2.3mm;color:#8fa6bb;line-height:3.2mm;height:3.2mm;text-align:center;}
+.hissan .cb{height:3.6mm;border:0.2mm dashed #cfe0f0;background:#f7fbff;border-radius:0.6mm;}
+.tiles{display:flex;justify-content:center;align-items:flex-end;gap:1mm;margin-top:0.8mm;}
+.tiles.col{flex-direction:column;align-items:center;gap:0.3mm;margin-top:1.2mm;}
+.tiles.col .pm{line-height:2.6mm;}
+.tiles .pm{font-size:3.2mm;color:#666;}
+.hintbar{font-size:3mm;color:#3b6ea5;background:#f2f8ff;border:0.25mm solid #cfe0f0;border-radius:1.5mm;
+  padding:0.6mm 2mm;margin-bottom:1.5mm;line-height:5mm;}
+.head .easy{font-size:2.9mm;color:#fff;background:#5b9bd5;border-radius:1mm;padding:0.3mm 1.6mm;white-space:nowrap;}
+
+/* チャレンジ */
+.chal{margin-top:2.2mm;border:0.4mm solid #e0be55;background:#fffdf3;border-radius:2mm;
+  padding:1.4mm 2.4mm;font-size:3.7mm;line-height:6.6mm;}
+.chal .lb{display:inline-block;background:#e0be55;color:#fff;font-size:2.9mm;border-radius:1mm;
+  padding:0.2mm 1.6mm;margin-right:1.6mm;vertical-align:0.6mm;}
+.sheet.dense .chal{font-size:3.4mm;line-height:6mm;}
+
+/* メモ欄 */
+.memo{flex:1;margin-top:3mm;min-height:10mm;border:0.3mm dashed #c9c9c9;border-radius:1.5mm;
+  background:repeating-linear-gradient(0deg,transparent,transparent 7.5mm,#f0f0f0 7.5mm,#f0f0f0 7.7mm);position:relative;}
+.memo::before{content:"けいさん・メモ";position:absolute;top:-2.2mm;left:3mm;background:#fff;
+  padding:0 1.5mm;font-size:2.9mm;color:#999;}
+
+.foot{margin-top:auto;display:flex;align-items:center;gap:2mm;border-top:0.3mm dashed #bbb;padding-top:1.5mm;}
+.foot .msg{font-size:3.2mm;color:#777;flex:1;}
+.foot .score{font-size:3.4mm;border:0.3mm solid #999;border-radius:1.5mm;padding:0.5mm 3mm;color:#555;white-space:nowrap;}
+
+/* 問題が多いときは少し詰める */
+.sheet.dense .q{font-size:3.5mm;line-height:7mm;}
+.sheet.dense .sec{margin-top:2mm;}
+.sheet.dense .hissan .c,.sheet.dense .wari .c{height:5.4mm;line-height:5.4mm;font-size:4.4mm;}
+.sheet.dense .hissan .ab,.sheet.dense .wari .ab,.sheet.dense .hissan .ib{height:5.6mm;line-height:5.6mm;font-size:4.4mm;}
+.sheet.dense .fig .cap{font-size:3.4mm;line-height:6mm;}
+.sheet.dense .memo{min-height:7mm;}
+
+@media print{
+  body{background:#fff;}
+  .bar,.pro-panel,.note-link{display:none !important;}
+  body.print-ans .sheets{display:none !important;}
+  body.print-ans #anslist{display:block !important;}
+  .sheets{padding:0;gap:0;display:block;}
+  .sheet{box-shadow:none;break-after:page;page-break-after:always;}
+  .b4page{box-shadow:none;break-after:page;page-break-after:always;}
+  .b4page .sheet{break-after:auto;page-break-after:auto;}
+  .sheets > :last-child{break-after:auto;page-break-after:auto;}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>さんすう5分プリント<span class="pro">PRO</span></h1>
+  <div class="grp">
+    <label>クラス</label>
+    <select id="cls" aria-label="クラス"></select>
+  </div>
+  <div class="grp">
+    <label>学年</label>
+    <select id="grade">
+      <option value="1">1年</option><option value="2" selected>2年</option><option value="3">3年</option>
+      <option value="4">4年</option><option value="5">5年</option><option value="6">6年</option>
+    </select>
+  </div>
+  <div class="grp">
+    <label>テーマ</label>
+    <select id="mode"></select>
+  </div>
+  <div class="grp">
+    <label>けいさん</label>
+    <input type="range" id="cq" min="1" max="6" value="3"><span class="val" id="cqv">3</span>問
+  </div>
+  <div class="grp">
+    <label>テーマ</label>
+    <input type="range" id="tq" min="1" max="5" value="3"><span class="val" id="tqv">3</span>問
+  </div>
+  <div class="grp">
+    <label>★チャレンジ</label>
+    <input type="range" id="chalq" min="0" max="3" value="2"><span class="val" id="chalv">2</span>問
+  </div>
+  <div class="grp"><label><input type="checkbox" id="easy"> かんたんモード（裏面）</label></div>
+  <div class="grp"><label>枚数</label><input type="number" id="count" value="10" min="1" max="60"></div>
+  <div class="grp">
+    <label>印刷</label>
+    <select id="layout"><option value="b6">B6 1枚ずつ</option><option value="b4">B4に4枚（切って配る）</option></select>
+  </div>
+  <div class="grp"><label>番号</label><input type="text" id="seed" value=""></div>
+  <button class="primary" id="gen">新しく作る</button>
+  <button id="toggle">こたえを見る</button>
+  <button id="print">印刷する</button>
+  <button class="sub" id="ansPrint">答えの一覧を印刷</button>
+  <button class="sub" id="retry2w">二週間前のプリントで再チャレンジ</button>
+  <div class="hint">
+    ※「番号」が同じなら、いつでも同じ問題が出ます（作り直したいときは「新しく作る」）。／印刷はブラウザの設定で「余白：なし」「背景のグラフィック：ON」。／「こたえを見る」をONのまま印刷すると答え合わせ用が刷れます。
+  </div>
+</div>
+
+<div class="pro-panel" id="proPanel">
+  <div id="migrateBox" class="migrate-box" style="display:none"></div>
+  <div class="ptabs" id="ptabs">
+    <button data-p="hist" class="on">🖨 印刷履歴</button>
+    <button data-p="rec">📈 できた数の記録</button>
+    <button data-p="cls">🏫 クラス設定・月の予定</button>
+    <button data-p="data">🗂 データ</button>
+    <button class="fold" id="pfold">たたむ ▲</button>
+  </div>
+  <div class="pbody" id="pbody"></div>
+</div>
+
+<div class="sheets" id="sheets"></div>
+<div id="anslist"></div>
+
+<script>
+/* ================= 乱数（シードつき） ================= */
+let rng = Math.random;
+let HINT = false;   // かんたんモード（裏面）で true
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const ri = (a,b)=> a + Math.floor(rng()*(b-a+1));
+const pick = arr => arr[Math.floor(rng()*arr.length)];
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+const gcd = (a,b)=> b? gcd(b,a%b) : a;
+const round = (x,k)=> Math.round(x*Math.pow(10,k))/Math.pow(10,k);
+
+/* ================= 部品 ================= */
+function B(ans, w){ return '<span class="blank" style="min-width:'+(w||9)+'mm"><span class="a">'+ans+'</span></span>'; }
+function frac(n,d){ return '<span class="frac"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>'; }
+function fracB(n,d){ return '<span class="frac bl"><span class="fn"><span class="a">'+n+'</span></span><span class="fd"><span class="a">'+d+'</span></span></span>'; }
+
+/* ---- 筆算（たし・ひき・かけ／小数もOK） ---- */
+function hissanHTML(p, n, cls){
+  const sa=String(p.a), sb=String(p.b), sans=String(p.ans);
+  const cols = Math.max(sa.length, sb.length, sans.length) + 1;
+  const dec = s => s.indexOf('.')>=0 ? s.length-1-s.indexOf('.') : -1;
+  const d = Math.max(dec(sa), dec(sb), dec(sans));
+  const dotCol = d>=0 ? cols-1-d : -1;
+  let tpl=[]; for(let i=0;i<cols;i++) tpl.push(i===dotCol ? '2.8mm' : '6mm');
+  const cell = (s,i)=>{ const idx = i - (cols - s.length); return idx>=0 ? s[idx] : ''; };
+
+  let h = '<div class="hbox '+(cls||'')+'"><div class="hn">('+n+')</div>';
+  h += '<div class="hissan" style="grid-template-columns:'+tpl.join(' ')+'">';
+  if(HINT && dotCol<0 && cols<=5){
+    const names=['一','十','百','千','万'];
+    for(let i=0;i<cols;i++) h += '<div class="pl">'+(names[cols-1-i]||'')+'</div>';
+    for(let i=0;i<cols;i++) h += '<div class="cb"></div>';
+  }else if(HINT && dotCol<0 && cols===6){          // Pro：4年の3けた×2けた（答えが5けた）
+    const names=['一','十','百','千','万','十万'];
+    for(let i=0;i<cols;i++) h += '<div class="pl'+(i===0?' sm':'')+'">'+(names[cols-1-i]||'')+'</div>';
+    for(let i=0;i<cols;i++) h += '<div class="cb"></div>';
+  }else if(HINT && dotCol>=0){                      // Pro：小数のひっ算（4・5年）
+    const iN=['一','十','百','千'], fN=['1/10','1/100','1/1000'];
+    for(let i=0;i<cols;i++){
+      const nm = i<dotCol ? (iN[dotCol-1-i]||'') : (i>dotCol ? (fN[i-dotCol-1]||'') : '');
+      h += '<div class="pl'+(i>dotCol?' sm':'')+'">'+nm+'</div>';
+    }
+    for(let i=0;i<cols;i++) h += '<div class="cb"></div>';
+  }
+  for(let i=0;i<cols;i++) h += '<div class="c">'+cell(sa,i)+'</div>';
+  const bStart = cols - sb.length;
+  for(let i=0;i<cols;i++){
+    if(i === bStart-1) h += '<div class="c op">'+p.op+'</div>';
+    else h += '<div class="c">'+cell(sb,i)+'</div>';
+  }
+  h += '<div class="ln"></div>';
+  if(p.inter){
+    for(let r=0;r<p.inter;r++) for(let i=0;i<cols;i++) h += '<div class="ib"></div>';
+    h += '<div class="ln"></div>';
+  }
+  for(let i=0;i<cols;i++) h += '<div class="ab"><span class="a">'+cell(sans,i)+'</span></div>';
+  h += '</div>';
+  if(HINT && dotCol<0 && p.op!=='×' && p.a<100 && p.b<100)
+    h += '<div class="tiles col">'+tileSVG(p.a)+'<span class="pm">'+p.op+'</span>'+tileSVG(p.b)+'</div>';
+  h += '</div>';
+  return h;
+}
+/* ---- わり算の筆算 ---- */
+function wariHTML(a, b, q, r, n){
+  const sa=String(a), sq=String(q), cols=sa.length;
+  const dw = String(b).length>1 ? '11mm' : '7mm';
+  let tpl=[dw]; for(let i=0;i<cols;i++) tpl.push('6mm');
+  const cell=(s,i)=>{ const idx=i-(cols-s.length); return idx>=0? s[idx] : ''; };
+  let h = '<div class="hbox w2"><div class="hn">('+n+')</div>';
+  h += '<div class="wari" style="grid-template-columns:'+tpl.join(' ')+'">';
+  h += '<div class="c"></div>';
+  for(let i=0;i<cols;i++) h += '<div class="ab"><span class="a">'+cell(sq,i)+'</span></div>';
+  h += '<div class="c dv">'+b+'</div>';
+  for(let i=0;i<cols;i++) h += '<div class="c ov">'+sa[i]+'</div>';
+  h += '</div>';
+  if(r>0) h += '<div class="amari">あまり '+B(r,8)+'</div>';
+  h += '</div>';
+  return h;
+}
+/* ---- 横式 ---- */
+function yokoHTML(body, n, cls, tiles){
+  let t='';
+  if(HINT && tiles){
+    if(tiles.kind==='array') t = '<div class="tiles">'+arraySVG(tiles.a,tiles.b)+'</div>';
+    else t = '<div class="tiles">'+tileSVG(tiles.a)+'<span class="pm">'+(tiles.op||'')+'</span>'+tileSVG(tiles.b)+'</div>';
+  }
+  return '<div class="hbox yoko '+(cls||'w2')+'"><div class="hn">('+n+')</div><div class="ex">'+body+'</div>'+t+'</div>';
+}
+
+/* ================= 計算（学年別） ================= */
+function hissan(kind){
+  let a,b,op='＋';
+  if(kind==='a1'){ a=ri(4,9); b=ri(10-a,9); }                        // くり上がりのあるたし算
+  else if(kind==='a1n'){ a=ri(2,7); b=ri(1,9-a); }
+  else if(kind==='s1'){ a=ri(11,18); b=ri(a-9,9); op='－'; }            // くり下がりのあるひき算
+  else if(kind==='a2n'){ const a1=ri(1,4),a0=ri(1,4); a=a1*10+a0; b=ri(1,9-a1)*10+ri(1,9-a0); }
+  else if(kind==='a2'){ const a0=ri(4,9), b0=ri(10-a0,9), a1=ri(1,7); a=a1*10+a0; b=ri(1,Math.max(1,8-a1))*10+b0; }
+  else if(kind==='a3'){ a=ri(105,890); b=ri(24,98); }
+  else if(kind==='a3b'){ a=ri(105,899); b=ri(105,899); }
+  else if(kind==='s2n'){ const a1=ri(3,9),a0=ri(3,9); a=a1*10+a0; b=ri(1,a1-1)*10+ri(1,a0); op='－'; }
+  else if(kind==='s2'){ const a0=ri(0,5), a1=ri(3,9); a=a1*10+a0; b=ri(1,a1-1)*10+ri(a0+1,9); op='－'; }
+  else if(kind==='s3'){ a=ri(112,498); b=ri(25,98); op='－'; }
+  else if(kind==='s3b'){ a=ri(310,999); b=ri(105,a-100); op='－'; }
+  else if(kind==='m2x1'){ a=ri(13,99); b=ri(2,9); op='×'; }
+  else if(kind==='m3x1'){ a=ri(112,999); b=ri(2,9); op='×'; }
+  else if(kind==='m2x2'){ a=ri(13,99); b=ri(12,99); op='×'; }
+  else if(kind==='m3x2'){ a=ri(112,999); b=ri(12,99); op='×'; }
+  const ans = op==='＋' ? a+b : op==='－' ? a-b : a*b;
+  const inter = (op==='×' && String(b).length>1) ? String(b).length : 0;
+  return {a:a,b:b,op:op,ans:ans,inter:inter};
+}
+function decAddSub(dmax){
+  const d = pick(dmax===1?[1,1,2]:[1,2,2]);
+  const f = Math.pow(10,d);
+  const op = pick(['＋','－']);
+  let A = ri(15, d===1?999:9999), Bv = ri(11, op==='－' ? A-5 : (d===1?999:9999));
+  const a=(A/f).toFixed(d), b=(Bv/f).toFixed(d);
+  const ans = (op==='＋' ? (A+Bv)/f : (A-Bv)/f).toFixed(d);
+  return {a:a,b:b,op:op,ans:ans,inter:0};
+}
+function fracPair(maxD){
+  const ds=[2,3,4,5,6,8,10,12].filter(x=>x<=maxD);
+  let d1=pick(ds), d2=pick(ds.filter(x=>x!==d1));
+  return [d1,d2];
+}
+function coprimeNum(d){ let n=ri(1,d-1), t=0; while(gcd(n,d)!==1 && t<20){ n=ri(1,d-1); t++; } return n; }
+function fracAddSubQ(n){
+  const [d1,d2]=fracPair(12);
+  const L = d1*d2/gcd(d1,d2);
+  let n1=coprimeNum(d1), n2=coprimeNum(d2);
+  const op = pick(['＋','－']);
+  let A=n1*L/d1, C=n2*L/d2;
+  if(op==='＋'){ let t=0; while(A+C>=L && t<30){ n1=coprimeNum(d1); n2=coprimeNum(d2); A=n1*L/d1; C=n2*L/d2; t++; } if(A+C>=L) return fracAddSubQ(n); }
+  else { if(A<=C) return fracAddSubQ(n); }
+  let num = op==='＋' ? A+C : A-C, den=L;
+  const g=gcd(num,den); num/=g; den/=g;
+  return yokoHTML(frac(n1,d1)+' '+op+' '+frac(n2,d2)+' ＝ '+fracB(num,den), n, 'w2');
+}
+function fracMulDivQ(n){
+  const op = pick(['×','÷']);
+  const d1=ri(2,9), n1=coprimeNum(d1), d2=ri(2,9), n2=coprimeNum(d2);
+  let num,den;
+  if(op==='×'){ num=n1*n2; den=d1*d2; } else { num=n1*d2; den=d1*n2; }
+  const g=gcd(num,den); num/=g; den/=g;
+  return yokoHTML(frac(n1,d1)+' '+op+' '+frac(n2,d2)+' ＝ '+fracB(num,den), n, 'w2');
+}
+function decMulDivQ(n){
+  if(rng()<0.5){
+    const A=ri(11,99)/10, Bv=ri(11,49)/10;
+    return yokoHTML(A.toFixed(1)+' × '+Bv.toFixed(1)+' ＝ '+B(round(A*Bv,2),14), n, 'w2');
+  }else{
+    const k=ri(2,9)/10, q=ri(11,49)/10, A=round(k*q,2);
+    return yokoHTML(A.toFixed(2)+' ÷ '+k.toFixed(1)+' ＝ '+B(q.toFixed(1),14), n, 'w2');
+  }
+}
+function wariQ(n, hard){
+  const b = hard ? ri(12,29) : ri(2,9);
+  const q = hard ? ri(4,39) : ri(11,99);
+  const r = ri(0, b-1);
+  const a = b*q + r;
+  return wariHTML(a,b,q,r,n);
+}
+function wariYokoQ(n){
+  const b=ri(2,9), q=ri(2,9), r=ri(0,b-1), a=b*q+r;
+  const body = a+' ÷ '+b+' ＝ '+B(q,8)+' あまり '+B(r,8);
+  return yokoHTML(body, n, 'w2');
+}
+function kukuQ(n){
+  const a=ri(2,9), b=ri(2,9);
+  return yokoHTML(a+' × '+b+' ＝ '+B(a*b,11), n, '', {kind:'array',a:a,b:b});
+}
+function g1Q(n, i){
+  const t = i%3;
+  if(t===0){ const p=hissan(pick(['a1','a1','a1n'])); return yokoHTML(p.a+' ＋ '+p.b+' ＝ '+B(p.ans,10), n, '', {a:p.a,b:p.b,op:'＋'}); }
+  if(t===1){ const p=hissan('s1'); return yokoHTML(p.a+' － '+p.b+' ＝ '+B(p.ans,10), n, '', {a:p.a,b:p.b,op:'－'}); }
+  const a=ri(2,6),b=ri(1,4),c=ri(1,4);
+  return yokoHTML(a+' ＋ '+b+' ＋ '+c+' ＝ '+B(a+b+c,10), n, 'w2');
+}
+function calcProblem(grade, i){
+  const n = i+1;
+  if(grade===1) return g1Q(n, i);
+  if(grade===2){
+    if(i%4===3) return kukuQ(n);
+    return hissanHTML(hissan(pick(i%2===0?['a2n','a2','a2','a3']:['s2n','s2','s2','s3'])), n);
+  }
+  if(grade===3){
+    const r=i%4;
+    if(r===0) return hissanHTML(hissan(pick(['a3b','a3'])), n);
+    if(r===1) return hissanHTML(hissan(pick(['s3b','s3'])), n);
+    if(r===2) return hissanHTML(hissan(pick(['m2x1','m3x1','m2x2'])), n);
+    return wariYokoQ(n);
+  }
+  if(grade===4){
+    const r=i%4;
+    if(r===0) return hissanHTML(hissan(pick(['m3x2','m2x2'])), n);
+    if(r===1) return wariQ(n,false);
+    if(r===2) return wariQ(n,true);
+    return hissanHTML(decAddSub(1), n);
+  }
+  if(grade===5){
+    const r=i%3;
+    if(r===0) return hissanHTML(decAddSub(2), n);
+    if(r===1) return decMulDivQ(n);
+    return fracAddSubQ(n);
+  }
+  const r=i%3;
+  if(r===0) return fracMulDivQ(n);
+  if(r===1) return fracAddSubQ(n);
+  return decMulDivQ(n);
+}
+function calcSection(grade, cnt){
+  let h='<div class="sec"><div class="sec-t">1 けいさん</div><div class="probs">';
+  for(let i=0;i<cnt;i++) h += calcProblem(grade, i);
+  return h+'</div></div>';
+}
+
+/* ================= 図 ================= */
+function clockSVG(h, m, size){
+  const s=size||26, cx=50, cy=50, r=45;
+  let g='';
+  for(let i=0;i<60;i++){
+    const ang=(i*6-90)*Math.PI/180, big=(i%5===0), r1=big? r-6 : r-3.5;
+    g += '<line x1="'+(cx+Math.cos(ang)*r1).toFixed(1)+'" y1="'+(cy+Math.sin(ang)*r1).toFixed(1)+
+         '" x2="'+(cx+Math.cos(ang)*(r-1)).toFixed(1)+'" y2="'+(cy+Math.sin(ang)*(r-1)).toFixed(1)+
+         '" stroke="#333" stroke-width="'+(big?2:1)+'"/>';
+  }
+  for(let i=1;i<=12;i++){
+    const ang=(i*30-90)*Math.PI/180;
+    g += '<text x="'+(cx+Math.cos(ang)*(r-13)).toFixed(1)+'" y="'+(cy+Math.sin(ang)*(r-13)+4.5).toFixed(1)+
+         '" font-size="11" text-anchor="middle" fill="#333" font-family="sans-serif">'+i+'</text>';
+  }
+  const mA=(m*6-90)*Math.PI/180, hA=(((h%12)*30)+m*0.5-90)*Math.PI/180;
+  g += '<line x1="50" y1="50" x2="'+(cx+Math.cos(hA)*24).toFixed(1)+'" y2="'+(cy+Math.sin(hA)*24).toFixed(1)+'" stroke="#222" stroke-width="5" stroke-linecap="round"/>';
+  g += '<line x1="50" y1="50" x2="'+(cx+Math.cos(mA)*35).toFixed(1)+'" y2="'+(cy+Math.sin(mA)*35).toFixed(1)+'" stroke="#222" stroke-width="3" stroke-linecap="round"/>';
+  g += '<circle cx="50" cy="50" r="2.5" fill="#222"/>';
+  return '<svg viewBox="0 0 100 100" width="'+s+'mm" height="'+s+'mm"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#333" stroke-width="2"/>'+g+'</svg>';
+}
+function rulerSVG(cm, mm){
+  const W=290,H=52,x0=10,per=22;
+  let g='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#fff"/>';
+  g += '<rect x="'+x0+'" y="6" width="'+((cm+mm/10)*per).toFixed(1)+'" height="11" fill="#cfe3ff" stroke="#5b86c8" stroke-width="1.5"/>';
+  g += '<rect x="'+(x0-6)+'" y="24" width="'+(W-x0-4)+'" height="24" fill="#fdf7e3" stroke="#333" stroke-width="1.5"/>';
+  for(let i=0;i<=12;i++){
+    for(let j=0;j<10;j++){
+      const x=x0+i*per+j*per/10; if(x>W-12) break;
+      const len=(j===0)?15:(j===5?9:5.5);
+      g += '<line x1="'+x.toFixed(1)+'" y1="24" x2="'+x.toFixed(1)+'" y2="'+(24+len)+'" stroke="#333" stroke-width="'+(j===0?1.4:0.9)+'"/>';
+    }
+    const x=x0+i*per;
+    if(x<=W-12) g += '<text x="'+x.toFixed(1)+'" y="47" font-size="9" text-anchor="middle" fill="#333" font-family="sans-serif">'+i+'</text>';
+  }
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="104mm" height="'+(H/W*104).toFixed(1)+'mm">'+g+'</svg>';
+}
+function masuSVG(litre, deci){
+  const cell=34, gap=7; let g='', x=gap;
+  for(let i=0;i<litre;i++){
+    g += '<rect x="'+x+'" y="8" width="'+cell+'" height="'+cell+'" fill="#dceeff" stroke="#3b6ea5" stroke-width="1.6"/>';
+    g += '<text x="'+(x+cell/2)+'" y="'+(8+cell/2+4)+'" font-size="12" text-anchor="middle" fill="#20456d" font-family="sans-serif">1L</text>';
+    x += cell+gap;
+  }
+  const c2=cell*0.45;
+  for(let i=0;i<deci;i++){
+    g += '<rect x="'+x+'" y="'+(8+cell-c2)+'" width="'+c2+'" height="'+c2+'" fill="#e8f7e4" stroke="#4d8a45" stroke-width="1.5"/>';
+    g += '<text x="'+(x+c2/2)+'" y="'+(8+cell-c2/2+3)+'" font-size="7.5" text-anchor="middle" fill="#2d5a28" font-family="sans-serif">1dL</text>';
+    x += c2+gap;
+  }
+  const W=x, w=Math.max(42, Math.min(102, W*0.46));
+  return '<svg viewBox="0 0 '+W+' 52" width="'+w.toFixed(1)+'mm" height="'+(52/W*w).toFixed(1)+'mm">'+g+'</svg>';
+}
+function dotsSVG(a,b){
+  let g=''; const r=9, gap=24;
+  for(let i=0;i<a;i++) g += '<circle cx="'+(14+i*gap)+'" cy="20" r="'+r+'" fill="#f5c9c0" stroke="#c0623f" stroke-width="1.5"/>';
+  for(let i=0;i<b;i++) g += '<circle cx="'+(14+(a+i)*gap+16)+'" cy="20" r="'+r+'" fill="#cfe3ff" stroke="#3b6ea5" stroke-width="1.5"/>';
+  const W=14+(a+b)*gap+24;
+  return '<svg viewBox="0 0 '+W+' 40" width="'+Math.min(100,W*0.42).toFixed(1)+'mm" height="'+(40/W*Math.min(100,W*0.42)).toFixed(1)+'mm">'+g+'</svg>';
+}
+function blockTapeSVG(n){
+  const c=22; let g='';
+  g += '<rect x="6" y="4" width="'+(n*c)+'" height="12" fill="#cfe3ff" stroke="#5b86c8" stroke-width="1.5"/>';
+  for(let i=0;i<n;i++) g += '<rect x="'+(6+i*c)+'" y="22" width="'+c+'" height="'+c+'" fill="#fdf3d8" stroke="#a08542" stroke-width="1.2"/>';
+  const W=n*c+14;
+  return '<svg viewBox="0 0 '+W+' 48" width="'+Math.min(96,W*0.45).toFixed(1)+'mm" height="'+(48/W*Math.min(96,W*0.45)).toFixed(1)+'mm">'+g+'</svg>';
+}
+function michinoriSVG(a,b){
+  const W=280;
+  let g='<line x1="20" y1="34" x2="260" y2="34" stroke="#333" stroke-width="2"/>';
+  [[20,'家'],[140,'公園'],[260,'学校']].forEach(function(p){
+    g += '<circle cx="'+p[0]+'" cy="34" r="5" fill="#fff" stroke="#333" stroke-width="2"/>';
+    g += '<text x="'+p[0]+'" y="52" font-size="12" text-anchor="middle" fill="#333" font-family="sans-serif">'+p[1]+'</text>';
+  });
+  g += '<text x="80" y="22" font-size="12" text-anchor="middle" fill="#c0392b" font-family="sans-serif">'+a+'</text>';
+  g += '<text x="200" y="22" font-size="12" text-anchor="middle" fill="#c0392b" font-family="sans-serif">'+b+'</text>';
+  return '<svg viewBox="0 0 '+W+' 58" width="92mm" height="'+(58/W*92).toFixed(1)+'mm">'+g+'</svg>';
+}
+function hakariSVG(gram){
+  const cx=50,cy=50,r=42; let g='';
+  for(let i=0;i<20;i++){
+    const ang=(i*18-90)*Math.PI/180, big=(i%2===0), r1=big?r-8:r-4;
+    g += '<line x1="'+(cx+Math.cos(ang)*r1).toFixed(1)+'" y1="'+(cy+Math.sin(ang)*r1).toFixed(1)+'" x2="'+(cx+Math.cos(ang)*r).toFixed(1)+'" y2="'+(cy+Math.sin(ang)*r).toFixed(1)+'" stroke="#333" stroke-width="'+(big?1.8:0.9)+'"/>';
+    if(big){
+      const ang2=(i*18-90)*Math.PI/180;
+      g += '<text x="'+(cx+Math.cos(ang2)*(r-15)).toFixed(1)+'" y="'+(cy+Math.sin(ang2)*(r-15)+3.5).toFixed(1)+'" font-size="8" text-anchor="middle" fill="#333" font-family="sans-serif">'+(i*50)+'</text>';
+    }
+  }
+  const ang=((gram/1000)*360-90)*Math.PI/180;
+  g += '<line x1="50" y1="50" x2="'+(cx+Math.cos(ang)*32).toFixed(1)+'" y2="'+(cy+Math.sin(ang)*32).toFixed(1)+'" stroke="#c0392b" stroke-width="2.6"/>';
+  g += '<circle cx="50" cy="50" r="3" fill="#c0392b"/><text x="50" y="72" font-size="8" text-anchor="middle" fill="#666" font-family="sans-serif">（g）</text>';
+  return '<svg viewBox="0 0 100 100" width="30mm" height="30mm"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#333" stroke-width="2"/>'+g+'</svg>';
+}
+function kakudoSVG(known){
+  const W=260,H=90,ox=40,oy=72;
+  const rad=(180-known)*Math.PI/180;
+  const x=ox+Math.cos(rad)*150, y=oy-Math.sin(rad)*150;
+  let g='<line x1="10" y1="'+oy+'" x2="250" y2="'+oy+'" stroke="#333" stroke-width="2"/>';
+  g += '<line x1="'+ox+'" y1="'+oy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#333" stroke-width="2"/>';
+  g += '<path d="M '+(ox+30)+' '+oy+' A 30 30 0 0 0 '+(ox+Math.cos(rad)*30).toFixed(1)+' '+(oy-Math.sin(rad)*30).toFixed(1)+'" fill="none" stroke="#c0392b" stroke-width="1.6"/>';
+  g += '<text x="'+(ox+46)+'" y="'+(oy-10)+'" font-size="13" fill="#c0392b" font-family="sans-serif">'+known+'°</text>';
+  g += '<text x="'+(ox-22)+'" y="'+(oy-10)+'" font-size="14" fill="#1a5fb4" font-family="sans-serif">あ</text>';
+  g += '<path d="M '+(ox-26)+' '+oy+' A 26 26 0 0 1 '+(ox-26*Math.cos(Math.PI-rad)).toFixed(1)+' '+(oy-26*Math.sin(Math.PI-rad)).toFixed(1)+'" fill="none" stroke="#1a5fb4" stroke-width="1.6"/>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="86mm" height="'+(H/W*86).toFixed(1)+'mm">'+g+'</svg>';
+}
+function rectSVG(w,h,unit){
+  const s=13, W=Math.max(120, w*s+70), H=h*s+40;
+  let g='<rect x="40" y="10" width="'+(w*s)+'" height="'+(h*s)+'" fill="#eef5ff" stroke="#3b6ea5" stroke-width="2"/>';
+  g += '<text x="'+(40+w*s/2)+'" y="'+(h*s+30)+'" font-size="12" text-anchor="middle" fill="#333" font-family="sans-serif">'+w+unit+'</text>';
+  g += '<text x="24" y="'+(10+h*s/2+4)+'" font-size="12" text-anchor="middle" fill="#333" font-family="sans-serif">'+h+unit+'</text>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+Math.min(70,W*0.32).toFixed(1)+'mm" height="'+(H/W*Math.min(70,W*0.32)).toFixed(1)+'mm">'+g+'</svg>';
+}
+function numLineSVG(v){
+  const W=280,x0=20,x1=260,y=40;
+  let g='<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="#333" stroke-width="2"/>';
+  for(let i=0;i<=10;i++){
+    const x=x0+(x1-x0)*i/10, big=(i%5===0);
+    g += '<line x1="'+x.toFixed(1)+'" y1="'+(y-(big?12:7))+'" x2="'+x.toFixed(1)+'" y2="'+y+'" stroke="#333" stroke-width="'+(big?1.8:1)+'"/>';
+    if(big) g += '<text x="'+x.toFixed(1)+'" y="'+(y+16)+'" font-size="11" text-anchor="middle" fill="#333" font-family="sans-serif">'+(i/10)+'</text>';
+  }
+  const xv=x0+(x1-x0)*v;
+  g += '<path d="M '+xv.toFixed(1)+' '+(y-14)+' l -5 -9 l 10 0 z" fill="#c0392b"/>';
+  g += '<text x="'+xv.toFixed(1)+'" y="'+(y-26)+'" font-size="12" text-anchor="middle" fill="#c0392b" font-family="sans-serif">↓</text>';
+  return '<svg viewBox="0 0 '+W+' 60" width="94mm" height="'+(60/W*94).toFixed(1)+'mm">'+g+'</svg>';
+}
+function boxSVG(a,b,c){
+  const s=5.5, W=200, w=a*s, h=c*s, d=b*s*0.5;
+  const x=30,y=30+d;
+  let g='';
+  g += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#eef5ff" stroke="#3b6ea5" stroke-width="2"/>';
+  g += '<path d="M '+x+' '+y+' l '+d+' -'+d+' l '+w+' 0 l -'+d+' '+d+' z" fill="#dceeff" stroke="#3b6ea5" stroke-width="1.6"/>';
+  g += '<path d="M '+(x+w)+' '+y+' l '+d+' -'+d+' l 0 '+h+' l -'+d+' '+d+' z" fill="#cfe3ff" stroke="#3b6ea5" stroke-width="1.6"/>';
+  g += '<text x="'+(x+w/2)+'" y="'+(y+h+14)+'" font-size="11" text-anchor="middle" fill="#333" font-family="sans-serif">'+a+'cm</text>';
+  g += '<text x="'+(x+w+d+16)+'" y="'+(y+h/2)+'" font-size="11" text-anchor="middle" fill="#333" font-family="sans-serif">'+c+'cm</text>';
+  g += '<text x="'+(x+w+d*0.5)+'" y="'+(y-d-4)+'" font-size="11" text-anchor="middle" fill="#333" font-family="sans-serif">'+b+'cm</text>';
+  return '<svg viewBox="0 0 '+W+' 110" width="52mm" height="'+(110/W*52).toFixed(1)+'mm">'+g+'</svg>';
+}
+function circleSVG(r, isDia){
+  const W=140;
+  let g='<circle cx="70" cy="60" r="45" fill="#eef5ff" stroke="#3b6ea5" stroke-width="2"/><circle cx="70" cy="60" r="2.5" fill="#333"/>';
+  if(isDia){
+    g += '<line x1="25" y1="60" x2="115" y2="60" stroke="#c0392b" stroke-width="2"/>';
+    g += '<text x="70" y="53" font-size="12" text-anchor="middle" fill="#c0392b" font-family="sans-serif">直径'+r+'cm</text>';
+  }else{
+    g += '<line x1="70" y1="60" x2="115" y2="60" stroke="#c0392b" stroke-width="2"/>';
+    g += '<text x="95" y="53" font-size="12" text-anchor="middle" fill="#c0392b" font-family="sans-serif">'+r+'cm</text>';
+  }
+  return '<svg viewBox="0 0 '+W+' 115" width="34mm" height="'+(115/W*34).toFixed(1)+'mm">'+g+'</svg>';
+}
+
+/* ---- ヒント用：タイル（10のまとまり）とアレイ図 ---- */
+function tileSVG(v){
+  const t=Math.floor(v/10), u=v%10, sw=7, sh=34, gap=3, us=6;
+  let g='', x=2;
+  for(let i=0;i<t;i++){
+    g += '<rect x="'+x+'" y="3" width="'+sw+'" height="'+sh+'" fill="#dceeff" stroke="#3b6ea5" stroke-width="1.1"/>';
+    for(let k=1;k<10;k++) g += '<line x1="'+x+'" y1="'+(3+sh*k/10).toFixed(1)+'" x2="'+(x+sw)+'" y2="'+(3+sh*k/10).toFixed(1)+'" stroke="#a9c8e6" stroke-width="0.5"/>';
+    x += sw+gap;
+  }
+  if(t>0 && u>0) x += 3;
+  for(let i=0;i<u;i++){
+    const col=Math.floor(i/5), row=i%5;
+    g += '<rect x="'+(x+col*(us+2))+'" y="'+(3+sh-us-row*(us+1))+'" width="'+us+'" height="'+us+'" fill="#ffe9c9" stroke="#c08a3e" stroke-width="1"/>';
+  }
+  const W = x + (u>0 ? Math.ceil(u/5)*(us+2)+2 : 2);
+  const w = Math.max(6, Math.min(21, W*0.30));
+  return '<svg viewBox="0 0 '+W+' 40" width="'+w.toFixed(1)+'mm" height="'+(40/W*w).toFixed(1)+'mm">'+g+'</svg>';
+}
+function arraySVG(a,b){
+  const r=4.5, gap=11; let g='';
+  for(let i=0;i<a;i++) for(let j=0;j<b;j++)
+    g += '<circle cx="'+(6+j*gap)+'" cy="'+(6+i*gap)+'" r="'+r+'" fill="#dceeff" stroke="#3b6ea5" stroke-width="1"/>';
+  const W=b*gap+2, H=a*gap+2, w=Math.min(24, W*0.28);
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+w.toFixed(1)+'mm" height="'+(H/W*w).toFixed(1)+'mm">'+g+'</svg>';
+}
+const THEME_HINT = {
+  tokei1:'ながい はりが 12で ちょうど、6で はん',
+  ikutsu:'10の おともだち　1と9・2と8・3と7・4と6・5と5',
+  nagasa1:'□が いくつぶん か、かぞえて くらべよう',
+  tokei:'1時間＝60分　みじかいはり＝時　ながいはり＝分',
+  nagasa:'1cm＝10mm　1m＝100cm',
+  kasa:'1L＝10dL　1dL＝100mL　1L＝1000mL',
+  jikan3:'1分＝60秒　1時間＝60分',
+  nagasa3:'1km＝1000m',
+  omosa3:'1kg＝1000g　1t＝1000kg',
+  kakudo:'1回転＝360°　半回転（直線）＝180°　直角＝90°　三角形の角の和＝180°',
+  menseki:'長方形＝たて×よこ　正方形＝1辺×1辺　1m²＝10000cm²',
+  shosu4:'0.1が10こで1　1L＝10dL　1m＝100cm　1kg＝1000g',
+  taiseki:'直方体＝たて×よこ×高さ　1L＝1000cm³　1m³＝1000L',
+  wariai:'割合＝くらべる量÷もとにする量　1＝100%　0.1＝10%',
+  heikin:'平均＝合計÷個数　合計＝平均×個数',
+  hayasa:'速さ＝道のり÷時間　道のり＝速さ×時間　時間＝道のり÷速さ',
+  hi:'比は 両方に同じ数をかけても わっても 等しい　比の値＝前の数÷後ろの数',
+  en:'円周＝直径×3.14　円の面積＝半径×半径×3.14'
+};
+
+/* ================= テーマ（学年別） ================= */
+function figWrap(inner, cap, i){ return '<div class="fig">'+inner+'<div class="cap">('+i+') '+cap+'</div></div>'; }
+function twoClocks(cnt, i, minutes, hira){
+  const t1={h:ri(1,12), m:pick(minutes)}, t2={h:ri(1,12), m:pick(minutes)};
+  const jm = hira ? ['じ','ふん'] : ['時','分'];
+  let h='<div class="figs">';
+  h += '<div class="fig">'+clockSVG(t1.h,t1.m)+'<div class="cap">('+i+') '+B(t1.h,7)+jm[0]+B(t1.m,8)+jm[1]+'</div></div>';
+  if(cnt>1) h += '<div class="fig">'+clockSVG(t2.h,t2.m)+'<div class="cap">('+(i+1)+') '+B(t2.h,7)+jm[0]+B(t2.m,8)+jm[1]+'</div></div>';
+  return {count: cnt>1?2:1, html: h+'</div>'};
+}
+const baseHour = g => (g==='午前' ? ri(6,10) : ri(1,7));
+const jikoku = (g,h,m) => g + h + '時' + (m===0 ? '' : m+'分');
+
+const THEME = {
+  /* --- 1年 --- */
+  tokei1:{label:'とけい', sub:'なんじ なんぷん？', figMax:2,
+    fig:(c,i)=>twoClocks(c,i,[0,30],true),
+    qs:[
+      ()=>{const h=ri(1,10); return h+'じの 1じかん あとは '+B(h+1,8)+'じ';},
+      ()=>{const h=ri(1,10); return h+'じはんの 30ぷん あとは '+B(h+1,8)+'じ';},
+      ()=>{const h=ri(2,11); return h+'じの 1じかん まえは '+B(h-1,8)+'じ';}
+    ]},
+  ikutsu:{label:'いくつと いくつ', sub:'10の おともだち', figMax:1,
+    fig:(c,i)=>{const a=ri(2,6), b=ri(2,5); return {count:1, html:figWrap(dotsSVG(a,b),'あわせて '+B(a+b,9)+'こ', i)};},
+    qs:[
+      ()=>{const a=ri(1,9); return '10は '+a+'と '+B(10-a,9);},
+      ()=>{const a=ri(1,9); return a+'と '+B(10-a,9)+'で 10';},
+      ()=>{const a=ri(3,9), b=ri(2,7); return a+'と '+b+'で '+B(a+b,9);}
+    ]},
+  nagasa1:{label:'ながさくらべ', sub:'□なんこぶん', figMax:1,
+    fig:(c,i)=>{const n=ri(3,8); return {count:1, html:figWrap(blockTapeSVG(n),'テープは □'+B(n,8)+'こぶん', i)};},
+    qs:[
+      ()=>{const a=ri(5,9), b=ri(1,4); return 'えんぴつ □'+a+'こぶん、けしゴム □'+b+'こぶん。ちがいは '+B(a-b,8)+'こぶん';},
+      ()=>{const a=ri(2,6), b=ri(2,5); return '□'+a+'こぶんと □'+b+'こぶんを あわせて '+B(a+b,8)+'こぶん';}
+    ]},
+
+  /* --- 2年 --- */
+  tokei:{label:'とけい', sub:'なんじ なんぷん？', figMax:2,
+    fig:(c,i)=>twoClocks(c,i,[0,5,10,15,20,25,30,35,40,45,50,55,ri(1,59)],false),
+    qs:[
+      ()=>{const g=pick(['午前','午後']), h=baseHour(g), m=pick([0,10,15,20,30,40,45]), d=pick([10,15,20,30,40]);
+           const t=m+d; return jikoku(g,h,m)+'の '+d+'分あとの 時こくは？　'+B(h+Math.floor(t/60),7)+'時'+B(t%60,8)+'分';},
+      ()=>{const g=pick(['午前','午後']), h=baseHour(g), m=pick([0,5,10,15,20,30]), d=pick([15,20,25,30,40,45]);
+           const t=m+d; return jikoku(g,h,m)+'から '+jikoku('',h+Math.floor(t/60),t%60)+'までの 時間は？　'+B(d,9)+'分';},
+      ()=>{const g=pick(['午前','午後']), h=baseHour(g)+1, m=pick([10,15,20,30,40,45,50]), d=pick([10,15,20,30]);
+           let t=m-d, nh=h; if(t<0){nh=h-1;t+=60;} return jikoku(g,h,m)+'の '+d+'分まえの 時こくは？　'+B(nh,7)+'時'+B(t,8)+'分';},
+      ()=>'1時間＝ '+B(60,10)+'分'
+    ]},
+  nagasa:{label:'ながさ', sub:'cm と mm', figMax:1,
+    fig:(c,i)=>{const cm=ri(2,10), mm=pick([0,5,3,7,5,0]); return {count:1, html:figWrap(rulerSVG(cm,mm),'テープの ながさは '+B(cm,8)+'cm '+B(mm,8)+'mm', i)};},
+    qs:[
+      ()=>{const n=ri(3,9); return n+'cm ＝ '+B(n*10,11)+'mm';},
+      ()=>{const n=ri(4,9), k=ri(1,9); return (n*10+k)+'mm ＝ '+B(n,8)+'cm '+B(k,8)+'mm';},
+      ()=>{const m=ri(1,3), c=ri(5,95); return m+'m '+c+'cm ＝ '+B(m*100+c,13)+'cm';},
+      ()=>{const a=ri(3,8),am=ri(1,5),b=ri(2,6),bm=ri(1,4),t=(a*10+am)+(b*10+bm);
+           return a+'cm'+am+'mm ＋ '+b+'cm'+bm+'mm ＝ '+B(Math.floor(t/10),8)+'cm '+B(t%10,8)+'mm';},
+      ()=>{const a=ri(7,15),am=ri(5,9),b=ri(2,6),bm=ri(1,4),t=(a*10+am)-(b*10+bm);
+           return a+'cm'+am+'mm － '+b+'cm'+bm+'mm ＝ '+B(Math.floor(t/10),8)+'cm '+B(t%10,8)+'mm';}
+    ]},
+  kasa:{label:'かさ', sub:'L・dL・mL', figMax:1,
+    fig:(c,i)=>{const L=ri(1,3), d=ri(2,6); return {count:1, html:figWrap(masuSVG(L,d),'ぜんぶで '+B(L,8)+'L '+B(d,8)+'dL', i)};},
+    qs:[
+      ()=>{const n=ri(2,7); return n+'L ＝ '+B(n*10,11)+'dL';},
+      ()=>{const n=ri(2,9); return n+'dL ＝ '+B(n*100,13)+'mL';},
+      ()=>{const n=ri(1,4); return n+'L ＝ '+B(n*1000,15)+'mL';},
+      ()=>{const n=ri(1,4), k=ri(1,9); return n+'L '+k+'dL ＝ '+B(n*10+k,11)+'dL';},
+      ()=>{const a=ri(1,3),ad=ri(1,5),b=ri(1,2),bd=ri(1,4),t=(a*10+ad)+(b*10+bd);
+           return a+'L'+ad+'dL ＋ '+b+'L'+bd+'dL ＝ '+B(Math.floor(t/10),8)+'L '+B(t%10,8)+'dL';}
+    ]},
+
+  /* --- 3年 --- */
+  jikan3:{label:'時こくと時間', sub:'秒までよむ', figMax:2,
+    fig:(c,i)=>twoClocks(c,i,[0,5,10,15,20,25,30,35,40,45,50,55,ri(1,59)],false),
+    qs:[
+      ()=>{const m=ri(1,3), s=ri(5,55); return m+'分'+s+'秒 ＝ '+B(m*60+s,12)+'秒';},
+      ()=>{const s=ri(70,240); return s+'秒 ＝ '+B(Math.floor(s/60),7)+'分'+B(s%60,8)+'秒';},
+      ()=>{const g=pick(['午前','午後']), h=baseHour(g), m=pick([10,20,30,40,50]), d=pick([20,25,35,40,50]);
+           const t=m+d; return jikoku(g,h,m)+'の '+d+'分あとは '+B(h+Math.floor(t/60),7)+'時'+B(t%60,8)+'分';},
+      ()=>'1分＝ '+B(60,10)+'秒'
+    ]},
+  nagasa3:{label:'長さ', sub:'km と m', figMax:1,
+    fig:(c,i)=>{const a=ri(3,9)*100, b=ri(4,9)*100; const t=a+b;
+      return {count:1, html:figWrap(michinoriSVG(a+'m', b+'m'),'家から学校までの 道のりは '+B(Math.floor(t/1000),7)+'km'+B(t%1000,10)+'m', i)};},
+    qs:[
+      ()=>'1km ＝ '+B(1000,13)+'m',
+      ()=>{const k=ri(1,4), m=ri(1,9)*100; return k+'km'+m+'m ＝ '+B(k*1000+m,14)+'m';},
+      ()=>{const m=ri(11,49)*100; return m+'m ＝ '+B(Math.floor(m/1000),7)+'km '+B(m%1000,10)+'m';},
+      ()=>{const a=ri(1,3), am=ri(3,9)*100, b=ri(3,8)*100; const t=a*1000+am+b;
+           return a+'km'+am+'m ＋ '+b+'m ＝ '+B(Math.floor(t/1000),7)+'km '+B(t%1000,10)+'m';}
+    ]},
+  omosa3:{label:'重さ', sub:'g・kg・t', figMax:1,
+    fig:(c,i)=>{const g0=ri(1,19)*50; return {count:1, html:figWrap(hakariSVG(g0),'はかりの めもりは '+B(g0,11)+'g', i)};},
+    qs:[
+      ()=>'1kg ＝ '+B(1000,13)+'g',
+      ()=>{const k=ri(1,4), g0=ri(1,9)*100; return k+'kg'+g0+'g ＝ '+B(k*1000+g0,14)+'g';},
+      ()=>{const g0=ri(11,49)*100; return g0+'g ＝ '+B(Math.floor(g0/1000),7)+'kg '+B(g0%1000,10)+'g';},
+      ()=>'1t ＝ '+B(1000,13)+'kg',
+      ()=>{const a=ri(1,3), ag=ri(3,8)*100, b=ri(2,6)*100; const t=a*1000+ag+b;
+           return a+'kg'+ag+'g ＋ '+b+'g ＝ '+B(Math.floor(t/1000),7)+'kg '+B(t%1000,10)+'g';}
+    ]},
+
+  /* --- 4年 --- */
+  kakudo:{label:'角の大きさ', sub:'度（°）', figMax:1,
+    fig:(c,i)=>{const k=ri(3,15)*10; return {count:1, html:figWrap(kakudoSVG(k),'あ の角度は '+B(180-k,11)+'°', i)};},
+    qs:[
+      ()=>{const a=ri(3,8)*10, b=ri(2,7)*10; return '三角形の 2つの角が '+a+'°と'+b+'°。のこりは '+B(180-a-b,11)+'°';},
+      ()=>'1回転は '+B(360,11)+'°、半回転は '+B(180,11)+'°',
+      ()=>{const a=ri(2,12)*10; return '直線の角 180°のうち '+a+'°をのぞくと '+B(180-a,11)+'°';},
+      ()=>{const a=ri(1,3)*30; return '三角じょうぎの 直角は '+B(90,10)+'°、'+a+'°の 2つ分は '+B(a*2,11)+'°';}
+    ]},
+  menseki:{label:'面積', sub:'cm² と m²', figMax:1,
+    fig:(c,i)=>{const w=ri(3,9), h=ri(2,6); return {count:1, html:figWrap(rectSVG(w,h,'cm'),'長方形の面積は '+B(w*h,12)+'cm²', i)};},
+    qs:[
+      ()=>{const a=ri(3,12); return '1辺'+a+'cmの 正方形の面積は '+B(a*a,12)+'cm²';},
+      ()=>{const w=ri(4,12), h=ri(3,9); return 'たて'+h+'cm よこ'+w+'cmの 面積は '+B(w*h,12)+'cm²';},
+      ()=>'1m² ＝ '+B(10000,15)+'cm²',
+      ()=>{const h=ri(3,8), s=h*ri(4,9); return '面積'+s+'cm²、たて'+h+'cm → よこは '+B(s/h,10)+'cm';}
+    ]},
+  shosu4:{label:'小数と単位', sub:'0.1のいくつ分', figMax:1,
+    fig:(c,i)=>{const v=ri(1,9)/10; return {count:1, html:figWrap(numLineSVG(v),'↓の めもりは '+B(v.toFixed(1),11)+'', i)};},
+    qs:[
+      ()=>{const n=ri(11,49)/10; return n.toFixed(1)+'L ＝ '+B(n*10,11)+'dL';},
+      ()=>{const n=ri(11,49)/10; return n.toFixed(1)+'m ＝ '+B(Math.round(n*100),12)+'cm';},
+      ()=>{const n=ri(1,9)/10; return n.toFixed(1)+'kg ＝ '+B(Math.round(n*1000),13)+'g';},
+      ()=>{const n=ri(2,9); return '0.1が '+n+'こで '+B((n/10).toFixed(1),11);},
+      ()=>{const n=ri(12,89)/10; return n.toFixed(1)+'は 0.1が '+B(Math.round(n*10),11)+'こ';}
+    ]},
+
+  /* --- 5年 --- */
+  taiseki:{label:'体積', sub:'cm³・m³・L', figMax:1,
+    fig:(c,i)=>{const a=ri(3,9), b=ri(2,6), h=ri(2,6); return {count:1, html:figWrap(boxSVG(a,b,h),'直方体の体積は '+B(a*b*h,13)+'cm³', i)};},
+    qs:[
+      ()=>{const a=ri(2,7); return '1辺'+a+'cmの 立方体の体積は '+B(a*a*a,13)+'cm³';},
+      ()=>'1L ＝ '+B(1000,14)+'cm³',
+      ()=>'1m³ ＝ '+B(1000,13)+'L',
+      ()=>{const n=ri(2,9); return n+'L ＝ '+B(n*1000,14)+'cm³';},
+      ()=>{const a=ri(2,5), b=ri(2,5), h=ri(2,5); return 'たて'+a+'cm よこ'+b+'cm 高さ'+h+'cm の体積は '+B(a*b*h,12)+'cm³';}
+    ]},
+  wariai:{label:'割合', sub:'％と小数', figMax:0, fig:null,
+    qs:[
+      ()=>{const n=ri(1,95)/100; return n.toFixed(2)+' ＝ '+B(Math.round(n*100),11)+'%';},
+      ()=>{const n=ri(1,19)*5; return n+'% ＝ '+B((n/100).toFixed(2),12);},
+      ()=>{const base=ri(2,9)*100, p=pick([10,20,25,50,30]); return base+'円の '+p+'%は '+B(base*p/100,12)+'円';},
+      ()=>{const base=ri(2,8)*10, p=pick([10,20,50]); return base+'人の '+p+'%は '+B(base*p/100,11)+'人';},
+      ()=>{const a=ri(2,9), b=a*ri(2,5); return a+'は '+b+'の '+fracB(a/gcd(a,b), b/gcd(a,b))+'（分数で）';}
+    ]},
+  heikin:{label:'平均・単位量', sub:'ならすと？', figMax:0, fig:null,
+    qs:[
+      ()=>{const a=ri(2,9),b=ri(2,9),c=ri(2,9); const s=a+b+c; const t=s%3===0?[a,b,c]:[a,b,3-(s%3)+c];
+           const s2=t[0]+t[1]+t[2]; return t.join('、')+' の平均は '+B(s2/3,11);},
+      ()=>{const n=ri(2,6), w=ri(2,9)*10; return n+'この重さが '+(n*w)+'g → 1こ '+B(w,11)+'g';},
+      ()=>{const m=ri(2,6), y=ri(3,9)*10; return m+'mで '+(m*y)+'円 → 1m '+B(y,11)+'円';},
+      ()=>{const n=ri(3,6), p=ri(20,60); return n+'人の平均が '+p+'点 → 合計 '+B(n*p,12)+'点';}
+    ]},
+
+  /* --- 6年 --- */
+  hayasa:{label:'速さ', sub:'時速・分速', figMax:0, fig:null,
+    qs:[
+      ()=>{const s=ri(3,9)*10, t=ri(2,5); return (s*t)+'kmを '+t+'時間 → 時速 '+B(s,11)+'km';},
+      ()=>{const s=ri(3,9)*10, t=ri(2,5); return '時速'+s+'kmで '+t+'時間 → '+B(s*t,12)+'km';},
+      ()=>{const s=ri(6,9)*10, t=ri(10,30); return '分速'+s+'mで '+t+'分 → '+B(s*t,13)+'m';},
+      ()=>{const s=ri(5,9)*10, t=ri(10,25); return (s*t)+'mを '+t+'分 → 分速 '+B(s,11)+'m';},
+      ()=>{const s=ri(3,9)*10; return '時速'+(s*60/1000).toFixed(1)+'km ＝ 分速 '+B(s,11)+'m';}
+    ]},
+  hi:{label:'比', sub:'かんたんな比', figMax:0, fig:null,
+    qs:[
+      ()=>{const a=ri(2,6), b=ri(2,6), k=ri(2,5); return (a*k)+'：'+(b*k)+' ＝ '+B(a,8)+'：'+B(b,8);},
+      ()=>{const a=ri(2,9), b=ri(2,9); const g=gcd(a,b); return a+'：'+b+' を かんたんに → '+B(a/g,8)+'：'+B(b/g,8);},
+      ()=>{const a=ri(2,8), b=ri(2,9); const g=gcd(a,b); return a+'：'+b+' の 比の値は '+fracB(a/g,b/g);},
+      ()=>{const a=ri(2,5), b=ri(2,5), k=ri(2,6); return a+'：'+b+' ＝ '+(a*k)+'：'+B(b*k,9);}
+    ]},
+  en:{label:'円', sub:'円周率は3.14', figMax:1,
+    fig:(c,i)=>{const r=ri(2,9); return {count:1, html:figWrap(circleSVG(r,false),'円の面積は '+B(round(r*r*3.14,2),14)+'cm²', i)};},
+    qs:[
+      ()=>{const d=ri(2,12); return '直径'+d+'cmの 円周は '+B(round(d*3.14,2),14)+'cm';},
+      ()=>{const r=ri(2,9); return '半径'+r+'cmの 円周は '+B(round(2*r*3.14,2),14)+'cm';},
+      ()=>{const r=ri(2,8); return '半径'+r+'cmの 円の面積は '+B(round(r*r*3.14,2),14)+'cm²';},
+      ()=>{const r=ri(2,6); return '半径'+r+'cmの 半円の まわりの長さは '+B(round(r*3.14+2*r,2),15)+'cm';}
+    ]}
+};
+
+const GRADE_THEMES = {
+  1:['tokei1','ikutsu','nagasa1'],
+  2:['tokei','nagasa','kasa'],
+  3:['jikan3','nagasa3','omosa3'],
+  4:['kakudo','menseki','shosu4'],
+  5:['taiseki','wariai','heikin'],
+  6:['hayasa','hi','en']
+};
+
+function themeSection(key, cnt){
+  const t = THEME[key];
+  let out='', idx=1, left=cnt;
+  if(t.fig && left>0){
+    const f = t.fig(Math.min(left, t.figMax||1), idx);
+    out += f.html; idx += f.count; left -= f.count;
+  }
+  const pool = shuffle(t.qs.slice());
+  let k=0;
+  while(left>0){
+    out += '<div class="q"><span class="qn">('+idx+')</span> '+pool[k % pool.length]()+'</div>';
+    k++; idx++; left--;
+  }
+  const hb = (HINT && THEME_HINT[key]) ? '<div class="hintbar">ヒント　'+THEME_HINT[key]+'</div>' : '';
+  return '<div class="sec"><div class="sec-t">2 '+t.label+'<span>'+(t.sub||'')+'</span></div>'+hb+out+'</div>';
+}
+
+/* ================= チャレンジ問題（できた人向け） ================= */
+const CHALLENGE = {
+  1:[
+    ()=>{const a=ri(6,9),b=ri(3,7),c=ri(2,5); return a+' ＋ '+b+' － '+c+' ＝ '+B(a+b-c,10);},
+    ()=>{const a=ri(11,18),b=ri(3,8); return 'あめが '+a+'こ あります。'+b+'こ たべると のこりは '+B(a-b,9)+'こ';},
+    ()=>{const t=ri(2,9),o=ri(1,9); return '10が '+t+'つと 1が '+o+'つで '+B(t*10+o,11);},
+    ()=>{const a=ri(3,7),b=ri(2,5); return 'いちごを '+a+'こずつ '+b+'さらに おくと ぜんぶで '+B(a*b,10)+'こ';}
+  ],
+  2:[
+    ()=>{const b=ri(18,49),ans=ri(13,48); return '□ ＋ '+b+' ＝ '+(b+ans)+'　□は '+B(ans,11);},
+    ()=>{const a=ri(3,9),b=ri(3,9); return a+' × □ ＝ '+(a*b)+'　□は '+B(b,10);},
+    ()=>{const a=ri(25,58),b=ri(14,39),c=ri(11,29); return a+' ＋ '+b+' － '+c+' ＝ '+B(a+b-c,11);},
+    ()=>{const h=ri(1,2),m=ri(1,5)*10; return h+'時間'+m+'分 ＝ '+B(h*60+m,12)+'分';}
+  ],
+  3:[
+    ()=>{const a=ri(12,29),b=ri(4,8); return '□ × '+b+' ＝ '+(a*b)+'　□は '+B(a,11);},
+    ()=>{const b=ri(4,8),q=ri(12,29),r=ri(1,b-1); return 'あめ '+(b*q+r)+'こを '+b+'人に 同じ数ずつ → 1人 '+B(q,9)+'こ、あまり '+B(r,8)+'こ';},
+    ()=>{const g0=ri(3,9)*100; return '1kg500g － '+g0+'g ＝ '+B(1500-g0,12)+'g';},
+    ()=>{const a=ri(2,4),m=ri(3,7)*100,b=ri(3,8)*100; const t=a*1000+m-b;
+         return a+'km'+m+'m － '+b+'m ＝ '+B(Math.floor(t/1000),7)+'km '+B(t%1000,10)+'m';}
+  ],
+  4:[
+    ()=>{const b=ri(12,29),q=ri(11,39),r=ri(1,b-1); return '□ ÷ '+b+' ＝ '+q+' あまり '+r+'　□は '+B(b*q+r,12);},
+    ()=>{const k=ri(2,6); return 'たて'+k+'cm よこ'+(k*4)+'cm の長方形と 同じ面積の 正方形の 1辺は '+B(k*2,10)+'cm';},
+    ()=>{const a=ri(11,49)/10,b=ri(11,49)/10; return a.toFixed(1)+' ＋ □ ＝ '+(a+b).toFixed(1)+'　□は '+B(b.toFixed(1),12);},
+    ()=>{const a=ri(3,8)*10,b=ri(2,7)*10; return '四角形の 4つの角の和は 360°。3つが '+a+'°、'+b+'°、90°→ のこりは '+B(360-a-b-90,11)+'°';}
+  ],
+  5:[
+    ()=>{const p=pick([20,25,30,40,50]),base=ri(2,9)*50; return '□の '+p+'％が '+(base*p/100)+' → □は '+B(base,12);},
+    ()=>{const d=pick([6,8,10,12]);
+         let n1=coprimeNum(d), n2=ri(1,d-n1-1), t=0;
+         while((n1+n2>=d || gcd(n1+n2,d)!==1) && t<40){ n1=coprimeNum(d); n2=ri(1,Math.max(1,d-n1-1)); t++; }
+         const g=gcd(n2,d);
+         return frac(n1,d)+' ＋ □ ＝ '+frac(n1+n2,d)+'　□は '+fracB(n2/g,d/g);},
+    ()=>{const s0=ri(3,8)*10,t=pick([1.5,2.5,2,3]); return '時速□kmで '+t+'時間に '+(s0*t)+'km → □は '+B(s0,11);},
+    ()=>{const a=ri(2,6),b=ri(2,6),c=ri(2,6); return '直方体の 体積が '+(a*b*c)+'cm³、たて'+a+'cm よこ'+b+'cm → 高さは '+B(c,10)+'cm';}
+  ],
+  6:[
+    ()=>{const a=ri(2,7),b=ri(2,7),k=ri(3,6); return a+'：'+b+' ＝ □：'+(b*k)+'　□は '+B(a*k,11);},
+    ()=>{const r=ri(2,8); return '半径'+r+'cmの 円の 4分の1の 面積は '+B(round(r*r*3.14/4,3),14)+'cm²';},
+    ()=>{const m=ri(5,9)*10; return '分速□mで 1時間に '+(m*60/1000).toFixed(1)+'km → □は '+B(m,11);},
+    ()=>{const d=pick([4,5,6,8]),n=ri(1,d-1),k=ri(2,5); const num=n*k, den=d;
+         const g=gcd(num,den); return '□ × '+frac(1,k)+' ＝ '+frac(n,d)+'　□は '+fracB(num/g,den/g);}
+  ]
+};
+function challengeHTML(grade, fn){
+  return '<div class="chal"><span class="lb">★チャレンジ</span>'+fn()+'</div>';
+}
+
+/* ================= 1枚ぶん ================= */
+const MSG = ['まいにち つづけよう！','ゆっくり ていねいに。','たんいを わすれずに！','見なおしまで できたら はなまる。','きのうの じぶんに かとう！'];
+function sheetHTML(no, grade, theme, cq, tq, chalN, hint){
+  const total = cq+tq;
+  let h = '<div class="sheet'+((total>=8||hint)?' dense':'')+'">';
+  h += '<div class="head"><span class="ttl">さんすう 5ふん</span>'+
+       '<span class="no">'+grade+'年　'+THEME[theme].label+'</span>'+
+       (hint?'<span class="easy">ヒントつき</span>':'')+
+       '<span class="spacer"></span><span class="nm"><b>なまえ</b></span></div>';
+  h += calcSection(grade, cq);
+  h += themeSection(theme, tq);
+  h += '<div class="memo"></div>';
+  if(chalN>0){
+    const cpool = shuffle(CHALLENGE[grade].slice());
+    for(let c=0;c<chalN;c++) h += challengeHTML(grade, cpool[c % cpool.length]);
+  }
+  h += '<div class="foot"><span class="msg">'+pick(MSG)+'</span><span class="score">できた　　／'+total+'</span></div>';
+  return h+'</div>';
+}
+
+/* ================= 生成 ================= */
+const $ = id => document.getElementById(id);
+function fillThemeSelect(){
+  const g = parseInt($('grade').value,10);
+  const cur = $('mode').value;
+  let html = '<option value="cycle">学年のテーマを順にくり返し</option><option value="random">ランダム</option>'+planOptionHTML(g);
+  GRADE_THEMES[g].forEach(k=>{ html += '<option value="'+k+'">'+THEME[k].label+'だけ</option>'; });
+  $('mode').innerHTML = html;
+  if([...$('mode').options].some(o=>o.value===cur)) $('mode').value = cur;
+}
+function currentSeed(){
+  const el=$('seed'); let v=el.value.trim();
+  if(!v){ v=String(Math.floor(Math.random()*90000)+10000); el.value=v; }
+  let s=0; for(let i=0;i<v.length;i++) s=(s*31+v.charCodeAt(i))>>>0;
+  return s;
+}
+function build(){
+  const base = currentSeed();
+  const grade = parseInt($('grade').value,10);
+  const mode = effectiveMode();
+  const cq = parseInt($('cq').value,10), tq = parseInt($('tq').value,10), chalN = parseInt($('chalq').value,10);
+  $('cqv').textContent=cq; $('tqv').textContent=tq; $('chalv').textContent=chalN;
+  const easyOK = true;   // Pro：4〜6年もヒントつき裏面OK
+  $('easy').disabled = !easyOK;
+  if(!easyOK) $('easy').checked = false;
+  const easy = $('easy').checked && easyOK;
+  const n = Math.max(1, Math.min(60, parseInt($('count').value,10)||10));
+  const layout = $('layout').value;
+  const order = GRADE_THEMES[grade];
+
+  const fronts=[], backs=[];
+  for(let i=0;i<n;i++){
+    let theme;
+    if(mode==='cycle') theme = order[i%order.length];
+    else if(mode==='random'){ rng = mulberry32((base+i*104729)>>>0); theme = pick(order); }
+    else theme = THEME[mode] ? mode : order[i%order.length];
+    const ss = (base + i*7919)>>>0;
+    rng = mulberry32(ss); HINT=false;
+    fronts.push(sheetHTML(i+1, grade, theme, cq, tq, chalN, false));
+    if(easy){ rng = mulberry32(ss); HINT=true; backs.push(sheetHTML(i+1, grade, theme, cq, tq, 0, true)); HINT=false; }
+  }
+
+  const box=$('sheets');
+  const blank = '<div class="sheet"></div>';
+  if(layout==='b4'){
+    let html='';
+    for(let i=0;i<fronts.length;i+=4){
+      const f=fronts.slice(i,i+4); while(f.length<4) f.push(blank);
+      html += '<div class="b4page">'+f.join('')+'</div>';
+      if(easy){
+        const b=backs.slice(i,i+4); while(b.length<4) b.push(blank);
+        html += '<div class="b4page">'+[b[1],b[0],b[3],b[2]].join('')+'</div>';   // 長辺とじ用に左右反転
+      }
+    }
+    box.innerHTML=html;
+  }else{
+    let seq=[];
+    for(let i=0;i<fronts.length;i++){ seq.push(fronts[i]); if(easy) seq.push(backs[i]); }
+    box.innerHTML=seq.join('');
+  }
+  applyPageCSS(layout);
+}
+function applyPageCSS(layout){
+  let st=$('pagecss');
+  if(!st){ st=document.createElement('style'); st.id='pagecss'; document.head.appendChild(st); }
+  st.textContent = (layout==='b4') ? '@page{size:257mm 364mm;margin:0;}' : '@page{size:128mm 182mm;margin:0;}';
+}
+
+$('grade').addEventListener('change', ()=>{ fillThemeSelect(); build(); });
+['mode','count','layout','seed','easy'].forEach(id=> $(id).addEventListener('change', build));
+['cq','tq','chalq'].forEach(id=> $(id).addEventListener('input', build));
+$('gen').addEventListener('click', ()=>{ $('seed').value=''; build(); });
+$('toggle').addEventListener('click', e=>{
+  document.body.classList.toggle('show-ans');
+  const on=document.body.classList.contains('show-ans');
+  e.target.classList.toggle('on', on);
+  e.target.textContent = on ? 'こたえを かくす' : 'こたえを見る';
+});
+$('print').addEventListener('click', ()=>{ recordPrint(); window.print(); });
+
+/* ================================================================
+   ここから下は Pro版の機能（問題の作り方には一切さわらない）
+   ================================================================ */
+const PRO_KEY = 'bo10pro_sansu5_v1';
+const MONTHS = [4,5,6,7,8,9,10,11,12,1,2,3];
+let DB = null;
+let pview = 'hist';
+let hitId = '';
+const confirmTimers = {};
+
+function uidP(p){ return (p||'c') + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function escP(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function clampI(v, lo, hi, def){ v = parseInt(v,10); if(isNaN(v)) return def; return Math.max(lo, Math.min(hi, v)); }
+function toastP(msg){
+  let t = $('toastP');
+  if(!t){ t = document.createElement('div'); t.id = 'toastP';
+    t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:999px;font-size:14px;z-index:99;max-width:92vw;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none;';
+    document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(toastP._t); toastP._t = setTimeout(()=>{ t.style.opacity = '0'; }, 2600);
+}
+function armConfirm(btn, key, fn, label){
+  if(btn.dataset.armed === '1'){ delete btn.dataset.armed; clearTimeout(confirmTimers[key]); fn(); return; }
+  btn.dataset.armed = '1'; const orig = btn.textContent;
+  btn.textContent = label || 'もう一度押すと削除'; btn.classList.add('armed');
+  confirmTimers[key] = setTimeout(()=>{ delete btn.dataset.armed; btn.textContent = orig; btn.classList.remove('armed'); }, 3000);
+}
+function execCopy(txt){
+  try{ const ta = document.createElement('textarea'); ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok; }catch(e){ return false; }
+}
+function copyP(txt){
+  const fin = ok => toastP(ok ? 'コピーしました' : '枠の中から手動でコピーしてください');
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(()=>fin(true), ()=>fin(execCopy(txt))); return; } }catch(e){}
+  fin(execCopy(txt));
+}
+function dayKey(d){ return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function day0(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function md(iso){ const d = new Date(iso); return (d.getMonth()+1)+'/'+d.getDate()+'（'+'日月火水木金土'.charAt(d.getDay())+'）'; }
+function modeLabel(mode, grade){
+  if(THEME[mode]) return THEME[mode].label;
+  if(mode==='random') return 'ランダム';
+  return (GRADE_THEMES[grade]||[]).map(k=>THEME[k].label).join('→') + '（順に）';
+}
+
+/* ---------- 正規化 ---------- */
+function normSet(s){
+  s = s || {};
+  const grade = clampI(s.grade, 1, 6, 2);
+  let mode = String(s.mode || 'cycle');
+  if(!(mode==='cycle' || mode==='random' || mode==='plan' || GRADE_THEMES[grade].indexOf(mode)>=0)) mode = 'cycle';
+  return { grade:grade, mode:mode, cq:clampI(s.cq,1,6,3), tq:clampI(s.tq,1,5,3), chalN:clampI(s.chalN,0,3,2),
+    easy:!!s.easy, count:clampI(s.count,1,60,10), layout: s.layout==='b4' ? 'b4' : 'b6' };
+}
+function normClass(c){
+  const o = normSet(c);
+  o.id = c && c.id ? String(c.id) : uidP('c');
+  o.name = String((c && c.name) || 'クラス').slice(0,30);
+  o.plan = {};
+  const p = (c && c.plan) || {};
+  MONTHS.forEach(m=>{ if(p[m] && THEME[p[m]]) o.plan[m] = String(p[m]); });
+  return o;
+}
+function normHist(h){
+  if(!h || typeof h!=='object' || h.seed==null) return null;
+  const o = normSet(h);
+  if(o.mode==='plan') o.mode = 'cycle';
+  o.id = h.id ? String(h.id) : uidP('h');
+  o.at = isNaN(new Date(h.at).getTime()) ? new Date().toISOString() : String(h.at);
+  o.classId = h.classId ? String(h.classId) : '';
+  o.className = String(h.className || '');
+  o.seed = String(h.seed).slice(0,40);
+  o.result = null;
+  if(h.result && typeof h.result==='object'){
+    const r = { all:clampI(h.result.all,0,99,0), half:clampI(h.result.half,0,99,0), less:clampI(h.result.less,0,99,0) };
+    if(r.all+r.half+r.less>0) o.result = r;
+  }
+  return o;
+}
+function normDB(d){
+  d = d || {};
+  const out = {
+    version:1,
+    classes: Array.isArray(d.classes) ? d.classes.map(normClass) : [],
+    currentClassId: String(d.currentClassId || ''),
+    history: Array.isArray(d.history) ? d.history.map(normHist).filter(Boolean) : [],
+    folded: !!d.folded,
+    welcomed: !!d.welcomed
+  };
+  if(!out.classes.some(c=>c.id===out.currentClassId)) out.currentClassId = '';
+  return out;
+}
+function loadP(){
+  let d = null;
+  try{ const raw = localStorage.getItem(PRO_KEY); d = raw ? JSON.parse(raw) : null; }catch(e){ d = null; }
+  DB = normDB(d && typeof d==='object' ? d : {});
+}
+function saveP(){
+  try{ localStorage.setItem(PRO_KEY, JSON.stringify(DB)); }catch(e){ toastP('保存できませんでした（容量オーバーの可能性）'); }
+}
+
+/* ---------- 画面の設定 ⇔ データ ---------- */
+function currentClass(){
+  if(!DB) return null;
+  for(const c of DB.classes) if(c.id===DB.currentClassId) return c;
+  return null;
+}
+function planTheme(c, g){
+  if(!c || !c.plan) return null;
+  const k = c.plan[new Date().getMonth()+1];
+  return (k && GRADE_THEMES[g] && GRADE_THEMES[g].indexOf(k)>=0) ? k : null;
+}
+function planOptionHTML(g){
+  const c = currentClass();
+  if(!c) return '';
+  const k = planTheme(c, g), m = new Date().getMonth()+1;
+  return '<option value="plan">月の予定（'+m+'月：'+(k ? escP(THEME[k].label) : '未設定→順にくり返し')+'）</option>';
+}
+/* 「月の予定」は、その月のテーマに置きかえてから問題を作る（作り方そのものは無料版と同じ） */
+function effectiveMode(){
+  const v = $('mode').value;
+  if(v!=='plan') return v;
+  return planTheme(currentClass(), parseInt($('grade').value,10)) || 'cycle';
+}
+function readControls(){
+  return normSet({ grade:$('grade').value, mode:$('mode').value, cq:$('cq').value, tq:$('tq').value, chalN:$('chalq').value,
+    easy:$('easy').checked, count:$('count').value, layout:$('layout').value });
+}
+function applyControls(s, seed){
+  $('grade').value = String(s.grade);
+  fillThemeSelect();
+  $('mode').value = [...$('mode').options].some(o=>o.value===s.mode) ? s.mode : 'cycle';
+  $('cq').value = s.cq; $('tq').value = s.tq; $('chalq').value = s.chalN;
+  $('easy').checked = !!s.easy;
+  $('count').value = s.count;
+  $('layout').value = s.layout;
+  if(seed!==undefined) $('seed').value = seed;
+  build();
+}
+function applyClass(c){
+  const s = Object.assign({}, c);
+  if(planTheme(c, c.grade)) s.mode = 'plan';
+  applyControls(s);
+}
+
+/* ---------- ① 印刷履歴 ---------- */
+function probSig(h){ return [h.grade,h.mode,h.cq,h.tq,h.chalN,h.seed].join('|'); }
+function fullSig(h){ return probSig(h)+'|'+(h.easy?1:0)+'|'+h.count+'|'+h.layout+'|'+(h.classId||''); }
+function recordPrint(){
+  const s = readControls();
+  s.mode = effectiveMode();
+  s.seed = $('seed').value.trim();
+  const c = currentClass();
+  s.classId = c ? c.id : ''; s.className = c ? c.name : '';
+  const now = new Date(), today = dayKey(now), sig = fullSig(s);
+  const ex = DB.history.find(h=> dayKey(new Date(h.at))===today && fullSig(h)===sig);
+  if(ex){ ex.at = now.toISOString(); }
+  else{ s.at = now.toISOString(); s.id = uidP('h'); DB.history.push(normHist(s)); }
+  if(DB.history.length > 1000) DB.history = DB.history.slice(-1000);
+  saveP();
+  if(pview==='hist' || pview==='rec') renderPanel();
+}
+function restoreHist(h){
+  if(h.classId && DB.classes.some(c=>c.id===h.classId)){ DB.currentClassId = h.classId; renderClassSelect(); }
+  applyControls(h, h.seed);
+  hitId = h.id;
+  saveP();
+  renderPanel();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function retry2w(){
+  const c = currentClass();
+  const t0 = day0(new Date());
+  const list = DB.history.filter(h=> (!c || h.classId===c.id) && day0(new Date(h.at)) < t0);
+  if(!list.length){ toastP(c ? '「'+c.name+'」の、きのうまでの印刷履歴がありません' : 'きのうまでの印刷履歴がありません'); return; }
+  const target = t0.getTime() - 14*86400000;
+  let best = null, bd = Infinity;
+  list.forEach(h=>{
+    const dd = Math.abs(day0(new Date(h.at)).getTime() - target);
+    if(dd < bd || (dd===bd && best && h.at < best.at)){ best = h; bd = dd; }
+  });
+  pview = 'hist';
+  restoreHist(best);
+  const ago = Math.round((t0.getTime() - day0(new Date(best.at)).getTime())/86400000);
+  toastP(md(best.at)+'（'+ago+'日前）と まったく同じプリントです。番号 '+best.seed);
+}
+
+/* ---------- ⑤ 答えの一覧 ---------- */
+function ansOfItem(el){
+  if(el.querySelector('.hissan')) return [...el.querySelectorAll('.hissan .ab .a')].map(t=>t.textContent).join('');
+  if(el.querySelector('.wari')){
+    const q = [...el.querySelectorAll('.wari .ab .a')].map(t=>t.textContent).join('');
+    const r = el.querySelector('.amari .a');
+    return q + (r ? ' あまり '+r.textContent : '');
+  }
+  const out = [];
+  el.querySelectorAll('.blank, .frac.bl').forEach(b=>{
+    if(b.classList.contains('frac')) out.push(b.querySelector('.fn .a').textContent+'/'+b.querySelector('.fd .a').textContent);
+    else out.push(b.querySelector('.a').textContent);
+  });
+  return out.join('・');
+}
+function itemNo(el, sel){
+  const x = el.querySelector(sel);
+  const m = x ? /\((\d+)\)/.exec(x.textContent) : null;
+  return m ? m[1] : '';
+}
+function answerSheetData(){
+  const sheets = [...document.querySelectorAll('#sheets .sheet')].filter(s=> s.querySelector('.head') && !s.querySelector('.head .easy'));
+  return sheets.map((s, i)=>{
+    const secs = s.querySelectorAll('.sec');
+    const calc = secs[0] ? [...secs[0].querySelectorAll('.probs > .hbox')].map(el=>({n:itemNo(el,'.hn'), a:ansOfItem(el)})) : [];
+    const theme = secs[1] ? [...secs[1].querySelectorAll('.fig, .q')].map(el=>({n: el.classList.contains('q') ? itemNo(el,'.qn') : itemNo(el,'.cap'), a:ansOfItem(el)})) : [];
+    const chal = [...s.querySelectorAll('.chal')].map((el, k)=>({n:String(k+1), a:ansOfItem(el)}));
+    const t = s.querySelector('.head .no');
+    return { no:i+1, label: t ? t.textContent.replace(/\s+/g,' ') : '', calc:calc, theme:theme, chal:chal };
+  });
+}
+function itemsHTML(arr){ return arr.map(x=>'<span class="it"><b>('+escP(x.n)+')</b>'+escP(x.a)+'</span>').join(''); }
+function printAnswers(){
+  const data = answerSheetData();
+  if(!data.length){ toastP('プリントがありません'); return; }
+  const s = readControls(), hasChal = data.some(d=>d.chal.length);
+  let h = '<div class="ansp"><h2>さんすう5分プリント　こたえ一覧</h2><div class="meta">'+s.grade+'年／'+escP(modeLabel(effectiveMode(), s.grade))+
+    '／番号 '+escP($('seed').value.trim())+'／'+data.length+'枚／'+escP(md(new Date().toISOString()))+'</div>';
+  h += '<table><thead><tr><th>No.</th><th>1 けいさん</th><th>2 テーマ</th>'+(hasChal?'<th>★チャレンジ</th>':'')+'</tr></thead><tbody>';
+  data.forEach(d=>{
+    h += '<tr><td class="no">'+d.no+'</td><td>'+itemsHTML(d.calc)+'</td><td><div style="color:#777;font-size:10px">'+escP(d.label)+'</div>'+itemsHTML(d.theme)+'</td>'+
+      (hasChal ? '<td>'+itemsHTML(d.chal)+'</td>' : '')+'</tr>';
+  });
+  h += '</tbody></table></div>';
+  $('anslist').innerHTML = h;
+  document.body.classList.add('print-ans');
+  let st = $('pagecss');
+  if(!st){ st = document.createElement('style'); st.id = 'pagecss'; document.head.appendChild(st); }
+  st.textContent = '@page{size:A4;margin:10mm;}';
+  window.print();
+}
+window.addEventListener('afterprint', ()=>{
+  if(document.body.classList.contains('print-ans')){
+    document.body.classList.remove('print-ans');
+    applyPageCSS($('layout').value);
+  }
+});
+
+/* ---------- パネル ---------- */
+function renderClassSelect(){
+  const sel = $('cls');
+  sel.innerHTML = '<option value="">（クラスなし）</option>' + DB.classes.map(c=>'<option value="'+escP(c.id)+'">'+escP(c.name)+'</option>').join('');
+  sel.value = DB.currentClassId;
+}
+function renderPanel(){
+  document.querySelectorAll('#ptabs button[data-p]').forEach(b=> b.classList.toggle('on', b.dataset.p===pview));
+  $('pbody').style.display = DB.folded ? 'none' : '';
+  $('pfold').textContent = DB.folded ? 'ひらく ▼' : 'たたむ ▲';
+  if(DB.folded) return;
+  if(pview==='hist') renderHist();
+  else if(pview==='rec') renderRec();
+  else if(pview==='cls') renderCls();
+  else renderData();
+}
+function histLine(h){
+  return '<span class="hd">'+escP(md(h.at))+(h.className ? '<span class="tag">'+escP(h.className)+'</span>' : '')+'</span>'+
+    '<span class="hs">'+h.grade+'年・'+escP(modeLabel(h.mode, h.grade))+'　番号 <b>'+escP(h.seed)+'</b>　'+h.count+'枚'+
+    (h.layout==='b4'?'（B4）':'')+(h.easy?'<span class="tag">ヒント裏面</span>':'')+
+    '<span class="tag">計算'+h.cq+'・テーマ'+h.tq+'・★'+h.chalN+'</span></span>';
+}
+function renderHist(){
+  const c = currentClass();
+  const list = DB.history.filter(h=> !c || h.classId===c.id).slice().sort((a,b)=> a.at<b.at ? 1 : -1);
+  let h = '<h3>🖨 印刷履歴'+(c ? '（'+escP(c.name)+'）' : '（すべて）')+'</h3>';
+  h += '<p class="muted">「印刷する」を押すたびに、日付・クラス・学年・テーマ・番号・枚数が残ります。「もう一度」で、そのときとまったく同じプリントが出ます。答え合わせのあとに「できた数」の人数だけ入れておくと、📈 に出ます（名前は入れません）。</p>';
+  if(!list.length) h += '<p class="muted">まだ履歴がありません。</p>';
+  h += '<ul class="hist">' + list.slice(0,80).map(x=>
+    '<li class="'+(x.id===hitId?'hit':'')+'">'+histLine(x)+
+    '<button data-h="again" data-id="'+escP(x.id)+'">もう一度</button>'+
+    '<button data-h="del" data-id="'+escP(x.id)+'">削除</button>'+
+    '<div class="res">できた数：全問 <input type="number" min="0" max="99" data-r="all" data-id="'+escP(x.id)+'" value="'+(x.result?x.result.all:'')+'">人'+
+    '　半分以上 <input type="number" min="0" max="99" data-r="half" data-id="'+escP(x.id)+'" value="'+(x.result?x.result.half:'')+'">人'+
+    '　半分未満 <input type="number" min="0" max="99" data-r="less" data-id="'+escP(x.id)+'" value="'+(x.result?x.result.less:'')+'">人</div></li>').join('') + '</ul>';
+  if(list.length>80) h += '<p class="muted">（新しい80件を表示しています）</p>';
+  $('pbody').innerHTML = h;
+}
+function barRow(label, r, extra){
+  const tot = r.all + r.half + r.less;
+  const seg = (n, cls, nm)=> n>0 ? '<span class="'+cls+'" style="flex:'+n+' 1 0" title="'+nm+' '+n+'人"></span>' : '';
+  return '<div class="cbar" title="全問 '+r.all+'人・半分以上 '+r.half+'人・半分未満 '+r.less+'人"><span>'+escP(label)+'</span><div class="track">'+
+    seg(r.all,'s-all','全問できた')+seg(r.half,'s-half','半分以上')+seg(r.less,'s-less','半分未満')+'</div><span class="pct">'+Math.round(r.all/tot*100)+'%</span></div>'+(extra||'');
+}
+function renderRec(){
+  const c = currentClass();
+  const list = DB.history.filter(h=> h.result && (!c || h.classId===c.id)).sort((a,b)=> a.at<b.at ? -1 : 1);
+  let h = '<h3>📈 できた数の記録'+(c ? '（'+escP(c.name)+'）' : '（すべて）')+'</h3>';
+  h += '<div class="legend"><span><i class="s-all"></i>全問できた</span><span><i class="s-half"></i>半分以上</span><span><i class="s-less"></i>半分未満</span><span>右の％＝全問できた割合</span></div>';
+  if(!list.length){
+    $('pbody').innerHTML = h + '<p class="muted">まだ記録がありません。🖨 印刷履歴の各行に、答え合わせのあとの人数を入れてください。</p>';
+    return;
+  }
+  /* 同じ番号のプリントを2回以上やったもの */
+  const bySig = {}, sigOrder = [];
+  list.forEach(x=>{ const k = probSig(x)+'|'+x.classId; if(!bySig[k]){ bySig[k] = []; sigOrder.push(k); } bySig[k].push(x); });
+  const pairs = sigOrder.filter(k=> bySig[k].length>=2);
+  if(pairs.length){
+    h += '<h3 style="margin-top:6px">🔁 同じプリントの 1回目と2回目</h3>';
+    pairs.forEach(k=>{
+      const arr = bySig[k];
+      h += '<div class="pair"><div class="pt">'+arr[0].grade+'年・'+escP(modeLabel(arr[0].mode, arr[0].grade))+'　番号 '+escP(arr[0].seed)+(arr[0].className?'（'+escP(arr[0].className)+'）':'')+'</div>'+
+        arr.map((x,i)=> barRow((i+1)+'回目 '+md(x.at), x.result)).join('')+'</div>';
+    });
+  }
+  /* テーマごとの推移 */
+  const byTheme = {}, tOrder = [];
+  list.forEach(x=>{ const k = x.grade+'|'+x.mode; if(!byTheme[k]){ byTheme[k] = []; tOrder.push(k); } byTheme[k].push(x); });
+  h += '<h3 style="margin-top:12px">テーマごとの推移（古い順）</h3>';
+  tOrder.forEach(k=>{
+    const arr = byTheme[k];
+    h += '<div class="chart-g"><h4>'+arr[0].grade+'年・'+escP(modeLabel(arr[0].mode, arr[0].grade))+'</h4>'+
+      arr.map(x=> barRow(md(x.at), x.result)).join('')+'</div>';
+  });
+  h += '<p class="muted">クラス全体の手応えを見るための記録です。点数を成績に入れたり、個人の名前で記録したりはしないでください。</p>';
+  $('pbody').innerHTML = h;
+}
+function renderCls(){
+  const c = currentClass();
+  let h = '<h3>🏫 クラス設定</h3>';
+  h += '<p class="muted">「3年1組：計算4問・テーマ2問・チャレンジ2問・B4で4枚」のように、いまの画面の設定をクラスとして保存できます。上のバーの「クラス」で切り替えると、設定がワンタップで戻ります。</p>';
+  h += '<div class="row2"><input type="text" id="newCls" maxlength="30" placeholder="例：3年1組"><button class="primary" id="addCls">＋ いまの設定でクラスを作る</button></div>';
+  if(DB.classes.length){
+    h += '<ul class="hist">' + DB.classes.map(x=>
+      '<li'+(c && x.id===c.id ? ' class="hit"' : '')+'><span class="hd">'+escP(x.name)+'</span><span class="hs">'+x.grade+'年・'+escP(x.mode==='plan'?'月の予定':modeLabel(x.mode, x.grade))+
+      '<span class="tag">計算'+x.cq+'・テーマ'+x.tq+'・★'+x.chalN+'</span><span class="tag">'+x.count+'枚・'+(x.layout==='b4'?'B4':'B6')+'</span>'+(x.easy?'<span class="tag">ヒント裏面</span>':'')+'</span>'+
+      '<button data-c="use" data-id="'+escP(x.id)+'">つかう</button>'+
+      '<button data-c="save" data-id="'+escP(x.id)+'">いまの設定で上書き</button>'+
+      '<button data-c="ren" data-id="'+escP(x.id)+'">名前</button>'+
+      '<button data-c="del" data-id="'+escP(x.id)+'">削除</button></li>').join('') + '</ul>';
+  }
+  h += '<h3 style="margin-top:14px">🗓 月ごとのテーマ予定</h3>';
+  if(!c){
+    h += '<p class="muted">クラスを選ぶと、そのクラスの月ごとのテーマを決められます。</p>';
+  }else{
+    h += '<p class="muted">「'+escP(c.name)+'」（'+c.grade+'年）の予定です。決めておくと、テーマで「月の予定」を選んだとき（クラスを切り替えたときは自動）に、その月のテーマになります。</p><div class="months">';
+    MONTHS.forEach(m=>{
+      h += '<label>'+m+'月<select data-m="'+m+'"><option value="">―</option>'+
+        GRADE_THEMES[c.grade].map(k=>'<option value="'+k+'"'+(c.plan[m]===k?' selected':'')+'>'+escP(THEME[k].label)+'</option>').join('')+'</select></label>';
+    });
+    h += '</div>';
+  }
+  $('pbody').innerHTML = h;
+}
+function renderData(){
+  let h = '<h3>🗂 データ</h3>';
+  h += '<p class="muted">問題の作り方は無料版とまったく同じです。<b>無料版でメモしておいた番号を「番号」に入れれば、同じプリントが出ます。</b>（学年・テーマ・問題数も同じにしてください）<br>履歴と設定は、この端末のブラウザの中だけに保存され、外部には送信されません。別の端末へ移すときは、下の「書き出し」の文字列を「読みこみ」に貼ってください。</p>';
+  h += '<div class="row2"><button id="exp">📤 書き出し</button><button id="imp">📥 読みこみ</button></div><div id="ioArea"></div>';
+  $('pbody').innerHTML = h;
+}
+function renderWelcome(){
+  const mb = $('migrateBox');
+  if(DB.welcomed){ mb.style.display = 'none'; return; }
+  mb.style.display = '';
+  mb.innerHTML = '<button class="x" aria-label="閉じる">✕</button>➕ <b>Pro版へようこそ。</b><br>'+
+    '無料版は設定や履歴を保存しない作りなので、引き継ぐデータはありません。そのかわり問題の作り方がまったく同じなので、'+
+    '<b>無料版でメモした番号を「番号」に入れれば、同じプリントが出ます。</b><br>'+
+    'まずは 🏫 クラス設定 で、いまの設定をクラスとして保存してみてください。印刷するたびに 🖨 印刷履歴 に残ります。';
+  mb.querySelector('.x').addEventListener('click', ()=>{ DB.welcomed = true; saveP(); renderWelcome(); });
+}
+
+/* ---------- パネルのイベント ---------- */
+$('ptabs').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.id==='pfold'){ DB.folded = !DB.folded; saveP(); renderPanel(); return; }
+  if(b.dataset.p){ pview = b.dataset.p; if(DB.folded){ DB.folded = false; saveP(); } renderPanel(); }
+});
+$('pbody').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  const id = b.dataset.id;
+  if(b.dataset.h){
+    const h = DB.history.find(x=>x.id===id); if(!h) return;
+    if(b.dataset.h==='again'){ restoreHist(h); toastP(md(h.at)+'のプリントを出しました（番号 '+h.seed+'）'); }
+    else armConfirm(b, 'hd'+id, ()=>{ DB.history = DB.history.filter(x=>x.id!==id); saveP(); renderPanel(); toastP('履歴を削除しました'); });
+    return;
+  }
+  if(b.id==='addCls'){
+    const name = $('newCls').value.trim();
+    if(!name){ toastP('クラスの名前を入れてください'); $('newCls').focus(); return; }
+    if(DB.classes.length>=20){ toastP('クラスは20個までです'); return; }
+    const s = readControls();
+    const c = normClass(Object.assign(s, { id:uidP('c'), name:name, plan:{} }));
+    DB.classes.push(c); DB.currentClassId = c.id;
+    saveP(); renderClassSelect(); fillThemeSelect(); renderPanel();
+    toastP('「'+name+'」を作りました');
+    return;
+  }
+  if(b.dataset.c){
+    const c = DB.classes.find(x=>x.id===id); if(!c) return;
+    if(b.dataset.c==='use'){ DB.currentClassId = c.id; saveP(); renderClassSelect(); applyClass(c); renderPanel(); toastP('「'+c.name+'」の設定にしました'); }
+    else if(b.dataset.c==='save'){
+      const s = readControls();
+      const keep = { id:c.id, name:c.name, plan:c.plan };
+      if(s.grade!==c.grade) keep.plan = {};
+      Object.assign(c, normClass(Object.assign(s, keep)));
+      DB.currentClassId = c.id; saveP(); renderClassSelect(); fillThemeSelect(); renderPanel(); toastP('「'+c.name+'」に保存しました');
+    }else if(b.dataset.c==='ren'){
+      const li = b.closest('li');
+      li.innerHTML = '<input type="text" maxlength="30" style="font:inherit;padding:4px 6px;border:1px solid #c4cad2;border-radius:6px"><button>決定</button><button>やめる</button>';
+      const inp = li.querySelector('input'); inp.value = c.name; inp.focus();
+      const bs = li.querySelectorAll('button');
+      bs[0].addEventListener('click', ()=>{ const v = inp.value.trim(); if(v){ c.name = v.slice(0,30); saveP(); renderClassSelect(); } renderPanel(); });
+      bs[1].addEventListener('click', renderPanel);
+    }else if(b.dataset.c==='del'){
+      armConfirm(b, 'cd'+id, ()=>{
+        DB.classes = DB.classes.filter(x=>x.id!==id);
+        if(DB.currentClassId===id) DB.currentClassId = '';
+        saveP(); renderClassSelect(); fillThemeSelect(); renderPanel(); toastP('クラスを削除しました（印刷履歴は残ります）');
+      });
+    }
+    return;
+  }
+  if(b.id==='exp'){
+    const txt = JSON.stringify({ app:'sansu5-pro', version:1, classes:DB.classes, currentClassId:DB.currentClassId, history:DB.history });
+    $('ioArea').innerHTML = '<p class="muted">下の文字列をコピーして保存してください。</p><textarea class="io" readonly id="expText"></textarea><div class="row2"><button id="cpy">コピー</button></div>';
+    $('expText').value = txt;
+    $('cpy').addEventListener('click', ()=>copyP(txt));
+    return;
+  }
+  if(b.id==='imp'){
+    $('ioArea').innerHTML = '<p class="muted">書き出した文字列を貼りつけて「読みこむ」を押してください。<b>いまの履歴と設定は置きかわります。</b></p><textarea class="io" id="impText" placeholder="ここに貼りつけ"></textarea><div class="row2"><button id="doImp" class="primary">読みこむ</button><span id="impErr" style="color:#d94f4f;font-size:12px"></span></div>';
+    $('doImp').addEventListener('click', function(){
+      let d = null;
+      try{ d = JSON.parse($('impText').value.trim()); }catch(e){ d = null; }
+      if(!d || typeof d!=='object' || !Array.isArray(d.history) || !Array.isArray(d.classes)){ $('impErr').textContent = '読みこめませんでした。書き出した文字列か確認してください。'; return; }
+      armConfirm(this, 'imp', ()=>{
+        const keepW = DB.welcomed;
+        DB = normDB(d); DB.welcomed = keepW || DB.welcomed;
+        saveP(); renderClassSelect();
+        const c = currentClass(); if(c) applyClass(c); else { fillThemeSelect(); build(); }
+        pview = 'hist'; renderPanel();
+        toastP('読みこみました（クラス'+DB.classes.length+'・履歴'+DB.history.length+'件）');
+      }, 'もう一度押すと置きかえます');
+    });
+    return;
+  }
+});
+$('pbody').addEventListener('change', e=>{
+  const t = e.target;
+  if(t.dataset.r){
+    const h = DB.history.find(x=>x.id===t.dataset.id); if(!h) return;
+    const li = t.closest('li');
+    const v = k=> clampI(li.querySelector('[data-r="'+k+'"]').value, 0, 99, 0);
+    const r = { all:v('all'), half:v('half'), less:v('less') };
+    h.result = (r.all+r.half+r.less>0) ? r : null;
+    saveP(); toastP('できた数を記録しました');
+    return;
+  }
+  if(t.dataset.m){
+    const c = currentClass(); if(!c) return;
+    if(t.value) c.plan[t.dataset.m] = t.value; else delete c.plan[t.dataset.m];
+    saveP();
+    const keep = $('mode').value; fillThemeSelect(); $('mode').value = keep;
+    if(parseInt(t.dataset.m,10)===new Date().getMonth()+1 && keep==='plan') build();
+  }
+});
+$('cls').addEventListener('change', function(){
+  DB.currentClassId = this.value;
+  saveP();
+  const c = currentClass();
+  if(c){ applyClass(c); toastP('「'+c.name+'」の設定にしました'); }
+  else fillThemeSelect();
+  renderPanel();
+});
+$('ansPrint').addEventListener('click', printAnswers);
+$('retry2w').addEventListener('click', retry2w);
+
+/* ---------- 起動 ---------- */
+loadP();
+saveP();   // 初回からすぐ書きこむ
+renderClassSelect();
+(function(){
+  const c = currentClass();
+  if(c) applyClass(c);
+  else { fillThemeSelect(); build(); }
+})();
+renderPanel();
+renderWelcome();
+
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>
