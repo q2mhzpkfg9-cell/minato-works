@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単元進度トラッカー Pro</title>
+<style>
+  :root{
+    --accent:#457B9D;
+    --accent-dark:#35617d;
+    --accent-soft:#e6eef4;
+    --bg:#F7F5F0;
+    --ok:#2a9d5c;
+    --just:#e09f3e;
+    --ng:#d94f4f;
+    --text:#333;
+    --muted:#888;
+    --line:#e6e2da;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  header{
+    background:var(--accent);
+    color:#fff;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  header h1{font-size:1.1rem;font-weight:700;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  header a.back{
+    color:#fff;
+    text-decoration:none;
+    background:rgba(255,255,255,.18);
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:.85rem;
+    white-space:nowrap;
+  }
+  header a.back:active{background:rgba(255,255,255,.32);}
+  .pro-badge{
+    display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;
+    background:#fff;color:var(--accent);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;
+  }
+  .class-select{
+    width:auto;min-width:90px;max-width:40vw;
+    font-family:inherit;font-size:.95rem;font-weight:700;
+    padding:7px 10px;border-radius:10px;border:none;
+    background:#fff;color:var(--accent);
+  }
+  main{max-width:900px;margin:0 auto;padding:14px 12px 80px;}
+
+  /* ===== 学期バー ===== */
+  .term-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+  .term-bar .label{font-size:.85rem;color:var(--muted);}
+  .term-btn{
+    border:2px solid #ddd;background:#fff;border-radius:12px;padding:8px 16px;
+    font-size:.95rem;cursor:pointer;font-family:inherit;color:var(--text);
+  }
+  .term-btn.active{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:700;}
+
+  /* ===== タブ ===== */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;-webkit-overflow-scrolling:touch;}
+  .tab{
+    flex:0 0 auto;border:none;border-radius:12px;padding:10px 16px;font-size:.95rem;cursor:pointer;
+    font-family:inherit;background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.06);
+    border-bottom:4px solid transparent;white-space:nowrap;
+  }
+  .tab.active{font-weight:700;color:#fff;}
+  .tab.dash{border-bottom-color:var(--accent);}
+  .tab.dash.active,.tab.tool.active{background:var(--accent);}
+  .tab.tool{border-bottom-color:#b9c7d1;}
+  .tab.add-tab{color:var(--accent);border:2px dashed var(--accent);box-shadow:none;background:transparent;}
+  .tab-sep{flex:0 0 auto;width:1px;background:#d8d3c9;margin:4px 2px;}
+
+  /* ===== カード ===== */
+  .card{background:#FFF;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:16px;margin-bottom:14px;}
+  .card h2{font-size:1rem;margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .card h2 .small-note{font-size:.75rem;color:var(--muted);font-weight:400;}
+
+  /* ===== ボタン共通 ===== */
+  button{font-family:inherit;}
+  .btn{border:none;border-radius:12px;padding:12px 18px;font-size:1rem;cursor:pointer;background:var(--accent);color:#fff;}
+  .btn:active{background:var(--accent-dark);}
+  .btn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .btn.danger{background:var(--ng);}
+  .btn.small{padding:8px 12px;font-size:.85rem;border-radius:10px;}
+  .btn.gray{background:#e8e5de;color:#555;}
+  .btn.confirming{background:var(--ng)!important;color:#fff!important;border-color:var(--ng)!important;}
+
+  /* ===== フォーム ===== */
+  input[type=text],input[type=number],input[type=date],select,textarea{
+    font-family:inherit;font-size:1rem;padding:10px 12px;border:2px solid #ddd;border-radius:12px;
+    background:#fff;color:var(--text);width:100%;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
+  .form-row .field{flex:1 1 140px;min-width:120px;}
+  .form-row .field.narrow{flex:0 1 110px;min-width:90px;}
+  .field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px;}
+  .check-label{display:flex;align-items:center;gap:8px;font-size:.92rem;cursor:pointer;padding:6px 0;}
+  .check-label input{width:20px;height:20px;}
+
+  /* ===== 判定バナー ===== */
+  .judge{border-radius:16px;padding:16px;margin-bottom:14px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .judge.ok{background:var(--ok);}
+  .judge.just{background:var(--just);}
+  .judge.ng{background:var(--ng);}
+  .judge.none{background:#9aa5ad;}
+  .judge .judge-title{font-size:1.05rem;font-weight:700;margin-bottom:4px;}
+  .judge .judge-detail{font-size:.88rem;opacity:.95;}
+  .judge .judge-nums{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+  .judge .num-box{background:rgba(255,255,255,.18);border-radius:12px;padding:8px 10px;text-align:center;flex:1 1 80px;}
+  .judge .num-box .v{font-size:1.5rem;font-weight:700;line-height:1.2;}
+  .judge .num-box .k{font-size:.72rem;opacity:.9;}
+  .judge .judge-src{margin-top:8px;font-size:.78rem;opacity:.9;}
+
+  /* ===== 単元 ===== */
+  .unit{border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px;}
+  .unit.done-unit{background:#f2f9f4;border-color:#cde8d6;}
+  .unit-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .unit-name{flex:1 1 150px;font-weight:700;font-size:.98rem;display:flex;align-items:center;gap:6px;min-width:0;}
+  .unit-name .check{color:var(--ok);font-size:1.1rem;}
+  .unit-count{font-size:.9rem;color:var(--muted);white-space:nowrap;}
+  .unit-count b{color:var(--text);font-size:1.1rem;}
+  .unit-btns{display:flex;gap:8px;}
+  .hour-btn{border:none;border-radius:12px;width:56px;height:44px;font-size:1.15rem;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);}
+  .hour-btn.minus{background:#b9b3a8;}
+  .hour-btn:active{opacity:.75;}
+  .hour-btn:disabled{opacity:.35;cursor:default;}
+  .progress-wrap{margin-top:10px;background:#eee;border-radius:99px;height:14px;overflow:hidden;}
+  .progress-bar{height:100%;border-radius:99px;background:var(--accent);transition:width .25s;min-width:0;}
+  .unit-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;flex-wrap:wrap;}
+  .unit-foot .pct{font-size:.78rem;color:var(--muted);}
+  .icon-btn{border:none;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:6px 8px;border-radius:8px;}
+  .icon-btn:active{background:#eee;}
+  .icon-btn.on{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+  .icon-btn.confirming{background:var(--ng);color:#fff;font-weight:700;}
+  .actual-tag{font-size:.75rem;background:#e3f1e8;color:#2a7a4b;border-radius:99px;padding:2px 8px;font-weight:700;white-space:nowrap;}
+
+  /* ===== 調整メモ ===== */
+  .notes{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;}
+  .note{background:#fbfaf6;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:.9rem;}
+  .note .nd{font-size:.75rem;color:var(--muted);font-weight:700;}
+  .note .after{margin-top:6px;padding:6px 10px;background:#eef5f0;border-radius:8px;font-size:.86rem;}
+  .note .after .nd{color:#2a7a4b;}
+  .note textarea{min-height:60px;font-size:.9rem;margin-top:6px;}
+  .note-foot{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px;}
+  .notes textarea.new-note{min-height:60px;font-size:.9rem;}
+
+  /* ===== ダッシュボード ===== */
+  .dash-card{
+    background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:14px 16px;margin-bottom:12px;
+    border-left:8px solid #ccc;cursor:pointer;
+  }
+  .dash-card:active{transform:scale(.99);}
+  .dash-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .dash-top .subj{font-weight:700;font-size:1.05rem;}
+  .badge{font-size:.78rem;font-weight:700;color:#fff;padding:4px 12px;border-radius:99px;white-space:nowrap;display:inline-block;}
+  .badge.ok{background:var(--ok);}
+  .badge.just{background:var(--just);}
+  .badge.ng{background:var(--ng);}
+  .badge.none{background:#9aa5ad;}
+  .dash-nums{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:4px;}
+  .dash-nums b{color:var(--text);}
+  .dash-warn{margin-top:6px;font-size:.85rem;font-weight:700;color:var(--ng);}
+  .dash-unit{margin-top:4px;font-size:.82rem;color:var(--text);}
+
+  /* ===== マトリクス / 表 ===== */
+  .tbl-scroll{overflow-x:auto;border-radius:12px;border:1px solid var(--line);}
+  table.tbl{border-collapse:collapse;width:100%;font-size:.86rem;background:#fff;}
+  table.tbl th,table.tbl td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;}
+  table.tbl th{background:#f3f0ea;font-size:.78rem;color:#666;font-weight:700;}
+  table.tbl td.l,table.tbl th.l{text-align:left;}
+  table.tbl tr:last-child td{border-bottom:none;}
+  table.tbl tr.cur td{background:var(--accent-soft);}
+  table.tbl .cell-btn{border:none;background:none;cursor:pointer;padding:0;}
+  table.tbl .badge{font-size:.72rem;padding:3px 9px;}
+  table.tbl input[type=number]{width:58px;padding:6px 4px;text-align:center;border-radius:8px;font-size:.95rem;}
+  table.tbl td.diff-plus{color:var(--ng);font-weight:700;}
+  table.tbl td.diff-minus{color:var(--ok);font-weight:700;}
+
+  /* ===== 行事カレンダー ===== */
+  .ev{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff;}
+  .ev.past{opacity:.5;}
+  .ev .ev-date{font-weight:700;font-size:.9rem;min-width:88px;}
+  .ev .ev-body{flex:1;min-width:0;font-size:.9rem;}
+  .ev .ev-label{font-weight:700;}
+  .ev .ev-lost{font-size:.8rem;color:#666;margin-top:2px;}
+  .ev .ev-tag{font-size:.7rem;background:#eee;border-radius:99px;padding:1px 8px;margin-left:6px;font-weight:700;color:#666;}
+  .ev .ev-tag.off{background:#fde3e3;color:#b33;}
+  .ev .ev-btns{display:flex;flex-direction:column;gap:2px;}
+  .lost-grid{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px;}
+  .lost-grid .li{display:flex;align-items:center;gap:6px;background:#f7f5f0;border-radius:10px;padding:6px 8px;font-size:.88rem;}
+  .lost-grid input{width:64px;padding:6px 6px;text-align:center;border-radius:8px;}
+  .status-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+
+  /* ===== クラス管理 ===== */
+  .class-row{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;background:#fff;}
+  .class-row.active{border-color:var(--accent);background:var(--accent-soft);}
+  .class-row input{flex:1;min-width:0;padding:8px 10px;}
+  .class-row .cnt{font-size:.75rem;color:var(--muted);white-space:nowrap;}
+  .copy-targets{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 8px;}
+
+  /* ===== 引き継ぎ通知 ===== */
+  .migrate-box{background:#FFF8E8;border:1.5px solid #F0E2BF;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative;}
+  .migrate-box .x{position:absolute;right:8px;top:6px;border:none;background:none;font-size:1rem;color:#a08a50;cursor:pointer;}
+
+  /* ===== カラーパレット ===== */
+  .palette{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+  .swatch{width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;}
+  .swatch.selected{border-color:var(--text);}
+
+  /* ===== トースト ===== */
+  #toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:#333;color:#fff;padding:10px 20px;border-radius:12px;font-size:.9rem;
+    opacity:0;pointer-events:none;transition:all .25s;z-index:100;max-width:90vw;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  textarea{resize:vertical;min-height:100px;font-size:.8rem;}
+  textarea.out{font-size:.85rem;line-height:1.7;min-height:120px;background:#fcfbf9;}
+  .muted{color:var(--muted);font-size:.85rem;}
+  .hint{color:var(--muted);font-size:.8rem;margin-top:6px;}
+  .empty-msg{text-align:center;color:var(--muted);padding:20px 10px;font-size:.9rem;}
+  .row-right{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;}
+  .row-left{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;}
+  details.settings-details summary{cursor:pointer;font-size:.9rem;color:var(--accent);font-weight:700;padding:4px 0;list-style:none;}
+  details.settings-details summary::-webkit-details-marker{display:none;}
+  @media (max-width:480px){
+    header h1{font-size:.98rem;}
+    .hour-btn{width:50px;}
+    .ev .ev-date{min-width:70px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>📚 単元進度トラッカー<span class="pro-badge">PRO</span></h1>
+  <select class="class-select" id="classSelect" aria-label="クラスを切り替え"></select>
+</header>
+
+<main>
+  <div id="migrateBox" class="migrate-box" style="display:none"></div>
+  <div class="term-bar" id="termBar"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+(function(){
+  var STORAGE_KEY = "bo10pro_shindo_v1";      // Pro版（全クラス＋時間割＋行事カレンダー）
+  var FREE_KEY    = "bo10_shindo_data_v1";    // 無料版（読むだけ・消さない）
+  var TERMS = ["1学期","2学期","3学期"];
+  var COLORS = ["#457B9D","#E76F51","#2A9D8F","#E9C46A","#9C6644","#8E7CC3","#D62858","#5FA8D3","#6A994E","#8D99AE"];
+  var DOW_KEYS = ["mon","tue","wed","thu","fri"];
+  var DOW_LABEL = ["月","火","水","木","金"];
+  var MAX_CLASSES = 12;
+  var MIGRATE_LABEL = "補正（無料版から）";
+
+  /* ---------- state ---------- */
+  var DB = null;             // {version, classes:[{id,name,data:{currentTerm,terms},timetable}], currentClassId, calendar:[]}
+  var cls = null;            // 表示中のクラス
+  var state = null;          // = cls.data（無料版と同じ {currentTerm, terms} 構造）
+  var currentView = "dash";  // "dash" | 教科id | "tt" | "cal" | "rec" | "manage"
+  var editingSubject = false;
+  var confirmTimers = {};
+  var openNotes = {};        // 単元id → 調整メモ欄を開いているか
+  var showPastEvents = false;
+  var editingEventId = null;
+  var migrateInfo = null;
+
+  function uid(){ return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  /* ---------- 日付 ---------- */
+  function pad(n){ return (n<10?"0":"") + n; }
+  function dstr(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function todayD(){ var t = new Date(); t.setHours(0,0,0,0); return t; }
+  function addDays(d, n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+  function parseD(s){
+    if(typeof s!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+    var p = s.split("-");
+    var d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function md(s){ var d = parseD(s); return d ? (d.getMonth()+1) + "/" + d.getDate() : s; }
+  function mdw(s){ var d = parseD(s); return d ? md(s) + "（" + "日月火水木金土".charAt(d.getDay()) + "）" : s; }
+  function nextWeekdayStr(){
+    var d = addDays(todayD(), 1);
+    while(d.getDay()===0 || d.getDay()===6) d = addDays(d, 1);
+    return dstr(d);
+  }
+
+  /* ---------- 既定データ ---------- */
+  function defaultTermData(){
+    return { subjects: [
+      { id: uid(), name:"国語", color:"#E76F51", targetDate:"", weekly:5, adjust:0, units:[] },
+      { id: uid(), name:"算数", color:"#457B9D", targetDate:"", weekly:5, adjust:0, units:[] },
+      { id: uid(), name:"理科", color:"#2A9D8F", targetDate:"", weekly:3, adjust:0, units:[] },
+      { id: uid(), name:"社会", color:"#E9C46A", targetDate:"", weekly:3, adjust:0, units:[] }
+    ]};
+  }
+  function defaultData(){
+    var terms = {};
+    TERMS.forEach(function(t){ terms[t] = defaultTermData(); });
+    return { currentTerm: "1学期", terms: terms };
+  }
+  function emptyTimetable(){ var t = {}; DOW_KEYS.forEach(function(k){ t[k] = {}; }); return t; }
+  function newClass(name){ return { id: uid(), name: name, data: defaultData(), timetable: emptyTimetable() }; }
+
+  /* ---------- 正規化（読みこみ時の安全装置） ---------- */
+  function normUnit(u){
+    if(!u || typeof u!=="object") u = {};
+    if(!u.id) u.id = uid();
+    u.name = String(u.name||"単元");
+    u.planned = Math.max(1, Number(u.planned)||1);
+    u.done = Math.max(0, Math.round(Number(u.done)||0));
+    u.closed = !!u.closed;
+    if(!Array.isArray(u.adjustNotes)) u.adjustNotes = [];
+    u.adjustNotes = u.adjustNotes.filter(function(n){ return n && typeof n==="object"; }).map(function(n){
+      return { id: n.id || uid(), date: String(n.date||""), text: String(n.text||""),
+               after: String(n.after||""), afterDate: String(n.afterDate||"") };
+    });
+    return u;
+  }
+  function normData(d){
+    if(!d || typeof d!=="object" || !d.terms || typeof d.terms!=="object") return defaultData();
+    TERMS.forEach(function(t){
+      if(!d.terms[t] || !Array.isArray(d.terms[t].subjects)) d.terms[t] = defaultTermData();
+      d.terms[t].subjects = d.terms[t].subjects.filter(function(s){ return s && typeof s==="object"; });
+      d.terms[t].subjects.forEach(function(s){
+        if(!s.id) s.id = uid();
+        s.name = String(s.name||"教科");
+        s.color = String(s.color||COLORS[0]);
+        s.weekly = Math.max(0, Number(s.weekly)||0);
+        s.adjust = Number(s.adjust)||0;
+        s.targetDate = typeof s.targetDate==="string" ? s.targetDate : "";
+        if(!Array.isArray(s.units)) s.units = [];
+        s.units = s.units.map(normUnit);
+      });
+    });
+    if(TERMS.indexOf(d.currentTerm) < 0) d.currentTerm = "1学期";
+    return d;
+  }
+  function normTimetable(t){
+    var out = emptyTimetable();
+    if(t && typeof t==="object"){
+      DOW_KEYS.forEach(function(k){
+        var row = t[k];
+        if(row && typeof row==="object"){
+          Object.keys(row).forEach(function(nm){
+            var v = Math.max(0, Math.min(8, Math.round(Number(row[nm])||0)));
+            if(v) out[k][nm] = v;
+          });
+        }
+      });
+    }
+    return out;
+  }
+  function normClass(c){
+    if(!c || typeof c!=="object") c = newClass("クラス");
+    if(!c.id) c.id = uid();
+    c.name = (typeof c.name==="string" && c.name) ? c.name : "クラス";
+    c.data = normData(c.data);
+    c.timetable = normTimetable(c.timetable);
+    return c;
+  }
+  function normEvent(e){
+    if(!e || typeof e!=="object" || !parseD(e.date)) return null;
+    var lost = {};
+    if(e.lost && typeof e.lost==="object"){
+      Object.keys(e.lost).forEach(function(nm){
+        var v = Math.round(Number(e.lost[nm])||0);
+        if(v) lost[nm] = v;
+      });
+    }
+    var allDay = !!e.allDay;
+    return { id: e.id || uid(), date: e.date, endDate: (allDay && parseD(e.endDate) && e.endDate > e.date) ? e.endDate : "",
+             label: String(e.label||"行事"), lost: lost, allDay: allDay, classId: typeof e.classId==="string" ? e.classId : "" };
+  }
+  function normDB(d){
+    d.version = 1;
+    d.classes = d.classes.slice(0, MAX_CLASSES).map(normClass);
+    if(!Array.isArray(d.calendar)) d.calendar = [];
+    d.calendar = d.calendar.map(normEvent).filter(Boolean);
+    var ids = d.classes.map(function(c){ return c.id; });
+    d.calendar.forEach(function(e){ if(e.classId && ids.indexOf(e.classId)<0) e.classId = ""; });
+    if(ids.indexOf(d.currentClassId) < 0) d.currentClassId = ids[0];
+    return d;
+  }
+
+  /* 無料版の手動補正（adjust）→ 行事カレンダーの行に変換。adjust は0に戻す */
+  function adjustToCalendar(data, classId){
+    var tomorrow = dstr(addDays(todayD(), 1));
+    var byDate = {};
+    var order = [];
+    TERMS.forEach(function(t){
+      data.terms[t].subjects.forEach(function(s){
+        var a = Math.round(Number(s.adjust)||0);
+        s.adjust = 0;
+        if(!a) return;
+        var date;
+        if(parseD(s.targetDate)){
+          if(s.targetDate < tomorrow) return;   // 目標日が過ぎている補正は、もう計算に効かない
+          date = s.targetDate;                  // 目標日の行に置くと、無料版と同じく目標日まで効き続ける
+        }else{
+          date = nextWeekdayStr();
+        }
+        if(!byDate[date]){ byDate[date] = {}; order.push(date); }
+        byDate[date][s.name] = (byDate[date][s.name]||0) - a;   // 補正−5 → 潰れるコマ5／補正＋2 → −2（増コマ）
+      });
+    });
+    return order.map(function(date){
+      return normEvent({ id: uid(), date: date, label: MIGRATE_LABEL, lost: byDate[date], allDay:false, classId: classId });
+    }).filter(function(e){ return e && Object.keys(e.lost).length; });
+  }
+
+  function readJSON(key){
+    try{
+      var raw = localStorage.getItem(key);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ return null; }
+  }
+
+  function load(){
+    var d = readJSON(STORAGE_KEY);
+    if(!d || typeof d!=="object" || !Array.isArray(d.classes) || !d.classes.length){
+      // 初回起動：同じブラウザに無料版のデータがあれば「1組」として引き継ぐ
+      var first = newClass("1組");
+      var cal = [];
+      var free = readJSON(FREE_KEY);
+      if(free && typeof free==="object" && free.terms && typeof free.terms==="object"){
+        first.data = normData(JSON.parse(JSON.stringify(free)));
+        cal = adjustToCalendar(first.data, first.id);
+        var unitCount = 0;
+        TERMS.forEach(function(t){ first.data.terms[t].subjects.forEach(function(s){ unitCount += s.units.length; }); });
+        migrateInfo = { units: unitCount, adjustRows: cal.length };
+      }
+      d = { version:1, classes:[first], currentClassId:first.id, calendar:cal };
+    }
+    DB = normDB(d);
+    bindClass();
+  }
+
+  function bindClass(){
+    cls = null;
+    for(var i=0;i<DB.classes.length;i++){ if(DB.classes[i].id===DB.currentClassId) cls = DB.classes[i]; }
+    if(!cls){ cls = DB.classes[0]; DB.currentClassId = cls.id; }
+    state = cls.data;
+  }
+
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+    catch(e){ toast("保存に失敗しました（容量オーバーの可能性）"); }
+  }
+
+  function termData(c){ return (c||cls).data.terms[state.currentTerm]; }
+  function getSubject(id){
+    var subs = termData().subjects;
+    for(var i=0;i<subs.length;i++){ if(subs[i].id===id) return subs[i]; }
+    return null;
+  }
+  function subjectNamesAll(){
+    var names = [];
+    DB.classes.forEach(function(c){
+      termData(c).subjects.forEach(function(s){ if(names.indexOf(s.name)<0) names.push(s.name); });
+    });
+    return names;
+  }
+
+  /* ---------- 計算 ---------- */
+  function unitComplete(u){ return u.closed || u.done >= u.planned; }
+  function unitRemaining(u){ return unitComplete(u) ? 0 : Math.max(0, u.planned - u.done); }
+  function currentUnit(s){
+    for(var i=0;i<s.units.length;i++){ if(!unitComplete(s.units[i])) return s.units[i]; }
+    return null;
+  }
+  function eventCovers(e, ds){
+    if(e.allDay && e.endDate) return ds >= e.date && ds <= e.endDate;
+    return e.date === ds;
+  }
+  function eventsFor(c){
+    return DB.calendar.filter(function(e){ return !e.classId || e.classId===c.id; });
+  }
+  function weeklyFromTT(c, name){
+    var n = 0;
+    DOW_KEYS.forEach(function(k){ n += Number(c.timetable[k][name])||0; });
+    return n;
+  }
+
+  /*
+   * 確保見込み：今日の翌日〜目標日まで1日ずつ回し、
+   *   曜日の時間割のコマ数を足す → 行事カレンダーの「潰れるコマ」を引く。
+   *   土日は0（ただし行事にマイナスで入れた増コマは足す）。休業日（allDay）はその日まるごと0。
+   *   今日までの行事は範囲外なので、自然に計算から外れる。
+   *   時間割にその教科が1コマもないときは、無料版と同じ「週コマ数×日数/7」で概算。
+   */
+  function calcSubject(s, c){
+    c = c || cls;
+    var planned=0, done=0, remaining=0;
+    s.units.forEach(function(u){
+      planned += u.planned;
+      done += unitComplete(u) ? u.planned : Math.min(u.done, u.planned);
+      remaining += unitRemaining(u);
+    });
+    var res = {
+      planned:planned, done:done, remaining:remaining,
+      pct: planned>0 ? Math.round(done/planned*100) : 0,
+      hasTarget:false, capacity:null, diff:null, status:"none", daysLeft:null,
+      mode:"none", weeklyTT:0, lostTotal:0, eventCount:0
+    };
+    var tgt = parseD(s.targetDate);
+    if(!tgt) return res;
+    var today = todayD();
+    res.hasTarget = true;
+    var days = Math.round((tgt - today)/86400000);
+    res.daysLeft = days;
+    var wt = weeklyFromTT(c, s.name);
+    res.weeklyTT = wt;
+    res.mode = wt > 0 ? "tt" : "weekly";
+    var evs = eventsFor(c);
+    var cap = 0, lostTotal = 0, evCount = 0;
+    var weekly = Math.max(0, Number(s.weekly)||0);
+    if(res.mode==="weekly" && days>0) cap = days/7*weekly;   // 無料版と同じ概算（行事は下で日付ごとに引く）
+    for(var i=1;i<=days;i++){
+      var d = addDays(today, i);
+      var ds = dstr(d);
+      var dow = d.getDay();
+      var weekday = dow>=1 && dow<=5;
+      var slots = 0;
+      if(res.mode==="tt") slots = weekday ? (Number(c.timetable[DOW_KEYS[dow-1]][s.name])||0) : 0;
+      else slots = weekday ? weekly/5 : 0;   // 概算モードでは休業日のぶんを引くためだけに使う
+      var closed = false;
+      for(var j=0;j<evs.length;j++){ if(evs[j].allDay && eventCovers(evs[j], ds)){ closed = true; break; } }
+      if(closed){
+        if(slots>0){ lostTotal += slots; evCount++; if(res.mode==="weekly") cap -= slots; }
+        continue;
+      }
+      if(res.mode==="tt") cap += slots;
+      evs.forEach(function(e){
+        if(!e.allDay && e.date===ds){
+          var l = Number(e.lost[s.name])||0;
+          if(l){ cap -= l; if(l>0) lostTotal += l; evCount++; }
+        }
+      });
+    }
+    cap = Math.floor(cap + 1e-9);
+    if(cap < 0) cap = 0;
+    res.capacity = cap;
+    res.lostTotal = Math.round(lostTotal);
+    res.eventCount = evCount;
+    res.diff = cap - remaining;
+    if(remaining===0 && planned>0){ res.status="ok"; }
+    else if(res.diff < 0){ res.status="ng"; }
+    else if(res.diff < 3){ res.status="just"; }
+    else { res.status="ok"; }
+    return res;
+  }
+
+  function statusLabel(st){
+    return st==="ok" ? "✅ 余裕あり" : st==="just" ? "⚠ ぴったり" : st==="ng" ? "🚨 不足" : "目標日 未設定";
+  }
+  function statusShort(c){
+    if(c.status==="none") return "目標日なし";
+    if(c.remaining===0 && c.planned>0) return "完了";
+    if(c.status==="ng") return "不足" + (-c.diff);
+    if(c.status==="just") return "ぴったり" + (c.diff>0 ? "+"+c.diff : "");
+    return "余裕+" + c.diff;
+  }
+
+  /* ---------- 学年会用テキスト ---------- */
+  function gakunenLine(s, c){
+    var r = calcSubject(s, c);
+    var u = currentUnit(s);
+    var part;
+    if(!s.units.length) part = "単元はまだ登録していません。";
+    else if(!u) part = "今学期の単元はすべて完了。";
+    else part = "「" + u.name + "」" + u.planned + "時間中" + Math.min(u.planned, u.done+1) + "時間目。";
+    if(r.hasTarget){
+      part += "目標日（" + md(s.targetDate) + "）まで確保見込み" + r.capacity + "コマ、残り必要" + r.remaining + "コマ（" +
+              (r.diff >= 0 ? "余裕" + r.diff : "不足" + (-r.diff)) + "コマ）";
+    }else{
+      part += "目標日は未設定";
+    }
+    return s.name + "：" + part;
+  }
+  function gakunenText(c){
+    var head = "【" + c.name + "】" + state.currentTerm + "・" + md(dstr(todayD())) + "時点";
+    var lines = termData(c).subjects.map(function(s){ return gakunenLine(s, c); });
+    return head + "\n" + lines.join("\n");
+  }
+
+  /* ---------- 実績の一覧（TSV） ---------- */
+  function recordRows(classes){
+    var rows = [];
+    classes.forEach(function(c){
+      TERMS.forEach(function(t){
+        c.data.terms[t].subjects.forEach(function(s){
+          s.units.forEach(function(u){
+            var comp = unitComplete(u);
+            rows.push({ cls:c.name, term:t, subj:s.name, unit:u.name, planned:u.planned,
+                        actual: u.done, complete: comp, diff: comp ? u.done - u.planned : null,
+                        notes: u.adjustNotes.map(function(n){
+                          return (n.date ? md(n.date)+" " : "") + n.text + (n.after ? " → その後：" + n.after : "");
+                        }).join(" / ") });
+          });
+        });
+      });
+    });
+    return rows;
+  }
+  function tsvClean(v){ return String(v).replace(/[\t\r\n]+/g, " "); }
+  function recordTSV(rows){
+    var out = ["クラス\t学期\t教科\t単元\t予定\t実績\t差\t状態\t調整メモ"];
+    rows.forEach(function(r){
+      out.push([r.cls, r.term, r.subj, r.unit, r.planned, r.actual,
+                r.diff===null ? "" : (r.diff>0 ? "+"+r.diff : r.diff),
+                r.complete ? "完了" : "途中", r.notes].map(tsvClean).join("\t"));
+    });
+    return out.join("\n");
+  }
+
+  /* ---------- util ---------- */
+  function esc(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  var toastTimer = null;
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2200);
+  }
+  function execCopy(txt){
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, txt.length);
+    var ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+  function copyText(txt, okMsg){
+    var fin = function(ok){ toast(ok ? (okMsg||"コピーしました") : "下の枠から手動でコピーしてください"); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ fin(true); }, function(){ fin(execCopy(txt)); });
+    }else{
+      fin(execCopy(txt));
+    }
+  }
+  function outBox(area, txt, rows){
+    area.innerHTML = '<textarea class="out" readonly></textarea>' +
+      '<div class="row-right"><button class="btn small gray">閉じる</button></div>';
+    var ta = area.querySelector("textarea");
+    ta.value = txt;
+    if(rows) ta.style.minHeight = Math.min(400, 40 + rows*22) + "px";
+    area.querySelector("button").addEventListener("click", function(){ area.innerHTML = ""; });
+  }
+
+  /* 2段階ボタン（confirmの代わり） */
+  function armConfirm(btn, key, onConfirm, label){
+    if(btn.dataset.armed === "1"){
+      delete btn.dataset.armed;
+      if(confirmTimers[key]) clearTimeout(confirmTimers[key]);
+      onConfirm();
+    }else{
+      btn.dataset.armed = "1";
+      var orig = btn.textContent;
+      btn.textContent = label || "もう一度押すと削除";
+      btn.classList.add("confirming");
+      confirmTimers[key] = setTimeout(function(){
+        delete btn.dataset.armed;
+        btn.textContent = orig;
+        btn.classList.remove("confirming");
+      }, 3000);
+    }
+  }
+
+  function switchClass(id){
+    DB.currentClassId = id;
+    bindClass();
+    save();
+  }
+
+  /* ---------- render: ヘッダーのクラス切替 ---------- */
+  function renderClassSelect(){
+    var sel = document.getElementById("classSelect");
+    sel.innerHTML = DB.classes.map(function(c){
+      return '<option value="' + esc(c.id) + '"' + (c.id===cls.id ? " selected" : "") + '>' + esc(c.name) + '</option>';
+    }).join("") + '<option value="__manage">＋ クラスの追加・管理</option>';
+  }
+  document.getElementById("classSelect").addEventListener("change", function(){
+    if(this.value==="__manage"){ currentView = "manage"; renderAll(); return; }
+    switchClass(this.value);
+    if(currentView!=="dash" && currentView!=="tt" && currentView!=="cal" && currentView!=="rec" && currentView!=="manage") currentView = "dash";
+    renderAll();
+    toast("🏫 " + cls.name + " に切り替えました");
+  });
+
+  /* ---------- render: 学期バー ---------- */
+  function renderTermBar(){
+    var bar = document.getElementById("termBar");
+    bar.innerHTML = "";
+    var lbl = document.createElement("span");
+    lbl.className = "label";
+    lbl.textContent = "学期:";
+    bar.appendChild(lbl);
+    TERMS.forEach(function(t){
+      var b = document.createElement("button");
+      b.className = "term-btn" + (state.currentTerm===t ? " active" : "");
+      b.textContent = t;
+      b.addEventListener("click", function(){
+        DB.classes.forEach(function(c){ c.data.currentTerm = t; });   // 全クラスの学期をそろえる（一覧を比べやすく）
+        if(currentView!=="tt" && currentView!=="cal" && currentView!=="rec" && currentView!=="manage") currentView = "dash";
+        editingSubject = false;
+        save(); renderAll();
+      });
+      bar.appendChild(b);
+    });
+  }
+
+  /* ---------- render: タブ ---------- */
+  function renderTabs(){
+    var tabs = document.getElementById("tabs");
+    tabs.innerHTML = "";
+    var dash = document.createElement("button");
+    dash.className = "tab dash" + (currentView==="dash" ? " active" : "");
+    dash.textContent = "🏠 ぜんぶ";
+    dash.addEventListener("click", function(){ currentView="dash"; editingSubject=false; renderAll(); });
+    tabs.appendChild(dash);
+
+    termData().subjects.forEach(function(s){
+      var b = document.createElement("button");
+      b.className = "tab" + (currentView===s.id ? " active" : "");
+      b.textContent = s.name;
+      b.style.borderBottomColor = s.color;
+      if(currentView===s.id) b.style.background = s.color;
+      b.addEventListener("click", function(){ currentView=s.id; editingSubject=false; renderAll(); });
+      tabs.appendChild(b);
+    });
+
+    var add = document.createElement("button");
+    add.className = "tab add-tab";
+    add.textContent = "＋ 教科";
+    add.addEventListener("click", function(){
+      var s = { id: uid(), name:"新しい教科", color: COLORS[termData().subjects.length % COLORS.length],
+                targetDate:"", weekly:3, adjust:0, units:[] };
+      termData().subjects.push(s);
+      currentView = s.id;
+      editingSubject = true;
+      save(); renderAll();
+      toast("教科を追加しました。名前と色を設定してください");
+    });
+    tabs.appendChild(add);
+
+    var sep = document.createElement("span");
+    sep.className = "tab-sep";
+    tabs.appendChild(sep);
+
+    [["tt","🗓 時間割"],["cal","📅 行事カレンダー"],["rec","📊 実績"],["manage","⚙ クラス・データ"]].forEach(function(p){
+      var b = document.createElement("button");
+      b.className = "tab tool" + (currentView===p[0] ? " active" : "");
+      b.textContent = p[1];
+      b.addEventListener("click", function(){ currentView = p[0]; editingSubject=false; renderAll(); });
+      tabs.appendChild(b);
+    });
+  }
+
+  /* ---------- render: ダッシュボード ---------- */
+  function renderDash(view){
+    var wrap = document.createElement("div");
+
+    /* クラス×教科マトリクス */
+    var names = subjectNamesAll();
+    if(names.length){
+      var mat = document.createElement("div");
+      mat.className = "card";
+      var h = '<h2>🧭 クラス×教科 <span class="small-note">' + esc(state.currentTerm) + '・押すとその教科へ</span></h2>' +
+              '<div class="tbl-scroll"><table class="tbl" id="matrix"><thead><tr><th class="l">クラス</th>';
+      names.forEach(function(n){ h += '<th>' + esc(n) + '</th>'; });
+      h += '</tr></thead><tbody>';
+      DB.classes.forEach(function(c){
+        h += '<tr' + (c.id===cls.id ? ' class="cur"' : '') + '><td class="l"><b>' + esc(c.name) + '</b></td>';
+        names.forEach(function(n){
+          var s = null;
+          termData(c).subjects.forEach(function(x){ if(!s && x.name===n) s = x; });
+          if(!s){ h += '<td class="muted">—</td>'; return; }
+          var r = calcSubject(s, c);
+          h += '<td><button class="cell-btn" data-cid="' + esc(c.id) + '" data-sid="' + esc(s.id) + '">' +
+               '<span class="badge ' + r.status + '">' + esc(statusShort(r)) + '</span></button></td>';
+        });
+        h += '</tr>';
+      });
+      h += '</tbody></table></div>';
+      mat.innerHTML = h;
+      wrap.appendChild(mat);
+      mat.querySelectorAll(".cell-btn").forEach(function(b){
+        b.addEventListener("click", function(){
+          switchClass(b.dataset.cid);
+          currentView = b.dataset.sid;
+          renderAll();
+          window.scrollTo(0,0);
+        });
+      });
+    }
+
+    /* 学年会用にコピー */
+    var gk = document.createElement("div");
+    gk.className = "card";
+    gk.innerHTML = '<h2>🗣 学年会用 <span class="small-note">' + esc(cls.name) + 'の進度を、教科ごとの文章に</span></h2>' +
+      '<div class="row-left">' +
+        '<button class="btn" id="btnGakunen">📋 学年会用にコピー</button>' +
+        (DB.classes.length>1 ? '<button class="btn small ghost" id="btnGakunenAll">全クラス分をコピー</button>' : '') +
+      '</div><div id="gakunenArea" style="margin-top:10px"></div>';
+    wrap.appendChild(gk);
+
+    var subs = termData().subjects;
+    var head = document.createElement("h2");
+    head.style.cssText = "font-size:1rem;margin:4px 4px 8px";
+    head.textContent = "📚 " + cls.name + " の教科";
+    wrap.appendChild(head);
+    if(subs.length===0){
+      var em = document.createElement("div");
+      em.className = "card empty-msg";
+      em.textContent = "教科がありません。上の「＋ 教科」から追加してください。";
+      wrap.appendChild(em);
+    }
+
+    subs.forEach(function(s){
+      var c = calcSubject(s);
+      var card = document.createElement("div");
+      card.className = "dash-card";
+      card.style.borderLeftColor = s.color;
+      var warnHtml = "";
+      if(c.status==="ng"){
+        warnHtml = '<div class="dash-warn">🚨 ' + (-c.diff) + 'コマ足りません</div>';
+      }
+      var capText = c.hasTarget
+        ? '確保見込み <b>' + c.capacity + '</b>コマ（目標日' + md(s.targetDate) + '・残り' + Math.max(0,c.daysLeft) + '日）'
+        : '目標日 未設定';
+      var u = currentUnit(s);
+      var unitHtml = u ? '<div class="dash-unit">いま：「' + esc(u.name) + '」' + u.planned + '時間中' + Math.min(u.planned, u.done+1) + '時間目</div>' : '';
+      card.innerHTML =
+        '<div class="dash-top">' +
+          '<span class="subj">' + esc(s.name) + '</span>' +
+          '<span class="badge ' + c.status + '">' + statusLabel(c.status) + '</span>' +
+        '</div>' + unitHtml +
+        '<div class="progress-wrap"><div class="progress-bar" style="width:' + c.pct + '%;background:' + esc(s.color) + '"></div></div>' +
+        '<div class="dash-nums">' +
+          '<span>進捗 <b>' + c.done + '</b>/' + c.planned + '時間（' + c.pct + '%）</span>' +
+          '<span>残り必要 <b>' + c.remaining + '</b>コマ</span>' +
+          '<span>' + capText + '</span>' +
+          (c.hasTarget && c.lostTotal ? '<span>行事で −' + c.lostTotal + 'コマ</span>' : '') +
+        '</div>' + warnHtml;
+      card.addEventListener("click", function(){ currentView = s.id; renderAll(); });
+      wrap.appendChild(card);
+    });
+
+    view.appendChild(wrap);
+
+    document.getElementById("btnGakunen").addEventListener("click", function(){
+      var txt = gakunenText(cls);
+      outBox(document.getElementById("gakunenArea"), txt, txt.split("\n").length);
+      copyText(txt, "学年会用の文章をコピーしました");
+    });
+    var ba = document.getElementById("btnGakunenAll");
+    if(ba) ba.addEventListener("click", function(){
+      var txt = DB.classes.map(gakunenText).join("\n\n");
+      outBox(document.getElementById("gakunenArea"), txt, txt.split("\n").length);
+      copyText(txt, "全クラス分をコピーしました");
+    });
+  }
+
+  /* ---------- render: 教科ページ ---------- */
+  function renderSubject(view, s){
+    var c = calcSubject(s);
+    var wrap = document.createElement("div");
+
+    /* --- 判定バナー --- */
+    var judge = document.createElement("div");
+    judge.className = "judge " + c.status;
+    var title, detail;
+    if(!c.hasTarget){
+      title = "目標日を設定しましょう";
+      detail = "下の「⚙ 設定」で目標日を入れると、時間割と行事カレンダーから確保できるコマを数えて判定します。";
+    }else if(c.remaining===0 && c.planned>0){
+      title = "✅ すべての単元が完了！";
+      detail = "おつかれさまでした。";
+    }else if(c.status==="ng"){
+      title = "🚨 " + (-c.diff) + "コマ足りません";
+      detail = "どこを軽くするかを選んで、単元の「📝 調整メモ」に残しておきましょう。";
+    }else if(c.status==="just"){
+      title = "⚠ ぴったりペース（余裕 " + c.diff + "コマ）";
+      detail = "行事が一つ増えると不足します。軽くできる時間の候補を一つ、調整メモに書いておきましょう。";
+    }else{
+      title = "✅ 余裕あり（＋" + c.diff + "コマ）";
+      detail = "このペースなら間に合います。";
+    }
+    var numsHtml = "";
+    if(c.hasTarget){
+      numsHtml =
+        '<div class="judge-nums">' +
+          '<div class="num-box"><div class="v">' + c.remaining + '</div><div class="k">残り必要コマ</div></div>' +
+          '<div class="num-box"><div class="v">' + c.capacity + '</div><div class="k">確保見込みコマ</div></div>' +
+          '<div class="num-box"><div class="v">' + c.lostTotal + '</div><div class="k">行事で減るコマ</div></div>' +
+          '<div class="num-box"><div class="v">' + Math.max(0,c.daysLeft) + '</div><div class="k">目標日まで（日）</div></div>' +
+        '</div>' +
+        '<div class="judge-src">' + (c.mode==="tt"
+          ? '計算：時間割（週' + c.weeklyTT + 'コマ）× 行事カレンダー。土日・休業日は除いています。'
+          : '時間割に「' + esc(s.name) + '」がないため、週' + Number(s.weekly||0) + 'コマで概算しています（行事カレンダーは反映）。') +
+        '</div>';
+    }
+    judge.innerHTML = '<div class="judge-title">' + title + '</div>' +
+                      '<div class="judge-detail">' + detail + '</div>' + numsHtml;
+    wrap.appendChild(judge);
+
+    /* --- 設定カード --- */
+    var setCard = document.createElement("div");
+    setCard.className = "card";
+    setCard.innerHTML =
+      '<h2>⚙ 設定 <span class="small-note">' + esc(s.name) + '</span></h2>' +
+      '<div class="form-row">' +
+        '<div class="field"><label>目標日（学期末など）</label>' +
+          '<input type="date" id="inpTarget" value="' + esc(s.targetDate) + '"></div>' +
+        '<div class="field narrow"><label>週コマ数（時間割未入力時）</label>' +
+          '<input type="number" id="inpWeekly" min="0" max="30" value="' + Number(s.weekly||0) + '"></div>' +
+      '</div>' +
+      '<div class="row-left" style="margin-top:0">' +
+        '<button class="btn small ghost" id="btnSameTarget"' + (s.targetDate ? '' : ' disabled') + '>この目標日を他の教科にもそろえる</button>' +
+      '</div>' +
+      '<p class="hint">行事で潰れるコマは「📅 行事カレンダー」に、曜日ごとのコマ数は「🗓 時間割」に入れます。手動の補正は要りません。</p>' +
+      '<details class="settings-details"' + (editingSubject ? ' open' : '') + ' style="margin-top:8px">' +
+        '<summary>✏️ 教科名・色の変更 / 教科の削除</summary>' +
+        '<div class="form-row" style="margin-top:8px">' +
+          '<div class="field"><label>教科名</label>' +
+          '<input type="text" id="inpSubjName" maxlength="10" value="' + esc(s.name) + '"></div>' +
+        '</div>' +
+        '<div class="palette" id="palette"></div>' +
+        '<div class="row-right">' +
+          '<button class="btn small danger" id="btnDelSubject">この教科を削除</button>' +
+        '</div>' +
+      '</details>';
+    wrap.appendChild(setCard);
+
+    /* --- 単元リスト --- */
+    var unitCard = document.createElement("div");
+    unitCard.className = "card";
+    unitCard.innerHTML = '<h2>📖 単元リスト</h2><div id="unitList"></div>' +
+      '<div class="form-row" style="margin-top:12px">' +
+        '<div class="field"><label>単元名</label><input type="text" id="inpUnitName" maxlength="30" placeholder="例：わり算の筆算"></div>' +
+        '<div class="field narrow"><label>予定時数</label><input type="number" id="inpUnitPlanned" min="1" max="99" value="8"></div>' +
+        '<div class="field narrow"><button class="btn" id="btnAddUnit" style="width:100%">＋ 追加</button></div>' +
+      '</div>' +
+      '<p class="hint">予定時数は、指導書の配当時数をそのまま入れるのがおすすめです。</p>';
+    wrap.appendChild(unitCard);
+    view.appendChild(wrap);
+
+    /* --- 設定イベント --- */
+    document.getElementById("inpTarget").addEventListener("change", function(){
+      s.targetDate = this.value; save(); renderAll();
+    });
+    document.getElementById("inpWeekly").addEventListener("change", function(){
+      var v = Math.max(0, Math.min(30, Math.round(Number(this.value)||0)));
+      s.weekly = v; this.value = v; save(); renderAll();
+    });
+    document.getElementById("btnSameTarget").addEventListener("click", function(){
+      armConfirm(this, "sameTarget", function(){
+        termData().subjects.forEach(function(x){ x.targetDate = s.targetDate; });
+        save(); renderAll();
+        toast("全教科の目標日を " + md(s.targetDate) + " にそろえました");
+      }, "もう一度押すと、全教科を" + md(s.targetDate) + "に");
+    });
+    document.getElementById("inpSubjName").addEventListener("change", function(){
+      var v = this.value.trim();
+      if(v && v!==s.name){ renameSubject(s, v); save(); editingSubject = true; renderAll(); toast("教科名を変更しました"); }
+    });
+
+    var pal = document.getElementById("palette");
+    COLORS.forEach(function(col){
+      var sw = document.createElement("button");
+      sw.className = "swatch" + (s.color===col ? " selected" : "");
+      sw.style.background = col;
+      sw.setAttribute("aria-label", "色 " + col);
+      sw.addEventListener("click", function(){
+        s.color = col; save(); editingSubject = true; renderAll();
+      });
+      pal.appendChild(sw);
+    });
+
+    document.getElementById("btnDelSubject").addEventListener("click", function(){
+      armConfirm(this, "delSub_"+s.id, function(){
+        var subs = termData().subjects;
+        var idx = subs.indexOf(s);
+        if(idx>=0) subs.splice(idx,1);
+        currentView = "dash";
+        editingSubject = false;
+        save(); renderAll();
+        toast("教科を削除しました");
+      });
+    });
+
+    /* --- 単元描画 --- */
+    var list = document.getElementById("unitList");
+    if(s.units.length===0){
+      list.innerHTML = '<div class="empty-msg">単元がまだありません。下のフォームから追加してください。</div>';
+    }
+    s.units.forEach(function(u, i){
+      list.appendChild(renderUnit(s, u, i));
+    });
+
+    /* --- 単元追加 --- */
+    function addUnit(){
+      var nameEl = document.getElementById("inpUnitName");
+      var plEl = document.getElementById("inpUnitPlanned");
+      var nm = nameEl.value.trim();
+      if(!nm){ toast("単元名を入力してください"); nameEl.focus(); return; }
+      var pl = Math.max(1, Math.min(99, Math.round(Number(plEl.value)||1)));
+      s.units.push(normUnit({ id: uid(), name:nm, planned:pl, done:0 }));
+      save(); renderAll();
+      toast("単元「" + nm + "」を追加しました");
+    }
+    document.getElementById("btnAddUnit").addEventListener("click", addUnit);
+    document.getElementById("inpUnitName").addEventListener("keydown", function(e){
+      if(e.key==="Enter" && !e.isComposing){ e.preventDefault(); addUnit(); }
+    });
+  }
+
+  /* 教科名を変えたら、時間割と（他で使っていなければ）行事カレンダーの紐づけも付け替える */
+  function renameSubject(s, nv){
+    var old = s.name;
+    s.name = nv;
+    DOW_KEYS.forEach(function(k){
+      var row = cls.timetable[k];
+      if(row[old]!==undefined){ row[nv] = (row[nv]||0) + row[old]; delete row[old]; }
+    });
+    var stillUsed = false;
+    DB.classes.forEach(function(c){
+      TERMS.forEach(function(t){ c.data.terms[t].subjects.forEach(function(x){ if(x.name===old) stillUsed = true; }); });
+    });
+    if(!stillUsed){
+      DB.calendar.forEach(function(e){
+        if(e.lost[old]!==undefined){ e.lost[nv] = (e.lost[nv]||0) + e.lost[old]; delete e.lost[old]; }
+      });
+    }
+  }
+
+  function renderUnit(s, u, i){
+    var comp = unitComplete(u);
+    var pct = comp ? 100 : (u.planned>0 ? Math.min(100, Math.round(u.done/u.planned*100)) : 0);
+    var div = document.createElement("div");
+    div.className = "unit" + (comp ? " done-unit" : "");
+    var diff = u.done - u.planned;
+    var footText = comp
+      ? '完了 🎉 <span class="actual-tag">実績 ' + u.done + '時間（予定' + u.planned + '・' + (diff===0 ? '予定どおり' : (diff>0 ? '+' + diff : diff)) + '）</span>'
+      : pct + '%（あと' + Math.max(0,u.planned-u.done) + 'コマ）';
+    var nNotes = u.adjustNotes.length;
+    div.innerHTML =
+      '<div class="unit-top">' +
+        '<span class="unit-name">' + (comp ? '<span class="check">✔</span>' : '') + esc(u.name) + '</span>' +
+        '<span class="unit-count"><b>' + u.done + '</b> / ' + u.planned + ' 時間</span>' +
+        '<span class="unit-btns">' +
+          '<button class="hour-btn minus" data-act="minus"' + (u.done<=0 ? " disabled" : "") + '>−1</button>' +
+          '<button class="hour-btn" data-act="plus">＋1</button>' +
+        '</span>' +
+      '</div>' +
+      '<div class="progress-wrap"><div class="progress-bar" style="width:' + pct + '%;background:' + (comp ? 'var(--ok)' : esc(s.color)) + '"></div></div>' +
+      '<div class="unit-foot">' +
+        '<span class="pct">' + footText + '</span>' +
+        '<span>' +
+          '<button class="icon-btn' + (openNotes[u.id] ? ' on' : '') + '" data-act="notes">📝 調整メモ' + (nNotes ? '（' + nNotes + '）' : '') + '</button>' +
+          (u.closed ? '<button class="icon-btn" data-act="reopen">↺ 完了を取り消す</button>'
+                    : (u.done < u.planned && u.done > 0 ? '<button class="icon-btn" data-act="close">✔ ここで完了</button>' : '')) +
+          '<button class="icon-btn" data-act="edit">✏️ 編集</button>' +
+          '<button class="icon-btn" data-act="del">🗑 削除</button>' +
+        '</span>' +
+      '</div>' +
+      '<div class="unit-edit-area"></div>' +
+      '<div class="notes-area"></div>';
+
+    div.querySelector('[data-act=plus]').addEventListener("click", function(){
+      var was = unitComplete(u);
+      u.done += 1; save(); renderAll();
+      if(!was && u.done === u.planned) toast('「' + u.name + '」完了！おつかれさまです 🎉');
+      else if(was) toast('実績を ' + u.done + '時間 にしました');
+    });
+    div.querySelector('[data-act=minus]').addEventListener("click", function(){
+      if(u.done>0){ u.done -= 1; if(u.closed && u.done===0) u.closed = false; save(); renderAll(); }
+    });
+    var cb = div.querySelector('[data-act=close]');
+    if(cb) cb.addEventListener("click", function(){
+      armConfirm(this, "close_"+u.id, function(){
+        u.closed = true; save(); renderAll();
+        toast('「' + u.name + '」を ' + u.done + '時間で完了にしました');
+      }, u.done + "時間で完了にする？");
+    });
+    var rb = div.querySelector('[data-act=reopen]');
+    if(rb) rb.addEventListener("click", function(){ u.closed = false; save(); renderAll(); });
+    div.querySelector('[data-act=notes]').addEventListener("click", function(){
+      openNotes[u.id] = !openNotes[u.id]; renderAll();
+    });
+    div.querySelector('[data-act=del]').addEventListener("click", function(){
+      armConfirm(this, "delUnit_"+u.id, function(){
+        s.units.splice(i,1); save(); renderAll();
+        toast("単元を削除しました");
+      });
+    });
+    div.querySelector('[data-act=edit]').addEventListener("click", function(){
+      var area = div.querySelector(".unit-edit-area");
+      if(area.innerHTML){ area.innerHTML=""; return; }
+      area.innerHTML =
+        '<div class="form-row" style="margin-top:10px">' +
+          '<div class="field"><label>単元名</label><input type="text" class="editName" maxlength="30" value="' + esc(u.name) + '"></div>' +
+          '<div class="field narrow"><label>予定時数</label><input type="number" class="editPlanned" min="1" max="99" value="' + u.planned + '"></div>' +
+          '<div class="field narrow"><button class="btn small" style="width:100%">保存</button></div>' +
+        '</div>';
+      area.querySelector(".btn").addEventListener("click", function(){
+        var nm = area.querySelector(".editName").value.trim();
+        var pl = Math.max(1, Math.min(99, Math.round(Number(area.querySelector(".editPlanned").value)||u.planned)));
+        if(nm) u.name = nm;
+        u.planned = pl;
+        save(); renderAll();
+        toast("単元を更新しました");
+      });
+    });
+
+    if(openNotes[u.id]) renderNotes(div.querySelector(".notes-area"), u);
+    return div;
+  }
+
+  /* 調整メモ：「どこを軽くしたか」と「その後」を対で残す */
+  function renderNotes(area, u){
+    var h = '<div class="notes">';
+    if(!u.adjustNotes.length){
+      h += '<p class="muted" style="margin-bottom:8px">まだありません。軽くした（軽くする候補の）時間を書いておくと、日付つきで残ります。</p>';
+    }
+    u.adjustNotes.forEach(function(n){
+      h += '<div class="note" data-nid="' + esc(n.id) + '">' +
+             '<div class="nd">' + esc(mdw(n.date)) + ' の調整</div>' +
+             '<div>' + esc(n.text) + '</div>' +
+             (n.after ? '<div class="after"><div class="nd">' + esc(mdw(n.afterDate)) + ' その後</div>' + esc(n.after) + '</div>' : '') +
+             '<div class="after-edit"></div>' +
+             '<div class="note-foot">' +
+               '<button class="icon-btn" data-nact="after">' + (n.after ? '✏️ その後を直す' : '✍ その後を書く') + '</button>' +
+               '<button class="icon-btn" data-nact="del">🗑</button>' +
+             '</div>' +
+           '</div>';
+    });
+    h += '<textarea class="new-note" maxlength="300" placeholder="例：練習問題の2時間を宿題とまとめて1時間に"></textarea>' +
+         '<div class="row-right"><button class="btn small" data-nact="add">📝 メモを残す</button></div></div>';
+    area.innerHTML = h;
+
+    area.querySelector('[data-nact=add]').addEventListener("click", function(){
+      var ta = area.querySelector(".new-note");
+      var v = ta.value.trim();
+      if(!v){ toast("調整の内容を書いてください"); ta.focus(); return; }
+      u.adjustNotes.push({ id: uid(), date: dstr(todayD()), text: v, after:"", afterDate:"" });
+      save(); renderAll();
+      toast("調整メモを残しました");
+    });
+    area.querySelectorAll(".note").forEach(function(el){
+      var n = null;
+      u.adjustNotes.forEach(function(x){ if(x.id===el.dataset.nid) n = x; });
+      if(!n) return;
+      el.querySelector('[data-nact=del]').addEventListener("click", function(){
+        armConfirm(this, "delNote_"+n.id, function(){
+          u.adjustNotes = u.adjustNotes.filter(function(x){ return x!==n; });
+          save(); renderAll();
+        }, "もう一度で削除");
+      });
+      el.querySelector('[data-nact=after]').addEventListener("click", function(){
+        var box = el.querySelector(".after-edit");
+        if(box.innerHTML){ box.innerHTML = ""; return; }
+        box.innerHTML = '<textarea maxlength="300" placeholder="例：理解への影響はなし。ただし3人は次の単元の導入で復習が必要だった"></textarea>' +
+                        '<div class="row-right"><button class="btn small">保存</button></div>';
+        var ta = box.querySelector("textarea");
+        ta.value = n.after;
+        ta.focus();
+        box.querySelector("button").addEventListener("click", function(){
+          n.after = ta.value.trim();
+          n.afterDate = n.after ? dstr(todayD()) : "";
+          save(); renderAll();
+          toast(n.after ? "その後を書き足しました" : "その後を消しました");
+        });
+      });
+    });
+  }
+
+  /* ---------- render: 時間割 ---------- */
+  function renderTimetable(view){
+    var subs = termData().subjects;
+    var card = document.createElement("div");
+    card.className = "card";
+    if(!subs.length){
+      card.innerHTML = '<div class="empty-msg">教科がありません。先に「＋ 教科」で教科を追加してください。</div>';
+      view.appendChild(card); return;
+    }
+    var h = '<h2>🗓 週の時間割 <span class="small-note">' + esc(cls.name) + '・曜日ごとに「何コマあるか」</span></h2>' +
+            '<div class="tbl-scroll"><table class="tbl" id="ttTable"><thead><tr><th class="l">曜日</th>';
+    subs.forEach(function(s){ h += '<th style="color:' + esc(s.color) + '">' + esc(s.name) + '</th>'; });
+    h += '</tr></thead><tbody>';
+    DOW_KEYS.forEach(function(k, di){
+      h += '<tr><td class="l"><b>' + DOW_LABEL[di] + '</b></td>';
+      subs.forEach(function(s){
+        var v = Number(cls.timetable[k][s.name])||0;
+        h += '<td><input type="number" min="0" max="8" inputmode="numeric" data-dow="' + k + '" data-name="' + esc(s.name) + '" value="' + (v||"") + '" placeholder="0"></td>';
+      });
+      h += '</tr>';
+    });
+    h += '<tr><td class="l muted">週</td>';
+    subs.forEach(function(s){ h += '<td><b>' + weeklyFromTT(cls, s.name) + '</b></td>'; });
+    h += '</tr></tbody></table></div>' +
+         '<p class="hint">ここに入れた教科は、目標日までの日付を1日ずつ数えて確保コマを出します（土日・休業日は0）。空欄の教科は「週コマ数」での概算になります。時間割は学期をまたいで共通です。</p>';
+    card.innerHTML = h;
+    view.appendChild(card);
+
+    card.querySelectorAll("input[data-dow]").forEach(function(inp){
+      inp.addEventListener("change", function(){
+        var v = Math.max(0, Math.min(8, Math.round(Number(inp.value)||0)));
+        var row = cls.timetable[inp.dataset.dow];
+        if(v) row[inp.dataset.name] = v; else delete row[inp.dataset.name];
+        save(); renderAll();
+      });
+    });
+
+    if(DB.classes.length > 1){
+      var cp = document.createElement("div");
+      cp.className = "card";
+      cp.innerHTML = '<h2>📑 他のクラスの時間割を写す</h2>' +
+        '<div class="form-row"><div class="field"><select id="ttFrom">' +
+        DB.classes.filter(function(c){ return c.id!==cls.id; }).map(function(c){
+          return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
+        }).join("") + '</select></div>' +
+        '<div class="field narrow"><button class="btn small ghost" id="btnTTCopy" style="width:100%">写す</button></div></div>' +
+        '<p class="hint">' + esc(cls.name) + 'の時間割が、選んだクラスの内容に置きかわります。</p>';
+      view.appendChild(cp);
+      document.getElementById("btnTTCopy").addEventListener("click", function(){
+        var from = document.getElementById("ttFrom").value;
+        armConfirm(this, "ttcopy", function(){
+          DB.classes.forEach(function(c){ if(c.id===from) cls.timetable = normTimetable(JSON.parse(JSON.stringify(c.timetable))); });
+          save(); renderAll(); toast("時間割を写しました");
+        }, "もう一度で上書き");
+      });
+    }
+  }
+
+  /* ---------- render: 行事カレンダー ---------- */
+  function renderCalendar(view){
+    var names = subjectNamesAll();
+    var editing = null;
+    if(editingEventId) DB.calendar.forEach(function(e){ if(e.id===editingEventId) editing = e; });
+    if(!editing) editingEventId = null;
+
+    /* いまの判定（行事を足すとその場で色が変わる） */
+    var st = document.createElement("div");
+    st.className = "card";
+    st.innerHTML = '<h2>🚦 ' + esc(cls.name) + ' のいまの判定</h2><div class="status-strip">' +
+      termData().subjects.map(function(s){
+        var r = calcSubject(s);
+        return '<span class="badge ' + r.status + '">' + esc(s.name) + ' ' + esc(statusShort(r)) + '</span>';
+      }).join("") + '</div>';
+    view.appendChild(st);
+
+    /* 追加フォーム */
+    var f = document.createElement("div");
+    f.className = "card";
+    var e0 = editing || { date: nextWeekdayStr(), endDate:"", label:"", lost:{}, allDay:false, classId:"" };
+    var h = '<h2>' + (editing ? '✏️ 行事を直す' : '＋ 行事を登録') + ' <span class="small-note">授業が潰れる日だけでOK</span></h2>' +
+      '<div class="form-row">' +
+        '<div class="field narrow" style="flex-basis:150px"><label>日付</label><input type="date" id="evDate" value="' + esc(e0.date) + '"></div>' +
+        '<div class="field"><label>行事名</label><input type="text" id="evLabel" maxlength="20" placeholder="例：運動会練習" value="' + esc(e0.label) + '"></div>' +
+        '<div class="field narrow" style="flex-basis:130px"><label>対象</label><select id="evClass">' +
+          '<option value="">全クラス</option>' +
+          DB.classes.map(function(c){ return '<option value="' + esc(c.id) + '"' + (e0.classId===c.id ? ' selected' : '') + '>' + esc(c.name) + 'だけ</option>'; }).join("") +
+        '</select></div>' +
+      '</div>' +
+      '<label class="check-label"><input type="checkbox" id="evAllDay"' + (e0.allDay ? ' checked' : '') + '> 休業日（その日の授業がすべてなし）</label>' +
+      '<div id="evAllDayBox" style="' + (e0.allDay ? '' : 'display:none') + '">' +
+        '<div class="form-row"><div class="field narrow" style="flex-basis:150px"><label>最終日（連休・長期休業のとき）</label>' +
+        '<input type="date" id="evEnd" value="' + esc(e0.endDate) + '"></div></div>' +
+      '</div>' +
+      '<div id="evLostBox" style="' + (e0.allDay ? 'display:none' : '') + '">' +
+        '<div class="muted">潰れるコマ（教科ごと）</div>' +
+        '<div class="lost-grid">' +
+        names.map(function(n){
+          var v = e0.lost[n];
+          return '<span class="li">' + esc(n) + '<input type="number" step="1" min="-8" max="8" data-lost="' + esc(n) + '" value="' + (v ? v : "") + '" placeholder="0"></span>';
+        }).join("") +
+        '</div>' +
+        '<p class="hint" style="margin-top:0">補講・土曜授業などでコマが増える日は、マイナス（例：−1）で入れると増えるぶんとして数えます。</p>' +
+      '</div>' +
+      '<div class="row-right">' +
+        (editing ? '<button class="btn small gray" id="evCancel">やめる</button>' : '') +
+        '<button class="btn" id="evSave">' + (editing ? '直す' : '＋ 登録') + '</button>' +
+      '</div>';
+    f.innerHTML = h;
+    view.appendChild(f);
+
+    document.getElementById("evAllDay").addEventListener("change", function(){
+      document.getElementById("evAllDayBox").style.display = this.checked ? "" : "none";
+      document.getElementById("evLostBox").style.display = this.checked ? "none" : "";
+    });
+    if(editing) document.getElementById("evCancel").addEventListener("click", function(){ editingEventId = null; renderAll(); });
+    document.getElementById("evSave").addEventListener("click", function(){
+      var date = document.getElementById("evDate").value;
+      if(!parseD(date)){ toast("日付を入れてください"); return; }
+      var allDay = document.getElementById("evAllDay").checked;
+      var label = document.getElementById("evLabel").value.trim() || (allDay ? "休業日" : "行事");
+      var lost = {};
+      if(!allDay){
+        f.querySelectorAll("input[data-lost]").forEach(function(inp){
+          var v = Math.round(Number(inp.value)||0);
+          if(v) lost[inp.dataset.lost] = v;
+        });
+        if(!Object.keys(lost).length){ toast("潰れるコマを1つ以上入れてください（休業日ならチェックを）"); return; }
+      }
+      var ev = normEvent({ id: editing ? editing.id : uid(), date: date, endDate: allDay ? document.getElementById("evEnd").value : "",
+                           label: label, lost: lost, allDay: allDay, classId: document.getElementById("evClass").value });
+      if(editing){
+        DB.calendar = DB.calendar.map(function(x){ return x.id===editing.id ? ev : x; });
+      }else{
+        DB.calendar.push(ev);
+      }
+      editingEventId = null;
+      save(); renderAll();
+      toast(editing ? "行事を直しました" : "「" + label + "」を登録しました");
+    });
+
+    /* 一覧 */
+    var lc = document.createElement("div");
+    lc.className = "card";
+    var today = dstr(todayD());
+    var sorted = DB.calendar.slice().sort(function(a,b){ return a.date<b.date ? -1 : a.date>b.date ? 1 : 0; });
+    var isPast = function(e){ return (e.endDate || e.date) <= today; };
+    var pastCount = sorted.filter(isPast).length;
+    var shown = sorted.filter(function(e){ return showPastEvents || !isPast(e); });
+    var lh = '<h2>📅 登録した行事 <span class="small-note">' + (sorted.length - pastCount) + '件（これから）</span></h2>';
+    if(!shown.length) lh += '<div class="empty-msg">これからの行事はまだありません。</div>';
+    shown.forEach(function(e){
+      var cname = "";
+      if(e.classId) DB.classes.forEach(function(c){ if(c.id===e.classId) cname = c.name; });
+      var lostTxt = e.allDay ? "授業なし（全教科）"
+        : Object.keys(e.lost).map(function(n){ var v = e.lost[n]; return n + (v>0 ? " −" + v : " ＋" + (-v)); }).join("、");
+      lh += '<div class="ev' + (isPast(e) ? ' past' : '') + '" data-eid="' + esc(e.id) + '">' +
+              '<div class="ev-date">' + esc(mdw(e.date)) + (e.endDate ? '<br>〜' + esc(mdw(e.endDate)) : '') + '</div>' +
+              '<div class="ev-body"><span class="ev-label">' + esc(e.label) + '</span>' +
+                (e.allDay ? '<span class="ev-tag off">休業日</span>' : '') +
+                '<span class="ev-tag">' + (cname ? esc(cname) + 'だけ' : '全クラス') + '</span>' +
+                '<div class="ev-lost">' + esc(lostTxt) + (isPast(e) ? '（今日までの行事は計算から外れています）' : '') + '</div></div>' +
+              '<div class="ev-btns"><button class="icon-btn" data-eact="edit">✏️</button><button class="icon-btn" data-eact="del">🗑</button></div>' +
+            '</div>';
+    });
+    if(pastCount) lh += '<div class="row-left"><button class="btn small gray" id="evTogglePast">' +
+                        (showPastEvents ? '過ぎた行事をかくす' : '過ぎた行事も見る（' + pastCount + '件）') + '</button></div>';
+    lc.innerHTML = lh;
+    view.appendChild(lc);
+
+    var tp = document.getElementById("evTogglePast");
+    if(tp) tp.addEventListener("click", function(){ showPastEvents = !showPastEvents; renderAll(); });
+    lc.querySelectorAll(".ev").forEach(function(el){
+      var id = el.dataset.eid;
+      el.querySelector('[data-eact=edit]').addEventListener("click", function(){ editingEventId = id; renderAll(); window.scrollTo(0,0); });
+      el.querySelector('[data-eact=del]').addEventListener("click", function(){
+        armConfirm(this, "delEv_"+id, function(){
+          DB.calendar = DB.calendar.filter(function(x){ return x.id!==id; });
+          if(editingEventId===id) editingEventId = null;
+          save(); renderAll(); toast("行事を削除しました");
+        }, "削除？");
+      });
+    });
+  }
+
+  /* ---------- render: 実績 ---------- */
+  function renderRecords(view){
+    var rows = recordRows([cls]);
+    var card = document.createElement("div");
+    card.className = "card";
+    var h = '<h2>📊 予定と実績 <span class="small-note">' + esc(cls.name) + '・全学期</span></h2>';
+    if(!rows.length){
+      h += '<div class="empty-msg">単元がまだありません。</div>';
+    }else{
+      h += '<div class="tbl-scroll"><table class="tbl"><thead><tr><th class="l">学期</th><th class="l">教科</th><th class="l">単元</th><th>予定</th><th>実績</th><th>差</th></tr></thead><tbody>';
+      rows.forEach(function(r){
+        var dcls = r.diff===null ? "" : r.diff>0 ? "diff-plus" : r.diff<0 ? "diff-minus" : "";
+        h += '<tr><td class="l">' + esc(r.term) + '</td><td class="l">' + esc(r.subj) + '</td><td class="l">' + esc(r.unit) + '</td>' +
+             '<td>' + r.planned + '</td><td>' + r.actual + (r.complete ? '' : '<span class="muted">（途中）</span>') + '</td>' +
+             '<td class="' + dcls + '">' + (r.diff===null ? '—' : (r.diff>0 ? '+' + r.diff : r.diff)) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+    h += '<p class="hint">実績＝その単元で実際に＋1した時間。完了したあとに＋1しても実績に足されます。予定より早く終わった単元は「✔ ここで完了」で締めてください。</p>' +
+         '<div class="row-left">' +
+           '<button class="btn" id="btnTSV">📋 表計算ソフト用にコピー</button>' +
+           (DB.classes.length>1 ? '<button class="btn small ghost" id="btnTSVAll">全クラス分</button>' : '') +
+         '</div>' +
+         '<div id="tsvArea" style="margin-top:10px"></div>';
+    card.innerHTML = h;
+    view.appendChild(card);
+    document.getElementById("btnTSV").addEventListener("click", function(){
+      var txt = recordTSV(recordRows([cls]));
+      outBox(document.getElementById("tsvArea"), txt, 8);
+      copyText(txt, "コピーしました。表計算ソフトに貼りつけできます");
+    });
+    var all = document.getElementById("btnTSVAll");
+    if(all) all.addEventListener("click", function(){
+      var txt = recordTSV(recordRows(DB.classes));
+      outBox(document.getElementById("tsvArea"), txt, 8);
+      copyText(txt, "全クラス分をコピーしました");
+    });
+  }
+
+  /* ---------- render: クラス・データ管理 ---------- */
+  function renderManage(view){
+    /* クラス */
+    var cc = document.createElement("div");
+    cc.className = "card";
+    var h = '<h2>🏫 クラス <span class="small-note">' + DB.classes.length + ' / ' + MAX_CLASSES + '</span></h2>';
+    DB.classes.forEach(function(c){
+      var n = 0;
+      TERMS.forEach(function(t){ c.data.terms[t].subjects.forEach(function(s){ n += s.units.length; }); });
+      h += '<div class="class-row' + (c.id===cls.id ? ' active' : '') + '">' +
+             '<input type="text" maxlength="12" value="' + esc(c.name) + '" data-cid="' + esc(c.id) + '" aria-label="クラス名">' +
+             '<span class="cnt">単元' + n + '</span>' +
+             (c.id!==cls.id ? '<button class="icon-btn" data-open="' + esc(c.id) + '">ひらく</button>' : '') +
+             (DB.classes.length>1 ? '<button class="icon-btn" data-rm="' + esc(c.id) + '">削除</button>' : '') +
+           '</div>';
+    });
+    h += '<div class="row-left"><button class="btn small" id="btnAddClass"' + (DB.classes.length>=MAX_CLASSES ? ' disabled' : '') + '>＋ クラスを追加</button></div>';
+    cc.innerHTML = h;
+    view.appendChild(cc);
+
+    cc.querySelectorAll("input[data-cid]").forEach(function(inp){
+      inp.addEventListener("change", function(){
+        var v = inp.value.trim() || "クラス";
+        DB.classes.forEach(function(c){ if(c.id===inp.dataset.cid) c.name = v; });
+        save(); renderAll(); toast("クラス名を変更しました");
+      });
+    });
+    cc.querySelectorAll("[data-open]").forEach(function(b){
+      b.addEventListener("click", function(){ switchClass(b.dataset.open); currentView = "dash"; renderAll(); });
+    });
+    cc.querySelectorAll("[data-rm]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id = b.dataset.rm;
+        armConfirm(b, "rmClass_"+id, function(){
+          DB.classes = DB.classes.filter(function(c){ return c.id!==id; });
+          DB.calendar = DB.calendar.filter(function(e){ return e.classId!==id; });
+          if(DB.currentClassId===id) DB.currentClassId = DB.classes[0].id;
+          bindClass(); save(); renderAll(); toast("クラスを削除しました");
+        }, "もう一度で削除");
+      });
+    });
+    document.getElementById("btnAddClass").addEventListener("click", function(){
+      if(DB.classes.length>=MAX_CLASSES){ toast("クラスは12個までです"); return; }
+      var c = newClass((DB.classes.length+1) + "組");
+      c.data.currentTerm = state.currentTerm;
+      DB.classes.push(c);
+      save(); renderAll();
+      toast("「" + c.name + "」を追加しました。下の「単元リストをコピー」も使えます");
+    });
+
+    /* 単元リストを他クラスへコピー */
+    if(DB.classes.length>1){
+      var cp = document.createElement("div");
+      cp.className = "card";
+      cp.innerHTML = '<h2>📑 単元リストを他クラスへコピー <span class="small-note">' + esc(cls.name) + '・' + esc(state.currentTerm) + ' → </span></h2>' +
+        '<div class="copy-targets">' +
+        DB.classes.filter(function(c){ return c.id!==cls.id; }).map(function(c){
+          return '<label class="check-label"><input type="checkbox" data-tgt="' + esc(c.id) + '" checked> ' + esc(c.name) + '</label>';
+        }).join("") + '</div>' +
+        '<button class="btn small" id="btnCopyUnits">コピーする</button>' +
+        '<p class="hint">単元名と予定時数だけを写します（進み具合は0から）。同じ名前の単元がすでにあるときは足しません。教科がなければ作り、目標日が空なら同じ目標日を入れます。</p>';
+      view.appendChild(cp);
+      document.getElementById("btnCopyUnits").addEventListener("click", function(){
+        var ids = [];
+        cp.querySelectorAll("input[data-tgt]").forEach(function(x){ if(x.checked) ids.push(x.dataset.tgt); });
+        if(!ids.length){ toast("コピー先を選んでください"); return; }
+        var added = copyUnitsTo(ids);
+        save(); renderAll();
+        toast(ids.length + "クラスへ、単元を合計" + added + "件コピーしました");
+      });
+    }
+
+    /* データ */
+    var dc = document.createElement("div");
+    dc.className = "card";
+    dc.innerHTML =
+      '<h2>🗂 データ管理 <span class="small-note">（全クラス・全学期・時間割・行事カレンダーをまとめて）</span></h2>' +
+      '<div class="row-left">' +
+        '<button class="btn small ghost" id="btnExport">📤 書き出し</button>' +
+        '<button class="btn small ghost" id="btnImport">📥 読みこみ</button>' +
+        '<button class="btn small gray" id="btnResetTerm">↺ ' + esc(cls.name) + 'の' + esc(state.currentTerm) + 'をリセット</button>' +
+      '</div>' +
+      '<div id="dataArea" style="margin-top:10px"></div>' +
+      '<p class="hint">データはこの端末のブラウザの中だけに保存されます。機種変更や別の端末へ移すときは「書き出し」の文字列を「読みこみ」に貼ってください。無料版のデータは消さずに残してあります。</p>';
+    view.appendChild(dc);
+
+    document.getElementById("btnExport").addEventListener("click", function(){
+      var area = document.getElementById("dataArea");
+      area.innerHTML =
+        '<p class="muted">下の文字列をコピーして保存してください。</p>' +
+        '<textarea id="exportText" readonly></textarea>' +
+        '<div class="row-right"><button class="btn small" id="btnCopy">コピー</button>' +
+        '<button class="btn small gray" id="btnCloseData">閉じる</button></div>';
+      var txt = JSON.stringify(DB);
+      document.getElementById("exportText").value = txt;
+      document.getElementById("btnCopy").addEventListener("click", function(){ copyText(txt); });
+      document.getElementById("btnCloseData").addEventListener("click", function(){ area.innerHTML=""; });
+    });
+
+    document.getElementById("btnImport").addEventListener("click", function(){
+      var area = document.getElementById("dataArea");
+      area.innerHTML =
+        '<p class="muted">書き出した文字列を貼りつけて「読みこむ」を押してください。Pro版の文字列なら<b>いまのデータ全体が置きかわります</b>。無料版で書き出した文字列なら、新しいクラスとして足します。</p>' +
+        '<textarea id="importText" placeholder="ここに貼りつけ"></textarea>' +
+        '<div class="row-right"><button class="btn small" id="btnDoImport">読みこむ</button>' +
+        '<button class="btn small gray" id="btnCloseData2">閉じる</button></div>' +
+        '<p id="importErr" style="color:var(--ng);font-size:.85rem;margin-top:6px;"></p>';
+      document.getElementById("btnDoImport").addEventListener("click", function(){
+        var txt = document.getElementById("importText").value.trim();
+        var errEl = document.getElementById("importErr");
+        if(!txt){ errEl.textContent = "テキストが空です。"; return; }
+        var d;
+        try{ d = JSON.parse(txt); }catch(e){ errEl.textContent = "読みこめませんでした。書き出した文字列か確認してください。"; return; }
+        if(d && typeof d==="object" && Array.isArray(d.classes) && d.classes.length){
+          var self = this;
+          armConfirm(self, "importAll", function(){
+            DB = normDB(d);
+            bindClass();
+            currentView = "dash";
+            save(); renderAll();
+            toast("読みこみました（" + DB.classes.length + "クラス）");
+          }, "もう一度押すと、いまのデータを置きかえます");
+        }else if(d && typeof d==="object" && d.terms && typeof d.terms==="object"){
+          if(DB.classes.length>=MAX_CLASSES){ errEl.textContent = "クラスが12個あるため足せません。"; return; }
+          var c = newClass((DB.classes.length+1) + "組");
+          c.data = normData(d);
+          var rows = adjustToCalendar(c.data, c.id);
+          DB.classes.push(c);
+          DB.calendar = DB.calendar.concat(rows);
+          switchClass(c.id);
+          currentView = "dash";
+          save(); renderAll();
+          toast("無料版のデータを「" + c.name + "」として足しました");
+        }else{
+          errEl.textContent = "読みこめませんでした。書き出した文字列か確認してください。";
+        }
+      });
+      document.getElementById("btnCloseData2").addEventListener("click", function(){ area.innerHTML=""; });
+    });
+
+    document.getElementById("btnResetTerm").addEventListener("click", function(){
+      armConfirm(this, "resetTerm", function(){
+        state.terms[state.currentTerm] = defaultTermData();
+        currentView = "dash";
+        save(); renderAll();
+        toast(cls.name + "の" + state.currentTerm + "をリセットしました");
+      }, "もう一度押すとリセット");
+    });
+  }
+
+  function copyUnitsTo(ids){
+    var term = state.currentTerm;
+    var src = termData().subjects;
+    var added = 0;
+    DB.classes.forEach(function(tc){
+      if(ids.indexOf(tc.id)<0 || tc.id===cls.id) return;
+      var tsubs = tc.data.terms[term].subjects;
+      src.forEach(function(s){
+        var ts = null;
+        tsubs.forEach(function(x){ if(!ts && x.name===s.name) ts = x; });
+        if(!ts){
+          ts = { id: uid(), name: s.name, color: s.color, targetDate: s.targetDate, weekly: s.weekly, adjust:0, units:[] };
+          tsubs.push(ts);
+        }
+        if(!ts.targetDate) ts.targetDate = s.targetDate;
+        s.units.forEach(function(u){
+          var exists = ts.units.some(function(x){ return x.name===u.name; });
+          if(exists) return;
+          ts.units.push(normUnit({ id: uid(), name: u.name, planned: u.planned, done: 0 }));
+          added++;
+        });
+      });
+    });
+    return added;
+  }
+
+  /* ---------- 引き継ぎ通知 ---------- */
+  function renderMigrateBox(){
+    var mb = document.getElementById("migrateBox");
+    if(!migrateInfo){ mb.style.display = "none"; return; }
+    mb.style.display = "";
+    mb.innerHTML = '<button class="x" aria-label="閉じる">✕</button>' +
+      '📚 <b>無料版のデータを引き継ぎました。</b><br>' +
+      '同じブラウザに入っていた教科・単元（' + migrateInfo.units + '件）を「1組」として読みこんでいます。' +
+      (migrateInfo.adjustRows
+        ? '無料版の手動補正は、行事カレンダーに「' + MIGRATE_LABEL + '」として' + migrateInfo.adjustRows + '行で入れました（日付は各教科の目標日）。行事ごとに入れ直したら、この行は消してください。'
+        : '') +
+      '<br>無料版のデータはそのまま残っているので、しばらく両方を開いて確かめてもだいじょうぶです。' +
+      '<br>次は「🗓 時間割」に曜日ごとのコマ数を入れると、日付単位の計算に切りかわります。';
+    mb.querySelector(".x").addEventListener("click", function(){ migrateInfo = null; renderMigrateBox(); });
+  }
+
+  /* ---------- render all ---------- */
+  function renderAll(){
+    renderClassSelect();
+    renderTermBar();
+    renderTabs();
+    renderMigrateBox();
+    var view = document.getElementById("view");
+    view.innerHTML = "";
+    if(currentView==="dash") renderDash(view);
+    else if(currentView==="tt") renderTimetable(view);
+    else if(currentView==="cal") renderCalendar(view);
+    else if(currentView==="rec") renderRecords(view);
+    else if(currentView==="manage") renderManage(view);
+    else{
+      var s = getSubject(currentView);
+      if(!s){ currentView="dash"; renderDash(view); }
+      else{ renderSubject(view, s); }
+    }
+    editingSubject = false;
+  }
+
+  load();
+  save();   // 初回（＝引き継ぎ直後）にすぐ書きこむ。これをしないと毎回無料版から読み直してしまう
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>
