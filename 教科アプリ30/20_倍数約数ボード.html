@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>倍数・約数ボード</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--cA:#7fb3e0;--cB:#f4c26b;--cAB:#e0795a;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1400px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button,select{font-family:inherit;font-size:1rem;min-height:44px;padding:6px 12px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+.layout{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.board{display:grid;gap:4px}
+.board div{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#fff;border:1px solid var(--line);font-weight:800;font-size:clamp(.8rem,2.2vw,1.6rem);cursor:pointer;user-select:none;position:relative;transition:background .2s}
+.board div.a{background:var(--cA)}
+.board div.b{background:var(--cB)}
+.board div.ab{background:var(--cAB);color:#fff}
+.board div.hid{color:transparent}
+.board div.m{outline:4px solid var(--navy);outline-offset:-4px}
+.board div.lc::after{content:"最小";position:absolute;top:1px;right:3px;font-size:.55em;color:#fff}
+input.num{font-size:1.4rem;width:4.2em;padding:6px;border:2px solid var(--line);border-radius:10px;font-family:inherit;font-weight:800;text-align:center}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.9rem;margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:4px;vertical-align:-2px;background:var(--c)}
+.res{font-size:1.1rem;font-weight:700;margin-top:10px;line-height:1.8}
+.res b{color:var(--acc);font-size:1.3em}
+.dots{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px}
+.dots figure{text-align:center;font-size:.9rem;font-weight:700;color:var(--navy)}
+.dots svg{display:block;margin:0 auto 4px}
+.note{font-size:.88rem;color:var(--sub)}
+label.chk{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--navy);min-height:40px}
+label.chk input{width:20px;height:20px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>倍数・約数ボード</h1></header>
+<main>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px"><span class="tabs row" id="modeTabs"><button data-m="mul" class="on">倍数・公倍数</button><button data-m="div">約数・公約数</button><button data-m="eo">偶数・奇数</button><button data-m="free">手でぬる（予想）</button></span></div>
+    <div class="row">
+      <span class="lbl">A</span><input class="num" id="A" type="number" min="1" max="100" value="4">
+      <span class="lbl">B</span><input class="num" id="B" type="number" min="0" max="100" value="6"><span class="note">（Bを0にすると1つだけ）</span>
+      <span class="lbl" style="margin-left:8px">横の数</span><select id="cols"><option>10</option><option>12</option><option>6</option><option>8</option></select>
+      <span class="lbl">〜</span><select id="max"><option>100</option><option>60</option><option>120</option><option>144</option></select>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="pri" id="stepBtn">▶ 1つずつ出す</button><button id="allBtn">全部出す</button><button id="clearBtn">消す</button><label class="chk"><input type="checkbox" id="hideNum">数字をかくす（位置だけ見せる）</label></div>
+  </div>
+  <div class="layout">
+    <div class="card"><div class="board" id="board"></div></div>
+    <div class="card">
+      <div class="legend" id="legend"></div>
+      <div class="res" id="res"></div>
+      <div class="dots" id="dots"></div>
+    </div>
+  </div>
+  <div class="card note">
+    <b style="color:var(--navy)">こんなときに</b>　5年「倍数と約数」の導入・まとめで提示。横の数を12にすると3・4・6の倍数が縦にそろうなど、並べ方を変えて「きまり」に気づかせられます。約数モードでは、ドットを長方形に並べる図で「かけて○になる2つの数」を見せられます。「手でぬる」は子どもの予想をその場でぬって確かめる用です（タップで色が変わります）。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_20_';
+const $=id=>document.getElementById(id);
+const S={mode:'mul'};
+let shown=null,marks={};
+try{const s=JSON.parse(localStorage.getItem(KEY+'set'));if(s){$('A').value=s.A;$('B').value=s.B;$('cols').value=s.cols;$('max').value=s.max;S.mode=s.mode||'mul';}}catch(e){}
+function save(){try{localStorage.setItem(KEY+'set',JSON.stringify({A:$('A').value,B:$('B').value,cols:$('cols').value,max:$('max').value,mode:S.mode}));}catch(e){}}
+function gcd(a,b){while(b){[a,b]=[b,a%b];}return a;}
+function divisors(n){const r=[];for(let i=1;i<=n;i++)if(n%i===0)r.push(i);return r;}
+function getAB(){let A=Math.max(1,Math.min(144,parseInt($('A').value,10)||1));let B=parseInt($('B').value,10);if(!(B>=1))B=0;B=Math.min(144,B);return {A,B};}
+// sequence of numbers to reveal (in order) for step mode
+function targets(){
+  const {A,B}=getAB(),M=+$('max').value;const t=[];
+  if(S.mode==='mul'){for(let i=1;i<=M;i++)if(i%A===0||(B&&i%B===0))t.push(i);}
+  else if(S.mode==='div'){for(let i=1;i<=M;i++)if(A%i===0||(B&&B%i===0))t.push(i);}
+  else if(S.mode==='eo'){for(let i=2;i<=M;i+=2)t.push(i);}
+  return t;
+}
+function classOf(i){
+  const {A,B}=getAB();
+  if(S.mode==='free')return marks[i]||'';
+  if(shown!==null&&!shown.has(i))return '';
+  let a=false,b=false;
+  if(S.mode==='mul'){a=i%A===0;b=B>0&&i%B===0;}
+  else if(S.mode==='div'){a=A%i===0;b=B>0&&B%i===0;}
+  else if(S.mode==='eo'){a=i%2===0;}
+  return a&&b?'ab':a?'a':b?'b':'';
+}
+function render(){
+  const M=+$('max').value,C=+$('cols').value;const {A,B}=getAB();
+  const bd=$('board');bd.style.gridTemplateColumns=`repeat(${C},1fr)`;
+  const hide=$('hideNum').checked;
+  let lcm=null;if(S.mode==='mul'&&B){lcm=A*B/gcd(A,B);}
+  let h='';
+  for(let i=1;i<=M;i++){
+    const c=classOf(i);
+    const extra=(c==='ab'&&lcm===i)?' lc':'';
+    h+=`<div data-i="${i}" class="${c}${extra}${hide&&!c?' hid':''}">${i}</div>`;
+  }
+  bd.innerHTML=h;
+  bd.querySelectorAll('div').forEach(d=>d.onclick=()=>{
+    if(S.mode!=='free')return;const i=+d.dataset.i;const order=['','a','b','ab'];
+    marks[i]=order[(order.indexOf(marks[i]||'')+1)%4];if(!marks[i])delete marks[i];render();
+  });
+  legendAndResult();
+}
+function legendAndResult(){
+  const {A,B}=getAB(),M=+$('max').value;let lg='',rs='';$('dots').innerHTML='';
+  if(S.mode==='mul'){
+    lg=`<span style="--c:var(--cA)">${A}の倍数</span>`+(B?`<span style="--c:var(--cB)">${B}の倍数</span><span style="--c:var(--cAB)">公倍数</span>`:'');
+    const ma=[];for(let i=A;i<=M&&ma.length<12;i+=A)ma.push(i);
+    rs=`${A}の倍数：${ma.join('、')}${ma[ma.length-1]+A<=M?'、…':''}`;
+    if(B){const mb=[];for(let i=B;i<=M&&mb.length<12;i+=B)mb.push(i);const L=A*B/gcd(A,B);const cm=[];for(let i=L;i<=M;i+=L)cm.push(i);
+      rs+=`<br>${B}の倍数：${mb.join('、')}${mb[mb.length-1]+B<=M?'、…':''}<br>公倍数：${cm.length?cm.join('、'):`（${M}までにはない）`}<br>最小公倍数：<b>${L}</b>`+(cm.length?`<br><small>公倍数は ${L} の倍数になっている</small>`:'');}
+  }else if(S.mode==='div'){
+    lg=`<span style="--c:var(--cA)">${A}の約数</span>`+(B?`<span style="--c:var(--cB)">${B}の約数</span><span style="--c:var(--cAB)">公約数</span>`:'');
+    const da=divisors(A);rs=`${A}の約数：${da.join('、')}（${da.length}個）`;
+    if(B){const db=divisors(B),g=gcd(A,B);rs+=`<br>${B}の約数：${db.join('、')}<br>公約数：${divisors(g).join('、')}<br>最大公約数：<b>${g}</b><br><small>公約数は ${g} の約数になっている</small>`;}
+    if(A>M||B>M)rs+=`<br><small style="color:#c0392b">表の範囲（〜${M}）より大きい数があります。</small>`;
+    drawDots(A);
+  }else if(S.mode==='eo'){
+    lg=`<span style="--c:var(--cA)">偶数（2でわり切れる）</span><span style="--c:#fff">奇数</span>`;
+    rs='偶数：2でわり切れる整数（0も偶数）<br>奇数：2でわると1あまる整数<br><small>横の数を奇数にしてみると、並び方はどう変わる？</small>';
+  }else{
+    lg=`<span style="--c:var(--cA)">1回タップ</span><span style="--c:var(--cB)">2回</span><span style="--c:var(--cAB)">3回</span>`;
+    rs='子どもの予想をタップでぬってから、上のタブで答え合わせ。<br><small>（ぬった記録はこの画面を閉じると消えます）</small>';
+  }
+  $('legend').innerHTML=lg;$('res').innerHTML=rs;
+}
+function drawDots(n){
+  if(n>60){$('dots').innerHTML='<p class="note">60以下の数でドット図を表示します。</p>';return;}
+  let h='';
+  divisors(n).forEach(a=>{const b=n/a;if(a>b)return;
+    const r=Math.min(6,Math.max(3,60/Math.max(a,b)));const g=r*2.6;
+    const w=b*g+4,hh=a*g+4;let s=`<svg width="${Math.min(w,220)}" viewBox="0 0 ${w} ${hh}">`;
+    for(let y=0;y<a;y++)for(let x=0;x<b;x++)s+=`<circle cx="${x*g+g/2+2}" cy="${y*g+g/2+2}" r="${r}" fill="#1f5f99"/>`;
+    s+='</svg>';h+=`<figure>${s}${a} × ${b}</figure>`;});
+  $('dots').innerHTML=`<p class="note" style="width:100%">${n}こを長方形にならべると…（かけて${n}になる組）</p>`+h;
+}
+function setMode(m){S.mode=m;shown=null;document.querySelectorAll('#modeTabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('A').disabled=$('B').disabled=(m==='eo'||m==='free');save();render();}
+document.querySelectorAll('#modeTabs button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+['A','B','cols','max'].forEach(id=>$(id).addEventListener('input',()=>{shown=null;save();render();}));
+$('cols').onchange=$('max').onchange=()=>{save();render();};
+$('hideNum').onchange=render;
+$('stepBtn').onclick=()=>{if(S.mode==='free')return;const t=targets();if(shown===null)shown=new Set();const nx=t.find(i=>!shown.has(i));if(nx!==undefined)shown.add(nx);render();};
+$('allBtn').onclick=()=>{shown=null;render();};
+$('clearBtn').onclick=()=>{if(S.mode==='free')marks={};else shown=new Set();render();};
+setMode(S.mode);
+</script>
+</body>
+</html>

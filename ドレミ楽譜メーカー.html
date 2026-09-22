@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ドレミ楽譜メーカー</title>
+<style>
+:root{
+  --bg:#fdf6e8; --paper:#fffdf7; --ink:#3d3226; --sub:#8a7a63;
+  --gold:#d9a441; --gold-d:#b8862c; --line:#e8dcc4; --danger:#d9534f;
+  --do:#e8534a; --re:#ef8f3c; --mi:#dcb52e; --fa:#5eb14c; --so:#3aa6bd; --la:#4a7fd0; --si:#9a6bd0;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN",-apple-system,"Yu Gothic",sans-serif;
+  background:var(--bg); color:var(--ink); font-size:16px; line-height:1.7;
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:14px 12px 40px}
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.topbar h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.04em}
+.topbar .home{margin-left:auto;font-size:14px;color:var(--sub);text-decoration:none}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:16px;font-weight:800}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.muted{color:var(--sub);font-size:13px;line-height:1.6}
+.btn{background:var(--gold);color:#fff;border-radius:12px;padding:9px 16px;font-weight:700;box-shadow:0 3px 0 var(--gold-d);transition:transform .06s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gold-d)}
+.btn.sub{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:0 3px 0 #e0d5bd}
+.btn.sub:active{box-shadow:0 1px 0 #e0d5bd}
+.btn.danger{background:var(--danger);box-shadow:0 3px 0 #a83c39}
+.btn.big{font-size:19px;padding:13px 24px;border-radius:16px}
+.btn:disabled{opacity:.4;pointer-events:none}
+input[type=text],input[type=number],select,textarea{
+  background:#fff;border:2px solid var(--line);border-radius:10px;padding:7px 10px;
+}
+textarea{width:100%;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--sub);font-weight:700}
+
+/* 楽譜 */
+#sheet{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 16px 10px;margin-bottom:14px}
+#sheetHead{text-align:center;margin-bottom:6px}
+#sheetTitle{font-size:26px;font-weight:800;letter-spacing:.06em}
+#sheetSub{font-size:14px;color:var(--sub)}
+#score svg{display:block;width:100%;height:auto;margin-bottom:2px;break-inside:avoid}
+.nt{cursor:pointer}
+.nt .hit{fill:transparent}
+.nt.sel .hit{fill:#ffe9a8}
+.nt.play .hit{fill:#bfe6c9}
+.empty{text-align:center;color:var(--sub);padding:26px 8px}
+
+/* パレット */
+.pitchgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.pitchgrid button{
+  background:#fff;border:2px solid var(--line);border-radius:12px;padding:11px 2px;
+  font-size:17px;font-weight:800;box-shadow:0 3px 0 #e6dac2;line-height:1.2;
+}
+.pitchgrid button:active{transform:translateY(2px);box-shadow:0 1px 0 #e6dac2}
+.pitchgrid button small{display:block;font-size:10px;color:var(--sub);font-weight:400}
+.dgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.dgrid button{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px 2px;box-shadow:0 3px 0 #e6dac2;line-height:1.25}
+.dgrid button:active{transform:translateY(2px);box-shadow:0 1px 0 #e6dac2}
+.dgrid button.on{border-color:var(--gold);background:#fff6e3}
+.dgrid .g{display:block;line-height:0;margin-bottom:2px}
+.dgrid .g svg{display:inline-block;vertical-align:middle}
+.dgrid .t{display:block;font-size:11px;color:var(--sub)}
+.mode{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:#fff6e3;border:1px solid var(--line)}
+.mode.edit{background:#ffe9a8;border-color:var(--gold)}
+details{border-top:1px dashed var(--line);padding-top:8px;margin-top:8px}
+summary{cursor:pointer;font-weight:700;font-size:14px}
+.savelist{display:flex;flex-direction:column;gap:6px}
+.saveitem{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:#fff}
+.saveitem .nm{flex:1;font-weight:700}
+
+@media (max-width:640px){
+  .pitchgrid{grid-template-columns:repeat(5,1fr)}
+  .dgrid{grid-template-columns:repeat(3,1fr)}
+}
+@media print{
+  body{background:#fff}
+  .noprint,.topbar{display:none !important}
+  .wrap{max-width:none;padding:0}
+  #sheet{border:none;border-radius:0;padding:0;margin:0}
+  #score svg{page-break-inside:avoid}
+  .nt.sel .hit,.nt.play .hit{fill:transparent}
+}
+</style>
+<style id="pageStyle">@page{size:A4 landscape;margin:10mm}</style>
+</head>
+<body>
+
+<div class="topbar noprint">
+  <h1>🎵 ドレミ楽譜メーカー</h1>
+  <a class="home" href="index.html">アプリ棚へ</a>
+</div>
+
+<div class="wrap">
+
+  <!-- 楽譜 -->
+  <div id="sheet">
+    <div id="sheetHead">
+      <div id="sheetTitle">曲のなまえ</div>
+      <div id="sheetSub"></div>
+    </div>
+    <div id="score"></div>
+  </div>
+
+  <!-- 操作 -->
+  <div class="card noprint">
+    <div class="row">
+      <button class="btn big" id="btnPlay">▶ さいせい</button>
+      <button class="btn big sub" id="btnStop">■ とめる</button>
+      <button class="btn big sub" id="btnPrint">🖨 いんさつ</button>
+      <select id="fPaper" style="align-self:center">
+        <option value="landscape">A4 よこ</option>
+        <option value="portrait">A4 たて</option>
+      </select>
+      <div class="spacer"></div>
+      <span class="mode" id="modeTag">追加モード（さいごに足す）</span>
+    </div>
+  </div>
+
+  <!-- 入力パレット -->
+  <div class="card noprint">
+    <h2>① 音をえらぶ</h2>
+    <div class="pitchgrid" id="pitchGrid"></div>
+    <div class="row" style="margin-top:9px">
+      <button class="btn sub" id="btnAcc">♯ / ♭ なし</button>
+      <button class="btn sub" id="btnRest">うん（休符）を入れる</button>
+      <button class="btn sub" id="btnBack">← 1つ消す</button>
+    </div>
+
+    <h2 style="margin-top:16px">② 音のながさ</h2>
+    <div class="dgrid" id="durGrid"></div>
+
+    <div id="editBox" style="display:none;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)">
+      <div class="row">
+        <b style="font-size:14px">えらんだ音符：</b>
+        <button class="btn sub" data-ed="up">↑ たかく</button>
+        <button class="btn sub" data-ed="down">↓ ひくく</button>
+        <button class="btn sub" data-ed="ins">← 前に入れる</button>
+        <button class="btn danger" data-ed="del">けす</button>
+        <button class="btn sub" data-ed="none">えらぶのをやめる</button>
+      </div>
+      <div class="muted" style="margin-top:6px">音のボタン・ながさのボタンを押すと、えらんだ音符が書きかわります。</div>
+    </div>
+  </div>
+
+  <!-- 曲の設定 -->
+  <div class="card noprint">
+    <h2>③ 曲のせってい</h2>
+    <div class="row">
+      <label class="f">曲のなまえ<input type="text" id="fTitle" size="16" placeholder="かえるのうた"></label>
+      <label class="f">サブ（作曲者など）<input type="text" id="fSub" size="16" placeholder="ドイツみんよう"></label>
+      <label class="f">ひょうし
+        <select id="fMeter"><option>4/4</option><option>3/4</option><option>2/4</option></select>
+      </label>
+      <label class="f">はやさ（♩＝）<input type="number" id="fTempo" value="100" min="40" max="200" step="5" style="width:80px"></label>
+      <label class="f">1だんの小節数
+        <select id="fPerRow"><option value="2">2（とても大きい）</option><option value="3">3（大きい）</option><option value="4" selected>4（ふつう）</option><option value="5">5（小さめ）</option></select>
+      </label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="row" style="gap:5px;font-size:14px"><input type="checkbox" id="fDoremi" checked> ドレミを書く</label>
+      <label class="row" style="gap:5px;font-size:14px"><input type="checkbox" id="fColor" checked> 色音符にする</label>
+      <label class="row" style="gap:5px;font-size:14px"><input type="checkbox" id="fLyricOn"> 歌詞を書く</label>
+    </div>
+    <div id="lyricBox" style="display:none;margin-top:10px">
+      <label class="f">歌詞（音符の数だけ、スペースで区切る）
+        <textarea id="fLyrics" rows="2" placeholder="かえるの うたが きこえて くるよ"></textarea>
+      </label>
+    </div>
+  </div>
+
+  <!-- まとめて入力 -->
+  <div class="card noprint">
+    <h2>④ ドレミをまとめて入力</h2>
+    <textarea id="bulk" rows="3" placeholder="ドレミファミレド"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="btnBulk">この ドレミ で楽譜をつくる</button>
+      <button class="btn sub" id="btnBulkAdd">今の楽譜のうしろに足す</button>
+    </div>
+    <div class="muted" style="margin-top:8px">
+      ・ふつうに「ドレミファ」と書くと、ぜんぶ４分音符になります。<br>
+      ・<b>ー</b>（長音）を書くと、その前の音が１拍のびます。「ドーー」＝3拍<br>
+      ・<b>ん</b>を書くと「うん（４分休符）」になります。<br>
+      ・<b>（　）</b>でかこむと、その中はぜんぶ８分音符になります。「（ドドレレ）」＝2拍<br>
+      ・低い音は前に<b>低</b>、高い音は前に<b>高</b>（例：低ラ、高ド）。<b>#</b>や<b>♭</b>も音のうしろに書けます。<br>
+      ・つくったあとで、音符をタップすれば長さや高さを直せます。
+    </div>
+    <details>
+      <summary>サンプルを入れる（著作権フリーの曲）</summary>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sub samp" data-t="かえるのうた|ドイツみんよう|ドレミファミレドんミファソラソファミんドードードードー（ドドレレミミファファ）ミレドー">かえるのうた</button>
+        <button class="btn sub samp" data-t="メリーさんのひつじ|アメリカみんよう|ミレドレミミミーレレレーミソソーミレドレミミミミレレミレドーーー">メリーさんのひつじ</button>
+        <button class="btn sub samp" data-t="ちょうちょう|ドイツみんよう|ソミミーファレレードレミファソソソーソミミミファレレードミソソミーーー">ちょうちょう</button>
+      </div>
+    </details>
+  </div>
+
+  <!-- 保存 -->
+  <div class="card noprint">
+    <h2>⑤ ほぞん</h2>
+    <div class="row">
+      <button class="btn" id="btnSave">この楽譜をほぞん</button>
+      <button class="btn sub danger" id="btnClear">ぜんぶ消して新しく</button>
+    </div>
+    <div class="savelist" id="saveList" style="margin-top:10px"></div>
+    <div class="muted" style="margin-top:8px">この端末のブラウザに保存されます（他の端末には出ません）。</div>
+  </div>
+
+  <div class="muted noprint" style="text-align:center">
+    ※ 市販の曲・教科書の曲を打ちこむときは、授業での利用の範囲でお使いください。
+  </div>
+</div>
+
+<script>
+/* ============ 音の定義 ============ */
+// step: ダイアトニック段数。ド(C4)=0, レ=1 ... 高ド(C5)=7
+const NAMES=['ド','レ','ミ','ファ','ソ','ラ','シ'];
+const COLORS=['var(--do)','var(--re)','var(--mi)','var(--fa)','var(--so)','var(--la)','var(--si)'];
+const SEMI=[0,2,4,5,7,9,11];
+const PITCHES=[
+  {s:-3,l:'低ソ'},{s:-2,l:'低ラ'},{s:-1,l:'低シ'},
+  {s:0,l:'ド'},{s:1,l:'レ'},{s:2,l:'ミ'},{s:3,l:'ファ'},{s:4,l:'ソ'},{s:5,l:'ラ'},{s:6,l:'シ'},
+  {s:7,l:'高ド'},{s:8,l:'高レ'},{s:9,l:'高ミ'},{s:10,l:'高ファ'},{s:11,l:'高ソ'}
+];
+const DURS=[
+  {d:4,t:'全 4拍'},{d:3,t:'付点2分 3拍'},{d:2,t:'2分 2拍'},
+  {d:1.5,t:'付点4分 1.5拍'},{d:1,t:'4分 1拍'},{d:0.5,t:'8分 0.5拍'}
+];
+// ボタン用の小さな音符アイコン（フォントに頼らずSVGで描く）
+function durGlyph(d){
+  const hollow=d>=2, dot=(d===3||d===1.5), ink='#3d3226';
+  let s=`<svg width="30" height="46" viewBox="0 0 30 46">`;
+  s+=`<ellipse cx="11" cy="36" rx="8.5" ry="6.4" transform="rotate(-18 11 36)" fill="${hollow?'#fff':ink}" stroke="${ink}" stroke-width="${hollow?2.6:1.4}"/>`;
+  if(d<4) s+=`<line x1="19" y1="34" x2="19" y2="6" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>`;
+  if(d===0.5) s+=`<path d="M 19 6 c 11 5 13 15 6 25 c 4 -12 -1 -16 -6 -19 z" fill="${ink}"/>`;
+  if(dot) s+=`<circle cx="24" cy="36" r="2.6" fill="${ink}"/>`;
+  return s+'</svg>';
+}
+const METERS={'4/4':4,'3/4':3,'2/4':2};
+
+const mod7=n=>((n%7)+7)%7;
+const nameOf=s=>NAMES[mod7(s)];
+const colorOf=s=>COLORS[mod7(s)];
+const midiOf=(s,acc)=>60+12*Math.floor(s/7)+SEMI[mod7(s)]+(acc||0);
+
+/* ============ 状態 ============ */
+const S={
+  title:'', sub:'', meter:'4/4', tempo:100, perRow:4,
+  doremi:true, color:true, lyricOn:false, lyrics:'',
+  notes:[], sel:null, dur:1, acc:0
+};
+const $=id=>document.getElementById(id);
+
+/* ============ パレット描画 ============ */
+function buildPalette(){
+  $('pitchGrid').innerHTML = PITCHES.map(p=>
+    `<button data-s="${p.s}" style="color:${colorOf(p.s)}">${p.l}<small>${p.s<0?'ひくい':p.s>6?'たかい':'　'}</small></button>`
+  ).join('');
+  $('durGrid').innerHTML = DURS.map(d=>
+    `<button data-d="${d.d}" class="${d.d===S.dur?'on':''}"><span class="g">${durGlyph(d.d)}</span><span class="t">${d.t}</span></button>`
+  ).join('');
+}
+
+/* ============ 小節わけ ============ */
+function layout(){
+  const bpm=METERS[S.meter], ms=[]; let cur=[], acc=0;
+  S.notes.forEach((n,i)=>{
+    if(acc>0 && acc+n.d>bpm){ ms.push(cur); cur=[]; acc=0; }
+    cur.push({n,i,start:acc});
+    acc+=n.d;
+    if(acc>=bpm){ ms.push(cur); cur=[]; acc=0; }
+  });
+  if(cur.length||ms.length===0) ms.push(cur);
+  return ms;
+}
+
+/* ============ 楽譜SVG ============ */
+const W=1000, LX=118, RX=26, Y_E4=148, GAP=22, H=290;
+const yOf=s=>Y_E4-(s-2)*(GAP/2);
+
+function ledgers(x,s){
+  let o='';
+  if(s<=0){ for(let k=0;k>=s;k-=2) o+=`<line x1="${x-22}" y1="${yOf(k)}" x2="${x+22}" y2="${yOf(k)}" stroke="#3d3226" stroke-width="2.8"/>`; }
+  if(s>=12){ for(let k=12;k<=s;k+=2) o+=`<line x1="${x-22}" y1="${yOf(k)}" x2="${x+22}" y2="${yOf(k)}" stroke="#3d3226" stroke-width="2.8"/>`; }
+  return o;
+}
+
+function drawNote(x,n,i,beam){
+  const ink='#3d3226';
+  const hw = n.d<1?13:24;
+  let g=`<g class="nt" data-i="${i}"><rect class="hit" x="${x-hw}" y="18" width="${hw*2}" height="230" rx="8"/>`;
+  if(n.p===null){ // 休符
+    if(n.d>=4) g+=`<rect x="${x-13}" y="${yOf(8)}" width="26" height="11" fill="${ink}"/>`;
+    else if(n.d>=2) g+=`<rect x="${x-13}" y="${yOf(6)-11}" width="26" height="11" fill="${ink}"/>`;
+    else if(n.d>=1){
+      g+=`<path d="M ${x-7} 84 L ${x+7} 101 L ${x-6} 111 L ${x+8} 128" fill="none" stroke="${ink}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+      g+=`<path d="M ${x+8} 128 c -8 -6 -13 1 -8 8" fill="none" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>`;
+    } else {
+      g+=`<circle cx="${x-6}" cy="100" r="6" fill="${ink}"/>`;
+      g+=`<path d="M ${x-1} 97 L ${x+7} 126" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>`;
+    }
+    if(n.d===1.5||n.d===3) g+=`<circle cx="${x+22}" cy="96" r="4.5" fill="${ink}"/>`;
+    if(S.doremi) g+=`<text x="${x}" y="242" text-anchor="middle" font-size="21" font-weight="700" fill="#8a7a63">うん</text>`;
+    return g+'</g>';
+  }
+  const s=n.p, y=yOf(s), fill=S.color?colorOf(s):ink, hollow=n.d>=2;
+  g+=ledgers(x,s);
+  if(n.acc) g+=`<text x="${x-27}" y="${y+9}" font-size="30" font-weight="700" fill="${ink}" text-anchor="middle">${n.acc>0?'♯':'♭'}</text>`;
+  g+=`<ellipse cx="${x}" cy="${y}" rx="13.5" ry="10" transform="rotate(-18 ${x} ${y})" fill="${hollow?'#fff':fill}" stroke="${hollow?fill:fill}" stroke-width="${hollow?4:2}"/>`;
+  const up = beam? beam.up : s<6;
+  if(n.d<4){
+    const sx = up? x+12.4 : x-12.4, sy = up? y-3 : y+3, ey = beam? beam.y : (up? y-74 : y+74);
+    g+=`<line x1="${sx}" y1="${sy}" x2="${sx}" y2="${ey}" stroke="${ink}" stroke-width="3.4" stroke-linecap="round"/>`;
+    if(n.d===0.5 && !beam){
+      g+= up
+        ? `<path d="M ${sx} ${ey} c 17 8 21 24 9 40 c 6 -19 -1 -26 -9 -30 z" fill="${ink}"/>`
+        : `<path d="M ${sx} ${ey} c 17 -8 21 -24 9 -40 c 6 19 -1 26 -9 30 z" fill="${ink}"/>`;
+    }
+  }
+  if(n.d===1.5||n.d===3){
+    const onLine = (Math.abs(s-2)%2===0); // 線上の音は、すぐ上の間に点を打つ
+    g+=`<circle cx="${x+24}" cy="${onLine? y-11 : y}" r="4.5" fill="${ink}"/>`;
+  }
+  if(S.doremi) g+=`<text x="${x}" y="242" text-anchor="middle" font-size="${n.d<1?18:21}" font-weight="800" fill="${S.color?fill:ink}">${nameOf(s)}${n.acc>0?'♯':n.acc<0?'♭':''}</text>`;
+  return g+'</g>';
+}
+
+function render(){
+  const ms=layout(), per=S.perRow, bpm=METERS[S.meter];
+  const words = S.lyricOn ? S.lyrics.split(/[\s　]+/).filter(w=>w) : [];
+  let widx=0; const lyricMap={};
+  S.notes.forEach((n,i)=>{ if(n.p!==null && widx<words.length){ lyricMap[i]=words[widx++]; } });
+
+  let out='';
+  for(let r=0; r*per<ms.length; r++){
+    const rowMs = ms.slice(r*per, r*per+per);
+    // 音符が多い小節ほど広くする
+    const wt = rowMs.map(m=>1+0.16*Math.max(0,m.length-4));
+    const denom = wt.reduce((a,b)=>a+b,0) + (per-rowMs.length);
+    const usable = W-LX-RX;
+    const mws = wt.map(w=>usable*w/denom);
+    const mxs=[]; let cx=LX;
+    mws.forEach(w=>{ mxs.push(cx); cx+=w; });
+    const endX = cx;
+    let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+    for(let k=0;k<5;k++){ const y=60+GAP*k; s+=`<line x1="26" y1="${y}" x2="${endX}" y2="${y}" stroke="#3d3226" stroke-width="2.2"/>`; }
+    s+=`<text x="30" y="139" font-size="112" fill="#3d3226" font-family="Bravura,'Apple Symbols','Segoe UI Symbol','Noto Music',serif">&#x1D11E;</text>`;
+    if(r===0){
+      const [a,b]=S.meter.split('/');
+      s+=`<text x="92" y="105" font-size="46" font-weight="800" text-anchor="middle" fill="#3d3226">${a}</text>`;
+      s+=`<text x="92" y="149" font-size="46" font-weight="800" text-anchor="middle" fill="#3d3226">${b}</text>`;
+    }
+    rowMs.forEach((mnotes,j)=>{
+      const x0=mxs[j], mw=mws[j];
+      const pos = mnotes.map(o=>({o, x: x0 + 26 + (o.start/bpm)*(mw-52)}));
+      // 8分音符は同じ拍の中でつなぐ（連桁）
+      const beams=new Map(); let run=[];
+      const flush=()=>{
+        if(run.length>1){
+          const up = run.reduce((a,p)=>a+p.o.n.p,0)/run.length < 6;
+          const y = up ? Math.min(...run.map(p=>yOf(p.o.n.p)))-74
+                       : Math.max(...run.map(p=>yOf(p.o.n.p)))+74;
+          run.forEach(p=>beams.set(p.o.i,{up,y}));
+          const x1=run[0].x+(up?12.4:-12.4), x2=run[run.length-1].x+(up?12.4:-12.4);
+          s+=`<rect x="${Math.min(x1,x2)-1.7}" y="${up?y-4:y-4}" width="${Math.abs(x2-x1)+3.4}" height="8" fill="#3d3226"/>`;
+        }
+        run=[];
+      };
+      pos.forEach(p=>{
+        const e = p.o.n.d===0.5 && p.o.n.p!==null;
+        if(e && run.length && Math.floor(run[run.length-1].o.start)===Math.floor(p.o.start)) run.push(p);
+        else { flush(); if(e) run=[p]; }
+      });
+      flush();
+      pos.forEach(p=>{
+        s+=drawNote(p.x,p.o.n,p.o.i,beams.get(p.o.i));
+        if(S.lyricOn && lyricMap[p.o.i]) s+=`<text x="${p.x}" y="274" text-anchor="middle" font-size="${p.o.n.d<1?17:21}" fill="#3d3226">${esc(lyricMap[p.o.i])}</text>`;
+      });
+      const bx=x0+mw;
+      const last = (r*per+j)===ms.length-1;
+      if(last){
+        s+=`<line x1="${bx-7}" y1="60" x2="${bx-7}" y2="${60+GAP*4}" stroke="#3d3226" stroke-width="2.6"/>`;
+        s+=`<line x1="${bx}" y1="60" x2="${bx}" y2="${60+GAP*4}" stroke="#3d3226" stroke-width="6"/>`;
+      } else {
+        s+=`<line x1="${bx}" y1="60" x2="${bx}" y2="${60+GAP*4}" stroke="#3d3226" stroke-width="2.6"/>`;
+      }
+    });
+    out+=s+'</svg>';
+  }
+  $('score').innerHTML = S.notes.length? out : out+'<div class="empty noprint">下の「音をえらぶ」か「④ ドレミをまとめて入力」から音符を入れてね</div>';
+  $('sheetTitle').textContent = S.title || '曲のなまえ';
+  $('sheetSub').textContent = S.sub;
+  if(S.sel!==null){ const el=document.querySelector(`.nt[data-i="${S.sel}"]`); if(el) el.classList.add('sel'); }
+  $('editBox').style.display = S.sel===null?'none':'block';
+  $('modeTag').textContent = S.sel===null?'追加モード（さいごに足す）':'なおすモード（えらんだ音符を書きかえ）';
+  $('modeTag').className = 'mode'+(S.sel===null?'':' edit');
+}
+const esc=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ============ 編集 ============ */
+function addNote(p,acc){ S.notes.push({p,acc:acc||0,d:S.dur}); render(); }
+function setDur(d){
+  S.dur=d;
+  document.querySelectorAll('#durGrid button').forEach(b=>b.classList.toggle('on',+b.dataset.d===d));
+  if(S.sel!==null){ S.notes[S.sel].d=d; render(); }
+}
+$('pitchGrid').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const s=+b.dataset.s;
+  if(S.sel!==null){ S.notes[S.sel].p=s; S.notes[S.sel].acc=S.acc; render(); }
+  else addNote(s,S.acc);
+});
+$('durGrid').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setDur(+b.dataset.d); });
+$('score').addEventListener('click',e=>{
+  const g=e.target.closest('.nt'); if(!g) return;
+  const i=+g.dataset.i;
+  S.sel = (S.sel===i)? null : i;
+  if(S.sel!==null){ setDur(S.notes[i].d); }
+  render();
+});
+$('btnRest').onclick=()=>{ if(S.sel!==null){ S.notes[S.sel].p=null; } else S.notes.push({p:null,acc:0,d:S.dur}); render(); };
+$('btnBack').onclick=()=>{ if(S.sel!==null){ S.notes.splice(S.sel,1); S.sel=null; } else S.notes.pop(); render(); };
+$('btnAcc').onclick=()=>{
+  S.acc = S.acc===0?1:S.acc===1?-1:0;
+  $('btnAcc').textContent = S.acc===0?'♯ / ♭ なし':S.acc===1?'♯（シャープ）を つける':'♭（フラット）を つける';
+  if(S.sel!==null && S.notes[S.sel].p!==null){ S.notes[S.sel].acc=S.acc; render(); }
+};
+$('editBox').addEventListener('click',e=>{
+  const b=e.target.closest('[data-ed]'); if(!b||S.sel===null) return;
+  const n=S.notes[S.sel], a=b.dataset.ed;
+  if(a==='up'&&n.p!==null) n.p=Math.min(12,n.p+1);
+  if(a==='down'&&n.p!==null) n.p=Math.max(-4,n.p-1);
+  if(a==='ins'){ S.notes.splice(S.sel,0,{p:n.p,acc:0,d:S.dur}); }
+  if(a==='del'){ S.notes.splice(S.sel,1); S.sel=null; }
+  if(a==='none') S.sel=null;
+  render();
+});
+
+/* ============ 設定 ============ */
+function bind(id,key,ev,get){
+  $(id).addEventListener(ev||'input',()=>{ S[key]=get($(id)); render(); });
+}
+bind('fTitle','title','input',e=>e.value);
+bind('fSub','sub','input',e=>e.value);
+bind('fMeter','meter','change',e=>e.value);
+bind('fPerRow','perRow','change',e=>+e.value);
+bind('fLyrics','lyrics','input',e=>e.value);
+$('fTempo').addEventListener('input',()=>S.tempo=+$('fTempo').value||100);
+$('fDoremi').addEventListener('change',()=>{S.doremi=$('fDoremi').checked;render()});
+$('fColor').addEventListener('change',()=>{S.color=$('fColor').checked;render()});
+$('fLyricOn').addEventListener('change',()=>{
+  S.lyricOn=$('fLyricOn').checked; $('lyricBox').style.display=S.lyricOn?'block':'none'; render();
+});
+
+/* ============ ドレミ テキスト解析 ============ */
+function parseDoremi(txt){
+  const out=[]; const t=txt.replace(/[｜|\/、,\n\r]/g,' ');
+  let i=0, oct=0, unit=1;
+  const base={'ド':0,'レ':1,'ミ':2,'ファ':3,'ソ':4,'ラ':5,'シ':6};
+  while(i<t.length){
+    const c=t[i];
+    if(c===' '||c==='　'){ i++; continue; }
+    if(c==='('||c==='（'){ unit=0.5; i++; continue; }
+    if(c===')'||c==='）'){ unit=1; i++; continue; }
+    if(c==='低'){ oct=-7; i++; continue; }
+    if(c==='高'||c==='＋'||c==='+'){ oct=7; i++; continue; }
+    if(c==='ー'||c==='－'||c==='―'||c==='‐'){ if(out.length) out[out.length-1].d+=unit; i++; continue; }
+    if(c==='ん'||c==='休'||c==='・'){ out.push({p:null,acc:0,d:unit}); i++; continue; }
+    if(c==='う'&&t[i+1]==='ん'){ out.push({p:null,acc:0,d:unit}); i+=2; continue; }
+    let nm=null, len=1;
+    if(c==='フ'){ nm='ファ'; len=(t[i+1]==='ァ')?2:1; }
+    else if(base[c]!==undefined){ nm=c; }
+    if(nm!==null){
+      let acc=0, j=i+len;
+      if(t[j]==='#'||t[j]==='＃'||t[j]==='♯'){acc=1;j++;}
+      else if(t[j]==='♭'||t[j]==='b'||t[j]==='ｂ'){acc=-1;j++;}
+      out.push({p:base[nm]+oct,acc,d:unit});
+      oct=0; i=j; continue;
+    }
+    i++;
+  }
+  return out;
+}
+$('btnBulk').onclick=()=>{ const a=parseDoremi($('bulk').value); if(!a.length){alert('ドレミが読み取れませんでした');return;} S.notes=a; S.sel=null; render(); };
+$('btnBulkAdd').onclick=()=>{ const a=parseDoremi($('bulk').value); S.notes=S.notes.concat(a); S.sel=null; render(); };
+document.querySelectorAll('.samp').forEach(b=>b.onclick=()=>{
+  const [ti,su,dr]=b.dataset.t.split('|');
+  $('fTitle').value=S.title=ti; $('fSub').value=S.sub=su; $('bulk').value=dr;
+  S.notes=parseDoremi(dr); S.sel=null; render();
+});
+
+/* ============ 再生 ============ */
+let ac=null, timers=[];
+function stopAll(){
+  timers.forEach(clearTimeout); timers=[];
+  document.querySelectorAll('.nt.play').forEach(e=>e.classList.remove('play'));
+  if(ac){ ac.close(); ac=null; }
+}
+$('btnStop').onclick=stopAll;
+$('btnPlay').onclick=()=>{
+  stopAll();
+  if(!S.notes.length) return;
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  const spb=60/(S.tempo||100);
+  let t=ac.currentTime+0.15, ms=0;
+  S.notes.forEach((n,i)=>{
+    const dur=n.d*spb;
+    if(n.p!==null){
+      const f=440*Math.pow(2,(midiOf(n.p,n.acc)-69)/12);
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type='triangle'; o.frequency.value=f;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.22,t+0.02);
+      g.gain.setValueAtTime(0.22,t+dur*0.75);
+      g.gain.linearRampToValueAtTime(0.0001,t+dur*0.97);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur);
+    }
+    const at=ms;
+    timers.push(setTimeout(()=>{
+      document.querySelectorAll('.nt.play').forEach(e=>e.classList.remove('play'));
+      const el=document.querySelector(`.nt[data-i="${i}"]`); if(el) el.classList.add('play');
+    }, at*1000));
+    t+=dur; ms+=dur;
+  });
+  timers.push(setTimeout(stopAll, ms*1000+400));
+};
+$('btnPrint').onclick=()=>{
+  $('pageStyle').textContent=`@page{size:A4 ${$('fPaper').value};margin:10mm}`;
+  S.sel=null; render(); setTimeout(()=>window.print(),80);
+};
+
+/* ============ 保存 ============ */
+const KEY='doremi_scores_v1';
+const load=()=>{ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []} };
+function drawSaves(){
+  const a=load();
+  $('saveList').innerHTML = a.length? a.map((s,i)=>
+    `<div class="saveitem"><span class="nm">${esc(s.title||'（なまえなし）')}</span>
+     <button class="btn sub" data-ld="${i}">ひらく</button>
+     <button class="btn sub danger" data-rm="${i}">けす</button></div>`).join('')
+   : '<div class="muted">ほぞんした楽譜はまだありません。</div>';
+}
+$('btnSave').onclick=()=>{
+  const a=load();
+  const data={title:S.title,sub:S.sub,meter:S.meter,tempo:S.tempo,perRow:S.perRow,
+    doremi:S.doremi,color:S.color,lyricOn:S.lyricOn,lyrics:S.lyrics,notes:S.notes};
+  const k=a.findIndex(x=>x.title===S.title && S.title);
+  if(k>=0) a[k]=data; else a.push(data);
+  localStorage.setItem(KEY,JSON.stringify(a)); drawSaves(); alert('ほぞんしました');
+};
+$('saveList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-ld],[data-rm]'); if(!b) return;
+  const a=load();
+  if(b.dataset.ld!==undefined){
+    Object.assign(S,a[+b.dataset.ld]); S.sel=null; syncForm(); render();
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    if(!confirm('けしますか？')) return;
+    a.splice(+b.dataset.rm,1); localStorage.setItem(KEY,JSON.stringify(a)); drawSaves();
+  }
+});
+$('btnClear').onclick=()=>{ if(!confirm('楽譜をぜんぶ消しますか？')) return; S.notes=[]; S.sel=null; render(); };
+function syncForm(){
+  $('fTitle').value=S.title; $('fSub').value=S.sub; $('fMeter').value=S.meter;
+  $('fTempo').value=S.tempo; $('fPerRow').value=S.perRow;
+  $('fDoremi').checked=S.doremi; $('fColor').checked=S.color;
+  $('fLyricOn').checked=S.lyricOn; $('fLyrics').value=S.lyrics;
+  $('lyricBox').style.display=S.lyricOn?'block':'none';
+}
+
+// URLで渡せる：?t=曲名&s=サブ&d=ドレミ
+const q=new URLSearchParams(location.search);
+if(q.get('d')){
+  S.title=q.get('t')||''; S.sub=q.get('s')||'';
+  if(q.get('m')&&METERS[q.get('m')]) S.meter=q.get('m');
+  S.notes=parseDoremi(q.get('d')); syncForm(); $('bulk').value=q.get('d');
+}
+buildPalette(); drawSaves(); render();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>たいせきつみき</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button{font-family:inherit;font-size:1.05rem;min-height:48px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700;margin-right:4px}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+.stage{display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media(max-width:820px){.stage{grid-template-columns:1fr}}
+canvas{width:100%;display:block;background:#fdfbf6;border-radius:10px}
+#q{font-size:clamp(1.2rem,3vw,1.7rem);font-weight:800;color:var(--navy);margin-bottom:8px}
+#count{font-size:2.4rem;font-weight:800;color:var(--acc);text-align:center;line-height:1.2}
+#fb{font-size:1.1rem;font-weight:700;min-height:3em;margin:10px 0}
+.top{display:grid;gap:4px;margin:8px auto;max-width:280px}
+.top button{min-height:48px;padding:0;font-size:1.2rem;border-radius:8px}
+.top button.h1{background:#ffe3c9}.top button.h2{background:#ffc89a}.top button.h3{background:#f7a868}.top button.h4{background:#ee8a44;color:#fff}.top button.h5{background:#d96c22;color:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad button{font-size:1.6rem;min-height:56px}
+#disp{font-size:2.2rem;font-weight:800;text-align:center;border:3px solid var(--line);border-radius:var(--r);min-height:60px;margin-bottom:8px}
+.hide{display:none!important}
+.stat{font-size:.9rem;color:var(--sub);margin-top:8px}
+.note{font-size:.88rem;color:var(--sub)}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>たいせきつみき</h1></header>
+<main>
+  <div class="card">
+    <div class="row"><span class="lbl">あそびかた</span>
+      <span class="tabs row" id="modeTabs"><button data-m="build" class="on">つんで しらべる</button><button data-m="box">ちょくほうたい クイズ</button><button data-m="step">かいだん・L字 クイズ</button></span></div>
+  </div>
+  <div class="stage">
+    <div class="card"><canvas id="cv" width="800" height="600"></canvas>
+      <div class="row" style="justify-content:center;margin-top:8px"><button id="layerBtn" class="hide">だんごとに わけて見る</button></div></div>
+    <div class="card">
+      <div id="q"></div>
+      <div id="buildBox">
+        <div id="count">0 cm³</div>
+        <div class="note" style="text-align:center">つみき1こ ＝ 1cm³（1りっぽうセンチメートル）</div>
+        <p class="note" style="margin-top:8px">↓ 上から見た ず（左上が いちばん おく）。ますを タップすると 1こ つむよ。</p>
+        <div class="top" id="top"></div>
+        <div class="row"><span class="tabs row" id="toolTabs"><button data-t="add" class="on">＋ つむ</button><button data-t="del">− とる</button></span><button id="clearBtn">ぜんぶ とる</button></div>
+      </div>
+      <div id="ansBox" class="hide"><div id="disp"></div><div class="pad" id="pad"></div></div>
+      <div id="fb"></div>
+      <button id="nextBtn" class="hide" style="width:100%">つぎの もんだい</button>
+      <div class="stat" id="stat"></div>
+    </div>
+  </div>
+  <div class="card note">
+    <b style="color:var(--navy)">ポイント</b>　たいせきは 1cm³ の つみきが いくつ分か。ちょくほうたいは <b>たて × よこ × たかさ</b>。1だんめの こすう × だんの かず と かんがえても いいね。見えない うしろや した にも つみきが あるよ（うかんで いる つみきや あなは ない きまり）。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_15_';
+let stat={ok:0,all:0};try{const s=JSON.parse(localStorage.getItem(KEY+'stat'));if(s)stat=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY+'stat',JSON.stringify(stat));}catch(e){}}
+const $=id=>document.getElementById(id);
+const N=5,MAXH=5;
+const S={mode:'build',tool:'add'};
+let hm=[],quiz=null,typed='',answered=false,split=false;
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function empty(n){return Array.from({length:n},()=>Array(n).fill(0));}
+hm=empty(N);
+try{const s=JSON.parse(localStorage.getItem(KEY+'build'));if(s&&s.length===N)hm=s;}catch(e){}
+const cv=$('cv'),ctx=cv.getContext('2d');
+function faceColor(base,shade){
+  const [r,g,b]=base;return `rgb(${Math.round(r*shade)},${Math.round(g*shade)},${Math.round(b*shade)})`;
+}
+const PAL=[[255,196,140],[140,200,240],[170,220,160],[240,170,200],[250,225,130]];
+function draw(map,opt={}){
+  const n=map.length;const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+  let maxh=0;map.forEach(r=>r.forEach(v=>maxh=Math.max(maxh,v)));
+  const layers=opt.split?maxh:1;const gap=opt.split?0.8:0;
+  // fit size
+  const hTot=Math.max(maxh,3)+(opt.split?gap*(maxh-1):0);
+  const s=Math.min(W/((n*2)*0.866+(opt.split?4.8:1)),H/(n+hTot+1.2));
+  const a=s*0.866,b=s*0.5;
+  const ox=opt.split?n*a+s*0.3:W/2,oy=H-(n*2*b)-s*0.4;
+  const P=(x,y,z)=>[ox+(x-y)*a,oy+(x+y)*b-z*s];
+  // floor
+  ctx.lineWidth=1;ctx.strokeStyle='#d8cfbd';
+  for(let i=0;i<=n;i++){let p=P(i,0,0),q=P(i,n,0);ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.stroke();p=P(0,i,0);q=P(n,i,0);ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.stroke();}
+  const poly=(pts,fill)=>{ctx.beginPath();ctx.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)ctx.lineTo(...pts[i]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle='#5a4a3a';ctx.lineWidth=Math.max(1,s/28);ctx.stroke();};
+  const cubes=[];
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++)for(let k=0;k<map[i][j];k++)cubes.push([i,j,k]);
+  cubes.sort((p,q)=>(p[0]+p[1])-(q[0]+q[1])||p[2]-q[2]);
+  cubes.forEach(([i,j,k])=>{
+    const z=k+(opt.split?k*gap:0);
+    const col=opt.split?PAL[k%PAL.length]:PAL[0];
+    poly([P(i,j,z+1),P(i+1,j,z+1),P(i+1,j+1,z+1),P(i,j+1,z+1)],faceColor(col,1));
+    poly([P(i+1,j,z+1),P(i+1,j+1,z+1),P(i+1,j+1,z),P(i+1,j,z)],faceColor(col,.72));
+    poly([P(i,j+1,z+1),P(i+1,j+1,z+1),P(i+1,j+1,z),P(i,j+1,z)],faceColor(col,.86));
+  });
+  if(opt.split){
+    ctx.font=`bold ${Math.round(s*0.45)}px sans-serif`;ctx.fillStyle='#1f3a5f';ctx.textAlign='left';
+    for(let k=0;k<maxh;k++){let c=0;map.forEach(r=>r.forEach(v=>{if(v>k)c++;}));const z=k+k*gap;const p=P(n,0,z+0.5);ctx.fillText(`${k+1}だんめ ${c}こ`,p[0]+s*0.3,p[1]);}
+  }
+  if(opt.dims){
+    ctx.font=`bold ${Math.round(s*0.5)}px sans-serif`;ctx.fillStyle='#c0392b';ctx.textAlign='center';
+    const d=opt.dims;
+    let p=P(d.x/2,d.y+0.9,0);ctx.fillText(`${d.x}cm`,p[0]-a*0.2,p[1]+s*0.5);
+    p=P(d.x+0.9,d.y/2,0);ctx.fillText(`${d.y}cm`,p[0]+a*0.3,p[1]+s*0.5);
+    p=P(d.x,d.y,d.z/2);ctx.textAlign='left';ctx.fillText(`${d.z}cm`,p[0]+s*0.25,p[1]+s*0.2);
+  }
+}
+function vol(map){let v=0;map.forEach(r=>r.forEach(x=>v+=x));return v;}
+function boxInfo(map){
+  // is it a cuboid?
+  let cells=[],h=null,ok=true;
+  map.forEach((r,i)=>r.forEach((v,j)=>{if(v>0){cells.push([i,j]);if(h===null)h=v;else if(h!==v)ok=false;}}));
+  if(!cells.length||!ok)return null;
+  const is=cells.map(c=>c[0]),js=cells.map(c=>c[1]);
+  const x=Math.max(...is)-Math.min(...is)+1,y=Math.max(...js)-Math.min(...js)+1;
+  if(x*y!==cells.length)return null;return {x,y,z:h};
+}
+function renderTop(){
+  const t=$('top');t.style.gridTemplateColumns=`repeat(${N},1fr)`;
+  let h='';
+  // show so that x goes right-down, y left-down: top view with row = j? Use simple grid: rows=j? keep i as column
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const v=hm[i][j];h+=`<button data-i="${i}" data-j="${j}" class="${v?'h'+v:''}">${v||''}</button>`;}
+  t.innerHTML=h;
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,j=+b.dataset.j;
+    if(S.tool==='add')hm[i][j]=Math.min(MAXH,hm[i][j]+1);else hm[i][j]=Math.max(0,hm[i][j]-1);
+    try{localStorage.setItem(KEY+'build',JSON.stringify(hm));}catch(e){}buildUpdate();});
+}
+function buildUpdate(){
+  renderTop();draw(hm,{split});
+  const v=vol(hm),bi=boxInfo(hm);
+  let t=v+' cm³';
+  if(bi&&v>1)t+=`<div style="font-size:1.05rem;color:#1f3a5f">ちょくほうたい！ ${bi.x}×${bi.y}×${bi.z}＝${v}</div>`;
+  $('count').innerHTML=t;
+}
+function genBox(){const x=rnd(2,5),y=rnd(2,5),z=rnd(2,5);const m=empty(N);for(let i=0;i<x;i++)for(let j=0;j<y;j++)m[i][j]=z;return {map:m,ans:x*y*z,dims:{x,y,z},type:'box'};}
+function genStep(){
+  const m=empty(N);const kind=rnd(0,1);
+  if(kind===0){ // staircase along x, full depth y
+    const x=rnd(3,5),y=rnd(2,4);for(let i=0;i<x;i++)for(let j=0;j<y;j++)m[i][j]=x-i;
+    return {map:m,ans:vol(m),type:'step',info:`だんごとに：${Array.from({length:x},(_,k)=>(x-k)*y).reverse().join('＋')}`};
+  }
+  // L shape: big box minus a block at front-right corner region (heights)
+  const x=rnd(3,5),y=rnd(3,5),z=rnd(2,4),cx=rnd(1,x-1),cz=rnd(1,z-1);
+  for(let i=0;i<x;i++)for(let j=0;j<y;j++)m[i][j]=i>=x-cx?z-cz:z;
+  return {map:m,ans:vol(m),type:'step',info:`うしろの ${x-cx}×${y}×${z}＝${(x-cx)*y*z} と まえの ${cx}×${y}×${z-cz}＝${cx*y*(z-cz)}`};
+}
+function newQ(){
+  answered=false;typed='';split=false;$('fb').textContent='';$('nextBtn').classList.add('hide');$('disp').textContent='';
+  if(S.mode==='build'){$('q').textContent='つみきを つんで、たいせきを しらべよう';buildUpdate();$('layerBtn').classList.remove('hide');}
+  else{quiz=S.mode==='box'?genBox():genStep();$('q').textContent='たいせきは なんcm³？';draw(quiz.map,{dims:quiz.dims});$('layerBtn').classList.add('hide');}
+  $('layerBtn').textContent='だんごとに わけて見る';
+  showStat();
+}
+function judge(v){
+  if(answered)return;answered=true;stat.all++;const ok=v===quiz.ans;if(ok)stat.ok++;save();
+  let t=ok?`<span style="color:#2e8b57">⭕ せいかい！ ${quiz.ans}cm³</span>`:`<span style="color:#c0392b">❌ こたえは ${quiz.ans}cm³</span>`;
+  if(quiz.type==='box'){const d=quiz.dims;t+=`<br>${d.x} × ${d.y} × ${d.z} ＝ ${quiz.ans}<br>（1だんめ ${d.x*d.y}こ が ${d.z}だん）`;}
+  else t+='<br>'+quiz.info;
+  $('fb').innerHTML=t;split=true;draw(quiz.map,{split:true});$('layerBtn').classList.remove('hide');$('layerBtn').textContent='もとに もどす';
+  $('nextBtn').classList.remove('hide');showStat();
+}
+$('layerBtn').onclick=()=>{split=!split;$('layerBtn').textContent=split?'もとに もどす':'だんごとに わけて見る';
+  if(S.mode==='build')draw(hm,{split});else draw(quiz.map,{split,dims:split?null:quiz.dims});};
+$('clearBtn').onclick=()=>{hm=empty(N);try{localStorage.setItem(KEY+'build',JSON.stringify(hm));}catch(e){}buildUpdate();};
+$('nextBtn').onclick=newQ;
+(function(){const pad=$('pad');['7','8','9','4','5','6','1','2','3','けす','0','OK'].forEach(k=>{const b=document.createElement('button');b.textContent=k;if(k==='OK')b.className='pri';
+  b.onclick=()=>{if(answered)return;if(k==='けす')typed=typed.slice(0,-1);else if(k==='OK'){if(typed)judge(+typed);}else if(typed.length<3)typed+=k;$('disp').textContent=typed?typed+' cm³':'';};pad.appendChild(b);});})();
+function showStat(){$('stat').textContent=S.mode==='build'?'':`せいかい ${stat.ok} / ${stat.all}`;}
+function tabs(id,attr,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset[attr]);});}
+tabs('toolTabs','t',v=>S.tool=v);
+tabs('modeTabs','m',v=>{S.mode=v;$('buildBox').classList.toggle('hide',v!=='build');$('ansBox').classList.toggle('hide',v==='build');newQ();});
+newQ();
+</script>
+</body>
+</html>

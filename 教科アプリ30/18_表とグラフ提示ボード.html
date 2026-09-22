@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>表とグラフ提示ボード</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1400px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button,select{font-family:inherit;font-size:1rem;min-height:44px;padding:6px 12px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid var(--line);padding:4px}
+th{background:#eef2f7;color:var(--navy);font-size:.9rem}
+td input{width:100%;font-size:1.05rem;padding:6px;border:none;font-family:inherit;background:transparent}
+td input.v{text-align:right}
+td.del button{min-height:36px;padding:2px 8px;border:none;color:var(--ng)}
+input.txt{font-size:1.05rem;padding:8px;border:2px solid var(--line);border-radius:10px;font-family:inherit;width:100%}
+svg{width:100%;height:auto;display:block;background:#fff}
+.note{font-size:.85rem;color:var(--sub)}
+label.chk{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--navy);min-height:40px;margin-right:10px}
+label.chk input{width:20px;height:20px}
+body.present header,body.present .edit,body.present footer,body.present .howto{display:none}
+body.present .layout{grid-template-columns:1fr}
+body.present main{max-width:none;padding:8px}
+#presBar{display:none}
+body.present #presBar{display:flex}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>表とグラフ提示ボード</h1></header>
+<main>
+  <div class="layout">
+    <div class="card edit">
+      <div class="row" style="margin-bottom:8px"><span class="lbl">データ</span>
+        <select id="preset"><option value="">── ひな形を読みこむ ──</option></select>
+        <select id="saved"><option value="">── 保存したデータ ──</option></select></div>
+      <input class="txt" id="title" placeholder="題名（例：すきなくだもの調べ）" style="margin-bottom:6px">
+      <div class="row" style="margin-bottom:6px"><input class="txt" id="xname" placeholder="項目名（例：しゅるい）" style="flex:1"><input class="txt" id="unit" placeholder="単位（例：人）" style="width:7em"></div>
+      <table><thead><tr><th>項目</th><th style="width:30%">数</th><th style="width:40px"></th></tr></thead><tbody id="tb"></tbody></table>
+      <div class="row" style="margin-top:8px"><button id="addBtn">＋ 行を追加</button><button id="saveBtn">保存</button><button id="delSaved">保存データを削除</button></div>
+      <p class="note" style="margin-top:6px">データはこの端末（ブラウザ）の中だけに保存されます。児童名など個人情報は入れないでください。</p>
+    </div>
+    <div class="card">
+      <div class="row edit" style="margin-bottom:8px">
+        <span class="tabs row" id="typeTabs"><button data-g="bar" class="on">棒グラフ</button><button data-g="line">折れ線グラフ</button><button data-g="table">表</button></span>
+        <span class="lbl" style="margin-left:6px">1目もり</span><select id="step"><option value="auto">自動</option><option>1</option><option>2</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>0.5</option><option>0.1</option></select>
+      </div>
+      <div class="row edit" style="margin-bottom:8px">
+        <label class="chk"><input type="checkbox" id="sortChk">多い順（「その他」は最後）</label>
+        <label class="chk"><input type="checkbox" id="valChk">数を表示</label>
+        <label class="chk"><input type="checkbox" id="waveChk">途中を省く（〰）</label>
+        <label class="chk"><input type="checkbox" id="horizChk">横向き</label>
+      </div>
+      <div class="row edit" style="margin-bottom:8px">
+        <button id="revealBtn">1本ずつ出す</button><button class="pri" id="presBtn">⛶ 提示モード</button>
+      </div>
+      <div class="row" id="presBar" style="margin-bottom:8px"><button id="stepBtn" class="pri">▶ つぎ</button><button id="allBtn">全部見せる</button><button id="exitBtn">✕ 提示をやめる</button></div>
+      <svg id="svg" viewBox="0 0 1000 620"></svg>
+      <p class="note" id="warn" style="margin-top:6px"></p>
+    </div>
+  </div>
+  <div class="card howto note">
+    <b style="color:var(--navy)">こんなときに</b>　3年「表と棒グラフ」、4年「折れ線グラフ」で、子どもの調べたデータをその場でグラフにして提示。「1本ずつ出す」で次の棒を予想させたり、目もりの取り方（1目もり2人・5人）を比べたりできます。折れ線では「途中を省く」で波線（〰）入りのグラフを見せられます。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_18_';
+const $=id=>document.getElementById(id);
+const PRESETS={
+  'すきなくだもの':{title:'すきなくだもの調べ（3年1組）',xname:'しゅるい',unit:'人',rows:[['りんご',8],['バナナ',5],['いちご',11],['みかん',4],['ぶどう',6],['その他',3]]},
+  'けがの場所':{title:'4月にけがをした場所',xname:'場所',unit:'人',rows:[['校庭',16],['体育館',7],['ろうか',5],['教室',3],['階段',2],['その他',4]]},
+  '1日の気温':{title:'1日の気温の変わり方（4月20日）',xname:'時こく',unit:'度',rows:[['午前9時',14],['10時',16],['11時',18],['正午',20],['午後1時',21],['2時',21],['3時',19],['4時',17]]},
+  'ヘチマの成長':{title:'ヘチマのくきの長さ',xname:'日',unit:'cm',rows:[['6/1',12],['6/8',20],['6/15',35],['6/22',58],['6/29',90],['7/6',130],['7/13',150]]},
+  '体温の変化':{title:'体温の変わり方',xname:'時こく',unit:'度',rows:[['6時',36.2],['9時',36.5],['12時',36.8],['15時',37.0],['18時',36.7],['21時',36.4]]},
+};
+let D=JSON.parse(JSON.stringify(PRESETS['すきなくだもの']));
+let G='bar',reveal=null;
+try{const s=JSON.parse(localStorage.getItem(KEY+'cur'));if(s&&s.rows)D=s;const g=localStorage.getItem(KEY+'type');if(g)G=g;}catch(e){}
+function saveCur(){try{localStorage.setItem(KEY+'cur',JSON.stringify(D));localStorage.setItem(KEY+'type',G);}catch(e){}}
+function loadSaved(){try{return JSON.parse(localStorage.getItem(KEY+'saved'))||{};}catch(e){return {};}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fillSelects(){
+  $('preset').innerHTML='<option value="">── ひな形を読みこむ ──</option>'+Object.keys(PRESETS).map(k=>`<option>${k}</option>`).join('');
+  const sv=loadSaved();$('saved').innerHTML='<option value="">── 保存したデータ ──</option>'+Object.keys(sv).map(k=>`<option>${esc(k)}</option>`).join('');
+}
+function renderTable(){
+  $('title').value=D.title;$('xname').value=D.xname;$('unit').value=D.unit;
+  $('tb').innerHTML=D.rows.map((r,i)=>`<tr><td><input data-i="${i}" data-k="0" value="${esc(r[0])}"></td><td><input class="v" data-i="${i}" data-k="1" inputmode="decimal" value="${r[1]}"></td><td class="del"><button data-d="${i}">✕</button></td></tr>`).join('');
+  $('tb').querySelectorAll('input').forEach(inp=>inp.oninput=()=>{const i=+inp.dataset.i,k=+inp.dataset.k;D.rows[i][k]=k?(parseFloat(inp.value)||0):inp.value;reveal=null;draw();saveCur();});
+  $('tb').querySelectorAll('button[data-d]').forEach(b=>b.onclick=()=>{D.rows.splice(+b.dataset.d,1);reveal=null;renderTable();draw();saveCur();});
+}
+['title','xname','unit'].forEach(id=>$(id).oninput=()=>{D[id]=$(id).value;draw();saveCur();});
+function niceStep(max,steps){
+  const cands=[0.1,0.2,0.5,1,2,5,10,20,50,100,200,500,1000];
+  for(const c of cands)if(max/c<=steps)return c;return 1000;
+}
+function fmt(v){return String(Math.round(v*1000)/1000);}
+function rows(){
+  let r=D.rows.filter(x=>String(x[0]).trim()!=='');
+  if(G==='bar'&&$('sortChk').checked){
+    const other=r.filter(x=>/^その他$|^そのた$/.test(String(x[0]).trim()));
+    r=r.filter(x=>!other.includes(x)).sort((a,b)=>b[1]-a[1]).concat(other);
+  }
+  return r;
+}
+function draw(){
+  const R=rows();const svg=$('svg');const warn=[];
+  if(G==='table'){drawTable(R);return;}
+  const W=1000,H=620,L=110,T=90,Rt=40,B=90;
+  const horiz=G==='bar'&&$('horizChk').checked;
+  const vals=R.map(r=>+r[1]);let max=Math.max(0,...vals),min=Math.min(...vals,max);
+  const wave=G==='line'&&$('waveChk').checked&&min>0;
+  let step=$('step').value==='auto'?null:parseFloat($('step').value);
+  let lo=0;
+  if(wave){const s0=step||niceStep(max-min,10);lo=Math.max(0,Math.floor(min/s0)*s0-s0);}
+  if(!step)step=niceStep(Math.max(max-lo,1e-9),12);
+  let hi=Math.ceil(max/step)*step;if(hi<=lo)hi=lo+step;
+  let n=Math.round((hi-lo)/step);
+  if(n>40){warn.push('目もりが多すぎるので、1目もりを大きくしてください。');step=niceStep(hi-lo,12);n=Math.round((hi-lo)/step);}
+  if(vals.some(v=>v<0))warn.push('マイナスの数はグラフに表示できません。');
+  const labStep=n>20?5:n>12?2:1;
+  const pw=W-L-Rt,ph=H-T-B;
+  let h=`<text x="${W/2}" y="42" text-anchor="middle" font-size="32" font-weight="800" fill="#1f3a5f">${esc(D.title)}</text>`;
+  const vis=reveal==null?R.length:reveal;
+  if(!horiz){
+    const y=v=>T+ph-(v-lo)/(hi-lo)*ph;
+    const waveOff=wave?22:0;
+    for(let k=0;k<=n;k++){const v=lo+k*step,yy=y(v);if(wave&&k===0)continue;
+      h+=`<line x1="${L}" y1="${yy}" x2="${W-Rt}" y2="${yy}" stroke="${k%5===0||n<=10?'#bdb3a0':'#e6dfd1'}" stroke-width="${k%5===0?1.6:1}"/>`;
+      if(k%labStep===0)h+=`<text x="${L-10}" y="${yy+7}" text-anchor="end" font-size="20" fill="#2b2b2b">${fmt(v)}</text>`;}
+    // axis
+    h+=`<line x1="${L}" y1="${T-10}" x2="${L}" y2="${T+ph}" stroke="#2b2b2b" stroke-width="3"/><line x1="${L}" y1="${T+ph}" x2="${W-Rt}" y2="${T+ph}" stroke="#2b2b2b" stroke-width="3"/>`;
+    if(wave){h+=`<text x="${L-12}" y="${T+ph+6}" text-anchor="end" font-size="20">0</text>`;
+      const yw=T+ph-12;h+=`<rect x="${L-14}" y="${yw-10}" width="28" height="20" fill="#fff"/><path d="M${L-14},${yw-2} q7,-9 14,0 t14,0 M${L-14},${yw+8} q7,-9 14,0 t14,0" fill="none" stroke="#2b2b2b" stroke-width="2.5"/>`;}
+    h+=`<text x="${L-10}" y="${T-24}" text-anchor="end" font-size="20" font-weight="700" fill="#1f3a5f">（${esc(D.unit)}）</text>`;
+    const cw=pw/Math.max(R.length,1);
+    R.forEach((r,i)=>{
+      const cx=L+cw*i+cw/2,v=+r[1];
+      h+=`<text x="${cx}" y="${T+ph+30}" text-anchor="middle" font-size="${R.length>9?16:20}" fill="#2b2b2b">${esc(r[0])}</text>`;
+      if(i>=vis)return;
+      if(G==='bar'){const bw=Math.min(90,cw*0.6),top=y(Math.max(v,lo));h+=`<rect x="${cx-bw/2}" y="${top}" width="${bw}" height="${T+ph-top}" fill="${/その他|そのた/.test(r[0])?'#b9b2a6':'#7fb3e0'}" stroke="#1f5f99" stroke-width="2"/>`;
+        if($('valChk').checked)h+=`<text x="${cx}" y="${top-8}" text-anchor="middle" font-size="20" font-weight="800" fill="#1f3a5f">${fmt(v)}</text>`;}
+    });
+    if(G==='line'){
+      const pts=R.slice(0,vis).map((r,i)=>[L+cw*i+cw/2,y(+r[1])]);
+      if(pts.length>1)h+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e07a3f" stroke-width="4"/>`;
+      pts.forEach((p,i)=>{h+=`<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="#e07a3f"/>`;if($('valChk').checked)h+=`<text x="${p[0]}" y="${p[1]-14}" text-anchor="middle" font-size="18" font-weight="800" fill="#8a3d10">${fmt(R[i][1])}</text>`;});
+    }
+    h+=`<text x="${W-Rt}" y="${H-18}" text-anchor="end" font-size="20" font-weight="700" fill="#1f3a5f">${esc(D.xname)}</text>`;
+  }else{
+    const Lh=160;const pw2=W-Lh-Rt;const x=v=>Lh+(v-lo)/(hi-lo)*pw2;
+    for(let k=0;k<=n;k++){const v=lo+k*step,xx=x(v);h+=`<line x1="${xx}" y1="${T}" x2="${xx}" y2="${T+ph}" stroke="${k%5===0?'#bdb3a0':'#e6dfd1'}"/>`;if(k%labStep===0)h+=`<text x="${xx}" y="${T+ph+26}" text-anchor="middle" font-size="18">${fmt(v)}</text>`;}
+    h+=`<line x1="${Lh}" y1="${T}" x2="${Lh}" y2="${T+ph}" stroke="#2b2b2b" stroke-width="3"/><line x1="${Lh}" y1="${T+ph}" x2="${W-Rt}" y2="${T+ph}" stroke="#2b2b2b" stroke-width="3"/>`;
+    h+=`<text x="${W-Rt}" y="${T+ph+56}" text-anchor="end" font-size="18" font-weight="700" fill="#1f3a5f">（${esc(D.unit)}）</text>`;
+    const chh=ph/Math.max(R.length,1);
+    R.forEach((r,i)=>{const cy=T+chh*i+chh/2;h+=`<text x="${Lh-10}" y="${cy+7}" text-anchor="end" font-size="20">${esc(r[0])}</text>`;if(i>=vis)return;
+      const bh=Math.min(60,chh*0.6);h+=`<rect x="${Lh}" y="${cy-bh/2}" width="${x(+r[1])-Lh}" height="${bh}" fill="${/その他|そのた/.test(r[0])?'#b9b2a6':'#7fb3e0'}" stroke="#1f5f99" stroke-width="2"/>`;
+      if($('valChk').checked)h+=`<text x="${x(+r[1])+8}" y="${cy+7}" font-size="20" font-weight="800" fill="#1f3a5f">${fmt(r[1])}</text>`;});
+  }
+  if($('waveChk').checked&&G!=='line')warn.push('「途中を省く」は折れ線グラフのときだけ使えます（棒グラフは0から）。');
+  warn.push(`1目もり＝${fmt(step)}${D.unit}`);
+  svg.innerHTML=h;$('warn').textContent=warn.join('　');
+}
+function drawTable(R){
+  const W=1000;const rowH=Math.min(60,480/Math.max(R.length+2,1));
+  let h=`<text x="${W/2}" y="42" text-anchor="middle" font-size="32" font-weight="800" fill="#1f3a5f">${esc(D.title)}</text>`;
+  const x0=250,x1=550,x2=750;let y=80;
+  const vis=reveal==null?R.length:reveal;
+  const rowF=(a,b,bg,bold)=>{const s=`<rect x="${x0}" y="${y}" width="${x2-x0}" height="${rowH}" fill="${bg}" stroke="#8a8173"/><line x1="${x1}" y1="${y}" x2="${x1}" y2="${y+rowH}" stroke="#8a8173"/>`+
+    `<text x="${(x0+x1)/2}" y="${y+rowH/2+8}" text-anchor="middle" font-size="24" font-weight="${bold?800:400}">${a}</text><text x="${(x1+x2)/2}" y="${y+rowH/2+8}" text-anchor="middle" font-size="24" font-weight="${bold?800:400}">${b}</text>`;y+=rowH;return s;};
+  h+=rowF(esc(D.xname),`${esc('数')}（${esc(D.unit)}）`,'#eef2f7',true);
+  R.forEach((r,i)=>{h+=rowF(esc(r[0]),i<vis?fmt(r[1]):'',  '#fff',false);});
+  const tot=R.reduce((s,r)=>s+(+r[1]),0);
+  h+=rowF('合計',vis>=R.length?fmt(tot):'','#faf6ee',true);
+  $('svg').innerHTML=h;$('warn').textContent='';
+}
+$('addBtn').onclick=()=>{D.rows.push(['',0]);renderTable();draw();saveCur();};
+$('preset').onchange=()=>{const k=$('preset').value;if(!k)return;D=JSON.parse(JSON.stringify(PRESETS[k]));
+  if(/気温|成長|体温/.test(k)){G='line';syncTabs();}else{G='bar';syncTabs();}
+  reveal=null;renderTable();draw();saveCur();$('preset').value='';};
+$('saved').onchange=()=>{const k=$('saved').value;if(!k)return;const sv=loadSaved();if(sv[k]){D=JSON.parse(JSON.stringify(sv[k]));reveal=null;renderTable();draw();saveCur();}};
+$('saveBtn').onclick=()=>{const name=(D.title||'無題').slice(0,40);const sv=loadSaved();sv[name]=JSON.parse(JSON.stringify(D));try{localStorage.setItem(KEY+'saved',JSON.stringify(sv));}catch(e){}fillSelects();$('warn').textContent=`「${name}」を保存しました。`;};
+$('delSaved').onclick=()=>{const k=$('saved').value;if(!k){$('warn').textContent='削除する保存データを上のリストで選んでください。';return;}
+  if(!confirm(`「${k}」を削除しますか？`))return;const sv=loadSaved();delete sv[k];try{localStorage.setItem(KEY+'saved',JSON.stringify(sv));}catch(e){}fillSelects();};
+['step','sortChk','valChk','waveChk','horizChk'].forEach(id=>$(id).onchange=()=>{draw();});
+function syncTabs(){document.querySelectorAll('#typeTabs button').forEach(b=>b.classList.toggle('on',b.dataset.g===G));}
+document.querySelectorAll('#typeTabs button').forEach(b=>b.onclick=()=>{G=b.dataset.g;syncTabs();reveal=null;draw();saveCur();});
+$('revealBtn').onclick=()=>{reveal=0;draw();document.body.classList.add('present');};
+$('presBtn').onclick=()=>{document.body.classList.add('present');draw();};
+$('stepBtn').onclick=()=>{if(reveal==null)reveal=0;reveal=Math.min(rows().length,reveal+1);draw();};
+$('allBtn').onclick=()=>{reveal=null;draw();};
+$('exitBtn').onclick=()=>{document.body.classList.remove('present');reveal=null;draw();};
+document.addEventListener('keydown',e=>{if(!document.body.classList.contains('present'))return;if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();$('stepBtn').click();}if(e.key==='Escape')$('exitBtn').click();});
+fillSelects();syncTabs();renderTable();draw();
+</script>
+</body>
+</html>

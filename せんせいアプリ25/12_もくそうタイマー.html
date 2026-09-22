@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>もくそうタイマー</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height:100vh;
+    color:#333;
+    padding:16px;
+    transition:background 2.5s ease;
+  }
+  body.phase-in  { background:linear-gradient(160deg,#dff1ff 0%,#e3f7ef 55%,#f0fff7 100%); }
+  body.phase-hold{ background:linear-gradient(160deg,#f2eeff 0%,#ece5ff 55%,#f7f0ff 100%); }
+  body.phase-out { background:linear-gradient(160deg,#ffeef5 0%,#fff2e8 55%,#fff8ef 100%); }
+  header { text-align:center; margin-bottom:10px; }
+  h1 { font-size:clamp(28px,4.5vw,44px); color:#5b6ef5; letter-spacing:.05em; }
+  .sub { font-size:clamp(15px,2vw,20px); color:#777; margin-top:4px; }
+  .card {
+    background:#fff; border-radius:22px; box-shadow:0 8px 30px rgba(0,0,0,.18);
+    padding:24px; max-width:900px; margin:0 auto 18px; text-align:center;
+  }
+  /* こきゅうの円 */
+  .breath-stage {
+    position:relative; height:min(48vh,420px);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .breath-circle {
+    width:min(30vh,240px); height:min(30vh,240px); border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #aebcff 0%, #5b6ef5 75%);
+    box-shadow:0 0 60px rgba(91,110,245,.45);
+    transform:scale(.72);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .breath-circle .inner { font-size:clamp(40px,6vw,64px); }
+  .guide-text {
+    font-size:clamp(30px,5vw,54px); font-weight:bold; color:#5b6ef5;
+    min-height:1.4em; letter-spacing:.08em;
+  }
+  .remain {
+    font-size:clamp(22px,3.4vw,34px); color:#888; font-weight:bold; margin-top:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .btn {
+    border:none; cursor:pointer; font-family:inherit; font-weight:bold;
+    font-size:clamp(18px,2.6vw,26px); padding:16px 36px; border-radius:999px;
+    background:#5b6ef5; color:#fff; box-shadow:0 4px 14px rgba(91,110,245,.35);
+    transition:transform .12s; margin:6px;
+  }
+  .btn:active { transform:scale(.95); }
+  .btn.gray { background:#9aa0b5; box-shadow:0 4px 14px rgba(0,0,0,.15); }
+  .btn.big { font-size:clamp(22px,3.2vw,32px); padding:18px 52px; }
+  .preset-row { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:10px 0; }
+  .preset-btn {
+    border:3px solid #dfe3ff; background:#f7f8ff; color:#5b6ef5; cursor:pointer; font-family:inherit;
+    font-size:clamp(18px,2.6vw,26px); font-weight:bold; padding:14px 30px; border-radius:999px;
+    transition:transform .12s;
+  }
+  .preset-btn:active { transform:scale(.94); }
+  .preset-btn.active { background:#5b6ef5; color:#fff; border-color:#5b6ef5; }
+  h2 { font-size:clamp(18px,2.4vw,24px); color:#5b6ef5; margin-bottom:10px; }
+  .custom-row {
+    display:flex; justify-content:center; align-items:center; gap:14px; flex-wrap:wrap;
+    font-size:clamp(16px,2.2vw,22px); font-weight:bold; color:#555;
+  }
+  .num-ctl { display:flex; align-items:center; gap:6px; background:#f7f8ff; border-radius:999px; padding:6px 10px; }
+  .num-ctl button {
+    border:none; cursor:pointer; font-family:inherit; font-weight:bold;
+    width:48px; height:48px; border-radius:50%; font-size:26px;
+    background:#5b6ef5; color:#fff;
+  }
+  .num-ctl button:active { transform:scale(.92); }
+  .num-ctl .val { min-width:74px; font-size:clamp(20px,2.6vw,26px); color:#333; }
+  .hidden { display:none !important; }
+  .done-msg { font-size:clamp(26px,4vw,44px); font-weight:bold; color:#4caf7d; margin:10px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧘 もくそうタイマー</h1>
+  <div class="sub">まるに あわせて ゆっくり こきゅうしよう</div>
+</header>
+
+<section class="card">
+  <div class="breath-stage">
+    <div class="breath-circle" id="circle"><span class="inner" id="circleFace">😌</span></div>
+  </div>
+  <div class="guide-text" id="guideText">じゅんびが できたら スタート</div>
+  <div class="remain" id="remainText">--:--</div>
+  <div class="done-msg hidden" id="doneMsg">✨ おつかれさま ✨</div>
+  <div>
+    <button class="btn big" id="startBtn" onclick="startSession()">▶ スタート</button>
+    <button class="btn gray big hidden" id="stopBtn" onclick="stopSession(false)">■ やめる</button>
+  </div>
+</section>
+
+<section class="card" id="settingCard">
+  <h2>⏱ じかんを えらぶ</h2>
+  <div class="preset-row" id="presetRow">
+    <button class="preset-btn" data-min="1" onclick="setPreset(1)">1ぷん</button>
+    <button class="preset-btn active" data-min="2" onclick="setPreset(2)">2ふん</button>
+    <button class="preset-btn" data-min="3" onclick="setPreset(3)">3ぷん</button>
+    <button class="preset-btn" data-min="5" onclick="setPreset(5)">5ふん</button>
+  </div>
+  <h2 style="margin-top:18px;">🌬 こきゅうの ながさ（びょう）</h2>
+  <div class="custom-row">
+    <span>すう</span>
+    <div class="num-ctl">
+      <button onclick="changeSec('inhale',-1)">−</button>
+      <span class="val" id="inhaleVal">4びょう</span>
+      <button onclick="changeSec('inhale',1)">＋</button>
+    </div>
+    <span>とめる</span>
+    <div class="num-ctl">
+      <button onclick="changeSec('hold',-1)">−</button>
+      <span class="val" id="holdVal">2びょう</span>
+      <button onclick="changeSec('hold',1)">＋</button>
+    </div>
+    <span>はく</span>
+    <div class="num-ctl">
+      <button onclick="changeSec('exhale',-1)">−</button>
+      <span class="val" id="exhaleVal">6びょう</span>
+      <button onclick="changeSec('exhale',1)">＋</button>
+    </div>
+  </div>
+</section>
+
+<script>
+"use strict";
+var KEY_SETTINGS = "sensei25_mokusou_settings";
+
+var settings = { minutes:2, inhale:4, hold:2, exhale:6 };
+var running = false;
+var phaseTimer = null;
+var tickTimer = null;
+var endTime = 0;
+var audioCtx = null;
+
+function loadSettings(){
+  try {
+    var s = JSON.parse(localStorage.getItem(KEY_SETTINGS));
+    if (s && typeof s === "object"){
+      if (s.minutes >= 1) settings.minutes = s.minutes;
+      if (s.inhale >= 2 && s.inhale <= 10) settings.inhale = s.inhale;
+      if (s.hold >= 0 && s.hold <= 10) settings.hold = s.hold;
+      if (s.exhale >= 2 && s.exhale <= 12) settings.exhale = s.exhale;
+    }
+  } catch(e){}
+}
+function saveSettings(){ localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings)); }
+
+function setPreset(min){
+  settings.minutes = min;
+  saveSettings();
+  renderSettings();
+  if (!running) document.getElementById("remainText").textContent = formatTime(min * 60);
+}
+function changeSec(kind, delta){
+  if (kind === "inhale") settings.inhale = clamp(settings.inhale + delta, 2, 10);
+  if (kind === "hold") settings.hold = clamp(settings.hold + delta, 0, 10);
+  if (kind === "exhale") settings.exhale = clamp(settings.exhale + delta, 2, 12);
+  saveSettings();
+  renderSettings();
+}
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function renderSettings(){
+  var btns = document.querySelectorAll(".preset-btn");
+  for (var i=0;i<btns.length;i++){
+    btns[i].classList.toggle("active", Number(btns[i].getAttribute("data-min")) === settings.minutes);
+  }
+  document.getElementById("inhaleVal").textContent = settings.inhale + "びょう";
+  document.getElementById("holdVal").textContent = settings.hold + "びょう";
+  document.getElementById("exhaleVal").textContent = settings.exhale + "びょう";
+}
+
+function formatTime(sec){
+  sec = Math.max(0, Math.round(sec));
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return m + ":" + String(s).padStart(2,"0");
+}
+
+function ensureAudio(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+function playChime(){
+  try {
+    ensureAudio();
+    var notes = [523.25, 659.25, 783.99]; // ド・ミ・ソ
+    for (var i=0;i<notes.length;i++){
+      (function(freq, delay){
+        var t = audioCtx.currentTime + delay;
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o.stop(t + 1.7);
+      })(notes[i], i * 0.5);
+    }
+  } catch(e){}
+}
+
+function setPhase(name, seconds){
+  var circle = document.getElementById("circle");
+  var guide = document.getElementById("guideText");
+  var face = document.getElementById("circleFace");
+  document.body.classList.remove("phase-in","phase-hold","phase-out");
+  if (name === "in"){
+    document.body.classList.add("phase-in");
+    guide.textContent = "すって…　🌬";
+    face.textContent = "😊";
+    circle.style.transition = "transform " + seconds + "s ease-in-out";
+    circle.style.transform = "scale(1.35)";
+  } else if (name === "hold"){
+    document.body.classList.add("phase-hold");
+    guide.textContent = "とめて…　🤫";
+    face.textContent = "😮";
+    circle.style.transition = "transform 0.1s linear";
+    circle.style.transform = "scale(1.35)";
+  } else if (name === "out"){
+    document.body.classList.add("phase-out");
+    guide.textContent = "はいて…　💨";
+    face.textContent = "😌";
+    circle.style.transition = "transform " + seconds + "s ease-in-out";
+    circle.style.transform = "scale(.72)";
+  }
+}
+
+function breathLoop(){
+  if (!running) return;
+  setPhase("in", settings.inhale);
+  phaseTimer = setTimeout(function(){
+    if (!running) return;
+    if (settings.hold > 0){
+      setPhase("hold", settings.hold);
+      phaseTimer = setTimeout(function(){
+        if (!running) return;
+        setPhase("out", settings.exhale);
+        phaseTimer = setTimeout(breathLoop, settings.exhale * 1000);
+      }, settings.hold * 1000);
+    } else {
+      setPhase("out", settings.exhale);
+      phaseTimer = setTimeout(breathLoop, settings.exhale * 1000);
+    }
+  }, settings.inhale * 1000);
+}
+
+function startSession(){
+  if (running) return;
+  ensureAudio();
+  running = true;
+  endTime = Date.now() + settings.minutes * 60 * 1000;
+  document.getElementById("startBtn").classList.add("hidden");
+  document.getElementById("stopBtn").classList.remove("hidden");
+  document.getElementById("doneMsg").classList.add("hidden");
+  document.getElementById("settingCard").classList.add("hidden");
+  breathLoop();
+  tick();
+  tickTimer = setInterval(tick, 250);
+}
+
+function tick(){
+  var remain = (endTime - Date.now()) / 1000;
+  document.getElementById("remainText").textContent = formatTime(remain);
+  if (remain <= 0) stopSession(true);
+}
+
+function stopSession(finished){
+  if (!running) return;
+  running = false;
+  clearTimeout(phaseTimer);
+  clearInterval(tickTimer);
+  var circle = document.getElementById("circle");
+  circle.style.transition = "transform 1.2s ease-in-out";
+  circle.style.transform = "scale(.72)";
+  document.body.classList.remove("phase-in","phase-hold","phase-out");
+  document.getElementById("startBtn").classList.remove("hidden");
+  document.getElementById("stopBtn").classList.add("hidden");
+  document.getElementById("settingCard").classList.remove("hidden");
+  document.getElementById("circleFace").textContent = "😌";
+  if (finished){
+    playChime();
+    document.getElementById("guideText").textContent = "おわり！ よくがんばったね";
+    document.getElementById("doneMsg").classList.remove("hidden");
+    document.getElementById("remainText").textContent = formatTime(0);
+  } else {
+    document.getElementById("guideText").textContent = "じゅんびが できたら スタート";
+    document.getElementById("remainText").textContent = formatTime(settings.minutes * 60);
+  }
+}
+
+(function init(){
+  loadSettings();
+  renderSettings();
+  document.getElementById("remainText").textContent = formatTime(settings.minutes * 60);
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

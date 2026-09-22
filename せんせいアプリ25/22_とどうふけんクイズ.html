@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>とどうふけんクイズ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;min-height:100vh;color:#333;
+  font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+  background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+  background-attachment:fixed;
+}
+header{text-align:center;padding:18px 10px 6px}
+h1{margin:0;font-size:clamp(1.6rem,4vw,2.6rem);color:#5b6ef5;letter-spacing:.06em}
+.sub{color:#7a86a8;font-size:1.05rem;margin-top:4px}
+main{max-width:980px;margin:0 auto;padding:12px 16px 40px}
+.card{background:#fff;border-radius:22px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:24px;margin-bottom:20px}
+.btn{
+  border:none;border-radius:999px;background:#5b6ef5;color:#fff;cursor:pointer;
+  font-family:inherit;font-size:1.3rem;padding:15px 30px;margin:7px;
+  box-shadow:0 4px 12px rgba(91,110,245,.35);transition:transform .1s;
+}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:#eef1ff;color:#5b6ef5;box-shadow:none}
+.btn.big{font-size:1.6rem;padding:20px 42px}
+.btn.sel{outline:5px solid #ffd83d}
+.btn.small{font-size:1.05rem;padding:10px 20px;margin:4px}
+.center{text-align:center}
+.screen{display:none}
+.screen.show{display:block}
+h2{color:#5b6ef5;font-size:1.35rem;margin:4px 0 10px}
+.question{font-size:clamp(1.6rem,5vw,2.4rem);text-align:center;font-weight:bold;margin:10px 0;color:#2f3a68}
+.q-yomi{font-size:clamp(2rem,7vw,3.2rem);color:#e8618c}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.choice{
+  border:none;border-radius:999px;background:#eef1ff;color:#2f3a68;cursor:pointer;
+  font-family:inherit;font-size:1.5rem;padding:20px 12px;transition:transform .1s;
+}
+.choice:active{transform:scale(.96)}
+.choice.correct{background:#2ec27e;color:#fff}
+.choice.wrong{background:#f56b8d;color:#fff}
+.scorebar{display:flex;justify-content:center;gap:24px;font-size:1.25rem;color:#5b6ef5;font-weight:bold;flex-wrap:wrap}
+.mapwrap{max-width:460px;margin:0 auto}
+svg{width:100%;height:auto;display:block}
+.region-block{stroke:#fff;stroke-width:3;transition:opacity .2s}
+.region-block.dim{opacity:.25}
+.region-block.hl{stroke:#5b6ef5;stroke-width:6}
+.map-label{font-size:17px;font-weight:bold;fill:#2f3a68;pointer-events:none;font-family:inherit}
+.flash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.pref-card{background:#f7f8ff;border-radius:16px;padding:14px;text-align:center}
+.pref-card .name{font-size:1.6rem;font-weight:bold;color:#2f3a68}
+.pref-card .yomi{color:#e8618c;font-size:1.05rem}
+.pref-card .cap{color:#5b6ef5;font-size:1.1rem;margin-top:4px}
+.feedback{text-align:center;font-size:2rem;font-weight:bold;min-height:1.3em}
+.feedback.good{color:#2ec27e}
+.feedback.bad{color:#f56b8d}
+footer{text-align:center;color:#9aa4c4;font-size:.95rem;padding-bottom:24px}
+.tap-hint{color:#a5aecb;font-size:1.1rem;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗾 とどうふけんクイズ</h1>
+  <div class="sub">47とどうふけんを マスターしよう！</div>
+</header>
+<main>
+
+<!-- ホーム -->
+<section id="scr-home" class="screen show">
+  <div class="card center">
+    <h2>あそびかたを えらぼう</h2>
+    <button class="btn big" onclick="openRegionSelect('name')">🏷 なまえあて クイズ</button>
+    <button class="btn big" onclick="openRegionSelect('cap')">🏛 けんちょうしょざいち クイズ</button>
+    <br>
+    <button class="btn big ghost" onclick="startFlashMode()">📖 フラッシュあんき</button>
+    <div class="scorebar" style="margin-top:14px">
+      <span>🏆 れんぞくせいかい さいこう：<span id="best-streak">0</span></span>
+    </div>
+  </div>
+  <div class="card">
+    <h2 class="center">にほんちず（ちほうわけ）</h2>
+    <div class="mapwrap" id="home-map"></div>
+  </div>
+</section>
+
+<!-- 地方えらび -->
+<section id="scr-region" class="screen">
+  <div class="card center">
+    <h2 id="region-title">どの ちほうから だす？</h2>
+    <div id="region-btns"></div>
+    <button class="btn ghost" onclick="show('scr-home')">🏠 もどる</button>
+  </div>
+</section>
+
+<!-- クイズ -->
+<section id="scr-quiz" class="screen">
+  <div class="card">
+    <div class="scorebar">
+      <span>✅ せいかい <span id="q-score">0</span></span>
+      <span>🔥 れんぞく <span id="q-streak">0</span></span>
+      <span>📝 <span id="q-count">0</span>もんめ</span>
+    </div>
+    <div class="mapwrap" id="quiz-map"></div>
+    <div class="question" id="q-text"></div>
+    <div class="feedback" id="q-feedback"></div>
+    <div class="choices" id="q-choices"></div>
+    <div class="center" style="margin-top:12px">
+      <button class="btn" id="q-next" style="display:none" onclick="nextQuestion()">つぎのもんだい ▶</button>
+      <button class="btn ghost" onclick="show('scr-home')">🏠 おわる</button>
+    </div>
+  </div>
+</section>
+
+<!-- フラッシュあんき -->
+<section id="scr-flash" class="screen">
+  <div class="card">
+    <h2 class="center">📖 ちほうべつ いちらん</h2>
+    <div class="center" id="flash-region-btns"></div>
+    <div class="mapwrap" id="flash-map" style="max-width:360px"></div>
+    <div class="flash-grid" id="flash-grid"></div>
+    <div class="center" style="margin-top:14px">
+      <button class="btn ghost" onclick="show('scr-home')">🏠 もどる</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>せんせいアプリ25 ／ とどうふけんクイズ</footer>
+
+<script>
+"use strict";
+/* [名前, よみ, 地方, 県庁所在地] */
+const PREFS = [
+["北海道","ほっかいどう","北海道","札幌市"],
+["青森県","あおもりけん","東北","青森市"],["岩手県","いわてけん","東北","盛岡市"],["宮城県","みやぎけん","東北","仙台市"],
+["秋田県","あきたけん","東北","秋田市"],["山形県","やまがたけん","東北","山形市"],["福島県","ふくしまけん","東北","福島市"],
+["茨城県","いばらきけん","関東","水戸市"],["栃木県","とちぎけん","関東","宇都宮市"],["群馬県","ぐんまけん","関東","前橋市"],
+["埼玉県","さいたまけん","関東","さいたま市"],["千葉県","ちばけん","関東","千葉市"],["東京都","とうきょうと","関東","東京（新宿区）"],
+["神奈川県","かながわけん","関東","横浜市"],
+["新潟県","にいがたけん","中部","新潟市"],["富山県","とやまけん","中部","富山市"],["石川県","いしかわけん","中部","金沢市"],
+["福井県","ふくいけん","中部","福井市"],["山梨県","やまなしけん","中部","甲府市"],["長野県","ながのけん","中部","長野市"],
+["岐阜県","ぎふけん","中部","岐阜市"],["静岡県","しずおかけん","中部","静岡市"],["愛知県","あいちけん","中部","名古屋市"],
+["三重県","みえけん","近畿","津市"],["滋賀県","しがけん","近畿","大津市"],["京都府","きょうとふ","近畿","京都市"],
+["大阪府","おおさかふ","近畿","大阪市"],["兵庫県","ひょうごけん","近畿","神戸市"],["奈良県","ならけん","近畿","奈良市"],
+["和歌山県","わかやまけん","近畿","和歌山市"],
+["鳥取県","とっとりけん","中国","鳥取市"],["島根県","しまねけん","中国","松江市"],["岡山県","おかやまけん","中国","岡山市"],
+["広島県","ひろしまけん","中国","広島市"],["山口県","やまぐちけん","中国","山口市"],
+["徳島県","とくしまけん","四国","徳島市"],["香川県","かがわけん","四国","高松市"],["愛媛県","えひめけん","四国","松山市"],
+["高知県","こうちけん","四国","高知市"],
+["福岡県","ふくおかけん","九州・沖縄","福岡市"],["佐賀県","さがけん","九州・沖縄","佐賀市"],["長崎県","ながさきけん","九州・沖縄","長崎市"],
+["熊本県","くまもとけん","九州・沖縄","熊本市"],["大分県","おおいたけん","九州・沖縄","大分市"],["宮崎県","みやざきけん","九州・沖縄","宮崎市"],
+["鹿児島県","かごしまけん","九州・沖縄","鹿児島市"],["沖縄県","おきなわけん","九州・沖縄","那覇市"]
+];
+const REGIONS = ["北海道","東北","関東","中部","近畿","中国","四国","九州・沖縄"];
+const REGION_COLORS = {
+"北海道":"#9fd6f2","東北":"#a8e6c7","関東":"#ffd9a8","中部":"#f9c6d0",
+"近畿":"#d3c4f2","中国":"#f5e6a8","四国":"#b8e3e0","九州・沖縄":"#ffc4b8"
+};
+const LS_BEST = "sensei25_todofuken_beststreak";
+
+/* ===== 効果音 ===== */
+let actx=null;
+function ac(){ if(!actx){ actx=new (window.AudioContext||window.webkitAudioContext)(); } if(actx.state==="suspended") actx.resume(); return actx; }
+function tone(f,d,t,v,w){ const c=ac(),o=c.createOscillator(),g=c.createGain();
+o.type=t||"sine"; o.frequency.value=f;
+g.gain.setValueAtTime(v||0.2,c.currentTime+(w||0));
+g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+(w||0)+d);
+o.connect(g); g.connect(c.destination); o.start(c.currentTime+(w||0)); o.stop(c.currentTime+(w||0)+d+0.05); }
+function sePinpon(){ tone(784,0.15,"sine",0.25); tone(1046,0.3,"sine",0.25,0.13); }
+function seBoo(){ tone(220,0.35,"sawtooth",0.15); tone(180,0.35,"sawtooth",0.15,0.08); }
+
+/* ===== 簡略ブロック日本地図 SVG ===== */
+const MAP_BLOCKS = [
+["北海道",290,12,96,86],
+["東北",286,116,74,92],
+["関東",284,222,76,62],
+["中部",204,186,72,86],
+["近畿",132,222,64,60],
+["中国",44,196,80,42],
+["四国",78,256,62,38],
+["九州・沖縄",8,254,54,74]
+];
+function mapSVG(hlRegion){
+  let s = '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="にほんちず">';
+  MAP_BLOCKS.forEach(b=>{
+    const [r,x,y,w,h]=b;
+    const cls = "region-block" + (hlRegion ? (r===hlRegion?" hl":" dim") : "");
+    s += '<rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="14" fill="'+REGION_COLORS[r]+'"/>';
+  });
+  /* 沖縄の小島ブロック（九州・沖縄と同色） */
+  const okCls = "region-block" + (hlRegion ? (hlRegion==="九州・沖縄"?" hl":" dim") : "");
+  s += '<rect class="'+okCls+'" x="14" y="346" width="30" height="22" rx="8" fill="'+REGION_COLORS["九州・沖縄"]+'"/>';
+  MAP_BLOCKS.forEach(b=>{
+    const [r,x,y,w,h]=b;
+    const short = r==="九州・沖縄" ? "九州" : r;
+    s += '<text class="map-label" x="'+(x+w/2)+'" y="'+(y+h/2+6)+'" text-anchor="middle">'+short+'</text>';
+  });
+  s += '<text class="map-label" x="29" y="386" text-anchor="middle" style="font-size:12px">沖縄</text>';
+  s += '</svg>';
+  return s;
+}
+
+/* ===== 共通 ===== */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show"));
+  document.getElementById(id).classList.add("show");
+}
+function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+function getBest(){ return parseInt(localStorage.getItem(LS_BEST)||"0",10); }
+function renderBest(){ document.getElementById("best-streak").textContent = getBest(); }
+
+/* ===== クイズ ===== */
+let quizType="name", quizPool=[], score=0, streak=0, count=0, current=null, answered=false;
+
+function openRegionSelect(type){
+  quizType = type;
+  document.getElementById("region-title").textContent =
+    (type==="name" ? "🏷 なまえあて：" : "🏛 けんちょうしょざいち：") + "どの ちほう？";
+  const box = document.getElementById("region-btns");
+  let html = '<button class="btn big" onclick="startQuiz(null)">🗾 ぜんぶ（47けん）</button><br>';
+  REGIONS.forEach(r=>{
+    const n = PREFS.filter(p=>p[2]===r).length;
+    html += '<button class="btn small ghost" onclick="startQuiz(\''+r+'\')">'+r+'（'+n+'）</button>';
+  });
+  box.innerHTML = html;
+  show("scr-region");
+}
+function startQuiz(region){
+  quizPool = region ? PREFS.filter(p=>p[2]===region) : PREFS.slice();
+  score=0; streak=0; count=0;
+  show("scr-quiz");
+  nextQuestion();
+}
+function nextQuestion(){
+  answered=false;
+  current = quizPool[Math.floor(Math.random()*quizPool.length)];
+  count++;
+  document.getElementById("q-count").textContent = count;
+  document.getElementById("q-feedback").textContent = "";
+  document.getElementById("q-feedback").className = "feedback";
+  document.getElementById("q-next").style.display = "none";
+  document.getElementById("quiz-map").innerHTML = mapSVG(current[2]);
+  updateScorebar();
+
+  let qHtml, correctText, choicePool;
+  if(quizType==="name"){
+    qHtml = '<span class="q-yomi">「'+current[1]+'」</span><br>は どの とどうふけん？';
+    correctText = current[0];
+    choicePool = PREFS.filter(p=>p[0]!==current[0] && p[2]===current[2]).map(p=>p[0]);
+    if(choicePool.length<3){
+      const extra = PREFS.filter(p=>p[0]!==current[0] && !choicePool.includes(p[0])).map(p=>p[0]);
+      choicePool = choicePool.concat(shuffle(extra));
+    }
+  }else{
+    qHtml = '<span class="q-yomi">'+current[0]+'</span><br>の けんちょうしょざいちは？';
+    correctText = current[3];
+    choicePool = PREFS.filter(p=>p[3]!==current[3]).map(p=>p[3]);
+  }
+  document.getElementById("q-text").innerHTML = qHtml;
+  const choices = shuffle([correctText].concat(shuffle(choicePool).slice(0,3)));
+  const box = document.getElementById("q-choices");
+  box.innerHTML = "";
+  choices.forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "choice"; b.textContent = c;
+    b.onclick = ()=>answer(b, c===correctText, correctText);
+    box.appendChild(b);
+  });
+}
+function answer(btn, ok, correctText){
+  if(answered) return;
+  answered = true;
+  const fb = document.getElementById("q-feedback");
+  if(ok){
+    score++; streak++;
+    if(streak > getBest()){ localStorage.setItem(LS_BEST, String(streak)); }
+    btn.classList.add("correct");
+    fb.textContent = "⭕ せいかい！"; fb.classList.add("good");
+    sePinpon();
+  }else{
+    streak = 0;
+    btn.classList.add("wrong");
+    fb.textContent = "❌ ざんねん… こたえは「"+correctText+"」"; fb.classList.add("bad");
+    seBoo();
+    document.querySelectorAll("#q-choices .choice").forEach(b=>{
+      if(b.textContent===correctText) b.classList.add("correct");
+    });
+  }
+  updateScorebar();
+  renderBest();
+  document.getElementById("q-next").style.display = "";
+}
+function updateScorebar(){
+  document.getElementById("q-score").textContent = score;
+  document.getElementById("q-streak").textContent = streak;
+}
+
+/* ===== フラッシュあんき ===== */
+let flashRegion = "北海道";
+function startFlashMode(){
+  show("scr-flash");
+  const box = document.getElementById("flash-region-btns");
+  box.innerHTML = "";
+  REGIONS.forEach(r=>{
+    const b = document.createElement("button");
+    b.className = "btn small" + (r===flashRegion?" sel":" ghost");
+    b.textContent = r;
+    b.onclick = ()=>{ flashRegion = r; startFlashMode(); };
+    box.appendChild(b);
+  });
+  document.getElementById("flash-map").innerHTML = mapSVG(flashRegion);
+  const grid = document.getElementById("flash-grid");
+  grid.innerHTML = "";
+  PREFS.filter(p=>p[2]===flashRegion).forEach(p=>{
+    const d = document.createElement("div");
+    d.className = "pref-card";
+    d.innerHTML = '<div class="name">'+p[0]+'</div><div class="yomi">'+p[1]+'</div><div class="cap">🏛 '+p[3]+'</div>';
+    grid.appendChild(d);
+  });
+}
+
+document.getElementById("home-map").innerHTML = mapSVG(null);
+renderBest();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

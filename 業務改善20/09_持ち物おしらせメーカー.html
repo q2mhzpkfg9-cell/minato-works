@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>持ち物おしらせメーカー</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ng:#b83232;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1300px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.2rem;letter-spacing:.03em}
+main{max-width:1300px;margin:0 auto;padding:16px}
+.lead{margin:0 0 12px;color:var(--sub);font-size:.9rem}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:70px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+#toast.show{opacity:1}
+/* app */
+.layout{display:grid;gap:14px}
+.layout>*{min-width:0}
+@media(min-width:1050px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pv{position:sticky;top:12px;align-self:start}}
+.tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.tpls button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:8px;min-height:48px;font-family:inherit;font-size:.88rem;cursor:pointer;text-align:left}
+.tpls button:hover{border-color:var(--navy2)}
+.tpls button.mine{border-style:dashed}
+.items{display:flex;flex-direction:column;gap:5px}
+.it{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(0,.9fr) auto;gap:5px;align-items:center}
+.it input[type=text]{min-height:38px;padding:4px 8px;width:100%;min-width:0}
+.it .ops{display:flex;gap:2px}
+.it .ops button{min-height:36px;min-width:34px;padding:2px 6px}
+.it .num{font-size:.8rem;color:var(--sub);text-align:center}
+.it.off input[type=text]{opacity:.45;text-decoration:line-through}
+.opts{display:flex;gap:14px;flex-wrap:wrap}
+.opts label{display:flex;align-items:center;gap:4px;font-size:.88rem}
+.opts input[type=checkbox],.opts input[type=radio]{min-height:auto}
+.sheetpv{background:#e9e4d8;border-radius:10px;padding:10px;overflow:hidden}
+.a4{width:210mm;height:297mm;background:#fff;transform-origin:0 0;box-shadow:0 1px 5px rgba(0,0,0,.2)}
+.a4wrap{position:relative;overflow:hidden}
+/* 用紙 */
+.sheet{width:210mm;height:297mm;padding:8mm;display:grid;gap:0;background:#fff;color:#111;font-family:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+.sheet.n1{grid-template-columns:1fr;grid-template-rows:1fr}
+.sheet.n2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+.sheet.n4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.slip{border:1px dashed #999;padding:6mm 7mm;overflow:hidden;display:flex;flex-direction:column}
+.slip .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1f3a5f;padding-bottom:1.5mm;margin-bottom:2mm}
+.slip .ttl{font-size:1.5em;font-weight:800;color:#1f3a5f;line-height:1.2}
+.slip .when{font-size:1em;font-weight:700}
+.slip .msg{font-size:.85em;margin-bottom:2mm;white-space:pre-wrap}
+.slip table{width:100%;border-collapse:collapse}
+.slip td,.slip th{border-bottom:1px solid #bbb;padding:1.2mm 1mm;vertical-align:middle;text-align:left}
+.slip th{font-size:.72em;color:#555;font-weight:400;border-bottom:1.5px solid #555}
+.slip td.bx{width:9mm;text-align:center;font-size:1.25em}
+.slip td.nt{font-size:.78em;color:#444}
+.slip .ft{margin-top:auto;padding-top:2mm;display:flex;justify-content:space-between;font-size:.9em;gap:4mm}
+.slip .ft span{border-bottom:1px solid #333;flex:1;padding-bottom:1mm}
+.slip .ft span.from{border:0;flex:none;font-size:.85em;color:#444;align-self:flex-end}
+.sheet.n1 .slip{font-size:15pt}
+.sheet.n2 .slip{font-size:12pt}
+.sheet.n4 .slip{font-size:9.5pt}
+.big .slip{font-size:1.15em}
+#printArea{display:none}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block}
+  #printArea .sheet{page-break-after:always}
+  #printArea .sheet:last-child{page-break-after:auto}
+  @page{size:A4;margin:0}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><a class="back" href="../index.html">← MINATO WORKS</a><h1>持ち物おしらせメーカー</h1></div></header>
+<main>
+<p class="lead">遠足・水泳・習字・調理実習などの「持ち物のお知らせ」を、チェック欄つきで作って配布用に印刷。A4に1・2・4面付けできるので、切って配るだけ。おうちの人のチェック欄つきで、忘れ物を減らせます。</p>
+<div class="layout">
+<div>
+  <section class="card">
+    <h2>① ひな形を選ぶ</h2>
+    <div class="tpls" id="tpls"></div>
+    <p class="note">選ぶと下の内容が置きかわります。自分で直した内容は「マイひな形に保存」で残せます。</p>
+  </section>
+  <section class="card">
+    <h2>② 内容</h2>
+    <div class="row">
+      <label class="f" style="flex:1">タイトル<input id="title" style="width:100%"></label>
+      <label class="f">いつ持ってくる？<input id="when" placeholder="10月15日（水）" style="width:170px"></label>
+    </div>
+    <label class="f" style="margin-top:8px">ひとこと<textarea id="msg"></textarea></label>
+    <div class="note" style="margin:10px 0 4px;font-weight:700">持ち物（左のチェックを外すと、印刷しません）</div>
+    <div class="items" id="items"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn s" id="addIt">＋ 持ち物を追加</button>
+      <button class="btn s" id="saveMine">マイひな形に保存</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2>③ レイアウト</h2>
+    <div class="opts">
+      <label><input type="radio" name="n" value="1"> A4に1枚</label>
+      <label><input type="radio" name="n" value="2"> A4に2枚（A5）</label>
+      <label><input type="radio" name="n" value="4"> A4に4枚（A6）</label>
+    </div>
+    <div class="opts" style="margin-top:8px">
+      <label><input type="checkbox" id="optName"> 名前欄</label>
+      <label><input type="checkbox" id="optHome"> おうちの人チェック欄</label>
+      <label><input type="checkbox" id="optNote"> 備考を印刷</label>
+      <label><input type="checkbox" id="optBig"> 大きい字（低学年向け）</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="f">差出人<input id="from" placeholder="2年1組 担任" style="width:200px"></label>
+      <label class="f">印刷枚数（配る人数）<input type="number" id="copies" min="1" style="width:110px"></label>
+    </div>
+  </section>
+</div>
+<div class="pv">
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">プレビュー（A4 1枚分）</h2>
+      <button class="btn p" id="print">🖨 印刷</button>
+    </div>
+    <p class="note" id="sheetInfo"></p>
+    <div class="sheetpv"><div class="a4wrap" id="a4wrap"><div class="a4" id="a4"></div></div></div>
+  </section>
+</div>
+</div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+var KEY="mw_gyomu_09_data";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},1800)}
+function I(n,note){return{n:n,note:note||"",on:true}}
+var TPL=[
+ {ico:"🍙",name:"遠足",msg:"すべての持ち物に名前を書いてください。",items:[I("おべんとう"),I("すいとう","お茶か水"),I("しきもの"),I("ハンカチ・ティッシュ"),I("ビニールぶくろ","ごみ・よごれもの用"),I("あまぐ","おりたたみがさ"),I("ぼうし"),I("リュックサック")]},
+ {ico:"🏊",name:"水泳学習",msg:"プールカードに体温・印をお忘れなく。",items:[I("水着"),I("水泳ぼうし","名前を大きく"),I("バスタオル"),I("ゴーグル","使う人のみ"),I("プールバッグ"),I("プールカード","印と体温"),I("着がえ用の下着")]},
+ {ico:"🖌",name:"書写（習字）",msg:"汚れてもよい服で登校してください。",items:[I("書道セット"),I("新聞紙","2日分くらい"),I("ぞうきん"),I("汚れてもよい上着","または割烹着"),I("半紙","セットに入っていれば不要")]},
+ {ico:"🍳",name:"調理実習",msg:"つめを短く切り、長い髪は結んできてください。",items:[I("エプロン"),I("三角きん"),I("マスク"),I("ふきん","2枚"),I("手ふきタオル"),I("材料","担当の班のみ")]},
+ {ico:"🎨",name:"図工の材料",msg:"ご家庭にあるもので大丈夫です。",items:[I("空き箱","お菓子の箱など"),I("トイレットペーパーのしん"),I("ペットボトルのふた"),I("ビニールぶくろ"),I("のり・はさみ")]},
+ {ico:"🏃",name:"運動会",msg:"朝ごはんをしっかり食べてきてください。",items:[I("体そう服"),I("紅白ぼうし"),I("すいとう","多めに"),I("タオル"),I("おべんとう","ある場合"),I("日焼け止め","必要な人")]},
+ {ico:"🏫",name:"長期休み明け",msg:"休み中の提出物もいっしょに持ってきてください。",items:[I("通知表"),I("宿題プリント"),I("自由研究・作品"),I("うわばき"),I("体そう服"),I("ぞうきん","2枚"),I("給食セット")]},
+ {ico:"🎒",name:"学期はじめの道具",msg:"すべての物に名前を書いてください。",items:[I("えんぴつ","5本・けずっておく"),I("赤えんぴつ"),I("消しゴム"),I("じょうぎ","15cm"),I("のり"),I("はさみ"),I("クーピー・色えんぴつ"),I("れんらくぶくろ")]}
+];
+var D=null;try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!D||!D.items){var t0=TPL[0];D={title:t0.name+"の持ち物",when:"",msg:t0.msg,items:JSON.parse(JSON.stringify(t0.items)),n:2,optName:true,optHome:true,optNote:true,optBig:false,from:"",copies:30,mine:[]}}
+if(!D.mine)D.mine=[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+
+function renderTpls(){
+  var h=TPL.map(function(t,i){return"<button data-t='"+i+"'>"+t.ico+" "+esc(t.name)+"</button>"}).join("");
+  h+=D.mine.map(function(t,i){return"<button class='mine' data-m='"+i+"'>⭐ "+esc(t.title)+" <span data-dm='"+i+"' title='削除' style='color:var(--ng);float:right'>×</span></button>"}).join("");
+  $("#tpls").innerHTML=h;
+}
+$("#tpls").addEventListener("click",function(e){
+  var x=e.target.closest("[data-dm]");if(x){e.stopPropagation();if(confirm("このマイひな形を削除しますか？")){D.mine.splice(+x.dataset.dm,1);save();renderTpls()}return}
+  var b=e.target.closest("button");if(!b)return;
+  var src;if(b.dataset.t!=null){var t=TPL[+b.dataset.t];src={title:t.name+"の持ち物",msg:t.msg,items:t.items}}else src=D.mine[+b.dataset.m];
+  D.title=src.title;D.msg=src.msg;D.items=JSON.parse(JSON.stringify(src.items));save();fill();render();
+});
+$("#saveMine").onclick=function(){D.mine.push({title:D.title||"マイひな形",msg:D.msg,items:JSON.parse(JSON.stringify(D.items))});save();renderTpls();toast("マイひな形に保存しました")};
+
+function fill(){
+  $("#title").value=D.title;$("#when").value=D.when;$("#msg").value=D.msg;$("#from").value=D.from;$("#copies").value=D.copies;
+  ["optName","optHome","optNote","optBig"].forEach(function(k){$("#"+k).checked=!!D[k]});
+  document.querySelectorAll("input[name=n]").forEach(function(r){r.checked=+r.value===D.n});
+  renderItems();
+}
+["title","when","msg","from"].forEach(function(k){$("#"+k).addEventListener("input",function(){D[k]=this.value;save();render()})});
+$("#copies").oninput=function(){D.copies=Math.max(1,parseInt(this.value,10)||1);save();render()};
+["optName","optHome","optNote","optBig"].forEach(function(k){$("#"+k).onchange=function(){D[k]=this.checked;save();render()}});
+document.querySelectorAll("input[name=n]").forEach(function(r){r.onchange=function(){D.n=+this.value;save();render()}});
+
+function renderItems(){
+  $("#items").innerHTML=D.items.map(function(it,i){return"<div class='it"+(it.on?"":" off")+"'><input type='checkbox' data-on='"+i+"' "+(it.on?"checked":"")+" style='min-height:auto;width:20px;height:20px'><input type='text' data-n='"+i+"' value='"+esc(it.n)+"' placeholder='持ち物'><input type='text' data-note='"+i+"' value='"+esc(it.note)+"' placeholder='備考（任意）'><div class='ops'><button class='btn s' data-up='"+i+"'>▲</button><button class='btn s d' data-del='"+i+"'>×</button></div></div>"}).join("");
+}
+$("#items").addEventListener("input",function(e){var t=e.target;if(t.dataset.n!=null){D.items[+t.dataset.n].n=t.value}else if(t.dataset.note!=null){D.items[+t.dataset.note].note=t.value}else return;save();render()});
+$("#items").addEventListener("change",function(e){var t=e.target;if(t.dataset.on!=null){D.items[+t.dataset.on].on=t.checked;save();renderItems();render()}});
+$("#items").addEventListener("click",function(e){
+  var b=e.target.closest("[data-up]");if(b){var i=+b.dataset.up;if(i>0){var x=D.items[i];D.items[i]=D.items[i-1];D.items[i-1]=x;save();renderItems();render()}return}
+  b=e.target.closest("[data-del]");if(b){D.items.splice(+b.dataset.del,1);save();renderItems();render()}
+});
+$("#addIt").onclick=function(){D.items.push(I(""));save();renderItems();var ins=document.querySelectorAll("#items input[data-n]");if(ins.length)ins[ins.length-1].focus()};
+
+function slipHTML(){
+  var its=D.items.filter(function(i){return i.on&&i.n.trim()});
+  var h="<div class='slip'><div class='hd'><div class='ttl'>"+esc(D.title||"持ち物のおしらせ")+"</div>"+(D.when?"<div class='when'>"+esc(D.when)+"</div>":"")+"</div>"+(D.msg?"<div class='msg'>"+esc(D.msg)+"</div>":"");
+  h+="<table><tr><th style='width:11mm;text-align:center;white-space:nowrap'>じぶん</th><th>もちもの</th>"+(D.optNote?"<th>メモ</th>":"")+(D.optHome?"<th style='width:11mm;text-align:center;white-space:nowrap'>おうち</th>":"")+"</tr>";
+  its.forEach(function(i){h+="<tr><td class='bx'>□</td><td>"+esc(i.n)+"</td>"+(D.optNote?"<td class='nt'>"+esc(i.note)+"</td>":"")+(D.optHome?"<td class='bx'>□</td>":"")+"</tr>"});
+  h+="</table><div class='ft'>"+(D.optName?"<span>なまえ</span>":"<span style='border:0'></span>")+(D.from?"<span class='from'>"+esc(D.from)+"</span>":"")+"</div></div>";
+  return h;
+}
+function sheetHTML(){var s=slipHTML();var h="<div class='sheet n"+D.n+(D.optBig?" big":"")+"'>";for(var i=0;i<D.n;i++)h+=s;return h+"</div>"}
+function render(){
+  $("#a4").innerHTML=sheetHTML();
+  var sheets=Math.ceil(D.copies/D.n);
+  $("#sheetInfo").textContent=D.copies+"人分 → A4で "+sheets+"枚（1枚に"+D.n+"人分）。印刷設定は「余白なし」「倍率100%」で。";
+  fit();
+  var sl=$("#a4 .slip");if(sl&&sl.scrollHeight>sl.clientHeight+4)$("#sheetInfo").textContent+=" ⚠ 持ち物が多くて入りきりません。面付けを減らすか、項目をしぼってください。";
+}
+function fit(){var w=$("#a4wrap").clientWidth;var a=$("#a4");var s=w/a.offsetWidth;a.style.transform="scale("+s+")";$("#a4wrap").style.height=(a.offsetHeight*s)+"px"}
+window.addEventListener("resize",fit);
+$("#print").onclick=function(){var n=Math.ceil(D.copies/D.n);var h="";var sh=sheetHTML();for(var i=0;i<n;i++)h+=sh;$("#printArea").innerHTML=h;window.print()};
+
+renderTpls();fill();render();
+})();
+</script>
+</body>
+</html>

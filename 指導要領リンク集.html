@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小学校 学習指導要領リンク集</title>
+<style>
+  :root{
+    --bg:#faf7f2;
+    --card:#ffffff;
+    --ink:#33302c;
+    --sub:#8a8178;
+    --line:#e8e1d6;
+    --accent:#c8663c;
+    --accent-soft:#fdf0e8;
+    --shadow:0 1px 2px rgba(60,50,40,.05), 0 6px 18px rgba(60,50,40,.06);
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+    line-height:1.7;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:1020px;margin:0 auto;padding:0 20px 80px}
+
+  /* ---- ヘッダー ---- */
+  header{padding:44px 0 22px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.02em}
+  h1 .em{color:var(--accent)}
+  .lead{margin:0;color:var(--sub);font-size:14px}
+
+  /* ---- 検索 ---- */
+  .searchbox{position:relative;margin:22px 0 14px}
+  .searchbox input{
+    width:100%;padding:14px 44px 14px 46px;font-size:16px;
+    border:1px solid var(--line);border-radius:14px;background:var(--card);
+    color:var(--ink);box-shadow:var(--shadow);outline:none;
+    font-family:inherit;
+  }
+  .searchbox input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .searchbox .icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:17px}
+  .searchbox .clear{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    border:0;background:none;color:var(--sub);font-size:20px;cursor:pointer;
+    padding:6px 10px;border-radius:8px;display:none;
+  }
+  .searchbox .clear:hover{background:var(--bg)}
+
+  /* ---- タグ ---- */
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .tag{
+    border:1px solid var(--line);background:var(--card);color:var(--sub);
+    padding:6px 14px;border-radius:999px;font-size:13px;cursor:pointer;
+    font-family:inherit;transition:.15s;
+  }
+  .tag:hover{color:var(--ink);border-color:#d8cfc0}
+  .tag[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .count{color:var(--sub);font-size:13px;margin:14px 2px 10px}
+
+  /* ---- 本文カード ---- */
+  .primary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin:8px 0 10px}
+  .primary{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(135deg,#fff 0%,var(--accent-soft) 100%);
+    border:1px solid #f0dccf;border-radius:18px;padding:20px 22px;
+    box-shadow:var(--shadow);text-decoration:none;color:inherit;
+  }
+  .primary:hover{border-color:var(--accent)}
+  .primary .pi{font-size:30px;line-height:1}
+  .primary .pt{flex:1;min-width:180px}
+  .primary .pt b{display:block;font-size:17px;margin-bottom:2px}
+  .primary .pt span{font-size:13px;color:var(--sub)}
+  .primary .go{color:var(--accent);font-weight:700;font-size:14px;white-space:nowrap}
+
+  /* ---- 補助リンク ---- */
+  .sublinks{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px 2px}
+  .sublink{
+    font-size:12.5px;color:var(--sub);text-decoration:none;
+    border:1px solid var(--line);background:var(--card);
+    padding:5px 13px;border-radius:999px;
+  }
+  .sublink:hover{color:var(--accent);border-color:var(--accent)}
+
+  /* ---- グリッド ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:14px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:18px;box-shadow:var(--shadow);text-decoration:none;color:inherit;
+    display:flex;flex-direction:column;gap:8px;transition:.15s;
+  }
+  .card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 4px 10px rgba(60,50,40,.07),0 14px 30px rgba(60,50,40,.08)}
+  .card .top{display:flex;align-items:center;gap:10px}
+  .card .ic{
+    width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+    font-size:19px;background:var(--accent-soft);flex:none;
+  }
+  .card h2{font-size:16px;margin:0;font-weight:700}
+  .card .meta{font-size:12px;color:var(--sub)}
+  .card .desc{font-size:13px;color:var(--sub);flex:1}
+  .card .foot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--accent);font-weight:700;padding-top:4px;border-top:1px dashed var(--line)}
+  .card .foot .pdf{background:#f3ede4;color:var(--sub);border-radius:6px;padding:1px 7px;font-weight:600;font-size:11px}
+
+  .empty{display:none;text-align:center;color:var(--sub);padding:50px 0;font-size:14px}
+
+  /* ---- モード切替 ---- */
+  .modes{display:flex;gap:6px;background:#f1ebe1;padding:5px;border-radius:13px;margin:22px 0 0;width:fit-content}
+  .mode{
+    border:0;background:none;color:var(--sub);font-family:inherit;font-size:14px;
+    padding:8px 18px;border-radius:9px;cursor:pointer;font-weight:700;transition:.15s;
+  }
+  .mode[aria-pressed="true"]{background:var(--card);color:var(--accent);box-shadow:0 1px 3px rgba(60,50,40,.08)}
+
+  /* ---- 本文検索 ---- */
+  .filters{margin:4px 0 2px}
+  .filters .frow{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:8px}
+  .filters .flabel{font-size:12px;color:var(--sub);width:38px;flex:none}
+  .chip{
+    border:1px solid var(--line);background:var(--card);color:var(--sub);
+    padding:4px 12px;border-radius:999px;font-size:12.5px;cursor:pointer;
+    font-family:inherit;transition:.15s;
+  }
+  .chip:hover{color:var(--ink);border-color:#d8cfc0}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .examples{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+  .ex{
+    border:1px dashed var(--line);background:none;color:var(--sub);font-family:inherit;
+    font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  }
+  .ex:hover{color:var(--accent);border-color:var(--accent);background:var(--card)}
+
+  .hits{display:flex;flex-direction:column;gap:10px}
+  .hit{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .hit .hmeta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:7px}
+  .hit .badge{
+    font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:6px;
+    background:var(--accent-soft);color:var(--accent);
+  }
+  .hit .sub{font-size:11.5px;color:var(--sub)}
+  .hit .htext{font-size:14.5px;line-height:1.85}
+  .hit mark{background:#ffeeba;color:inherit;border-radius:3px;padding:0 2px}
+  .hit .hfoot{margin-top:8px;padding-top:7px;border-top:1px dashed var(--line)}
+  .hit .hopen{
+    border:0;background:none;color:var(--accent);font-family:inherit;font-weight:700;
+    font-size:12.5px;cursor:pointer;padding:0;
+  }
+  .hit .hopen:hover{text-decoration:underline}
+  .more{
+    display:block;width:100%;margin-top:14px;padding:12px;border:1px solid var(--line);
+    background:var(--card);border-radius:12px;color:var(--sub);font-family:inherit;
+    font-size:13px;cursor:pointer;
+  }
+  .more:hover{color:var(--accent);border-color:var(--accent)}
+
+  /* ---- PDFビューア ---- */
+  .viewer{
+    position:fixed;inset:0;z-index:100;background:rgba(45,38,32,.55);
+    display:none;padding:22px;backdrop-filter:blur(3px);
+  }
+  .viewer.open{display:flex;flex-direction:column}
+  .vbar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--card);border-radius:14px 14px 0 0;padding:12px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .vbar .vt{font-weight:700;font-size:16px;flex:1;min-width:120px}
+  .vbar .vt small{display:block;font-weight:400;font-size:12px;color:var(--sub)}
+  .vbar a.vlink{
+    font-size:12px;color:var(--sub);text-decoration:none;border:1px solid var(--line);
+    padding:6px 12px;border-radius:9px;white-space:nowrap;
+  }
+  .vbar a.vlink:hover{color:var(--accent);border-color:var(--accent)}
+  .vbar .close{
+    border:0;background:var(--accent);color:#fff;font-size:15px;cursor:pointer;
+    padding:7px 16px;border-radius:9px;font-family:inherit;font-weight:700;
+  }
+  .vbody{flex:1;background:#525252;border-radius:0 0 14px 14px;overflow:hidden;position:relative}
+  .vbody embed,.vbody iframe{width:100%;height:100%;border:0;display:block}
+  .vfall{
+    position:absolute;inset:0;display:none;place-content:center;text-align:center;
+    color:#fff;font-size:14px;padding:30px;line-height:2;
+  }
+  .vfall a{color:#ffd9c6}
+  @media(max-width:520px){
+    .viewer{padding:0}
+    .vbar{border-radius:0;padding:10px 12px}
+    .vbar .vt{font-size:14px}
+    .vbody{border-radius:0}
+  }
+
+  footer{margin-top:38px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+  footer a{color:var(--accent);text-decoration:none;margin-right:18px}
+  footer a:hover{text-decoration:underline}
+  footer .note{margin-top:10px;font-size:12px}
+
+  @media(max-width:520px){
+    header{padding:30px 0 16px}
+    h1{font-size:21px}
+    .grid{grid-template-columns:1fr 1fr;gap:10px}
+    .card{padding:14px}
+    .card h2{font-size:14px}
+    .card .desc{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>小学校 <span class="em">学習指導要領</span> リンク集</h1>
+  <p class="lead">学習指導要領（平成29年告示）＋生徒指導提要。文部科学省の公式PDFをそのまま開けます。</p>
+
+  <div class="modes" id="modes">
+    <button class="mode" data-m="pdf"  aria-pressed="true">📘 PDFを開く</button>
+    <button class="mode" data-m="text" aria-pressed="false">🔎 本文をさがす</button>
+  </div>
+
+  <div class="searchbox">
+    <span class="icon">🔍</span>
+    <input id="q" type="search" placeholder="教科名・キーワードで探す（例：図工、英語、評価）" autocomplete="off">
+    <button class="clear" id="clear" aria-label="クリア">×</button>
+  </div>
+
+  <div class="tags" id="tags">
+    <button class="tag" data-g="all" aria-pressed="true">すべて</button>
+    <button class="tag" data-g="低" aria-pressed="false">低学年</button>
+    <button class="tag" data-g="中" aria-pressed="false">中学年</button>
+    <button class="tag" data-g="高" aria-pressed="false">高学年</button>
+  </div>
+
+  <div class="filters" id="filters" hidden>
+    <div class="examples" id="examples">
+      <button class="ex">2年 読むこと</button>
+      <button class="ex">2年 算数 かけざん</button>
+      <button class="ex">3年 理科 音</button>
+      <button class="ex">5年 家庭 調理</button>
+      <button class="ex">6年 体育 保健</button>
+    </div>
+    <div class="frow" id="gradeChips">
+      <span class="flabel">学年</span>
+      <button class="chip" data-g="" aria-pressed="true">すべて</button>
+      <button class="chip" data-g="1">1年</button>
+      <button class="chip" data-g="2">2年</button>
+      <button class="chip" data-g="3">3年</button>
+      <button class="chip" data-g="4">4年</button>
+      <button class="chip" data-g="5">5年</button>
+      <button class="chip" data-g="6">6年</button>
+    </div>
+    <div class="frow" id="subjChips">
+      <span class="flabel">教科</span>
+    </div>
+  </div>
+</header>
+
+<div class="primary-row" id="primaryRow">
+  <a class="primary" id="primary" href="https://www.mext.go.jp/content/20230120-mxt_kyoiku02-100002604_01.pdf">
+    <span class="pi">📘</span>
+    <span class="pt">
+      <b>小学校学習指導要領（本文・告示）</b>
+      <span>全教科がこの1冊に。まずはここを確認</span>
+    </span>
+    <span class="go">開く →</span>
+  </a>
+  <a class="primary" id="primary2" href="https://www.mext.go.jp/content/20230220-mxt_jidou01-000024699-201-1.pdf">
+    <span class="pi">🤝</span>
+    <span class="pt">
+      <b>生徒指導提要（改訂版）</b>
+      <span>令和4年12月改訂。発達支持・課題予防・困難課題対応</span>
+    </span>
+    <span class="go">開く →</span>
+  </a>
+</div>
+
+<div class="sublinks" id="sublinks">
+  <a class="sublink" id="guide" href="https://www.mext.go.jp/content/20221206-mxt-jidou02-000024699-002.pdf">📖 生徒指導提要 活用ガイド</a>
+  <a class="sublink" href="https://www.mext.go.jp/a_menu/shotou/seitoshidou/1404008_00001.htm" target="_blank" rel="noopener">文科省・生徒指導提要のページ ↗</a>
+</div>
+
+<div class="count" id="count"></div>
+<div class="grid" id="grid"></div>
+<div class="hits" id="hits" hidden></div>
+<button class="more" id="more" hidden>もっと見る</button>
+<div class="empty" id="empty">見つかりませんでした。別のことばで探してみてください。</div>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true">
+  <div class="vbar">
+    <div class="vt" id="vtitle">　<small id="vsub"></small></div>
+    <a class="vlink" id="vnew" href="#" target="_blank" rel="noopener">別タブで開く</a>
+    <a class="vlink" id="vmext" href="#" target="_blank" rel="noopener">文科省の最新版</a>
+    <button class="close" id="vclose">閉じる</button>
+  </div>
+  <div class="vbody" id="vbody">
+    <div class="vfall" id="vfall">
+      PDFをこの中で表示できませんでした。<br>
+      <a id="vfall-a" href="#" target="_blank" rel="noopener">別タブで開く</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="https://www.mext.go.jp/a_menu/shotou/new-cs/1387014.htm" target="_blank" rel="noopener">文科省・解説の一覧ページ</a>
+  <a href="https://www.nier.go.jp/kaihatsu/shidousiryou.html" target="_blank" rel="noopener">国研・指導資料／評価の参考資料</a>
+  <div class="note">PDFは文部科学省の公式サイトのものを開きます。「本文をさがす」は告示本文から抜き出した文章を検索しています。表記のゆれで拾いきれないことがあるので、大事なところは必ずPDFの原文で確かめてください。</div>
+</footer>
+
+</div>
+
+<script src="honbun-data.js"></script>
+<script>
+const DATA = [
+  {n:"総則", i:"🧭", g:"全", d:"教育課程の考え方、資質・能力の3つの柱、授業時数など全体の土台。",
+   k:"そうそく 総則 教育課程 資質能力 主体的対話的で深い学び カリキュラムマネジメント 授業時数",
+   u:"https://www.mext.go.jp/content/20230308-mxt_kyoiku02-100002607_001.pdf"},
+  {n:"国語", i:"✏️", g:"全", d:"話すこと聞くこと・書くこと・読むこと、〔知識及び技能〕の系統。",
+   k:"こくご 国語 読解 作文 漢字 話し合い 言語活動",
+   u:"https://www.mext.go.jp/content/20220606-mxt_kyoiku02-100002607_002.pdf"},
+  {n:"社会", i:"🗾", g:"中高", d:"3年から。地域・産業・歴史・公民的分野の内容と見方考え方。",
+   k:"しゃかい 社会 地図 歴史 産業 地域学習 公民",
+   u:"https://www.mext.go.jp/content/20230308-mxt_kyoiku02-100002607_003.pdf"},
+  {n:"算数", i:"🔢", g:"全", d:"数と計算・図形・測定・変化と関係・データの活用の5領域。",
+   k:"さんすう 算数 計算 図形 測定 かけ算 わり算 分数 数学的な見方考え方 データの活用",
+   u:"https://www.mext.go.jp/content/20211102-mxt_kyoiku02-100002607_04.pdf"},
+  {n:"理科", i:"🔬", g:"中高", d:"3年から。エネルギー・粒子・生命・地球の4区分と問題解決の力。",
+   k:"りか 理科 実験 観察 生物 地球 エネルギー 問題解決",
+   u:"https://www.mext.go.jp/content/20211020-mxt_kyoiku02-100002607_05.pdf"},
+  {n:"生活", i:"🌱", g:"低", d:"1・2年。学校・まち・自然・自分の成長。気付きの質を高める。",
+   k:"せいかつ 生活科 まちたんけん 栽培 あさがお 気付き スタートカリキュラム",
+   u:"https://www.mext.go.jp/component/a_menu/education/micro_detail/__icsFiles/afieldfile/2019/03/18/1387017_006.pdf"},
+  {n:"音楽", i:"🎵", g:"全", d:"歌唱・器楽・音楽づくり・鑑賞。共通事項と表現の工夫。",
+   k:"おんがく 音楽 歌唱 鑑賞 リコーダー 合奏 共通教材",
+   u:"https://www.mext.go.jp/component/a_menu/education/micro_detail/__icsFiles/afieldfile/2019/03/18/1387017_007.pdf"},
+  {n:"図画工作", i:"🎨", g:"全", d:"造形遊び・絵や立体・工作・鑑賞。材料や用具の学年配当も。",
+   k:"ずこう 図工 図画工作 造形遊び 絵 版画 彫刻刀 鑑賞 用具",
+   u:"https://www.mext.go.jp/component/a_menu/education/micro_detail/__icsFiles/afieldfile/2019/03/18/1387017_008.pdf"},
+  {n:"家庭", i:"🍳", g:"高", d:"5・6年。食生活・衣生活・住生活・消費生活と環境。",
+   k:"かてい 家庭科 調理 裁縫 ミシン 消費 食育 住まい",
+   u:"https://www.mext.go.jp/content/20240918-mxt_kyoiku01-100002607_02.pdf"},
+  {n:"体育", i:"⚽", g:"全", d:"運動領域と保健領域。器械運動・水泳・ボール運動などの内容。",
+   k:"たいいく 体育 保健 水泳 マット 跳び箱 鉄棒 ボール運動 表現運動",
+   u:"https://www.mext.go.jp/content/20240918-mxt_kyoiku01-100002607.pdf"},
+  {n:"外国語活動・外国語", i:"🌍", g:"中高", d:"3・4年は外国語活動、5・6年は教科。聞く話す読む書く。",
+   k:"がいこくご 外国語 英語 えいご 外国語活動 ALT 慣れ親しむ 単元",
+   u:"https://www.mext.go.jp/content/20220614-mxt_kyoiku02-100002607_11.pdf"},
+  {n:"特別の教科 道徳", i:"💗", g:"全", d:"19〜22の内容項目、考え議論する道徳、記述による評価。",
+   k:"どうとく 道徳 特別の教科 内容項目 考え議論する道徳 所見 評価",
+   u:"https://www.mext.go.jp/content/20260318-mxt_kyoiku01-100002607_12.pdf"},
+  {n:"総合的な学習の時間", i:"🧩", g:"中高", d:"3年から。探究のプロセスと横断的・総合的な課題の設定。",
+   k:"そうごう 総合的な学習の時間 探究 課題設定 情報の収集 まとめ表現 福祉 環境",
+   u:"https://www.mext.go.jp/component/a_menu/education/micro_detail/__icsFiles/afieldfile/2019/03/18/1387017_013_1.pdf"},
+  {n:"特別活動", i:"🙌", g:"全", d:"学級活動・児童会・クラブ・学校行事。話合い活動とキャリア形成。",
+   k:"とくべつかつどう 特別活動 学級活動 学級会 児童会 クラブ 行事 キャリアパスポート 係活動",
+   u:"https://www.mext.go.jp/content/20221213-mxt_kyoiku02-100002607_014.pdf"},
+];
+
+const GRADE_LABEL = {"低":"1・2年","中高":"3〜6年","高":"5・6年","全":"全学年"};
+
+// 手元に保存した公式PDF（サイト内で開くため）
+const DIR = "pdf/";
+const FILE = {
+  "総則":"sousoku.pdf", "国語":"kokugo.pdf", "社会":"shakai.pdf", "算数":"sansuu.pdf",
+  "理科":"rika.pdf", "生活":"seikatsu.pdf", "音楽":"ongaku.pdf", "図画工作":"zukou.pdf",
+  "家庭":"katei.pdf", "体育":"taiiku.pdf", "外国語活動・外国語":"gaikokugo.pdf",
+  "特別の教科 道徳":"doutoku.pdf", "総合的な学習の時間":"sougou.pdf", "特別活動":"tokkatsu.pdf"
+};
+const localOf = d => d.u;
+
+const grid = document.getElementById("grid");
+const empty = document.getElementById("empty");
+const countEl = document.getElementById("count");
+const q = document.getElementById("q");
+const clearBtn = document.getElementById("clear");
+let gradeFilter = "all";
+
+function render(){
+  const kw = q.value.trim().toLowerCase();
+  const hits = DATA.filter(d=>{
+    const okG = gradeFilter==="all" || d.g==="全" || d.g.includes(gradeFilter);
+    const okK = !kw || (d.n+" "+d.k+" "+d.d).toLowerCase().includes(kw);
+    return okG && okK;
+  });
+
+  grid.innerHTML = hits.map(d=>`
+    <a class="card" href="${localOf(d)}" data-n="${d.n}">
+      <div class="top">
+        <div class="ic">${d.i}</div>
+        <div>
+          <h2>${d.n}</h2>
+          <div class="meta">${GRADE_LABEL[d.g]||""}</div>
+        </div>
+      </div>
+      <div class="desc">${d.d}</div>
+      <div class="foot"><span>解説を開く →</span><span class="pdf">PDF</span></div>
+    </a>`).join("");
+
+  countEl.textContent = `${hits.length}件`;
+  empty.style.display = hits.length ? "none" : "block";
+  clearBtn.style.display = q.value ? "block" : "none";
+}
+
+q.addEventListener("input", ()=>{ mode==="pdf" ? render() : renderText(); });
+clearBtn.addEventListener("click", ()=>{
+  q.value=""; q.focus();
+  mode==="pdf" ? render() : renderText();
+});
+
+document.getElementById("tags").addEventListener("click", e=>{
+  const b = e.target.closest(".tag");
+  if(!b) return;
+  document.querySelectorAll(".tag").forEach(t=>t.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  gradeFilter = b.dataset.g;
+  render();
+});
+
+/* ============================================================
+   本文検索モード（pdf/honbun.pdf から抽出した本文を全文検索）
+   ============================================================ */
+const HD = window.HONBUN_DATA || {subjects:[], rows:[]};
+const ROWS = HD.rows.map(r=>({s:HD.subjects[r[0]], g:r[1], a:r[2], c:r[3], p:r[4], t:r[5]}));
+
+// 教科の呼び名ゆれ
+const SUBJ_ALIAS = {
+  "こくご":"国語","国語":"国語",
+  "しゃかい":"社会","社会":"社会",
+  "さんすう":"算数","算数":"算数",
+  "りか":"理科","理科":"理科",
+  "せいかつ":"生活","生活":"生活","生活科":"生活",
+  "おんがく":"音楽","音楽":"音楽",
+  "ずこう":"図画工作","図工":"図画工作","図画工作":"図画工作",
+  "かてい":"家庭","家庭":"家庭","家庭科":"家庭",
+  "たいいく":"体育","体育":"体育",
+  "がいこくご":"外国語","外国語":"外国語","英語":"外国語","えいご":"外国語",
+  "外国語活動":"外国語活動",
+  "どうとく":"特別の教科 道徳","道徳":"特別の教科 道徳","特別の教科 道徳":"特別の教科 道徳",
+  "そうごう":"総合的な学習の時間","総合":"総合的な学習の時間","総合的な学習の時間":"総合的な学習の時間",
+  "とくかつ":"特別活動","特活":"特別活動","特別活動":"特別活動",
+  "そうそく":"総則","総則":"総則",
+};
+
+// ふだんの言い方 → 指導要領の用語（OR検索で展開）
+const SYN = {
+  "かけざん":["乗法"], "かけ算":["乗法"], "掛け算":["乗法"], "九九":["九九","乗法"],
+  "わりざん":["除法"], "わり算":["除法"], "割り算":["除法"], "あまり":["余り","除法"],
+  "たしざん":["加法"], "たし算":["加法"], "足し算":["加法"],
+  "ひきざん":["減法"], "ひき算":["減法"], "引き算":["減法"],
+  "くり上がり":["加法"], "繰り上がり":["加法"], "くり下がり":["減法"], "繰り下がり":["減法"],
+  "筆算":["筆算","計算"], "時計":["時刻","時間"], "ものさし":["長さ"], "かさ":["体積","かさ"],
+  "文章題":["問題","式"], "図形":["図形"],
+  "読解":["読むこと"], "音読":["音読","読むこと"], "作文":["書くこと"],
+  "話し合い":["話合い","話すこと"], "話合い":["話合い","話すこと"], "スピーチ":["話すこと"],
+  "漢字":["漢字"], "ローマ字":["ローマ字"], "書写":["書写"], "読書":["読書"],
+  "水泳":["水泳","水遊び"], "プール":["水泳","水遊び"], "とび箱":["跳び箱"], "跳び箱":["跳び箱"],
+  "マット":["マット"], "鉄棒":["鉄棒"], "ダンス":["表現","リズム"], "運動会":["表現","集団"],
+  "保健":["保健","健康"], "けが":["けが","安全"], "安全":["安全"],
+  "実験":["実験"], "観察":["観察"], "まちたんけん":["町","地域"], "町探検":["町","地域"],
+  "調理":["調理"], "ミシン":["縫","布"], "裁縫":["縫","布"],
+  "絵":["絵"], "工作":["工作"], "鑑賞":["鑑賞"],
+  "歌":["歌唱","歌"], "リコーダー":["器楽","楽器"], "合奏":["器楽"],
+  "プログラミング":["プログラミング"], "タブレット":["情報","コンピュータ"],
+  "ict":["情報","コンピュータ"], "情報":["情報"],
+  "いじめ":["いじめ"], "キャリア":["キャリア"], "学級会":["学級活動","話合い"],
+  "係":["当番","係"], "行事":["学校行事"], "クラブ":["クラブ活動"],
+};
+
+const GRADE_RE_Q = /^([1-6１-６一二三四五六])年(生)?$/;
+const Z2H_G = {"１":"1","２":"2","３":"3","４":"4","５":"5","６":"6",
+               "一":"1","二":"2","三":"3","四":"4","五":"5","六":"6"};
+
+const hitsEl = document.getElementById("hits");
+const moreEl = document.getElementById("more");
+const filtersEl = document.getElementById("filters");
+const primaryRow = document.getElementById("primaryRow");
+const sublinksEl = document.getElementById("sublinks");
+const tagsEl = document.getElementById("tags");
+
+let mode = "pdf";
+let tGrade = "";     // "" = すべて
+let tSubject = "";   // "" = すべて
+let shown = 60;
+
+// 教科チップを作る
+(function buildSubjChips(){
+  const box = document.getElementById("subjChips");
+  const ORDER = ["国語","社会","算数","理科","生活","音楽","図画工作","家庭","体育",
+                 "外国語","外国語活動","特別の教科 道徳","総合的な学習の時間","特別活動","総則"];
+  const list = ORDER.filter(s=>HD.subjects.includes(s));
+  box.insertAdjacentHTML("beforeend",
+    `<button class="chip" data-s="" aria-pressed="true">すべて</button>` +
+    list.map(s=>`<button class="chip" data-s="${s}">${s.replace("特別の教科 ","")}</button>`).join(""));
+})();
+
+const esc = s => s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function parseQuery(str){
+  const kws = [];
+  let g = "", s = "";
+  str.trim().split(/[\s　]+/).filter(Boolean).forEach(tok=>{
+    const m = tok.match(GRADE_RE_Q);
+    if(m){ g = Z2H_G[m[1]] || m[1]; return; }
+    const al = SUBJ_ALIAS[tok] || SUBJ_ALIAS[tok.toLowerCase()];
+    if(al){ s = al; return; }
+    const syn = SYN[tok] || SYN[tok.toLowerCase()];
+    kws.push({raw:tok, or:[tok].concat(syn||[])});
+  });
+  return {g, s, kws};
+}
+
+function gradeOK(rowG, g){
+  if(!g) return true;
+  if(!rowG) return true;            // 学年共通（教科の目標など）は常に出す
+  return rowG.split(",").includes(g);
+}
+
+function renderText(){
+  const {g, s, kws} = parseQuery(q.value);
+  const useG = g || tGrade;
+  const useS = s || tSubject;
+
+  const hits = ROWS.filter(r=>{
+    if(useS && r.s !== useS) return false;
+    if(!gradeOK(r.g, useG)) return false;
+    if(!kws.length) return !!(useG || useS);   // 条件ゼロなら何も出さない
+    const hay = r.t + " " + r.a + " " + r.c;
+    return kws.every(k => k.or.some(w => hay.includes(w)));
+  }).map((r,i)=>{
+    // 領域名（Ｃ 読むこと など）に当たったものを上に
+    const sc = kws.reduce((n,k)=> n + (k.or.some(w=>(r.a+r.c).includes(w)) ? 1 : 0), 0);
+    return {r, sc, i};
+  }).sort((a,b)=> b.sc - a.sc || a.i - b.i).map(x=>x.r);
+
+  const marks = kws.flatMap(k=>k.or).filter(w=>w.length>0)
+                   .sort((a,b)=>b.length-a.length);
+  const rx = marks.length
+    ? new RegExp("(" + marks.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "g")
+    : null;
+  const hl = txt => {
+    const s = esc(txt);
+    return rx ? s.replace(rx, "<mark>$1</mark>") : s;
+  };
+
+  hitsEl.innerHTML = hits.slice(0, shown).map(r=>{
+    const gl = r.g ? r.g.split(",").map(x=>x+"年").join("・") : "学年共通";
+    const meta = [r.a, r.c].filter(Boolean).join(" ／ ");
+    return `<div class="hit">
+      <div class="hmeta">
+        <span class="badge">${esc(r.s)}</span>
+        <span class="badge">${gl}</span>
+        ${meta ? `<span class="sub">${esc(meta)}</span>` : ""}
+      </div>
+      <div class="htext">${hl(r.t)}</div>
+      <div class="hfoot"><button class="hopen" data-p="${r.p}">📘 本文PDFの ${r.p} ページを開く →</button></div>
+    </div>`;
+  }).join("");
+
+  const n = hits.length;
+  countEl.textContent = (kws.length || useG || useS)
+    ? `${n}件${n > shown ? `（${shown}件を表示中）` : ""}`
+    : "学年・教科・キーワードを入れてください（例：2年 算数 かけざん）";
+  moreEl.hidden = n <= shown;
+  moreEl.textContent = `残り ${n - shown} 件を見る`;
+  empty.style.display = (n === 0 && (kws.length || useG || useS)) ? "block" : "none";
+  clearBtn.style.display = q.value ? "block" : "none";
+}
+
+function setMode(m){
+  if(m !== mode){ q.value = ""; clearBtn.style.display = "none"; }
+  mode = m;
+  document.querySelectorAll(".mode").forEach(b=>
+    b.setAttribute("aria-pressed", String(b.dataset.m === m)));
+  const isText = m === "text";
+  filtersEl.hidden   = !isText;
+  hitsEl.hidden      = !isText;
+  primaryRow.hidden  = isText;
+  sublinksEl.hidden  = isText;
+  tagsEl.hidden      = isText;
+  grid.hidden        = isText;
+  moreEl.hidden      = true;
+  shown = 60;
+  q.placeholder = isText
+    ? "学年・教科・ことばで本文を探す（例：2年 読むこと）"
+    : "教科名・キーワードで探す（例：図工、英語、評価）";
+  isText ? renderText() : render();
+}
+
+document.getElementById("modes").addEventListener("click", e=>{
+  const b = e.target.closest(".mode");
+  if(b) setMode(b.dataset.m);
+});
+document.getElementById("gradeChips").addEventListener("click", e=>{
+  const b = e.target.closest(".chip");
+  if(!b) return;
+  b.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  tGrade = b.dataset.g; shown = 60; renderText();
+});
+document.getElementById("subjChips").addEventListener("click", e=>{
+  const b = e.target.closest(".chip");
+  if(!b) return;
+  b.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  tSubject = b.dataset.s; shown = 60; renderText();
+});
+document.getElementById("examples").addEventListener("click", e=>{
+  const b = e.target.closest(".ex");
+  if(!b) return;
+  q.value = b.textContent; shown = 60; renderText(); q.focus();
+});
+moreEl.addEventListener("click", ()=>{ shown += 60; renderText(); });
+hitsEl.addEventListener("click", e=>{
+  const b = e.target.closest(".hopen");
+  if(!b) return;
+  openViewer("小学校学習指導要領（本文・告示）", `${b.dataset.p}ページ`,
+             "https://www.mext.go.jp/content/20230120-mxt_kyoiku02-100002604_01.pdf#page=" + b.dataset.p,
+             "https://www.mext.go.jp/content/20230120-mxt_kyoiku02-100002604_01.pdf");
+});
+
+// ---- サイト内PDFビューア ----
+const viewer = document.getElementById("viewer");
+const vbody  = document.getElementById("vbody");
+const vfall  = document.getElementById("vfall");
+const HONBUN = {n:"小学校学習指導要領（本文・告示）", g:"", src:"https://www.mext.go.jp/content/20230120-mxt_kyoiku02-100002604_01.pdf",
+                u:"https://www.mext.go.jp/content/20230120-mxt_kyoiku02-100002604_01.pdf"};
+const SEITO  = {n:"生徒指導提要（改訂版）", g:"令和4年12月", src:"https://www.mext.go.jp/content/20230220-mxt_jidou01-000024699-201-1.pdf",
+                u:"https://www.mext.go.jp/content/20230220-mxt_jidou01-000024699-201-1.pdf"};
+const GUIDE  = {n:"生徒指導提要 活用ガイド", g:"令和4年12月", src:"https://www.mext.go.jp/content/20221206-mxt-jidou02-000024699-002.pdf",
+                u:"https://www.mext.go.jp/content/20221206-mxt-jidou02-000024699-002.pdf"};
+
+function openViewer(title, sub, src, mext){
+  document.getElementById("vtitle").firstChild.nodeValue = title;
+  document.getElementById("vsub").textContent = sub || "";
+  document.getElementById("vnew").href = src;
+  document.getElementById("vfall-a").href = src;
+  document.getElementById("vmext").href = mext;
+
+  // 既存のPDFを消して差し替え
+  vbody.querySelectorAll("embed").forEach(e=>e.remove());
+  const em = document.createElement("embed");
+  em.type = "application/pdf";
+  em.src = src + (src.includes("#") ? "&view=FitH" : "#view=FitH");
+  vbody.insertBefore(em, vfall);
+
+  vfall.style.display = "none";
+  viewer.classList.add("open");
+  document.body.style.overflow = "hidden";
+  // 表示できていなければ案内を出す
+  setTimeout(()=>{ if(!em.offsetHeight) vfall.style.display = "grid"; }, 1200);
+}
+function closeViewer(){
+  viewer.classList.remove("open");
+  vbody.querySelectorAll("embed").forEach(e=>e.remove()); // メモリ解放
+  document.body.style.overflow = "";
+}
+
+grid.addEventListener("click", e=>{
+  const a = e.target.closest(".card");
+  if(!a || e.metaKey || e.ctrlKey || e.shiftKey) return;   // 新規タブ操作はそのまま
+  e.preventDefault();
+  const d = DATA.find(x=>x.n === a.dataset.n);
+  openViewer(d.n, GRADE_LABEL[d.g]||"", localOf(d), d.u);
+});
+function bindOne(id, doc, sub){
+  document.getElementById(id).addEventListener("click", e=>{
+    if(e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    openViewer(doc.n, sub, doc.src, doc.u);
+  });
+}
+bindOne("primary",  HONBUN, "平成29年告示");
+bindOne("primary2", SEITO,  SEITO.g);
+bindOne("guide",    GUIDE,  GUIDE.g);
+
+// #honbun #seitoshido #算数 などで直接ビューアを開く
+const SINGLES = {
+  "honbun":[HONBUN,"平成29年告示"], "本文":[HONBUN,"平成29年告示"],
+  "seitoshido":[SEITO,SEITO.g], "生徒指導提要":[SEITO,SEITO.g],
+  "seitoshido-guide":[GUIDE,GUIDE.g], "活用ガイド":[GUIDE,GUIDE.g],
+};
+function openFromHash(){
+  const h = decodeURIComponent(location.hash.slice(1));
+  if(!h) return;
+  if(SINGLES[h]){ const [doc,sub] = SINGLES[h]; return openViewer(doc.n, sub, doc.src, doc.u); }
+  const d = DATA.find(x=>x.n === h || FILE[x.n] === h + ".pdf");
+  if(d) openViewer(d.n, GRADE_LABEL[d.g]||"", localOf(d), d.u);
+}
+window.addEventListener("hashchange", openFromHash);
+
+document.getElementById("vclose").addEventListener("click", closeViewer);
+viewer.addEventListener("click", e=>{ if(e.target === viewer) closeViewer(); });
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeViewer(); });
+
+render();
+openFromHash();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

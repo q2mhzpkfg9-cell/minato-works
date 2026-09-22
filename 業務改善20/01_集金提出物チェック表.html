@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>集金・提出物チェック表</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ok:#2f855a;--okbg:#e6f4ea;--warn:#b7791f;--warnbg:#fdf3dc;--ng:#b83232;--ngbg:#fbe9e7;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.2rem;letter-spacing:.03em}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.lead{margin:0 0 12px;color:var(--sub);font-size:.9rem}
+.priv{display:inline-block;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:4px 10px;font-size:.8rem;color:var(--sub);margin-bottom:12px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.p:hover{background:var(--navy2)}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+.btn.on{background:var(--navy);color:#fff}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:120px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+#toast.show{opacity:1}
+#printArea{display:none}
+/* app */
+.items{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;cursor:pointer;text-align:left;font-family:inherit;font-size:.88rem;min-height:44px}
+.chip b{display:block;color:var(--navy)}
+.chip.sel{border-color:var(--navy);background:#eef2f7}
+.modes{display:flex;gap:6px;flex-wrap:wrap}
+.tblwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px}
+table.m{border-collapse:separate;border-spacing:0;font-size:.88rem;min-width:100%}
+table.m th,table.m td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;text-align:center;background:#fff}
+table.m thead th{position:sticky;top:0;background:#f1ede4;z-index:2;padding:6px 6px;font-size:.8rem;min-width:84px}
+table.m thead th.sel{background:#dfe7f1}
+table.m th.nm{position:sticky;left:0;z-index:1;text-align:left;padding:6px 10px;white-space:nowrap;background:#fff;min-width:120px}
+table.m thead th.nm{z-index:3;background:#f1ede4}
+table.m tfoot td,table.m tfoot th{position:sticky;bottom:0;background:#f1ede4;font-size:.78rem;padding:4px}
+.cell{width:100%;min-height:44px;border:0;background:transparent;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:700}
+.cell.st-ok{background:var(--okbg);color:var(--ok)}
+.cell.st-part{background:var(--warnbg);color:var(--warn)}
+.cell.st-ex{background:#f0f0f0;color:#999}
+.cell.st-no{color:#c9c2b3}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.sum div{background:#f8f5ee;border-radius:10px;padding:8px 10px}
+.sum b{display:block;font-size:1.25rem;color:var(--navy)}
+.sum .ng b{color:var(--ng)}
+.miss{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.miss span{background:var(--ngbg);color:var(--ng);border-radius:999px;padding:3px 10px;font-size:.85rem;font-weight:700}
+.coin{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px}
+.coin label{display:flex;align-items:center;gap:6px;font-size:.85rem}
+.coin input{width:70px;text-align:right}
+.grid2{display:grid;gap:14px}
+@media(min-width:900px){.grid2{grid-template-columns:1fr 1fr}}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block;font-size:10.5pt;color:#000}
+  #printArea h1{font-size:14pt;margin:0 0 4pt}
+  #printArea table{border-collapse:collapse;width:100%}
+  #printArea th,#printArea td{border:1px solid #555;padding:3pt 4pt;text-align:center}
+  #printArea td.l,#printArea th.l{text-align:left}
+  @page{size:A4;margin:12mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><a class="back" href="../index.html">← MINATO WORKS</a><h1>集金・提出物チェック表</h1></div></header>
+<main>
+<p class="lead">集金袋・同意書・アンケートなどの回収を、名簿×項目の表でタップ記録。未提出者の一覧、集金額の合計、金種の照合までできます。</p>
+<div class="priv">🔒 名簿と記録はこの端末（ブラウザ）の中だけに保存されます。外部には送信しません。</div>
+
+<section class="card">
+  <details id="rosterBox">
+    <summary>① 名簿（<span id="rosterCount">0</span>人）</summary>
+    <p class="note">1行に1人。出席番号順に入れてください。名前を変えても記録は引き継がれます（同じ名前の行は同じ子として扱います）。</p>
+    <textarea id="rosterTxt" placeholder="あおき はると&#10;いとう さくら&#10;..."></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn p" id="rosterSave">名簿を保存</button>
+      <button class="btn" id="rosterCommon">共通名簿から読み込む</button>
+      <span class="note">（せんせいアプリの「せってい・なまえちょう」で入れた名簿）</span>
+    </div>
+  </details>
+</section>
+
+<section class="card">
+  <h2>② 集める項目</h2>
+  <div class="row">
+    <label class="f">項目名<input id="itName" placeholder="例：遠足代 / 家庭調査票" style="width:200px"></label>
+    <label class="f">種類<select id="itType"><option value="money">集金（金額あり）</option><option value="doc">提出物</option></select></label>
+    <label class="f" id="itAmtWrap">1人あたりの金額<input id="itAmt" type="number" min="0" step="1" placeholder="1200" style="width:120px"></label>
+    <label class="f">締切<input id="itDue" type="date"></label>
+    <button class="btn p" id="itAdd" style="align-self:flex-end">追加</button>
+  </div>
+  <p class="note">項目をタップすると選択。選択中の項目の集計が下に出ます。</p>
+  <div class="items" id="itemList"></div>
+</section>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">③ チェック表</h2>
+    <div class="row">
+      <span class="note">タップしたときの記録：</span>
+      <div class="modes" id="modes">
+        <button class="btn s on" data-m="ok">✓ 済</button>
+        <button class="btn s" data-m="part">一部（金額）</button>
+        <button class="btn s" data-m="ex">対象外</button>
+        <button class="btn s" data-m="no">未に戻す</button>
+      </div>
+    </div>
+  </div>
+  <p class="note">「済」モードで済のセルをもう一度タップすると未に戻ります。欠席・転出などは「対象外」にすると集計から外れます。</p>
+  <div class="tblwrap"><table class="m" id="mat"></table></div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn" id="prTable">🖨 チェック表を印刷</button>
+    <button class="btn" id="csv">CSVで保存</button>
+  </div>
+</section>
+
+<div class="grid2">
+<section class="card">
+  <h2>④ 選択中の項目：<span id="selName">—</span></h2>
+  <div class="sum" id="sumBox"></div>
+  <div><b>まだの人</b> <span class="note" id="missNote"></span></div>
+  <div class="miss" id="missList"></div>
+  <div class="row">
+    <button class="btn" id="copyMiss">未提出者をコピー</button>
+    <button class="btn" id="copyLetter">連絡帳用の文面をコピー</button>
+    <button class="btn" id="prMiss">🖨 未提出者メモを印刷</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>⑤ 金種の照合（集金袋から出したお金）</h2>
+  <div class="coin" id="coinBox"></div>
+  <div class="sum">
+    <div><span class="note">数えた合計</span><b id="coinTotal">0円</b></div>
+    <div><span class="note">表の集金額</span><b id="coinExp">0円</b></div>
+    <div id="coinDiffBox"><span class="note">差</span><b id="coinDiff">0円</b></div>
+  </div>
+  <button class="btn s" id="coinClear">金種をクリア</button>
+</section>
+</div>
+
+<section class="card">
+  <details>
+    <summary>データの管理</summary>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="bk">バックアップ（JSON）</button>
+      <label class="btn" style="display:inline-flex;align-items:center">復元<input type="file" id="rs" accept=".json" style="display:none"></label>
+      <button class="btn d" id="delItem">選択中の項目を削除</button>
+      <button class="btn d" id="reset">すべて消去</button>
+    </div>
+  </details>
+</section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+var KEY="mw_gyomu_01_data";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},1800)}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
+function yen(n){return (Math.round(n)||0).toLocaleString("ja-JP")+"円"}
+var D=null;
+try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){D=null}
+if(!D||!D.students){D={students:[],items:[],rec:{},sel:null,coins:{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("保存できませんでした")}}
+var mode="ok";
+var DENOM=[10000,5000,1000,500,100,50,10,5,1];
+
+function copyText(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){toast("コピーしました")},function(){fallback()})}else fallback();
+  function fallback(){var ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("コピーしました")}catch(e){toast("コピーできませんでした")}ta.remove()}
+}
+function download(name,text,type){var b=new Blob([text],{type:type||"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function fmtDate(s){if(!s)return"";var d=new Date(s+"T00:00:00");return (d.getMonth()+1)+"/"+d.getDate()+"("+"日月火水木金土"[d.getDay()]+")"}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+
+/* ---------- 名簿 ---------- */
+function rosterToText(){return D.students.map(function(s){return s.name}).join("\n")}
+function setRoster(lines){
+  var old={};D.students.forEach(function(s){old[s.name]=s.id});
+  D.students=lines.map(function(n){n=n.trim();return n?{id:old[n]||uid(),name:n}:null}).filter(Boolean);
+  save();renderAll();toast("名簿を保存しました（"+D.students.length+"人）");
+}
+$("#rosterSave").onclick=function(){setRoster($("#rosterTxt").value.split(/\r?\n/))};
+$("#rosterCommon").onclick=function(){
+  var t="";try{t=localStorage.getItem("sensei25_names")||""}catch(e){}
+  if(!t.trim()){toast("共通名簿が見つかりません");return}
+  $("#rosterTxt").value=t;toast("読み込みました。「名簿を保存」を押してください");
+};
+
+/* ---------- 項目 ---------- */
+$("#itType").onchange=function(){$("#itAmtWrap").style.display=this.value==="money"?"":"none"};
+$("#itAdd").onclick=function(){
+  var name=$("#itName").value.trim();if(!name){toast("項目名を入れてください");return}
+  var type=$("#itType").value;var amt=parseInt($("#itAmt").value,10)||0;
+  if(type==="money"&&!amt){toast("金額を入れてください");return}
+  var it={id:uid(),name:name,type:type,amount:type==="money"?amt:0,due:$("#itDue").value||""};
+  D.items.push(it);D.rec[it.id]={};D.sel=it.id;$("#itName").value="";$("#itAmt").value="";$("#itDue").value="";
+  save();renderAll();
+};
+function selItem(){return D.items.filter(function(i){return i.id===D.sel})[0]||null}
+function renderItems(){
+  var box=$("#itemList");box.innerHTML="";
+  if(!D.items.length){box.innerHTML='<span class="note">まだ項目がありません。上から追加してください。</span>';return}
+  D.items.forEach(function(it){
+    var st=stats(it);
+    var b=document.createElement("button");b.className="chip"+(it.id===D.sel?" sel":"");
+    b.innerHTML="<b>"+esc(it.name)+"</b>"+(it.type==="money"?yen(it.amount)+" ／ ":"提出物 ／ ")+"済 "+st.done+"/"+st.target+(it.due?" ／ 〆"+fmtDate(it.due):"");
+    b.onclick=function(){D.sel=it.id;save();renderAll()};
+    box.appendChild(b);
+  });
+}
+
+/* ---------- 記録 ---------- */
+function getRec(it,sid){return (D.rec[it.id]||{})[sid]||null}
+function setRec(it,sid,r){if(!D.rec[it.id])D.rec[it.id]={};if(r)D.rec[it.id][sid]=r;else delete D.rec[it.id][sid]}
+function stats(it){
+  var target=0,done=0,part=0,collected=0,missing=[];
+  D.students.forEach(function(s){
+    var r=getRec(it,s.id);
+    if(r&&r.s==="ex")return;
+    target++;
+    if(r&&r.s==="ok"){done++;collected+=it.type==="money"?it.amount:0}
+    else if(r&&r.s==="part"){part++;collected+=r.amt||0;missing.push({s:s,part:r.amt||0})}
+    else missing.push({s:s,part:0});
+  });
+  return{target:target,done:done,part:part,collected:collected,expected:target*it.amount,missing:missing};
+}
+function cellHTML(it,r){
+  if(!r)return{c:"st-no",t:"・"};
+  if(r.s==="ok")return{c:"st-ok",t:"✓"+(r.d?'<br><small style="font-weight:400">'+esc(r.d.slice(5).replace("-","/"))+"</small>":"")};
+  if(r.s==="part")return{c:"st-part",t:"一部<br><small>"+yen(r.amt)+"</small>"};
+  if(r.s==="ex")return{c:"st-ex",t:"対象外"};
+  return{c:"st-no",t:"・"};
+}
+function tapCell(itId,sid){
+  var it=D.items.filter(function(i){return i.id===itId})[0];if(!it)return;
+  var r=getRec(it,sid);
+  if(mode==="ok"){setRec(it,sid,(r&&r.s==="ok")?null:{s:"ok",d:today()})}
+  else if(mode==="part"){
+    if(it.type!=="money"){toast("提出物には「一部」は使えません");return}
+    var v=prompt("受け取った金額（円）を入れてください",r&&r.amt?r.amt:"");
+    if(v===null)return;var n=parseInt(String(v).replace(/[^\d]/g,""),10);
+    if(!n){setRec(it,sid,null)}
+    else if(n>=it.amount){setRec(it,sid,{s:"ok",d:today()});if(n>it.amount)toast("金額以上なので「済」にしました（おつり "+yen(n-it.amount)+"）")}
+    else setRec(it,sid,{s:"part",amt:n,d:today()});
+  }
+  else if(mode==="ex"){setRec(it,sid,(r&&r.s==="ex")?null:{s:"ex"})}
+  else setRec(it,sid,null);
+  save();renderMatrix();renderItems();renderSummary();
+}
+document.getElementById("modes").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;mode=b.dataset.m;
+  Array.prototype.forEach.call(this.querySelectorAll("button"),function(x){x.classList.toggle("on",x===b)});
+});
+function renderMatrix(){
+  var t=$("#mat");
+  if(!D.students.length){t.innerHTML='<tbody><tr><td style="padding:20px">まず①で名簿を入れてください。</td></tr></tbody>';return}
+  if(!D.items.length){t.innerHTML='<tbody><tr><td style="padding:20px">②で集める項目を追加してください。</td></tr></tbody>';return}
+  var h="<thead><tr><th class='nm'>番号・名前</th>";
+  D.items.forEach(function(it){h+="<th class='"+(it.id===D.sel?"sel":"")+"'>"+esc(it.name)+"<br><span style='font-weight:400'>"+(it.type==="money"?yen(it.amount):"提出物")+"</span></th>"});
+  h+="</tr></thead><tbody>";
+  D.students.forEach(function(s,i){
+    h+="<tr><th class='nm'>"+(i+1)+". "+esc(s.name)+"</th>";
+    D.items.forEach(function(it){var c=cellHTML(it,getRec(it,s.id));h+="<td><button class='cell "+c.c+"' data-i='"+it.id+"' data-s='"+s.id+"'>"+c.t+"</button></td>"});
+    h+="</tr>";
+  });
+  h+="</tbody><tfoot><tr><th class='nm'>済／対象</th>";
+  D.items.forEach(function(it){var st=stats(it);h+="<td>"+st.done+"/"+st.target+(it.type==="money"?"<br>"+yen(st.collected):"")+"</td>"});
+  h+="</tr></tfoot>";
+  t.innerHTML=h;
+}
+$("#mat").addEventListener("click",function(e){var b=e.target.closest(".cell");if(b)tapCell(b.dataset.i,b.dataset.s)});
+
+/* ---------- 集計 ---------- */
+function renderSummary(){
+  var it=selItem();
+  $("#selName").textContent=it?it.name:"—";
+  if(!it){$("#sumBox").innerHTML="";$("#missList").innerHTML="";$("#missNote").textContent="";renderCoins();return}
+  var st=stats(it);var h="";
+  h+="<div><span class='note'>済</span><b>"+st.done+" / "+st.target+"人</b></div>";
+  h+="<div class='"+(st.missing.length?"ng":"")+"'><span class='note'>まだ</span><b>"+st.missing.length+"人</b></div>";
+  if(it.type==="money"){
+    h+="<div><span class='note'>集まった額</span><b>"+yen(st.collected)+"</b></div>";
+    h+="<div><span class='note'>予定額（"+yen(it.amount)+"×"+st.target+"）</span><b>"+yen(st.expected)+"</b></div>";
+    h+="<div class='"+(st.expected-st.collected>0?"ng":"")+"'><span class='note'>未収</span><b>"+yen(st.expected-st.collected)+"</b></div>";
+  }
+  if(it.due){var over=it.due<today();h+="<div class='"+(over&&st.missing.length?"ng":"")+"'><span class='note'>締切</span><b>"+fmtDate(it.due)+(over?" 過ぎ":"")+"</b></div>"}
+  $("#sumBox").innerHTML=h;
+  $("#missList").innerHTML=st.missing.map(function(m){return"<span>"+esc(m.s.name)+(m.part?"（"+yen(m.part)+"済）":"")+"</span>"}).join("")||'<span style="background:var(--okbg);color:var(--ok)">全員そろいました 🎉</span>';
+  $("#missNote").textContent=st.missing.length?"（"+st.missing.length+"人）":"";
+  renderCoins();
+}
+function missText(){var it=selItem();if(!it)return"";var st=stats(it);return it.name+" 未提出（"+st.missing.length+"人）\n"+st.missing.map(function(m){return"・"+m.s.name+(m.part?"（"+m.part+"円受領、残り"+(it.amount-m.part)+"円）":"")}).join("\n")}
+$("#copyMiss").onclick=function(){if(!selItem()){toast("項目を選んでください");return}copyText(missText())};
+$("#copyLetter").onclick=function(){
+  var it=selItem();if(!it){toast("項目を選んでください");return}
+  var s=it.type==="money"
+    ?"いつもお世話になっております。"+it.name+"（"+it.amount.toLocaleString()+"円）のご提出がまだのようです。"+(it.due?fmtDate(it.due)+"が締切となっておりますので、":"")+"お手数ですが、集金袋に入れてお子さまにお持たせください。行き違いの際はご容赦ください。"
+    :"いつもお世話になっております。「"+it.name+"」のご提出がまだのようです。"+(it.due?fmtDate(it.due)+"までに":"お手数ですが")+"ご記入のうえ、お子さまにお持たせください。行き違いの際はご容赦ください。";
+  copyText(s);
+};
+
+/* ---------- 金種 ---------- */
+function renderCoins(){
+  var box=$("#coinBox");
+  if(!box.childElementCount){
+    DENOM.forEach(function(d){var l=document.createElement("label");l.innerHTML=d.toLocaleString()+"円 × <input type='number' min='0' inputmode='numeric' data-d='"+d+"'>";box.appendChild(l)});
+    box.addEventListener("input",function(e){var i=e.target;if(!i.dataset.d)return;var it=selItem();if(!it)return;if(!D.coins[it.id])D.coins[it.id]={};D.coins[it.id][i.dataset.d]=parseInt(i.value,10)||0;save();calcCoins()});
+  }
+  var it=selItem();var c=it?(D.coins[it.id]||{}):{};
+  Array.prototype.forEach.call(box.querySelectorAll("input"),function(i){i.value=c[i.dataset.d]||"";i.disabled=!it||it.type!=="money"});
+  calcCoins();
+}
+function calcCoins(){
+  var it=selItem();var total=0;
+  if(it&&D.coins[it.id]){DENOM.forEach(function(d){total+=d*(D.coins[it.id][d]||0)})}
+  var exp=it&&it.type==="money"?stats(it).collected:0;
+  $("#coinTotal").textContent=yen(total);$("#coinExp").textContent=yen(exp);
+  var diff=total-exp;$("#coinDiff").textContent=(diff>0?"+":"")+yen(diff)+(diff===0&&total?" ぴったり":"");
+  $("#coinDiffBox").className=diff!==0&&total?"ng":"";
+}
+$("#coinClear").onclick=function(){var it=selItem();if(it){D.coins[it.id]={};save();renderCoins()}};
+
+/* ---------- 印刷・保存 ---------- */
+function doPrint(html){$("#printArea").innerHTML=html;window.print()}
+$("#prTable").onclick=function(){
+  if(!D.students.length||!D.items.length){toast("名簿と項目を入れてください");return}
+  var h="<h1>集金・提出物チェック表</h1><p style='margin:0 0 6pt'>印刷日 "+fmtDate(today())+"</p><table><thead><tr><th class='l'>名前</th>";
+  D.items.forEach(function(it){h+="<th>"+esc(it.name)+"<br><small>"+(it.type==="money"?yen(it.amount):"")+(it.due?" 〆"+fmtDate(it.due):"")+"</small></th>"});
+  h+="</tr></thead><tbody>";
+  D.students.forEach(function(s,i){h+="<tr><td class='l'>"+(i+1)+". "+esc(s.name)+"</td>";D.items.forEach(function(it){var r=getRec(it,s.id);h+="<td>"+(!r?"":r.s==="ok"?"✓":r.s==="part"?yen(r.amt):r.s==="ex"?"－":"")+"</td>"});h+="</tr>"});
+  h+="</tbody><tfoot><tr><td class='l'>済／対象</td>";D.items.forEach(function(it){var st=stats(it);h+="<td>"+st.done+"/"+st.target+(it.type==="money"?"<br>"+yen(st.collected):"")+"</td>"});h+="</tr></tfoot></table>";
+  doPrint(h);
+};
+$("#prMiss").onclick=function(){
+  var it=selItem();if(!it){toast("項目を選んでください");return}var st=stats(it);
+  var h="<h1>"+esc(it.name)+" 未提出者</h1><p>"+fmtDate(today())+" 現在 ／ 済 "+st.done+"/"+st.target+"人"+(it.type==="money"?" ／ 集金額 "+yen(st.collected)+"（予定 "+yen(st.expected)+"）":"")+"</p><table><thead><tr><th class='l'>名前</th><th>状況</th><th style='width:30%'>メモ</th></tr></thead><tbody>";
+  st.missing.forEach(function(m){h+="<tr><td class='l'>"+esc(m.s.name)+"</td><td>"+(m.part?yen(m.part)+" 受領":"未")+"</td><td></td></tr>"});
+  h+="</tbody></table>";doPrint(h);
+};
+$("#csv").onclick=function(){
+  var rows=[["番号","名前"].concat(D.items.map(function(i){return i.name}))];
+  D.students.forEach(function(s,i){rows.push([i+1,s.name].concat(D.items.map(function(it){var r=getRec(it,s.id);return !r?"":r.s==="ok"?(it.type==="money"?it.amount:"済"):r.s==="part"?r.amt:"対象外"})))});
+  var csv="﻿"+rows.map(function(r){return r.map(function(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(",")}).join("\r\n");
+  download("集金提出物_"+today()+".csv",csv,"text/csv");
+};
+$("#bk").onclick=function(){download("集金提出物_backup_"+today()+".json",JSON.stringify(D),"application/json")};
+$("#rs").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result);if(!o.students)throw 0;if(!confirm("今のデータを置きかえて復元しますか？"))return;D=o;save();renderAll();toast("復元しました")}catch(e){toast("読み込めませんでした")}};r.readAsText(f);this.value=""};
+$("#delItem").onclick=function(){var it=selItem();if(!it){toast("項目を選んでください");return}if(!confirm("「"+it.name+"」と記録を削除しますか？"))return;D.items=D.items.filter(function(i){return i.id!==it.id});delete D.rec[it.id];delete D.coins[it.id];D.sel=D.items.length?D.items[0].id:null;save();renderAll()};
+$("#reset").onclick=function(){if(!confirm("名簿・項目・記録をすべて消去します。よろしいですか？"))return;D={students:[],items:[],rec:{},sel:null,coins:{}};save();renderAll()};
+
+function renderAll(){
+  $("#rosterCount").textContent=D.students.length;
+  $("#rosterTxt").value=rosterToText();
+  if(!D.students.length)$("#rosterBox").open=true;
+  if(D.sel&&!selItem())D.sel=D.items.length?D.items[0].id:null;
+  renderItems();renderMatrix();renderSummary();
+}
+renderAll();
+})();
+</script>
+</body>
+</html>

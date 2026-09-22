@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>めんせきブロック</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button{font-family:inherit;font-size:1.05rem;min-height:48px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700;margin-right:4px}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+.stage{display:grid;grid-template-columns:1fr 300px;gap:16px}
+@media(max-width:800px){.stage{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;touch-action:none;user-select:none}
+#q{font-size:clamp(1.25rem,3vw,1.8rem);font-weight:800;color:var(--navy);margin-bottom:8px}
+#count{font-size:2.6rem;font-weight:800;color:var(--acc);text-align:center;line-height:1.2}
+#fb{font-size:1.15rem;font-weight:700;min-height:3em;margin:10px 0}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad button{font-size:1.6rem;min-height:56px}
+#disp{font-size:2.2rem;font-weight:800;text-align:center;border:3px solid var(--line);border-radius:var(--r);min-height:60px;margin-bottom:8px}
+.hide{display:none!important}
+.stat{font-size:.9rem;color:var(--sub);margin-top:8px}
+label.chk{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--navy);min-height:44px}
+label.chk input{width:24px;height:24px}
+.unit{font-size:.9rem;color:var(--sub)}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>めんせきブロック</h1></header>
+<main>
+  <div class="card">
+    <div class="row"><span class="lbl">あそびかた</span>
+      <span class="tabs row" id="modeTabs"><button data-m="free" class="on">ぬって つくる</button><button data-m="make">おだいの めんせき</button><button data-m="rect">ながしかく クイズ</button><button data-m="L">ふくざつな かたち</button></span></div>
+  </div>
+  <div class="stage">
+    <div class="card"><svg id="svg"></svg></div>
+    <div class="card">
+      <div id="q"></div>
+      <div id="paintBox">
+        <div id="count">0 cm²</div>
+        <div class="unit" style="text-align:center">1ます ＝ 1cm²（1へいほうセンチメートル）</div>
+        <div class="row" style="margin-top:10px"><span class="tabs row" id="toolTabs"><button data-t="paint" class="on">✏️ ぬる</button><button data-t="erase">🧽 けす</button></span><button id="clearBtn">ぜんぶ けす</button></div>
+        <button class="pri hide" id="checkBtn" style="width:100%;margin-top:10px">できた！</button>
+      </div>
+      <div id="ansBox" class="hide"><div id="disp"></div><div class="pad" id="pad"></div>
+        <label class="chk" style="margin-top:6px"><input type="checkbox" id="showGrid" checked> ますめを 見せる</label>
+        <button id="hintBtn" style="width:100%">ヒント（わけて かんがえる）</button></div>
+      <div id="fb"></div>
+      <button id="nextBtn" style="width:100%" class="hide">つぎの もんだい</button>
+      <div class="stat" id="stat"></div>
+    </div>
+  </div>
+  <div class="card" style="font-size:.95rem;color:var(--sub)">
+    <b style="color:var(--navy)">ポイント</b>　めんせきは 1cm² の ますが いくつ分か。ながしかくは <b>たて × よこ</b>、ましかくは <b>1辺 × 1辺</b> で もとめられるよ。ふくざつな かたちは「わける」か「大きな ながしかくから ひく」。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_14_stat';
+let stat={ok:0,all:0};try{const s=JSON.parse(localStorage.getItem(KEY));if(s)stat=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(stat));}catch(e){}}
+const $=id=>document.getElementById(id);
+const COLS=14,ROWS=10,C=44,OX=40,OY=40;
+const W=OX*2+COLS*C,H=OY*2+ROWS*C;
+$('svg').setAttribute('viewBox',`0 0 ${W} ${H}`);
+const S={mode:'free',tool:'paint'};
+let cells=new Set(),target=0,shape=null,typed='',answered=false,hintOn=false,painting=false;
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function key(x,y){return x+','+y;}
+function gridSvg(show){
+  let h=`<rect x="${OX}" y="${OY}" width="${COLS*C}" height="${ROWS*C}" fill="#fff"/>`;
+  if(show){for(let i=0;i<=COLS;i++)h+=`<line x1="${OX+i*C}" y1="${OY}" x2="${OX+i*C}" y2="${OY+ROWS*C}" stroke="#cfc6b3" stroke-width="1"/>`;
+  for(let j=0;j<=ROWS;j++)h+=`<line x1="${OX}" y1="${OY+j*C}" x2="${OX+COLS*C}" y2="${OY+j*C}" stroke="#cfc6b3" stroke-width="1"/>`;}
+  return h;
+}
+function rectInfo(){
+  if(!cells.size)return null;
+  let x0=99,y0=99,x1=-1,y1=-1;
+  cells.forEach(k=>{const [x,y]=k.split(',').map(Number);x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);});
+  const w=x1-x0+1,h=y1-y0+1;
+  return {x0,y0,w,h,isRect:w*h===cells.size};
+}
+function drawPaint(){
+  let h=gridSvg(true);
+  cells.forEach(k=>{const [x,y]=k.split(',').map(Number);h+=`<rect x="${OX+x*C+2}" y="${OY+y*C+2}" width="${C-4}" height="${C-4}" rx="5" fill="#f4a261"/>`;});
+  const ri=rectInfo();
+  if(ri&&ri.isRect&&cells.size>1){
+    const x=OX+ri.x0*C,y=OY+ri.y0*C;
+    h+=`<rect x="${x}" y="${y}" width="${ri.w*C}" height="${ri.h*C}" fill="none" stroke="#1f3a5f" stroke-width="4"/>`;
+    h+=`<text x="${x+ri.w*C/2}" y="${y-8}" text-anchor="middle" font-size="22" font-weight="800" fill="#1f3a5f">${ri.w}cm</text>`;
+    h+=`<text x="${x-8}" y="${y+ri.h*C/2+8}" text-anchor="end" font-size="22" font-weight="800" fill="#1f3a5f">${ri.h}cm</text>`;
+  }
+  $('svg').innerHTML=h;
+  let t=cells.size+' cm²';
+  if(ri&&ri.isRect&&cells.size>1)t+=`<div style="font-size:1.1rem;color:#1f3a5f">${ri.h===ri.w?'ましかく':'ながしかく'}！ たて${ri.h} × よこ${ri.w} ＝ ${cells.size}</div>`;
+  $('count').innerHTML=t;
+}
+function cellAt(ev){
+  const r=$('svg').getBoundingClientRect();
+  const x=(ev.clientX-r.left)/r.width*W,y=(ev.clientY-r.top)/r.height*H;
+  const cx=Math.floor((x-OX)/C),cy=Math.floor((y-OY)/C);
+  if(cx<0||cy<0||cx>=COLS||cy>=ROWS)return null;return key(cx,cy);
+}
+function paintAt(ev){const k=cellAt(ev);if(!k)return;if(S.tool==='paint')cells.add(k);else cells.delete(k);drawPaint();}
+const svg=$('svg');
+svg.addEventListener('pointerdown',ev=>{if(!(S.mode==='free'||S.mode==='make')||answered)return;painting=true;svg.setPointerCapture(ev.pointerId);paintAt(ev);});
+svg.addEventListener('pointermove',ev=>{if(painting)paintAt(ev);});
+svg.addEventListener('pointerup',()=>painting=false);
+svg.addEventListener('pointercancel',()=>painting=false);
+// quiz shapes
+function genRect(){
+  const w=rnd(2,12),h=rnd(2,8);const x0=Math.floor((COLS-w)/2),y0=Math.floor((ROWS-h)/2);
+  return {type:'rect',x0,y0,w,h,area:w*h};
+}
+function genL(){
+  // big rectangle minus a corner rectangle
+  const w=rnd(5,12),h=rnd(4,8);const cw=rnd(2,w-2),ch=rnd(2,h-2);
+  const corner=rnd(0,3);const x0=Math.floor((COLS-w)/2),y0=Math.floor((ROWS-h)/2);
+  return {type:'L',x0,y0,w,h,cw,ch,corner,area:w*h-cw*ch};
+}
+function Lpoints(s){
+  // polygon points in grid units, clockwise from top-left, cutting corner
+  const {x0,y0,w,h,cw,ch,corner}=s;const X=x0,Y=y0,X2=x0+w,Y2=y0+h;
+  if(corner===0)return [[X+cw,Y],[X2,Y],[X2,Y2],[X,Y2],[X,Y+ch],[X+cw,Y+ch]]; // top-left cut
+  if(corner===1)return [[X,Y],[X2-cw,Y],[X2-cw,Y+ch],[X2,Y+ch],[X2,Y2],[X,Y2]]; // top-right
+  if(corner===2)return [[X,Y],[X2,Y],[X2,Y2-ch],[X2-cw,Y2-ch],[X2-cw,Y2],[X,Y2]]; // bottom-right
+  return [[X,Y],[X2,Y],[X2,Y2],[X+cw,Y2],[X+cw,Y2-ch],[X,Y2-ch]]; // bottom-left
+}
+function P(x,y){return [OX+x*C,OY+y*C];}
+function lab(x1,y1,x2,y2,text,side){
+  // label for segment in grid units; side offset in px
+  const [ax,ay]=P(x1,y1),[bx,by]=P(x2,y2);const mx=(ax+bx)/2,my=(ay+by)/2;
+  const dx=side[0],dy=side[1];
+  return `<text x="${mx+dx}" y="${my+dy+8}" text-anchor="middle" font-size="22" font-weight="800" fill="#1f3a5f">${text}</text>`;
+}
+function drawQuiz(){
+  const show=$('showGrid').checked;let h=gridSvg(show);const s=shape;
+  if(s.type==='rect'){
+    const [x,y]=P(s.x0,s.y0);
+    h+=`<rect x="${x}" y="${y}" width="${s.w*C}" height="${s.h*C}" fill="rgba(122,180,230,.45)" stroke="#1f3a5f" stroke-width="4"/>`;
+    h+=lab(s.x0,s.y0,s.x0+s.w,s.y0,s.w+'cm',[0,-22]);
+    h+=lab(s.x0,s.y0,s.x0,s.y0+s.h,s.h+'cm',[-34,0]);
+  }else{
+    const pts=Lpoints(s);
+    h+=`<polygon points="${pts.map(p=>P(p[0],p[1]).join(',')).join(' ')}" fill="rgba(122,180,230,.45)" stroke="#1f3a5f" stroke-width="4"/>`;
+    const X=s.x0,Y=s.y0,X2=s.x0+s.w,Y2=s.y0+s.h;
+    // outer lengths
+    const topFull=!(s.corner===0||s.corner===1),botFull=!(s.corner===2||s.corner===3);
+    if(topFull)h+=lab(X,Y,X2,Y,s.w+'cm',[0,-22]);else h+=lab(X,Y2,X2,Y2,s.w+'cm',[0,28]);
+    const leftFull=!(s.corner===0||s.corner===3);
+    if(leftFull)h+=lab(X,Y,X,Y2,s.h+'cm',[-34,0]);else h+=lab(X2,Y,X2,Y2,s.h+'cm',[34,0]);
+    // cut lengths: remaining segments along the cut edges
+    const cw=s.cw,ch=s.ch;
+    if(s.corner===0){h+=lab(X+cw,Y,X2,Y,(s.w-cw)+'cm',[0,-22]);h+=lab(X,Y+ch,X,Y2,(s.h-ch)+'cm',[-34,0]);}
+    if(s.corner===1){h+=lab(X,Y,X2-cw,Y,(s.w-cw)+'cm',[0,-22]);h+=lab(X2,Y+ch,X2,Y2,(s.h-ch)+'cm',[34,0]);}
+    if(s.corner===2){h+=lab(X,Y2,X2-cw,Y2,(s.w-cw)+'cm',[0,28]);h+=lab(X2,Y,X2,Y2-ch,(s.h-ch)+'cm',[34,0]);}
+    if(s.corner===3){h+=lab(X+cw,Y2,X2,Y2,(s.w-cw)+'cm',[0,28]);h+=lab(X,Y,X,Y2-ch,(s.h-ch)+'cm',[-34,0]);}
+    if(hintOn){
+      // split line: horizontal cut through the notch
+      let sx1,sy1,sx2,sy2;
+      if(s.corner===0){sx1=X+cw;sy1=Y+ch;sx2=X2;sy2=Y+ch;}
+      if(s.corner===1){sx1=X;sy1=Y+ch;sx2=X2-cw;sy2=Y+ch;}
+      if(s.corner===2){sx1=X;sy1=Y2-ch;sx2=X2-cw;sy2=Y2-ch;}
+      if(s.corner===3){sx1=X+cw;sy1=Y2-ch;sx2=X2;sy2=Y2-ch;}
+      const [a1,b1]=P(sx1,sy1),[a2,b2]=P(sx2,sy2);
+      h+=`<line x1="${a1}" y1="${b1}" x2="${a2}" y2="${b2}" stroke="#e07a3f" stroke-width="4" stroke-dasharray="10 7"/>`;
+      // dashed missing corner
+      const cx=(s.corner===0||s.corner===3)?X:X2-cw,cy=(s.corner===0||s.corner===1)?Y:Y2-ch;
+      const [px,py]=P(cx,cy);
+      h+=`<rect x="${px}" y="${py}" width="${cw*C}" height="${ch*C}" fill="none" stroke="#c0392b" stroke-width="3" stroke-dasharray="6 6"/>`;
+    }
+  }
+  $('svg').innerHTML=h;
+}
+function hintText(){
+  const s=shape;
+  if(s.type==='rect')return `たて ${s.h}cm、よこ ${s.w}cm の ながしかく。たて × よこ で もとめよう。`;
+  const a=s.w*(s.h-s.ch),b=(s.w-s.cw)*s.ch;
+  return `オレンジの せんで 2つに わけると<br>${s.w}×${s.h-s.ch}＝${a} と ${s.w-s.cw}×${s.ch}＝${b}　→　${a}＋${b}<br>または 大きな ながしかく ${s.w}×${s.h}＝${s.w*s.h} から あかい ところ ${s.cw}×${s.ch}＝${s.cw*s.ch} を ひく。`;
+}
+function newQ(){
+  answered=false;typed='';hintOn=false;$('fb').textContent='';$('nextBtn').classList.add('hide');
+  if(S.mode==='free'){cells.clear();$('q').textContent='すきな かたちを ぬって、めんせきを しらべよう';drawPaint();}
+  else if(S.mode==='make'){
+    cells.clear();target=rnd(6,36);
+    $('q').innerHTML=`めんせきが <span style="color:#e07a3f">${target}cm²</span> の かたちを つくろう<br><span class="unit">ながしかくで つくれたら ボーナス！</span>`;
+    drawPaint();
+  }else{
+    shape=S.mode==='rect'?genRect():genL();
+    $('q').textContent='この かたちの めんせきは なんcm²？';$('disp').textContent='';drawQuiz();
+  }
+  showStat();
+}
+function judgeAns(v){
+  if(answered)return;answered=true;stat.all++;
+  const ok=v===shape.area;if(ok)stat.ok++;save();
+  let t=ok?`<span style="color:#2e8b57">⭕ せいかい！ ${shape.area}cm²</span>`:`<span style="color:#c0392b">❌ こたえは ${shape.area}cm²</span>`;
+  if(shape.type==='rect')t+=`<br>${shape.h} × ${shape.w} ＝ ${shape.area}`;
+  else{hintOn=true;drawQuiz();t+='<br>'+hintText();}
+  if(!ok&&shape.type==='rect'&&v===2*(shape.w+shape.h))t+='<br>それは まわりの ながさ だよ。';
+  $('fb').innerHTML=t;$('nextBtn').classList.remove('hide');showStat();
+}
+$('checkBtn').onclick=()=>{
+  if(answered)return;
+  const n=cells.size,ri=rectInfo();
+  if(n!==target){$('fb').innerHTML=`<span style="color:#c0392b">いま ${n}cm²。あと ${target-n>0?target-n+'ます ぬろう':(n-target)+'ます けそう'}。</span>`;return;}
+  answered=true;stat.all++;stat.ok++;save();
+  let t=`<span style="color:#2e8b57">⭕ ${target}cm² できた！</span>`;
+  if(ri.isRect)t+=`<br>🌟 ながしかく ボーナス！ ${ri.h}×${ri.w}＝${target}`;
+  else{const divs=[];for(let a=1;a<=target;a++)if(target%a===0&&a<=target/a&&target/a<=COLS&&a<=ROWS)divs.push(`${a}×${target/a}`);if(divs.length)t+=`<br>ながしかくなら ${divs.join('、')} も できるよ。`;}
+  $('fb').innerHTML=t;$('nextBtn').classList.remove('hide');showStat();
+};
+$('clearBtn').onclick=()=>{if(answered&&S.mode==='make')return;cells.clear();drawPaint();};
+$('hintBtn').onclick=()=>{if(!shape)return;hintOn=true;drawQuiz();$('fb').innerHTML=hintText();};
+$('showGrid').onchange=()=>{if(shape&&S.mode!=='free'&&S.mode!=='make')drawQuiz();};
+$('nextBtn').onclick=newQ;
+(function(){const pad=$('pad');['7','8','9','4','5','6','1','2','3','けす','0','OK'].forEach(k=>{const b=document.createElement('button');b.textContent=k;if(k==='OK')b.className='pri';
+  b.onclick=()=>{if(answered)return;if(k==='けす')typed=typed.slice(0,-1);else if(k==='OK'){if(typed)judgeAns(+typed);}else if(typed.length<3)typed+=k;$('disp').textContent=typed?typed+' cm²':'';};pad.appendChild(b);});})();
+function showStat(){$('stat').textContent=S.mode==='free'?'':`せいかい ${stat.ok} / ${stat.all}`;}
+function tabs(id,attr,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset[attr]);});}
+tabs('toolTabs','t',v=>S.tool=v);
+tabs('modeTabs','m',v=>{S.mode=v;const paint=v==='free'||v==='make';
+  $('paintBox').classList.toggle('hide',!paint);$('ansBox').classList.toggle('hide',paint);$('checkBtn').classList.toggle('hide',v!=='make');newQ();});
+newQ();
+</script>
+</body>
+</html>

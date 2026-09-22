@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ことわざ・かんようく どうじょう</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b665c;--line:#e3dccd;--r:14px;--ok:#2e8b57;--ng:#c0392b;--gold:#d9a21b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;line-height:1.7}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:bold;font-size:.95rem;padding:6px 12px;border:1px solid rgba(255,255,255,.5);border-radius:10px}
+header h1{font-size:1.25rem;margin:0}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+h2{font-size:1.1rem;color:var(--navy);margin:0 0 10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs+.tabs{margin-top:8px}
+.tabs button,.btn{font-family:inherit;font-size:1.05rem;font-weight:bold;min-height:52px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.tabs button{flex:1;min-width:110px}
+.tabs button.on,.btn.main{background:var(--navy);color:#fff}
+.btn:disabled{opacity:.4}
+.bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-weight:bold;color:var(--sub)}
+.q{font-size:clamp(1.3rem,4vw,2.2rem);text-align:center;margin:14px 0;line-height:1.8}
+.q small{display:block;font-size:.55em;color:var(--sub)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choices button{font-family:inherit;font-size:clamp(1rem,2.6vw,1.3rem);min-height:70px;padding:8px 12px;border-radius:var(--r);border:3px solid var(--line);background:#fffdf8;cursor:pointer;color:var(--ink);text-align:left}
+.choices.short button{text-align:center;font-size:clamp(1.3rem,4vw,1.9rem)}
+.choices button.ok{border-color:var(--ok);background:#e5f5ec}
+.choices button.ng{border-color:var(--ng);background:#fbe9e7}
+.msg{min-height:3em;text-align:center;font-size:1.1rem;font-weight:bold;margin-top:12px}
+.msg.ok{color:var(--ok)}.msg.ng{color:var(--ng)}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.zukan{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.item{border:2px solid var(--line);border-radius:var(--r);padding:10px 12px;background:#fffdf8}
+.item.got{border-color:var(--gold)}
+.item b{font-size:1.15rem;color:var(--navy)}
+.item .y{font-size:.8rem;color:var(--sub)}
+.item .ex{font-size:.9rem;color:var(--sub);margin-top:4px}
+.star{color:var(--gold)}
+.prog{height:14px;background:#eee6d6;border-radius:8px;overflow:hidden;margin:6px 0 12px}
+.prog div{height:100%;background:var(--gold)}
+.result{font-size:1.8rem;text-align:center;font-weight:bold;color:var(--navy)}
+footer{text-align:center;font-size:.85rem;color:var(--sub);padding:20px 12px 30px}
+footer a{color:var(--navy)}
+@media(max-width:560px){.choices{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>ことわざ・かんようく どうじょう</h1></header>
+<main>
+  <div class="card">
+    <div class="tabs" id="kinds">
+      <button data-k="kotowaza" class="on">ことわざ<br><small>3年生〜</small></button>
+      <button data-k="kanyo">かんようく<br><small>4年生〜</small></button>
+    </div>
+    <div class="tabs" id="modes">
+      <button data-m="imi" class="on">いみ クイズ</button>
+      <button data-m="ana">あなうめ</button>
+      <button data-m="zukan">ずかん</button>
+    </div>
+  </div>
+  <div class="card" id="quiz">
+    <div class="bar"><span id="count"></span><span id="score"></span></div>
+    <div class="q" id="q"></div>
+    <div class="choices" id="choices"></div>
+    <div class="msg" id="msg"></div>
+    <div class="row"><button class="btn main" id="next" disabled>つぎへ ▶</button></div>
+  </div>
+  <div class="card" id="zukan" hidden>
+    <h2 id="zt"></h2>
+    <div class="prog"><div id="pg"></div></div>
+    <p style="margin:0 0 10px;font-size:.95rem">クイズで いっぱつ せいかい すると <span class="star">★</span> が つくよ。（きろくは このたんまつだけに ほぞん）</p>
+    <div class="zukan" id="zl"></div>
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_03_';
+function load(k,d){try{const v=localStorage.getItem(KEY+k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v))}catch(e){}}
+// w:ことば y:よみ m:いみ e:つかいかた f:あなうめ(＿) a:こたえ x:ちがう答え
+const DATA={
+kotowaza:[
+ {w:"猿も木から落ちる",y:"さるもきからおちる",m:"その道の名人でも、ときには失敗することがある。",e:"ピアノが上手な姉がまちがえた。猿も木から落ちるだね。",f:"＿も木から落ちる",a:"猿",x:["犬","猫","馬"]},
+ {w:"花よりだんご",y:"はなよりだんご",m:"見て楽しむものより、実際に役に立つものをえらぶこと。",e:"お花見なのに、弟は食べてばかり。花よりだんごだ。",f:"花より＿＿",a:"だんご",x:["おにぎり","せんべい","もち"]},
+ {w:"石の上にも三年",y:"いしのうえにもさんねん",m:"つらくても、がまんして続ければいつかは報われる。",e:"石の上にも三年。毎日の練習を続けよう。",f:"石の上にも＿＿",a:"三年",x:["一年","十年","百年"]},
+ {w:"急がば回れ",y:"いそがばまわれ",m:"急ぐときほど、遠回りでも安全で確実な方法をとるほうがよい。",e:"急がば回れ。計算はていねいに見直そう。",f:"急がば＿＿",a:"回れ",x:["走れ","止まれ","進め"]},
+ {w:"猫に小判",y:"ねこにこばん",m:"ねうちのわからない人に、大切なものをあたえてもむだなこと。",e:"赤ちゃんに高い本をあげても猫に小判だよ。",f:"＿に小判",a:"猫",x:["犬","猿","牛"]},
+ {w:"七転び八起き",y:"ななころびやおき",m:"何度失敗しても、くじけずに立ち上がること。",e:"七転び八起きで、さかあがりができた。",f:"七転び＿＿",a:"八起き",x:["九起き","三起き","十起き"]},
+ {w:"ちりも積もれば山となる",y:"ちりもつもればやまとなる",m:"小さなことでも、積み重なれば大きなものになる。",e:"毎日十円ずつ。ちりも積もれば山となる。",f:"ちりも積もれば＿となる",a:"山",x:["海","川","星"]},
+ {w:"早起きは三文の徳",y:"はやおきはさんもんのとく",m:"朝早く起きると、何かしら良いことがある。",e:"早起きしたら虹が見えた。早起きは三文の徳だ。",f:"早起きは＿＿の徳",a:"三文",x:["一文","十文","百文"]},
+ {w:"雨降って地固まる",y:"あめふってじかたまる",m:"もめごとの後は、かえって前よりよい関係になる。",e:"けんかのあと前より仲良し。雨降って地固まるだね。",f:"＿降って地固まる",a:"雨",x:["雪","風","雷"]},
+ {w:"百聞は一見にしかず",y:"ひゃくぶんはいっけんにしかず",m:"何度も話を聞くより、一度自分の目で見るほうがよくわかる。",e:"百聞は一見にしかず。工場見学に行こう。",f:"百聞は＿＿にしかず",a:"一見",x:["一聞","百見","千見"]},
+ {w:"灯台下暗し",y:"とうだいもとくらし",m:"身近なことは、かえって気づきにくい。",e:"さがしていたメガネが頭の上に。灯台下暗しだ。",f:"＿＿下暗し",a:"灯台",x:["電灯","太陽","月夜"]},
+ {w:"三人寄れば文殊の知恵",y:"さんにんよればもんじゅのちえ",m:"ふつうの人でも、三人集まって考えればよい知恵が出る。",e:"班で相談しよう。三人寄れば文殊の知恵だよ。",f:"＿＿寄れば文殊の知恵",a:"三人",x:["二人","五人","十人"]},
+ {w:"好きこそものの上手なれ",y:"すきこそもののじょうずなれ",m:"好きなことは熱心にやるので、上手になる。",e:"絵が好きな兄はどんどん上手に。好きこそものの上手なれ。",f:"＿＿こそものの上手なれ",a:"好き",x:["練習","努力","元気"]},
+ {w:"井の中の蛙大海を知らず",y:"いのなかのかわずたいかいをしらず",m:"せまい世界にいて、広い世界を知らないこと。",e:"井の中の蛙にならないよう、いろいろな本を読もう。",f:"井の中の＿大海を知らず",a:"蛙",x:["魚","亀","鳥"]},
+ {w:"能ある鷹は爪を隠す",y:"のうあるたかはつめをかくす",m:"本当に力のある人は、それをむやみに見せびらかさない。",e:"実はそろばん名人だった。能ある鷹は爪を隠す。",f:"能ある＿は爪を隠す",a:"鷹",x:["鳩","猫","熊"]},
+ {w:"転ばぬ先の杖",y:"ころばぬさきのつえ",m:"失敗しないように、前もって用心しておくこと。",e:"転ばぬ先の杖で、前の日に持ち物をそろえた。",f:"転ばぬ先の＿",a:"杖",x:["傘","靴","橋"]},
+ {w:"善は急げ",y:"ぜんはいそげ",m:"よいと思ったことは、ためらわずにすぐやるのがよい。",e:"ごみ拾い、善は急げで今日からやろう。",f:"善は＿＿",a:"急げ",x:["待て","休め","回れ"]},
+ {w:"失敗は成功のもと",y:"しっぱいはせいこうのもと",m:"失敗しても、原因を考え直せば次の成功につながる。",e:"実験がうまくいかなくても大丈夫。失敗は成功のもと。",f:"失敗は＿＿のもと",a:"成功",x:["努力","勉強","元気"]},
+ {w:"河童の川流れ",y:"かっぱのかわながれ",m:"名人でも失敗することがある。（猿も木から落ちると同じ意味）",e:"水泳選手がプールでおぼれかけた。河童の川流れだ。",f:"河童の＿流れ",a:"川",x:["海","滝","池"]},
+ {w:"馬の耳に念仏",y:"うまのみみにねんぶつ",m:"いくら言い聞かせても、まったく効き目がないこと。",e:"何度注意しても聞かない。馬の耳に念仏だ。",f:"＿の耳に念仏",a:"馬",x:["猫","牛","犬"]},
+ {w:"泣きっ面に蜂",y:"なきっつらにはち",m:"悪いことの上に、さらに悪いことが重なること。",e:"転んだうえに雨まで。泣きっ面に蜂だ。",f:"泣きっ面に＿",a:"蜂",x:["蚊","蝶","蟻"]},
+ {w:"たなからぼたもち",y:"たなからぼたもち",m:"思いがけない幸運が、苦労せずにまいこむこと。",e:"くじで一等が当たった。たなからぼたもちだ。",f:"たなから＿＿＿＿",a:"ぼたもち",x:["おにぎり","だんご","せんべい"]},
+ {w:"備えあれば憂いなし",y:"そなえあればうれいなし",m:"ふだんから準備しておけば、何が起きても心配ない。",e:"防災リュックを用意した。備えあれば憂いなし。",f:"＿＿あれば憂いなし",a:"備え",x:["元気","勇気","知恵"]},
+ {w:"聞くは一時の恥、聞かぬは一生の恥",y:"きくはいっときのはじ、きかぬはいっしょうのはじ",m:"知らないことを聞くのははずかしくても一時だけ。聞かずにいると一生知らないままになる。",e:"わからない言葉は質問しよう。聞くは一時の恥だよ。",f:"聞くは一時の恥、聞かぬは＿＿の恥",a:"一生",x:["一日","一年","一回"]},
+ {w:"二兎を追う者は一兎をも得ず",y:"にとをおうものはいっとをもえず",m:"同時に二つのことをしようとすると、どちらもうまくいかない。",e:"二兎を追う者は一兎をも得ず。まず宿題を終わらせよう。",f:"二兎を追う者は＿＿をも得ず",a:"一兎",x:["三兎","十兎","百兎"]},
+ {w:"時は金なり",y:"ときはかねなり",m:"時間はお金と同じくらい大切なものだから、むだにしてはいけない。",e:"時は金なり。休み時間を上手に使おう。",f:"時は＿なり",a:"金",x:["銀","宝","命"]},
+ {w:"案ずるより産むがやすし",y:"あんずるよりうむがやすし",m:"心配していたことも、やってみると案外かんたんにできる。",e:"発表はドキドキしたけど、案ずるより産むがやすしだった。",f:"＿＿より産むがやすし",a:"案ずる",x:["急ぐ","休む","話す"]},
+ {w:"犬も歩けば棒に当たる",y:"いぬもあるけばぼうにあたる",m:"出歩くと、思いがけない災難にあうこと。今では、思いがけない幸運にあうという意味でも使う。",e:"散歩に出たら友だちに会えた。犬も歩けば棒に当たるだ。",f:"＿も歩けば棒に当たる",a:"犬",x:["猫","猿","馬"]}
+],
+kanyo:[
+ {w:"顔が広い",y:"かおがひろい",m:"知り合いが多い。",e:"おじいちゃんは町内で顔が広い。",f:"＿が広い",a:"顔",x:["手","目","耳"]},
+ {w:"耳が痛い",y:"みみがいたい",m:"自分の弱いところを言われて、聞くのがつらい。",e:"「かたづけなさい」と言われて耳が痛い。",f:"＿が痛い",a:"耳",x:["鼻","目","手"]},
+ {w:"目がない",y:"めがない",m:"とても好きである。",e:"妹はあまいものに目がない。",f:"＿がない",a:"目",x:["口","耳","鼻"]},
+ {w:"鼻が高い",y:"はながたかい",m:"得意になる。じまんに思う。",e:"弟が賞をとって、ぼくも鼻が高い。",f:"＿が高い",a:"鼻",x:["手","耳","口"]},
+ {w:"口がかたい",y:"くちがかたい",m:"秘密をむやみに人に話さない。",e:"あの子は口がかたいから安心だ。",f:"＿がかたい",a:"口",x:["目","耳","手"]},
+ {w:"手を焼く",y:"てをやく",m:"どうあつかえばよいか困る。",e:"いたずらな子犬に手を焼く。",f:"＿を焼く",a:"手",x:["足","口","目"]},
+ {w:"足が棒になる",y:"あしがぼうになる",m:"歩きすぎたり立ちっぱなしだったりして、足がひどくつかれる。",e:"遠足でたくさん歩いて足が棒になった。",f:"＿が棒になる",a:"足",x:["手","首","腕"]},
+ {w:"首を長くする",y:"くびをながくする",m:"今か今かと待ちこがれる。",e:"夏休みを首を長くして待つ。",f:"＿を長くする",a:"首",x:["手","足","鼻"]},
+ {w:"肩を落とす",y:"かたをおとす",m:"がっかりして元気をなくす。",e:"試合に負けて肩を落とした。",f:"＿を落とす",a:"肩",x:["首","腕","胸"]},
+ {w:"胸をなでおろす",y:"むねをなでおろす",m:"心配ごとがなくなって、ほっと安心する。",e:"まいごの犬が見つかって胸をなでおろした。",f:"＿をなでおろす",a:"胸",x:["頭","肩","腹"]},
+ {w:"目を丸くする",y:"めをまるくする",m:"おどろいて目を大きく見開く。",e:"手品を見てみんな目を丸くした。",f:"＿を丸くする",a:"目",x:["口","耳","鼻"]},
+ {w:"歯が立たない",y:"はがたたない",m:"相手が強すぎて、とてもかなわない。",e:"兄とのしょうぎは歯が立たない。",f:"＿が立たない",a:"歯",x:["手","足","腕"]},
+ {w:"腹が立つ",y:"はらがたつ",m:"おこる。いかりを感じる。",e:"うそをつかれて腹が立った。",f:"＿が立つ",a:"腹",x:["胸","頭","肩"]},
+ {w:"舌をまく",y:"したをまく",m:"とても感心する。おどろく。",e:"あまりの上手さに舌をまいた。",f:"＿をまく",a:"舌",x:["首","手","腕"]},
+ {w:"頭が上がらない",y:"あたまがあがらない",m:"相手に世話になっていたりして、対等にふるまえない。",e:"いつも助けてくれる姉には頭が上がらない。",f:"＿が上がらない",a:"頭",x:["顔","手","目"]},
+ {w:"手が足りない",y:"てがたりない",m:"働く人の数が足りない。",e:"準備の手が足りないので手伝って。",f:"＿が足りない",a:"手",x:["足","口","目"]},
+ {w:"口をそろえる",y:"くちをそろえる",m:"みんなが同じことを言う。",e:"みんな口をそろえて「おいしい」と言った。",f:"＿をそろえる",a:"口",x:["目","耳","鼻"]},
+ {w:"気が合う",y:"きがあう",m:"考え方や好みが似ていて、仲良くできる。",e:"となりの席の子とは気が合う。",f:"＿が合う",a:"気",x:["手","耳","鼻"]},
+ {w:"猫の手も借りたい",y:"ねこのてもかりたい",m:"とてもいそがしくて、だれでもいいから手伝ってほしい。",e:"年末の店は猫の手も借りたいほどだ。",f:"＿の手も借りたい",a:"猫",x:["犬","猿","鳥"]},
+ {w:"羽をのばす",y:"はねをのばす",m:"気がねなく、自由にのびのびとする。",e:"夏休みにいなかで羽をのばした。",f:"＿をのばす",a:"羽",x:["手","首","鼻"]},
+ {w:"骨が折れる",y:"ほねがおれる",m:"苦労する。大変である。",e:"大きな荷物を運ぶのは骨が折れる。",f:"＿が折れる",a:"骨",x:["手","足","腕"]},
+ {w:"油を売る",y:"あぶらをうる",m:"仕事の途中で、むだ話などをしてなまける。",e:"おつかいの途中で油を売ってはいけない。",f:"＿を売る",a:"油",x:["水","塩","米"]},
+ {w:"さじを投げる",y:"さじをなげる",m:"見こみがないとあきらめる。",e:"むずかしいパズルに、ついにさじを投げた。",f:"＿＿を投げる",a:"さじ",x:["はし","ボール","石"]},
+ {w:"すずめのなみだ",y:"すずめのなみだ",m:"ほんの少し。ごくわずか。",e:"おこづかいはすずめのなみだほどだ。",f:"＿＿＿のなみだ",a:"すずめ",x:["からす","つばめ","はと"]},
+ {w:"馬が合う",y:"うまがあう",m:"気が合う。いっしょにいて気持ちがしっくりくる。",e:"いとことは馬が合う。",f:"＿が合う",a:"馬",x:["犬","牛","猿"]}
+]};
+let kind='kotowaza',mode='imi',qs=[],qi=0,score=0,answered=false,miss=false;
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const stars=()=>load('stars',{});
+function start(){
+  qi=0;score=0;$('quiz').hidden=mode==='zukan';$('zukan').hidden=mode!=='zukan';
+  if(mode==='zukan'){renderZukan();return}
+  qs=shuffle(DATA[kind]).slice(0,10);show();
+}
+function show(){
+  answered=false;miss=false;$('next').disabled=true;$('msg').textContent='';$('msg').className='msg';
+  $('count').textContent=(qi+1)+' / '+qs.length+'もん';$('score').textContent='せいかい '+score;
+  const it=qs[qi],c=$('choices');c.innerHTML='';
+  let opts,ans;
+  if(mode==='imi'){
+    $('q').innerHTML='「'+it.w+'」<small>'+it.y+'</small>の いみは？';
+    const others=shuffle(DATA[kind].filter(o=>o!==it)).slice(0,3).map(o=>o.m);
+    opts=shuffle([it.m,...others]);ans=it.m;c.className='choices';
+  }else{
+    $('q').innerHTML=it.f.replace(/＿+/,'<b style="color:var(--navy)">（　？　）</b>')+'<small>いみ：'+it.m+'</small>';
+    opts=shuffle([it.a,...it.x]);ans=it.a;c.className='choices short';
+  }
+  opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>judge(b,o===ans);c.appendChild(b)});
+}
+function judge(b,ok){
+  if(answered)return;const it=qs[qi];
+  if(ok){answered=true;b.classList.add('ok');
+    if(!miss){score++;const s=stars();s[it.w]=1;save('stars',s)}
+    $('score').textContent='せいかい '+score;
+    $('msg').className='msg ok';$('msg').innerHTML='せいかい！「'+it.w+'」<br><small>れい：'+it.e+'</small>';$('next').disabled=false;
+  }else{miss=true;b.classList.add('ng');$('msg').className='msg ng';$('msg').textContent='ざんねん。もういちど かんがえてみよう。'}
+}
+$('next').onclick=()=>{qi++;if(qi<qs.length)show();else{
+  $('q').innerHTML='<div class="result">'+qs.length+'もんちゅう '+score+'もん いっぱつ せいかい！</div>';
+  $('choices').innerHTML='';const r=document.createElement('button');r.textContent='もういちど';r.onclick=start;$('choices').appendChild(r);$('msg').textContent='';$('next').disabled=true}};
+function renderZukan(){
+  const s=stars(),list=DATA[kind],got=list.filter(i=>s[i.w]).length;
+  $('zt').textContent=(kind==='kotowaza'?'ことわざ':'かんようく')+' ずかん　'+got+' / '+list.length;
+  $('pg').style.width=(got/list.length*100)+'%';
+  $('zl').innerHTML=list.map(i=>'<div class="item'+(s[i.w]?' got':'')+'"><b>'+(s[i.w]?'<span class="star">★</span>':'')+i.w+'</b><div class="y">'+i.y+'</div><div>'+i.m+'</div><div class="ex">れい：'+i.e+'</div></div>').join('');
+}
+function tabs(id,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b);start()})}
+tabs('kinds',b=>kind=b.dataset.k);tabs('modes',b=>mode=b.dataset.m);
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ひっさんステップ</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--hl:#fff3c4;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button{font-family:inherit;font-size:1.05rem;min-height:48px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+button:disabled{opacity:.35;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700;margin-right:4px}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+.stage{display:grid;grid-template-columns:1fr 280px;gap:16px}
+@media(max-width:760px){.stage{grid-template-columns:1fr}}
+#board{display:flex;justify-content:center;padding:10px 0}
+.grid{display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.cell{width:clamp(48px,11vw,84px);height:clamp(56px,12vw,92px);display:flex;align-items:center;justify-content:center;font-size:clamp(2rem,6vw,3.4rem);font-weight:800;position:relative;border-radius:10px}
+.small{height:clamp(30px,6vw,44px);font-size:clamp(1rem,3vw,1.5rem);color:var(--acc);font-weight:800}
+.col-on{background:var(--hl)}
+.ans{border:3px dashed #c9bfa9}
+.ans.cur{border-color:var(--acc);background:#fff}
+.ans.fill{border-style:solid;border-color:var(--ok);color:var(--ok)}
+.bar{grid-column:1/-1;height:5px;background:var(--ink);border-radius:3px}
+.strike{position:relative;color:#aaa}
+.strike::after{content:"";position:absolute;left:18%;right:18%;top:50%;height:4px;background:var(--ng);transform:rotate(-20deg)}
+.shake{animation:sh .35s}
+@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad button{font-size:1.8rem;min-height:64px}
+#msg{font-size:1.2rem;font-weight:700;min-height:3.4em;padding:10px 14px;border-radius:var(--r);background:#eef2f7;color:var(--navy);margin-bottom:12px}
+#msg.ok{background:#e4f4ea;color:var(--ok)}
+.stat{font-size:.95rem;color:var(--sub);margin-top:10px}
+input[type=number]{font-size:1.4rem;width:8em;padding:8px;border-radius:10px;border:2px solid var(--line);font-family:inherit}
+#borrowBtn{background:var(--acc);border-color:var(--acc);color:#fff;width:100%;margin-bottom:10px;font-size:1.2rem}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>ひっさんステップ</h1></header>
+<main>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <span class="lbl">けいさん</span>
+      <span class="tabs row" id="opTabs"><button data-op="+" class="on">たしざん</button><button data-op="-">ひきざん</button></span>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <span class="lbl">けた</span>
+      <span class="tabs row" id="digTabs"><button data-d="2" class="on">2けた</button><button data-d="3">3けた</button><button data-d="4">4けた</button></span>
+    </div>
+    <div class="row">
+      <button class="pri" id="newBtn">つぎの もんだい</button>
+      <span class="lbl" style="margin-left:8px">じぶんで：</span>
+      <input type="number" id="inA" min="0" max="9999" placeholder="うえ">
+      <span id="opSign" style="font-size:1.4rem;font-weight:800">＋</span>
+      <input type="number" id="inB" min="0" max="9999" placeholder="した">
+      <button id="myBtn">つくる</button>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="card"><div id="board"></div></div>
+    <div class="card">
+      <div id="msg"></div>
+      <button id="borrowBtn" class="hide">となりから 1 かりる</button>
+      <div class="pad" id="pad"></div>
+      <div class="row" style="margin-top:10px"><button id="hintBtn" style="flex:1">ヒント</button></div>
+      <div class="stat" id="stat"></div>
+    </div>
+  </div>
+  <div class="card" style="font-size:.95rem;color:var(--sub)">
+    <b style="color:var(--navy)">つかいかた</b>　ひっさんは いちのくらい（みぎはし）から じゅんばんに。きいろの たてれつの こたえを すうじボタンで いれよう。くりあがりは ちいさい オレンジの 1、くりさがりは せんで けして かきなおすよ。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_11_stat';
+let stat={solved:0,perfect:0};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s)stat=s;}catch(e){}
+function saveStat(){try{localStorage.setItem(KEY,JSON.stringify(stat));}catch(e){}}
+const PLACE=['いち','じゅう','ひゃく','せん','まん'];
+const S={op:'+',dig:2};
+let P=null;
+const $=id=>document.getElementById(id);
+function digits(n,len){const r=[];for(let i=0;i<len;i++){r.push(n%10);n=Math.floor(n/10);}return r;}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function hasCarry(a,b,op){
+  const len=5,A=digits(a,len),B=digits(b,len);
+  if(op==='+'){let c=0;for(let i=0;i<len;i++){if(A[i]+B[i]+c>=10)return true;c=0;}return false;}
+  for(let i=0;i<len;i++){if(A[i]<B[i])return true;}return false;
+}
+function gen(){
+  const d=S.dig,lo=Math.pow(10,d-1),hi=Math.pow(10,d)-1;let a,b,tries=0;
+  do{
+    if(S.op==='+'){a=rnd(lo,hi);b=Math.random()<.7?rnd(lo,hi):rnd(Math.max(1,lo/10),hi);}
+    else{a=rnd(lo+1,hi);b=Math.random()<.6?rnd(lo,a-1):rnd(Math.max(1,Math.floor(lo/10)),Math.min(a-1,Math.max(9,lo-1)));if(b<1)b=1;}
+    tries++;
+  }while(tries<50&&!hasCarry(a,b,S.op));
+  start(a,b);
+}
+function start(a,b){
+  const len=String(Math.max(a,b)).length;
+  const ncol=S.op==='+'?len+1:len;
+  P={a,b,ncol,len,A:digits(a,ncol),B:digits(b,ncol),top:digits(a,ncol),hist:digits(a,ncol).map(v=>[v]),
+     carry:new Array(ncol+1).fill(0),ans:new Array(ncol).fill(null),col:0,done:false,miss:0,needBorrow:false,alen:String(a).length,blen:String(b).length};
+  stepPrepare();render();
+}
+function expected(){
+  const i=P.col;
+  if(S.op==='+')return (P.A[i]+P.B[i]+P.carry[i])%10;
+  return P.top[i]-P.B[i];
+}
+function isFinished(){
+  const i=P.col;
+  if(S.op==='+'){return i>=P.ncol||(i>=P.len&&P.carry[i]===0);}
+  if(i>=P.ncol)return true;
+  const res=P.a-P.b;
+  return i>0&&Math.floor(res/Math.pow(10,i))===0;
+}
+function stepPrepare(){
+  if(isFinished()){finish();return;}
+  const i=P.col;
+  if(S.op==='-'&&P.top[i]<P.B[i]){P.needBorrow=true;
+    say(`${PLACE[i]}のくらい：${P.top[i]} から ${P.B[i]} は ひけないね。<br>となりの くらいから 1 かりよう。`);}
+  else{P.needBorrow=false;say(`${PLACE[i]}のくらいの こたえを いれよう。`);}
+  updateButtons();
+}
+function doBorrow(){
+  const i=P.col;let j=i+1;
+  while(j<P.ncol&&P.top[j]===0)j++;
+  if(j>=P.ncol)return;
+  P.top[j]-=1;P.hist[j].push(P.top[j]);
+  for(let k=j-1;k>i;k--){P.top[k]=9;P.hist[k].push(10);P.hist[k].push(9);}
+  P.top[i]+=10;P.hist[i].push(P.top[i]);
+  P.needBorrow=false;
+  let t=`${PLACE[j]}のくらいを 1 へらして、`;
+  if(j>i+1)t+=`とちゅうの 0 は 10→9 に。`;
+  t+=`${PLACE[i]}のくらいは ${P.top[i]} に なったよ。<br>${P.top[i]} − ${P.B[i]} は？`;
+  say(t);render();updateButtons();
+}
+function input(n){
+  if(!P||P.done||P.needBorrow)return;
+  const i=P.col,e=expected();
+  if(n===e){
+    P.ans[i]=n;
+    let t='';
+    if(S.op==='+'){
+      const s=P.A[i]+P.B[i]+P.carry[i];
+      if(s>=10&&i+1<P.ncol){P.carry[i+1]=1;t=`⭕ ${s} だから ${s%10} を かいて、1 を ${PLACE[i+1]}のくらいへ くりあげ！`;}
+      else t=`⭕ せいかい！`;
+    }else t='⭕ せいかい！';
+    P.col++;render();
+    if(isFinished()){finish(t);return;}
+    stepPrepare();if(t!=='⭕ せいかい！')say(t+'<br>つぎは '+PLACE[P.col]+'のくらい。',false);
+  }else{
+    P.miss++;const c=document.querySelector('.ans.cur');if(c){c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');}
+    say('おしい！ もういちど。こまったら「ヒント」を おしてね。');
+  }
+}
+function hint(){
+  if(!P||P.done)return;const i=P.col;
+  if(P.needBorrow){say(`${P.top[i]} は ${P.B[i]} より ちいさいので ひけません。<br>オレンジの「となりから 1 かりる」を おそう。`);return;}
+  if(S.op==='+'){
+    const s=P.A[i]+P.B[i]+P.carry[i];
+    say(`${P.A[i]} ＋ ${P.B[i]}${P.carry[i]?' ＋ くりあがりの 1':''} ＝ ${s}`+(s>=10?`<br>10 を こえたら 一のけただけ（${s%10}）を かくよ。`:''));
+  }else say(`${P.top[i]} − ${P.B[i]} ＝ ？<br>${P.B[i]} に いくつ たすと ${P.top[i]} に なるかな。`);
+}
+function finish(pre){
+  P.done=true;stat.solved++;if(P.miss===0)stat.perfect++;saveStat();
+  const res=S.op==='+'?P.a+P.b:P.a-P.b;
+  say((pre?pre+'<br>':'')+`🎉 できた！ ${P.a} ${S.op==='+'?'＋':'−'} ${P.b} ＝ ${res}`+(P.miss===0?'　まちがい なし！':''),true);
+  render();updateButtons();
+}
+function say(t,ok){const m=$('msg');m.innerHTML=t;m.className=ok?'ok':'';}
+function updateButtons(){
+  $('borrowBtn').classList.toggle('hide',!(P&&P.needBorrow&&!P.done));
+  document.querySelectorAll('#pad button').forEach(b=>b.disabled=!P||P.done||P.needBorrow);
+  $('stat').textContent=`ときおわった もんだい：${stat.solved}　ノーミス：${stat.perfect}`;
+}
+function render(){
+  const n=P.ncol,cols=n+1;
+  let h=`<div class="grid" style="grid-template-columns:repeat(${cols},auto)">`;
+  const colClass=i=>(!P.done&&i===P.col)?' col-on':'';
+  // row0: carry / borrow marks
+  h+=`<div class="cell small"></div>`;
+  for(let i=n-1;i>=0;i--){
+    let t='';
+    if(S.op==='+'){if(P.carry[i])t='1';}
+    else{if(P.hist[i].length>1)t=P.hist[i][P.hist[i].length-1];}
+    h+=`<div class="cell small${colClass(i)}">${t}</div>`;
+  }
+  // row1: top
+  h+=`<div class="cell"></div>`;
+  for(let i=n-1;i>=0;i--){
+    const show=i<P.alen;const changed=S.op==='-'&&P.hist[i].length>1;
+    h+=`<div class="cell${colClass(i)}"><span class="${changed?'strike':''}">${show?P.A[i]:''}</span></div>`;
+  }
+  // row2: op + bottom
+  h+=`<div class="cell">${S.op==='+'?'＋':'−'}</div>`;
+  for(let i=n-1;i>=0;i--){h+=`<div class="cell${colClass(i)}">${i<P.blen?P.B[i]:''}</div>`;}
+  h+=`<div class="bar"></div>`;
+  // row3: answers
+  h+=`<div class="cell"></div>`;
+  for(let i=n-1;i>=0;i--){
+    const active=!P.done&&i===P.col;
+    const needed=P.ans[i]!==null||active||(!P.done&&i>P.col&&i<(S.op==='+'?P.len:P.alen));
+    if(!needed){h+=`<div class="cell${colClass(i)}"></div>`;continue;}
+    h+=`<div class="cell ans${active?' cur':''}${P.ans[i]!==null?' fill':''}${colClass(i)}">${P.ans[i]!==null?P.ans[i]:(active?'?':'')}</div>`;
+  }
+  h+='</div>';
+  $('board').innerHTML=h;
+}
+// pad
+(function(){const pad=$('pad');[7,8,9,4,5,6,1,2,3,0].forEach(n=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>input(n);if(n===0)b.style.gridColumn='2';pad.appendChild(b);});})();
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(/^[0-9]$/.test(e.key))input(+e.key);if(e.key==='Enter'&&P&&P.done)gen();});
+$('borrowBtn').onclick=doBorrow;$('hintBtn').onclick=hint;$('newBtn').onclick=gen;
+function tabs(id,attr,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset[attr]);});}
+tabs('opTabs','op',v=>{S.op=v;$('opSign').textContent=v==='+'?'＋':'−';gen();});
+tabs('digTabs','d',v=>{S.dig=+v;gen();});
+$('myBtn').onclick=()=>{
+  const a=parseInt($('inA').value,10),b=parseInt($('inB').value,10);
+  if(isNaN(a)||isNaN(b)||a<0||b<0||a>9999||b>9999){say('0〜9999 の かずを 2つ いれてね。');return;}
+  if(S.op==='-'&&a<b){say('ひきざんは うえの かずを おおきく してね。');return;}
+  start(a,b);
+};
+gen();
+</script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>きょうしつタイマー ⏰</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    background-attachment: fixed;
+    color: #333;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 { font-size: clamp(28px, 4.5vw, 46px); color: #3d4370; }
+  .card {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: 24px;
+    width: 100%;
+    max-width: 980px;
+    margin-bottom: 18px;
+  }
+  .mode-row { display: flex; justify-content: center; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+  .mode-btn {
+    font-family: inherit;
+    font-size: clamp(18px, 2.4vw, 24px);
+    padding: 12px 30px;
+    border-radius: 999px;
+    border: 3px solid #5b6ef5;
+    background: #fff;
+    color: #5b6ef5;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform .1s;
+  }
+  .mode-btn.active { background: #5b6ef5; color: #fff; }
+  .mode-btn:active { transform: scale(.95); }
+
+  .timer-area { display: flex; flex-direction: column; align-items: center; }
+  .dial-wrap { position: relative; width: min(72vw, 46vh, 430px); height: min(72vw, 46vh, 430px); margin: 6px auto 10px; }
+  .dial-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: #e9ecfb; stroke-width: 20; }
+  .ring-fg { fill: none; stroke: #3fbf7f; stroke-width: 20; stroke-linecap: round; transition: stroke .4s; }
+  .time-display {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  #timeText {
+    font-size: clamp(56px, 13vw, 118px);
+    font-weight: bold;
+    color: #3d4370;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  #stateText { font-size: clamp(16px, 2.4vw, 24px); color: #888; margin-top: 10px; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 10px 0; }
+  .preset-btn {
+    font-family: inherit;
+    font-size: clamp(20px, 2.8vw, 28px);
+    font-weight: bold;
+    padding: 14px 26px;
+    border-radius: 999px;
+    border: none;
+    background: #eef1ff;
+    color: #3d4370;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #d5dbf5;
+    transition: transform .1s;
+  }
+  .preset-btn:active { transform: scale(.93); }
+
+  .manual-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+  .manual-row label { font-size: clamp(18px, 2.4vw, 24px); color: #3d4370; font-weight: bold; }
+  .manual-row input {
+    font-family: inherit;
+    width: 110px;
+    font-size: clamp(24px, 3.4vw, 34px);
+    text-align: center;
+    padding: 10px;
+    border: 3px solid #cdd5f7;
+    border-radius: 16px;
+    color: #3d4370;
+    font-weight: bold;
+  }
+  .manual-row input:focus { outline: none; border-color: #5b6ef5; }
+  .set-btn {
+    font-family: inherit;
+    font-size: clamp(18px, 2.4vw, 24px);
+    font-weight: bold;
+    padding: 12px 28px;
+    border-radius: 999px;
+    border: none;
+    background: #ffd66e;
+    color: #6b5210;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #e0b64e;
+  }
+  .set-btn:active { transform: scale(.95); }
+
+  .controls { display: flex; gap: 16px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+  .ctrl-btn {
+    font-family: inherit;
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: bold;
+    padding: 18px 46px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    transition: transform .1s;
+  }
+  .ctrl-btn:active { transform: scale(.94); }
+  #startBtn { background: #5b6ef5; color: #fff; box-shadow: 0 5px 0 #3f51c9; }
+  #resetBtn { background: #ffb3c1; color: #7a2338; box-shadow: 0 5px 0 #e58fa1; }
+
+  body.flash { animation: flashAnim .5s steps(2, jump-none) 8; }
+  @keyframes flashAnim {
+    0%   { background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%); }
+    50%  { background: #ffd9d9; }
+    100% { background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%); }
+  }
+  .dial-wrap.done #timeText { color: #f2545b; animation: pop .6s ease infinite alternate; }
+  @keyframes pop { from { transform: scale(1); } to { transform: scale(1.08); } }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⏰ きょうしつタイマー</h1>
+</header>
+
+<div class="card">
+  <div class="mode-row">
+    <button type="button" class="mode-btn active" id="modeDown">⏳ タイマー</button>
+    <button type="button" class="mode-btn" id="modeUp">⏱ ストップウォッチ</button>
+  </div>
+
+  <div class="timer-area">
+    <div class="dial-wrap" id="dialWrap">
+      <svg viewBox="0 0 300 300" aria-hidden="true">
+        <circle class="ring-bg" cx="150" cy="150" r="132"></circle>
+        <circle class="ring-fg" id="ringFg" cx="150" cy="150" r="132"></circle>
+      </svg>
+      <div class="time-display">
+        <div id="timeText">05:00</div>
+        <div id="stateText">じゅんびOK</div>
+      </div>
+    </div>
+
+    <div id="presetBlock">
+      <div class="presets" id="presets"></div>
+      <div class="manual-row">
+        <label for="minIn">じぶんできめる：</label>
+        <input type="number" id="minIn" min="0" max="180" value="5" inputmode="numeric"><label for="minIn">ふん</label>
+        <input type="number" id="secIn" min="0" max="59" value="0" inputmode="numeric"><label for="secIn">びょう</label>
+        <button type="button" class="set-btn" id="setBtn">セット</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button type="button" class="ctrl-btn" id="startBtn">▶ スタート</button>
+      <button type="button" class="ctrl-btn" id="resetBtn">↺ リセット</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var LS_KEY = "sensei25_timer_last";
+  var CIRC = 2 * Math.PI * 132;
+
+  var ringFg = document.getElementById("ringFg");
+  var timeText = document.getElementById("timeText");
+  var stateText = document.getElementById("stateText");
+  var startBtn = document.getElementById("startBtn");
+  var resetBtn = document.getElementById("resetBtn");
+  var setBtn = document.getElementById("setBtn");
+  var minIn = document.getElementById("minIn");
+  var secIn = document.getElementById("secIn");
+  var presetsEl = document.getElementById("presets");
+  var presetBlock = document.getElementById("presetBlock");
+  var modeDown = document.getElementById("modeDown");
+  var modeUp = document.getElementById("modeUp");
+  var dialWrap = document.getElementById("dialWrap");
+
+  ringFg.setAttribute("stroke-dasharray", String(CIRC));
+  ringFg.setAttribute("stroke-dashoffset", "0");
+
+  var mode = "down";          // "down" | "up"
+  var totalMs = 5 * 60000;    // set duration (countdown)
+  var remainMs = totalMs;     // remaining (countdown)
+  var elapsedMs = 0;          // stopwatch elapsed
+  var running = false;
+  var lastTick = 0;
+  var rafId = null;
+  var finished = false;
+
+  // ---- Web Audio ----
+  var audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    var ctx = getCtx();
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(ctx.currentTime + start);
+    osc.stop(ctx.currentTime + start + dur + 0.05);
+  }
+  function beepShort() { tone(880, 0, 0.12, 0.25, "square"); }
+  function chime() {
+    // 学校のチャイム風「キーンコーンカーンコーン」×2
+    var seq = [659.25, 523.25, 587.33, 392.0, 392.0, 587.33, 659.25, 523.25];
+    for (var i = 0; i < seq.length; i++) {
+      tone(seq[i], i * 0.55, 0.9, 0.22, "sine");
+      tone(seq[i] * 2, i * 0.55, 0.5, 0.06, "sine");
+    }
+  }
+
+  // ---- 表示 ----
+  function fmt(ms) {
+    var t = Math.max(0, Math.ceil(ms / 1000));
+    var m = Math.floor(t / 60);
+    var s = t % 60;
+    return (m < 10 ? "0" + m : "" + m) + ":" + (s < 10 ? "0" + s : "" + s);
+  }
+  function colorFor(frac) {
+    if (frac > 0.5) return "#3fbf7f";
+    if (frac > 0.2) return "#f5b73f";
+    return "#f2545b";
+  }
+  function render() {
+    if (mode === "down") {
+      timeText.textContent = fmt(remainMs);
+      var frac = totalMs > 0 ? remainMs / totalMs : 0;
+      ringFg.setAttribute("stroke-dashoffset", String(CIRC * (1 - frac)));
+      ringFg.style.stroke = colorFor(frac);
+    } else {
+      timeText.textContent = fmtUp(elapsedMs);
+      var f = (elapsedMs % 60000) / 60000; // 1周 = 1分
+      ringFg.setAttribute("stroke-dashoffset", String(CIRC * (1 - f)));
+      ringFg.style.stroke = "#5b6ef5";
+    }
+  }
+  function fmtUp(ms) {
+    var t = Math.floor(ms / 1000);
+    var m = Math.floor(t / 60);
+    var s = t % 60;
+    return (m < 10 ? "0" + m : "" + m) + ":" + (s < 10 ? "0" + s : "" + s);
+  }
+
+  // ---- ループ ----
+  function loop(now) {
+    if (!running) return;
+    var dt = now - lastTick;
+    lastTick = now;
+    if (mode === "down") {
+      remainMs -= dt;
+      if (remainMs <= 0) {
+        remainMs = 0;
+        running = false;
+        finished = true;
+        render();
+        onFinish();
+        return;
+      }
+    } else {
+      elapsedMs += dt;
+      if (elapsedMs > 5999000) elapsedMs = 5999000; // 99:59 まで
+    }
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function onFinish() {
+    stateText.textContent = "おわり！おつかれさま 🎉";
+    startBtn.textContent = "▶ スタート";
+    dialWrap.classList.add("done");
+    chime();
+    document.body.classList.remove("flash");
+    void document.body.offsetWidth; // reflow でアニメ再発火
+    document.body.classList.add("flash");
+    setTimeout(function () { document.body.classList.remove("flash"); }, 4200);
+  }
+
+  // ---- 操作 ----
+  function startPause() {
+    getCtx(); // ユーザー操作で音声を解錠
+    if (running) {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      startBtn.textContent = "▶ スタート";
+      stateText.textContent = "いちじていし中";
+    } else {
+      if (mode === "down" && (remainMs <= 0 || finished)) {
+        remainMs = totalMs;
+        finished = false;
+        dialWrap.classList.remove("done");
+      }
+      if (mode === "down" && totalMs <= 0) { stateText.textContent = "じかんをセットしてね"; return; }
+      running = true;
+      lastTick = performance.now();
+      startBtn.textContent = "⏸ いちじていし";
+      stateText.textContent = mode === "down" ? "はかっているよ…" : "カウントアップ中…";
+      beepShort();
+      rafId = requestAnimationFrame(loop);
+    }
+  }
+
+  function reset() {
+    running = false;
+    finished = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    dialWrap.classList.remove("done");
+    document.body.classList.remove("flash");
+    if (mode === "down") { remainMs = totalMs; } else { elapsedMs = 0; }
+    startBtn.textContent = "▶ スタート";
+    stateText.textContent = "じゅんびOK";
+    render();
+  }
+
+  function setDuration(ms) {
+    totalMs = ms;
+    remainMs = ms;
+    finished = false;
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    dialWrap.classList.remove("done");
+    startBtn.textContent = "▶ スタート";
+    stateText.textContent = "じゅんびOK";
+    try { localStorage.setItem(LS_KEY, String(ms)); } catch (e) {}
+    render();
+  }
+
+  // ---- プリセット ----
+  var presetMinutes = [1, 3, 5, 10, 15, 20, 30];
+  presetMinutes.forEach(function (m) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "preset-btn";
+    b.textContent = m + "ぷん";
+    b.addEventListener("click", function () {
+      getCtx();
+      setDuration(m * 60000);
+      minIn.value = String(m);
+      secIn.value = "0";
+    });
+    presetsEl.appendChild(b);
+  });
+
+  setBtn.addEventListener("click", function () {
+    getCtx();
+    var m = parseInt(minIn.value, 10);
+    var s = parseInt(secIn.value, 10);
+    if (isNaN(m) || m < 0) m = 0;
+    if (isNaN(s) || s < 0) s = 0;
+    if (s > 59) s = 59;
+    if (m > 180) m = 180;
+    minIn.value = String(m);
+    secIn.value = String(s);
+    var ms = (m * 60 + s) * 1000;
+    if (ms <= 0) { stateText.textContent = "0びょうはセットできないよ"; return; }
+    setDuration(ms);
+  });
+
+  // ---- モード切替 ----
+  function switchMode(next) {
+    if (mode === next) return;
+    mode = next;
+    running = false;
+    finished = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    dialWrap.classList.remove("done");
+    startBtn.textContent = "▶ スタート";
+    stateText.textContent = "じゅんびOK";
+    if (mode === "down") {
+      modeDown.classList.add("active");
+      modeUp.classList.remove("active");
+      presetBlock.classList.remove("hidden");
+      remainMs = totalMs;
+    } else {
+      modeUp.classList.add("active");
+      modeDown.classList.remove("active");
+      presetBlock.classList.add("hidden");
+      elapsedMs = 0;
+    }
+    render();
+  }
+  modeDown.addEventListener("click", function () { switchMode("down"); });
+  modeUp.addEventListener("click", function () { switchMode("up"); });
+
+  startBtn.addEventListener("click", startPause);
+  resetBtn.addEventListener("click", reset);
+
+  // ---- 復元 ----
+  try {
+    var saved = parseInt(localStorage.getItem(LS_KEY), 10);
+    if (!isNaN(saved) && saved > 0 && saved <= 180 * 60000) {
+      totalMs = saved;
+      remainMs = saved;
+      minIn.value = String(Math.floor(saved / 60000));
+      secIn.value = String(Math.floor(saved / 1000) % 60);
+    }
+  } catch (e) {}
+  render();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

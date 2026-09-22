@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単元進度トラッカー</title>
+<style>
+  :root{
+    --accent:#457B9D;
+    --accent-dark:#35617d;
+    --bg:#F7F5F0;
+    --ok:#2a9d5c;
+    --just:#e09f3e;
+    --ng:#d94f4f;
+    --text:#333;
+    --muted:#888;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  header{
+    background:var(--accent);
+    color:#fff;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  header h1{font-size:1.15rem;font-weight:700;}
+  header a{
+    color:#fff;
+    text-decoration:none;
+    background:rgba(255,255,255,.18);
+    padding:8px 14px;
+    border-radius:10px;
+    font-size:.9rem;
+    white-space:nowrap;
+  }
+  header a:active{background:rgba(255,255,255,.32);}
+  main{max-width:860px;margin:0 auto;padding:14px 12px 80px;}
+
+  /* ===== 学期バー ===== */
+  .term-bar{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+  .term-bar .label{font-size:.85rem;color:var(--muted);}
+  .term-btn{
+    border:2px solid #ddd;
+    background:#fff;
+    border-radius:12px;
+    padding:8px 16px;
+    font-size:.95rem;
+    cursor:pointer;
+    font-family:inherit;
+    color:var(--text);
+  }
+  .term-btn.active{
+    border-color:var(--accent);
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+  }
+
+  /* ===== タブ ===== */
+  .tabs{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    margin-bottom:12px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tab{
+    flex:0 0 auto;
+    border:none;
+    border-radius:12px;
+    padding:10px 16px;
+    font-size:.95rem;
+    cursor:pointer;
+    font-family:inherit;
+    background:#fff;
+    color:var(--text);
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    border-bottom:4px solid transparent;
+    white-space:nowrap;
+  }
+  .tab.active{font-weight:700;color:#fff;}
+  .tab.dash{border-bottom-color:var(--accent);}
+  .tab.dash.active{background:var(--accent);}
+  .tab.add-tab{color:var(--accent);border:2px dashed var(--accent);box-shadow:none;background:transparent;}
+
+  /* ===== カード ===== */
+  .card{
+    background:#FFF;
+    border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-size:1rem;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .card h2 .small-note{font-size:.75rem;color:var(--muted);font-weight:400;}
+
+  /* ===== ボタン共通 ===== */
+  button{font-family:inherit;}
+  .btn{
+    border:none;
+    border-radius:12px;
+    padding:12px 18px;
+    font-size:1rem;
+    cursor:pointer;
+    background:var(--accent);
+    color:#fff;
+  }
+  .btn:active{background:var(--accent-dark);}
+  .btn.ghost{
+    background:#fff;
+    color:var(--accent);
+    border:2px solid var(--accent);
+  }
+  .btn.danger{background:var(--ng);}
+  .btn.small{padding:8px 12px;font-size:.85rem;border-radius:10px;}
+  .btn.gray{background:#e8e5de;color:#555;}
+
+  /* ===== フォーム ===== */
+  input[type=text],input[type=number],input[type=date],select,textarea{
+    font-family:inherit;
+    font-size:1rem;
+    padding:10px 12px;
+    border:2px solid #ddd;
+    border-radius:12px;
+    background:#fff;
+    color:var(--text);
+    width:100%;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  .form-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-bottom:10px;
+  }
+  .form-row .field{flex:1 1 140px;min-width:120px;}
+  .form-row .field.narrow{flex:0 1 110px;min-width:90px;}
+  .field label{
+    display:block;
+    font-size:.78rem;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+
+  /* ===== 判定バナー ===== */
+  .judge{
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:14px;
+    color:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  .judge.ok{background:var(--ok);}
+  .judge.just{background:var(--just);}
+  .judge.ng{background:var(--ng);}
+  .judge.none{background:#9aa5ad;}
+  .judge .judge-title{font-size:1.05rem;font-weight:700;margin-bottom:4px;}
+  .judge .judge-detail{font-size:.88rem;opacity:.95;}
+  .judge .judge-nums{
+    display:flex;
+    gap:16px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .judge .num-box{
+    background:rgba(255,255,255,.18);
+    border-radius:12px;
+    padding:8px 14px;
+    text-align:center;
+    flex:1 1 90px;
+  }
+  .judge .num-box .v{font-size:1.5rem;font-weight:700;line-height:1.2;}
+  .judge .num-box .k{font-size:.72rem;opacity:.9;}
+
+  /* ===== 単元 ===== */
+  .unit{
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .unit.done-unit{background:#f2f9f4;border-color:#cde8d6;}
+  .unit-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .unit-name{
+    flex:1 1 150px;
+    font-weight:700;
+    font-size:.98rem;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-width:0;
+  }
+  .unit-name .check{
+    color:var(--ok);
+    font-size:1.1rem;
+  }
+  .unit-count{
+    font-size:.9rem;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .unit-count b{color:var(--text);font-size:1.1rem;}
+  .unit-btns{display:flex;gap:8px;}
+  .hour-btn{
+    border:none;
+    border-radius:12px;
+    width:56px;
+    height:44px;
+    font-size:1.15rem;
+    font-weight:700;
+    cursor:pointer;
+    color:#fff;
+    background:var(--accent);
+  }
+  .hour-btn.minus{background:#b9b3a8;}
+  .hour-btn:active{opacity:.75;}
+  .hour-btn:disabled{opacity:.35;cursor:default;}
+  .progress-wrap{
+    margin-top:10px;
+    background:#eee;
+    border-radius:99px;
+    height:14px;
+    overflow:hidden;
+  }
+  .progress-bar{
+    height:100%;
+    border-radius:99px;
+    background:var(--accent);
+    transition:width .25s;
+    min-width:0;
+  }
+  .unit-foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:6px;
+    gap:8px;
+  }
+  .unit-foot .pct{font-size:.78rem;color:var(--muted);}
+  .icon-btn{
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-size:.8rem;
+    cursor:pointer;
+    padding:6px 8px;
+    border-radius:8px;
+  }
+  .icon-btn:active{background:#eee;}
+  .icon-btn.confirming{background:var(--ng);color:#fff;font-weight:700;}
+
+  /* ===== ダッシュボード ===== */
+  .dash-card{
+    background:#fff;
+    border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:14px 16px;
+    margin-bottom:12px;
+    border-left:8px solid #ccc;
+    cursor:pointer;
+  }
+  .dash-card:active{transform:scale(.99);}
+  .dash-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .dash-top .subj{font-weight:700;font-size:1.05rem;}
+  .badge{
+    font-size:.78rem;
+    font-weight:700;
+    color:#fff;
+    padding:4px 12px;
+    border-radius:99px;
+    white-space:nowrap;
+  }
+  .badge.ok{background:var(--ok);}
+  .badge.just{background:var(--just);}
+  .badge.ng{background:var(--ng);}
+  .badge.none{background:#9aa5ad;}
+  .dash-nums{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    font-size:.82rem;
+    color:var(--muted);
+    margin-top:4px;
+  }
+  .dash-nums b{color:var(--text);}
+  .dash-warn{
+    margin-top:6px;
+    font-size:.85rem;
+    font-weight:700;
+    color:var(--ng);
+  }
+
+  /* ===== カラーパレット ===== */
+  .palette{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+  .swatch{
+    width:40px;height:40px;
+    border-radius:50%;
+    border:3px solid transparent;
+    cursor:pointer;
+    padding:0;
+  }
+  .swatch.selected{border-color:var(--text);}
+
+  /* ===== トースト ===== */
+  #toast{
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%) translateY(20px);
+    background:#333;
+    color:#fff;
+    padding:10px 20px;
+    border-radius:12px;
+    font-size:.9rem;
+    opacity:0;
+    pointer-events:none;
+    transition:all .25s;
+    z-index:100;
+    max-width:90vw;
+    text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  textarea{resize:vertical;min-height:100px;font-size:.8rem;}
+  .muted{color:var(--muted);font-size:.85rem;}
+  .empty-msg{
+    text-align:center;
+    color:var(--muted);
+    padding:20px 10px;
+    font-size:.9rem;
+  }
+  .row-right{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;}
+  details.settings-details summary{
+    cursor:pointer;
+    font-size:.9rem;
+    color:var(--accent);
+    font-weight:700;
+    padding:4px 0;
+    list-style:none;
+  }
+  details.settings-details summary::-webkit-details-marker{display:none;}
+  @media (max-width:480px){
+    header h1{font-size:1.02rem;}
+    .hour-btn{width:50px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 単元進度トラッカー</h1>
+  <a href="index.html">← いちらん</a>
+</header>
+
+<main>
+  <div class="term-bar" id="termBar"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+(function(){
+  var STORAGE_KEY = "bo10_shindo_data_v1";
+  var TERMS = ["1学期","2学期","3学期"];
+  var COLORS = ["#457B9D","#E76F51","#2A9D8F","#E9C46A","#9C6644","#8E7CC3","#D62858","#5FA8D3","#6A994E","#8D99AE"];
+
+  /* ---------- state ---------- */
+  var state = null;          // 全データ
+  var currentView = "dash";  // "dash" or subject id
+  var editingSubject = false;
+  var confirmTimers = {};
+
+  function uid(){ return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function defaultTermData(){
+    return { subjects: [
+      { id: uid(), name:"国語", color:"#E76F51", targetDate:"", weekly:5, adjust:0, units:[] },
+      { id: uid(), name:"算数", color:"#457B9D", targetDate:"", weekly:5, adjust:0, units:[] },
+      { id: uid(), name:"理科", color:"#2A9D8F", targetDate:"", weekly:3, adjust:0, units:[] },
+      { id: uid(), name:"社会", color:"#E9C46A", targetDate:"", weekly:3, adjust:0, units:[] }
+    ]};
+  }
+
+  function defaultState(){
+    var terms = {};
+    TERMS.forEach(function(t){ terms[t] = defaultTermData(); });
+    return { currentTerm: "1学期", terms: terms };
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){ state = defaultState(); return; }
+      var d = JSON.parse(raw);
+      if(!d || typeof d !== "object" || !d.terms){ state = defaultState(); return; }
+      TERMS.forEach(function(t){
+        if(!d.terms[t] || !Array.isArray(d.terms[t].subjects)) d.terms[t] = defaultTermData();
+      });
+      if(TERMS.indexOf(d.currentTerm) < 0) d.currentTerm = "1学期";
+      state = d;
+    }catch(e){
+      state = defaultState();
+    }
+  }
+
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ toast("保存に失敗しました（容量オーバーの可能性）"); }
+  }
+
+  function termData(){ return state.terms[state.currentTerm]; }
+  function getSubject(id){
+    var subs = termData().subjects;
+    for(var i=0;i<subs.length;i++){ if(subs[i].id===id) return subs[i]; }
+    return null;
+  }
+
+  /* ---------- 計算 ---------- */
+  function calcSubject(s){
+    var planned=0, done=0, remaining=0;
+    s.units.forEach(function(u){
+      planned += u.planned;
+      done += Math.min(u.done, u.planned);
+      remaining += Math.max(0, u.planned - u.done);
+    });
+    var res = {
+      planned:planned, done:done, remaining:remaining,
+      pct: planned>0 ? Math.round(done/planned*100) : 0,
+      hasTarget:false, capacity:null, diff:null, status:"none", daysLeft:null
+    };
+    if(s.targetDate){
+      var today = new Date(); today.setHours(0,0,0,0);
+      var tgt = new Date(s.targetDate + "T00:00:00");
+      if(!isNaN(tgt.getTime())){
+        res.hasTarget = true;
+        var days = Math.round((tgt - today)/86400000);
+        res.daysLeft = days;
+        var weekly = Math.max(0, Number(s.weekly)||0);
+        var base = days>0 ? Math.floor(days/7*weekly) : 0;
+        var cap = base + (Number(s.adjust)||0);
+        if(cap<0) cap = 0;
+        res.capacity = cap;
+        res.diff = cap - remaining;
+        if(remaining===0 && planned>0){ res.status="ok"; }
+        else if(res.diff < 0){ res.status="ng"; }
+        else if(res.diff < 3){ res.status="just"; }
+        else { res.status="ok"; }
+      }
+    }
+    return res;
+  }
+
+  function statusLabel(st){
+    return st==="ok" ? "✅ 余裕あり" : st==="just" ? "⚠ ぴったり" : st==="ng" ? "🚨 不足" : "目標日 未設定";
+  }
+
+  /* ---------- util ---------- */
+  function esc(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  var toastTimer = null;
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2200);
+  }
+
+  /* 2段階削除ボタン（confirmの代わり） */
+  function armConfirm(btn, key, onConfirm, label){
+    if(btn.dataset.armed === "1"){
+      delete btn.dataset.armed;
+      if(confirmTimers[key]) clearTimeout(confirmTimers[key]);
+      onConfirm();
+    }else{
+      btn.dataset.armed = "1";
+      var orig = btn.textContent;
+      btn.textContent = label || "もう一度押すと削除";
+      btn.classList.add("confirming");
+      confirmTimers[key] = setTimeout(function(){
+        delete btn.dataset.armed;
+        btn.textContent = orig;
+        btn.classList.remove("confirming");
+      }, 3000);
+    }
+  }
+
+  /* ---------- render: 学期バー ---------- */
+  function renderTermBar(){
+    var bar = document.getElementById("termBar");
+    bar.innerHTML = "";
+    var lbl = document.createElement("span");
+    lbl.className = "label";
+    lbl.textContent = "学期:";
+    bar.appendChild(lbl);
+    TERMS.forEach(function(t){
+      var b = document.createElement("button");
+      b.className = "term-btn" + (state.currentTerm===t ? " active" : "");
+      b.textContent = t;
+      b.addEventListener("click", function(){
+        state.currentTerm = t;
+        currentView = "dash";
+        editingSubject = false;
+        save(); renderAll();
+      });
+      bar.appendChild(b);
+    });
+  }
+
+  /* ---------- render: タブ ---------- */
+  function renderTabs(){
+    var tabs = document.getElementById("tabs");
+    tabs.innerHTML = "";
+    var dash = document.createElement("button");
+    dash.className = "tab dash" + (currentView==="dash" ? " active" : "");
+    dash.textContent = "🏠 ぜんぶ";
+    dash.addEventListener("click", function(){ currentView="dash"; editingSubject=false; renderAll(); });
+    tabs.appendChild(dash);
+
+    termData().subjects.forEach(function(s){
+      var b = document.createElement("button");
+      b.className = "tab" + (currentView===s.id ? " active" : "");
+      b.textContent = s.name;
+      b.style.borderBottomColor = s.color;
+      if(currentView===s.id) b.style.background = s.color;
+      b.addEventListener("click", function(){ currentView=s.id; editingSubject=false; renderAll(); });
+      tabs.appendChild(b);
+    });
+
+    var add = document.createElement("button");
+    add.className = "tab add-tab";
+    add.textContent = "＋ 教科";
+    add.addEventListener("click", function(){
+      var s = { id: uid(), name:"新しい教科", color: COLORS[termData().subjects.length % COLORS.length],
+                targetDate:"", weekly:3, adjust:0, units:[] };
+      termData().subjects.push(s);
+      currentView = s.id;
+      editingSubject = true;
+      save(); renderAll();
+      toast("教科を追加しました。名前と色を設定してください");
+    });
+    tabs.appendChild(add);
+  }
+
+  /* ---------- render: ダッシュボード ---------- */
+  function renderDash(view){
+    var wrap = document.createElement("div");
+
+    var subs = termData().subjects;
+    if(subs.length===0){
+      var em = document.createElement("div");
+      em.className = "card empty-msg";
+      em.textContent = "教科がありません。上の「＋ 教科」から追加してください。";
+      wrap.appendChild(em);
+    }
+
+    subs.forEach(function(s){
+      var c = calcSubject(s);
+      var card = document.createElement("div");
+      card.className = "dash-card";
+      card.style.borderLeftColor = s.color;
+      var warnHtml = "";
+      if(c.status==="ng"){
+        warnHtml = '<div class="dash-warn">🚨 ' + (-c.diff) + 'コマ足りません</div>';
+      }
+      var capText = c.hasTarget
+        ? '確保見込み <b>' + c.capacity + '</b>コマ（残り' + Math.max(0,c.daysLeft) + '日）'
+        : '目標日 未設定';
+      card.innerHTML =
+        '<div class="dash-top">' +
+          '<span class="subj">' + esc(s.name) + '</span>' +
+          '<span class="badge ' + c.status + '">' + statusLabel(c.status) + '</span>' +
+        '</div>' +
+        '<div class="progress-wrap"><div class="progress-bar" style="width:' + c.pct + '%;background:' + s.color + '"></div></div>' +
+        '<div class="dash-nums">' +
+          '<span>進捗 <b>' + c.done + '</b>/' + c.planned + '時間（' + c.pct + '%）</span>' +
+          '<span>残り必要 <b>' + c.remaining + '</b>コマ</span>' +
+          '<span>' + capText + '</span>' +
+        '</div>' + warnHtml;
+      card.addEventListener("click", function(){ currentView = s.id; renderAll(); });
+      wrap.appendChild(card);
+    });
+
+    /* データ管理カード */
+    var dataCard = document.createElement("div");
+    dataCard.className = "card";
+    dataCard.innerHTML =
+      '<h2>🗂 データ管理 <span class="small-note">（全学期分をまとめて扱います）</span></h2>' +
+      '<div class="row-right" style="justify-content:flex-start">' +
+        '<button class="btn small ghost" id="btnExport">📤 エクスポート</button>' +
+        '<button class="btn small ghost" id="btnImport">📥 インポート</button>' +
+        '<button class="btn small gray" id="btnResetTerm">↺ この学期をリセット</button>' +
+      '</div>' +
+      '<div id="dataArea" style="margin-top:10px"></div>';
+    wrap.appendChild(dataCard);
+
+    view.appendChild(wrap);
+
+    document.getElementById("btnExport").addEventListener("click", function(){
+      var area = document.getElementById("dataArea");
+      area.innerHTML =
+        '<p class="muted">下のテキストをコピーして保存してください。</p>' +
+        '<textarea id="exportText" readonly></textarea>' +
+        '<div class="row-right"><button class="btn small" id="btnCopy">コピー</button>' +
+        '<button class="btn small gray" id="btnCloseData">閉じる</button></div>';
+      document.getElementById("exportText").value = JSON.stringify(state);
+      document.getElementById("btnCopy").addEventListener("click", function(){
+        var ta = document.getElementById("exportText");
+        ta.select(); ta.setSelectionRange(0, 999999);
+        var ok = false;
+        try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+        if(!ok && navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(ta.value).then(function(){ toast("コピーしました"); }, function(){ toast("手動で選択してコピーしてください"); });
+          return;
+        }
+        toast(ok ? "コピーしました" : "手動で選択してコピーしてください");
+      });
+      document.getElementById("btnCloseData").addEventListener("click", function(){ area.innerHTML=""; });
+    });
+
+    document.getElementById("btnImport").addEventListener("click", function(){
+      var area = document.getElementById("dataArea");
+      area.innerHTML =
+        '<p class="muted">エクスポートしたテキストを貼り付けて「読み込む」を押してください。現在のデータは上書きされます。</p>' +
+        '<textarea id="importText" placeholder="ここに貼り付け"></textarea>' +
+        '<div class="row-right"><button class="btn small" id="btnDoImport">読み込む</button>' +
+        '<button class="btn small gray" id="btnCloseData2">閉じる</button></div>' +
+        '<p id="importErr" style="color:var(--ng);font-size:.85rem;margin-top:6px;"></p>';
+      document.getElementById("btnDoImport").addEventListener("click", function(){
+        var txt = document.getElementById("importText").value.trim();
+        var errEl = document.getElementById("importErr");
+        if(!txt){ errEl.textContent = "テキストが空です。"; return; }
+        try{
+          var d = JSON.parse(txt);
+          if(!d || typeof d!=="object" || !d.terms) throw new Error("format");
+          TERMS.forEach(function(t){
+            if(!d.terms[t] || !Array.isArray(d.terms[t].subjects)) d.terms[t] = defaultTermData();
+            d.terms[t].subjects.forEach(function(s){
+              if(!s.id) s.id = uid();
+              s.name = String(s.name||"教科");
+              s.color = String(s.color||COLORS[0]);
+              s.weekly = Number(s.weekly)||0;
+              s.adjust = Number(s.adjust)||0;
+              s.targetDate = typeof s.targetDate==="string" ? s.targetDate : "";
+              if(!Array.isArray(s.units)) s.units = [];
+              s.units.forEach(function(u){
+                if(!u.id) u.id = uid();
+                u.name = String(u.name||"単元");
+                u.planned = Math.max(1, Number(u.planned)||1);
+                u.done = Math.max(0, Number(u.done)||0);
+              });
+            });
+          });
+          if(TERMS.indexOf(d.currentTerm)<0) d.currentTerm = "1学期";
+          state = d;
+          currentView = "dash";
+          save(); renderAll();
+          toast("インポートしました");
+        }catch(e){
+          errEl.textContent = "読み込めませんでした。エクスポートしたテキストか確認してください。";
+        }
+      });
+      document.getElementById("btnCloseData2").addEventListener("click", function(){ area.innerHTML=""; });
+    });
+
+    document.getElementById("btnResetTerm").addEventListener("click", function(){
+      armConfirm(this, "resetTerm", function(){
+        state.terms[state.currentTerm] = defaultTermData();
+        currentView = "dash";
+        save(); renderAll();
+        toast(state.currentTerm + "をリセットしました");
+      }, "もう一度押すとリセット");
+    });
+  }
+
+  /* ---------- render: 教科ページ ---------- */
+  function renderSubject(view, s){
+    var c = calcSubject(s);
+    var wrap = document.createElement("div");
+
+    /* --- 判定バナー --- */
+    var judge = document.createElement("div");
+    judge.className = "judge " + c.status;
+    var title, detail;
+    if(!c.hasTarget){
+      title = "目標日を設定しましょう";
+      detail = "下の「⚙ 設定」で目標日と週コマ数を入れると、間に合うか自動で判定します。";
+    }else if(c.remaining===0 && c.planned>0){
+      title = "✅ すべての単元が完了！";
+      detail = "おつかれさまでした。";
+    }else if(c.status==="ng"){
+      title = "🚨 " + (-c.diff) + "コマ足りません";
+      detail = "週コマ数を増やすか、指導計画の見直しが必要です。";
+    }else if(c.status==="just"){
+      title = "⚠ ぴったりペース（余裕 " + c.diff + "コマ）";
+      detail = "行事などでコマが潰れると不足します。注意して進めましょう。";
+    }else{
+      title = "✅ 余裕あり（＋" + c.diff + "コマ）";
+      detail = "このペースなら間に合います。";
+    }
+    var numsHtml = "";
+    if(c.hasTarget){
+      numsHtml =
+        '<div class="judge-nums">' +
+          '<div class="num-box"><div class="v">' + c.remaining + '</div><div class="k">残り必要コマ</div></div>' +
+          '<div class="num-box"><div class="v">' + c.capacity + '</div><div class="k">確保見込みコマ</div></div>' +
+          '<div class="num-box"><div class="v">' + Math.max(0,c.daysLeft) + '</div><div class="k">目標日まで（日）</div></div>' +
+        '</div>';
+    }
+    judge.innerHTML = '<div class="judge-title">' + title + '</div>' +
+                      '<div class="judge-detail">' + detail + '</div>' + numsHtml;
+    wrap.appendChild(judge);
+
+    /* --- 設定カード --- */
+    var setCard = document.createElement("div");
+    setCard.className = "card";
+    setCard.innerHTML =
+      '<h2>⚙ 設定 <span class="small-note">' + esc(s.name) + '</span></h2>' +
+      '<div class="form-row">' +
+        '<div class="field"><label>目標日（学期末など）</label>' +
+          '<input type="date" id="inpTarget" value="' + esc(s.targetDate) + '"></div>' +
+        '<div class="field narrow"><label>週あたりコマ数</label>' +
+          '<input type="number" id="inpWeekly" min="0" max="30" value="' + Number(s.weekly||0) + '"></div>' +
+        '<div class="field narrow"><label>手動補正（±コマ）</label>' +
+          '<input type="number" id="inpAdjust" step="1" value="' + Number(s.adjust||0) + '"></div>' +
+      '</div>' +
+      '<p class="muted">補正：行事や長期休業でコマが潰れるぶんはマイナス、補講などで増えるぶんはプラスで入力。</p>' +
+      '<details class="settings-details"' + (editingSubject ? ' open' : '') + '>' +
+        '<summary>✏️ 教科名・色の変更 / 教科の削除</summary>' +
+        '<div class="form-row" style="margin-top:8px">' +
+          '<div class="field"><label>教科名</label>' +
+          '<input type="text" id="inpSubjName" maxlength="10" value="' + esc(s.name) + '"></div>' +
+        '</div>' +
+        '<div class="palette" id="palette"></div>' +
+        '<div class="row-right">' +
+          '<button class="btn small danger" id="btnDelSubject">この教科を削除</button>' +
+        '</div>' +
+      '</details>';
+    wrap.appendChild(setCard);
+
+    /* --- 単元リスト --- */
+    var unitCard = document.createElement("div");
+    unitCard.className = "card";
+    unitCard.innerHTML = '<h2>📖 単元リスト</h2><div id="unitList"></div>' +
+      '<div class="form-row" style="margin-top:12px">' +
+        '<div class="field"><label>単元名</label><input type="text" id="inpUnitName" maxlength="30" placeholder="例：わり算の筆算"></div>' +
+        '<div class="field narrow"><label>予定時数</label><input type="number" id="inpUnitPlanned" min="1" max="99" value="8"></div>' +
+        '<div class="field narrow"><button class="btn" id="btnAddUnit" style="width:100%">＋ 追加</button></div>' +
+      '</div>';
+    wrap.appendChild(unitCard);
+    view.appendChild(wrap);
+
+    /* --- 設定イベント --- */
+    document.getElementById("inpTarget").addEventListener("change", function(){
+      s.targetDate = this.value; save(); renderAll();
+    });
+    document.getElementById("inpWeekly").addEventListener("change", function(){
+      var v = Math.max(0, Math.min(30, Math.round(Number(this.value)||0)));
+      s.weekly = v; this.value = v; save(); renderAll();
+    });
+    document.getElementById("inpAdjust").addEventListener("change", function(){
+      var v = Math.round(Number(this.value)||0);
+      s.adjust = v; this.value = v; save(); renderAll();
+    });
+    document.getElementById("inpSubjName").addEventListener("change", function(){
+      var v = this.value.trim();
+      if(v){ s.name = v; save(); editingSubject = true; renderAll(); toast("教科名を変更しました"); }
+    });
+
+    var pal = document.getElementById("palette");
+    COLORS.forEach(function(col){
+      var sw = document.createElement("button");
+      sw.className = "swatch" + (s.color===col ? " selected" : "");
+      sw.style.background = col;
+      sw.setAttribute("aria-label", "色 " + col);
+      sw.addEventListener("click", function(){
+        s.color = col; save(); editingSubject = true; renderAll();
+      });
+      pal.appendChild(sw);
+    });
+
+    document.getElementById("btnDelSubject").addEventListener("click", function(){
+      var self = this;
+      armConfirm(self, "delSub_"+s.id, function(){
+        var subs = termData().subjects;
+        var idx = subs.indexOf(s);
+        if(idx>=0) subs.splice(idx,1);
+        currentView = "dash";
+        editingSubject = false;
+        save(); renderAll();
+        toast("教科を削除しました");
+      });
+    });
+
+    /* --- 単元描画 --- */
+    var list = document.getElementById("unitList");
+    if(s.units.length===0){
+      list.innerHTML = '<div class="empty-msg">単元がまだありません。下のフォームから追加してください。</div>';
+    }
+    s.units.forEach(function(u, i){
+      var isDone = u.done >= u.planned;
+      var pct = u.planned>0 ? Math.min(100, Math.round(u.done/u.planned*100)) : 0;
+      var div = document.createElement("div");
+      div.className = "unit" + (isDone ? " done-unit" : "");
+      div.innerHTML =
+        '<div class="unit-top">' +
+          '<span class="unit-name">' + (isDone ? '<span class="check">✔</span>' : '') + esc(u.name) + '</span>' +
+          '<span class="unit-count"><b>' + u.done + '</b> / ' + u.planned + ' 時間</span>' +
+          '<span class="unit-btns">' +
+            '<button class="hour-btn minus" data-act="minus"' + (u.done<=0 ? " disabled" : "") + '>−1</button>' +
+            '<button class="hour-btn" data-act="plus">＋1</button>' +
+          '</span>' +
+        '</div>' +
+        '<div class="progress-wrap"><div class="progress-bar" style="width:' + pct + '%;background:' + (isDone ? 'var(--ok)' : s.color) + '"></div></div>' +
+        '<div class="unit-foot">' +
+          '<span class="pct">' + (isDone ? '完了 🎉' : pct + '%（あと' + Math.max(0,u.planned-u.done) + 'コマ）') + '</span>' +
+          '<span>' +
+            '<button class="icon-btn" data-act="edit">✏️ 編集</button>' +
+            '<button class="icon-btn" data-act="del">🗑 削除</button>' +
+          '</span>' +
+        '</div>' +
+        '<div class="unit-edit-area"></div>';
+
+      div.querySelector('[data-act=plus]').addEventListener("click", function(){
+        u.done += 1; save(); renderAll();
+        if(u.done === u.planned) toast('「' + u.name + '」完了！おつかれさまです 🎉');
+      });
+      var minusBtn = div.querySelector('[data-act=minus]');
+      minusBtn.addEventListener("click", function(){
+        if(u.done>0){ u.done -= 1; save(); renderAll(); }
+      });
+      div.querySelector('[data-act=del]').addEventListener("click", function(){
+        armConfirm(this, "delUnit_"+u.id, function(){
+          s.units.splice(i,1); save(); renderAll();
+          toast("単元を削除しました");
+        });
+      });
+      div.querySelector('[data-act=edit]').addEventListener("click", function(){
+        var area = div.querySelector(".unit-edit-area");
+        if(area.innerHTML){ area.innerHTML=""; return; }
+        area.innerHTML =
+          '<div class="form-row" style="margin-top:10px">' +
+            '<div class="field"><label>単元名</label><input type="text" class="editName" maxlength="30" value="' + esc(u.name) + '"></div>' +
+            '<div class="field narrow"><label>予定時数</label><input type="number" class="editPlanned" min="1" max="99" value="' + u.planned + '"></div>' +
+            '<div class="field narrow"><button class="btn small" style="width:100%">保存</button></div>' +
+          '</div>';
+        area.querySelector(".btn").addEventListener("click", function(){
+          var nm = area.querySelector(".editName").value.trim();
+          var pl = Math.max(1, Math.min(99, Math.round(Number(area.querySelector(".editPlanned").value)||u.planned)));
+          if(nm) u.name = nm;
+          u.planned = pl;
+          save(); renderAll();
+          toast("単元を更新しました");
+        });
+      });
+      list.appendChild(div);
+    });
+
+    /* --- 単元追加 --- */
+    function addUnit(){
+      var nameEl = document.getElementById("inpUnitName");
+      var plEl = document.getElementById("inpUnitPlanned");
+      var nm = nameEl.value.trim();
+      if(!nm){ toast("単元名を入力してください"); nameEl.focus(); return; }
+      var pl = Math.max(1, Math.min(99, Math.round(Number(plEl.value)||1)));
+      s.units.push({ id: uid(), name:nm, planned:pl, done:0 });
+      save(); renderAll();
+      toast("単元「" + nm + "」を追加しました");
+    }
+    document.getElementById("btnAddUnit").addEventListener("click", addUnit);
+    document.getElementById("inpUnitName").addEventListener("keydown", function(e){
+      if(e.key==="Enter"){ e.preventDefault(); addUnit(); }
+    });
+  }
+
+  /* ---------- render all ---------- */
+  function renderAll(){
+    renderTermBar();
+    renderTabs();
+    var view = document.getElementById("view");
+    view.innerHTML = "";
+    if(currentView==="dash"){
+      renderDash(view);
+    }else{
+      var s = getSubject(currentView);
+      if(!s){ currentView="dash"; renderDash(view); }
+      else{ renderSubject(view, s); }
+    }
+    editingSubject = false;
+  }
+
+  load();
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

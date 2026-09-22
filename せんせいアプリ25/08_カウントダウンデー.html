@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カウントダウンデー</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height: 100vh;
+    padding: 16px;
+    color: #333;
+  }
+  header { text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: clamp(26px, 3.6vw, 42px); color: #5b6ef5; text-shadow: 0 2px 0 #fff; }
+  button {
+    font-family: inherit; border: none; cursor: pointer;
+    border-radius: 999px; font-weight: bold;
+    font-size: clamp(16px, 2vw, 22px);
+    padding: 10px 24px;
+    background: #fff; color: #5b6ef5;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15);
+    transition: transform .12s;
+  }
+  button:active { transform: scale(.94); }
+  .btn-main { background: #5b6ef5; color: #fff; }
+  .btn-danger { background: #ff7a9c; color: #fff; }
+  .today-date {
+    text-align: center; color: #7a86b8;
+    font-size: clamp(18px, 2.2vw, 26px);
+    font-weight: bold; margin-bottom: 14px;
+  }
+  #mainStage {
+    max-width: 1200px; margin: 0 auto 22px;
+    background: #fff; border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: clamp(30px, 5vw, 70px) 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 40vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+  }
+  #mainStage .deco {
+    position: absolute; font-size: clamp(30px, 4vw, 54px); opacity: .25;
+    animation: floaty 5s ease-in-out infinite;
+  }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+  .ev-name {
+    font-size: clamp(34px, 6vw, 84px);
+    font-weight: bold; color: #5b6ef5;
+    line-height: 1.2; overflow-wrap: anywhere;
+  }
+  .until { font-size: clamp(24px, 3.4vw, 46px); color: #888; margin-top: 8px; font-weight: bold; }
+  .big-days {
+    font-size: clamp(110px, 22vw, 300px);
+    font-weight: bold; line-height: 1;
+    color: #ff7a9c;
+    text-shadow: 0 6px 0 #ffe3ec;
+    font-variant-numeric: tabular-nums;
+    margin: 6px 0;
+  }
+  .big-days .unit { font-size: .32em; color: #888; text-shadow: none; }
+  .today-msg {
+    font-size: clamp(60px, 12vw, 170px);
+    font-weight: bold; color: #ff7a9c;
+    animation: bounce 1s ease infinite;
+    margin: 12px 0;
+  }
+  @keyframes bounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08) rotate(-2deg); } }
+  .date-label { font-size: clamp(18px, 2.4vw, 28px); color: #aab; font-weight: bold; }
+  .empty-hint { font-size: clamp(20px, 3vw, 34px); color: #99a; }
+  #cardList {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    max-width: 1200px; margin: 0 auto;
+  }
+  .ev-card {
+    background: #fff; border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: 18px; text-align: center;
+    position: relative;
+    border-top: 10px solid var(--ec, #5b6ef5);
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  .ev-card:hover { transform: translateY(-3px); }
+  .ev-card.selected { outline: 4px solid var(--ec, #5b6ef5); }
+  .ev-card h3 { font-size: clamp(18px, 2.2vw, 26px); color: #444; overflow-wrap: anywhere; }
+  .ev-card .d { font-size: clamp(40px, 5vw, 64px); font-weight: bold; color: var(--ec, #5b6ef5); line-height: 1.1; }
+  .ev-card .d small { font-size: .4em; color: #999; }
+  .ev-card .when { font-size: 15px; color: #aaa; }
+  .ev-card .del {
+    position: absolute; top: 8px; right: 8px;
+    background: #ffe9ef; color: #ff7a9c;
+    font-size: 16px; padding: 6px 12px;
+    box-shadow: none;
+  }
+  .ev-card .past-label { color: #bbb; font-size: clamp(22px, 3vw, 30px); font-weight: bold; }
+  /* dialog */
+  #addDialog {
+    position: fixed; inset: 0; background: rgba(60,70,120,.45);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+    padding: 16px;
+  }
+  #addDialog.show { display: flex; }
+  .dialog-card {
+    background: #fff; border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.3);
+    padding: 28px; width: min(520px, 100%);
+  }
+  .dialog-card h2 { color: #5b6ef5; font-size: 26px; margin-bottom: 18px; text-align: center; }
+  .dialog-card label { display: block; font-weight: bold; color: #666; margin: 14px 0 6px; font-size: 18px; }
+  .dialog-card input[type=text], .dialog-card input[type=date] {
+    font-family: inherit; width: 100%;
+    font-size: 22px; padding: 12px 14px;
+    border: 3px solid #d6dcff; border-radius: 14px; outline: none;
+  }
+  .dialog-card input:focus { border-color: #5b6ef5; }
+  .dialog-btns { display: flex; gap: 12px; justify-content: center; margin-top: 22px; }
+  .confetti {
+    position: absolute; top: -20px;
+    width: 12px; height: 20px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 20;
+  }
+  footer { text-align: center; margin-top: 20px; color: #888; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📅 カウントダウンデー</h1>
+  <button class="btn-main" id="btnAdd">➕ よていをふやす</button>
+</header>
+<div class="today-date" id="todayDate"></div>
+
+<div id="mainStage"></div>
+
+<div id="cardList"></div>
+
+<footer>カードをタップすると おおきなひょうじが きりかわるよ</footer>
+
+<div id="addDialog">
+  <div class="dialog-card">
+    <h2>よていを とうろく</h2>
+    <label for="evName">よていのなまえ</label>
+    <input type="text" id="evName" maxlength="20" placeholder="れい：うんどうかい">
+    <label for="evDate">ひにち</label>
+    <input type="date" id="evDate">
+    <div class="dialog-btns">
+      <button class="btn-main" id="btnSave">とうろくする</button>
+      <button id="btnCancel">やめる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var STORE_KEY = 'sensei25_countdown';
+  var COLORS = ['#5b6ef5','#ff7a9c','#3dbf7a','#f5a623','#8e5bf5','#38b6d9'];
+  var DECOS = ['🌸','⭐','🎈','🌈','✨','🎀'];
+  var WEEK = ['にち','げつ','か','すい','もく','きん','ど'];
+
+  var state = load();
+
+  function load(){
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.events)) return s;
+      }
+    } catch(e){}
+    return { events: [], selectedId: null };
+  }
+  function save(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){}
+  }
+
+  function todayMid(){
+    var d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  function parseDate(str){
+    var p = str.split('-');
+    return new Date(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10));
+  }
+  function daysUntil(dateStr){
+    var diff = parseDate(dateStr) - todayMid();
+    return Math.round(diff / 86400000);
+  }
+  function fmtDate(dateStr){
+    var d = parseDate(dateStr);
+    return d.getMonth()+1 + 'がつ ' + d.getDate() + 'にち（' + WEEK[d.getDay()] + '）';
+  }
+
+  var mainStage = document.getElementById('mainStage');
+  var cardList = document.getElementById('cardList');
+
+  function sortedEvents(){
+    return state.events.slice().sort(function(a,b){
+      return daysUntil(a.date) - daysUntil(b.date);
+    });
+  }
+
+  function pickMain(){
+    // selected event if exists & valid; else nearest upcoming (incl. today); else nearest past
+    var evs = sortedEvents();
+    if (state.selectedId != null) {
+      for (var i = 0; i < evs.length; i++) if (evs[i].id === state.selectedId) return evs[i];
+    }
+    for (var j = 0; j < evs.length; j++) if (daysUntil(evs[j].date) >= 0) return evs[j];
+    return evs.length ? evs[evs.length-1] : null;
+  }
+
+  function renderToday(){
+    var d = new Date();
+    document.getElementById('todayDate').textContent =
+      'きょうは ' + d.getFullYear() + 'ねん ' + (d.getMonth()+1) + 'がつ ' + d.getDate() + 'にち（' + WEEK[d.getDay()] + 'ようび）';
+  }
+
+  function renderMain(){
+    mainStage.innerHTML = '';
+    // floating decorations
+    DECOS.forEach(function(e, i){
+      var s = document.createElement('div');
+      s.className = 'deco';
+      s.textContent = e;
+      s.style.left = (5 + i * 16) + '%';
+      s.style.top = (i % 2 === 0 ? 6 : 74) + '%';
+      s.style.animationDelay = (i * .6) + 's';
+      mainStage.appendChild(s);
+    });
+
+    var ev = pickMain();
+    if (!ev) {
+      var hint = document.createElement('div');
+      hint.className = 'empty-hint';
+      hint.innerHTML = 'まだ よていがないよ。<br>「➕ よていをふやす」で とうろくしてね！';
+      mainStage.appendChild(hint);
+      return;
+    }
+
+    var days = daysUntil(ev.date);
+    var name = document.createElement('div');
+    name.className = 'ev-name';
+    name.textContent = ev.name;
+    mainStage.appendChild(name);
+
+    if (days === 0) {
+      var msg = document.createElement('div');
+      msg.className = 'today-msg';
+      msg.textContent = 'きょうです！🎉';
+      mainStage.appendChild(msg);
+      startConfetti();
+    } else if (days > 0) {
+      var until = document.createElement('div');
+      until.className = 'until';
+      until.textContent = 'まで あと';
+      mainStage.appendChild(until);
+      var big = document.createElement('div');
+      big.className = 'big-days';
+      big.innerHTML = days + '<span class="unit">にち</span>';
+      mainStage.appendChild(big);
+    } else {
+      var past = document.createElement('div');
+      past.className = 'until';
+      past.textContent = 'は ' + (-days) + 'にちまえに おわったよ。おつかれさま！🌟';
+      mainStage.appendChild(past);
+    }
+
+    var dl = document.createElement('div');
+    dl.className = 'date-label';
+    dl.textContent = fmtDate(ev.date);
+    mainStage.appendChild(dl);
+  }
+
+  function renderCards(){
+    cardList.innerHTML = '';
+    var evs = sortedEvents();
+    var mainEv = pickMain();
+    evs.forEach(function(ev, i){
+      var card = document.createElement('div');
+      card.className = 'ev-card';
+      card.style.setProperty('--ec', COLORS[i % COLORS.length]);
+      if (mainEv && ev.id === mainEv.id) card.classList.add('selected');
+
+      var del = document.createElement('button');
+      del.className = 'del';
+      del.textContent = '✕';
+      del.title = 'けす';
+      del.addEventListener('click', function(e){
+        e.stopPropagation();
+        if (!confirm('「' + ev.name + '」を けしてもいい？')) return;
+        state.events = state.events.filter(function(x){ return x.id !== ev.id; });
+        if (state.selectedId === ev.id) state.selectedId = null;
+        save(); renderAll();
+      });
+      card.appendChild(del);
+
+      var h3 = document.createElement('h3');
+      h3.textContent = ev.name;
+      card.appendChild(h3);
+
+      var d = document.createElement('div');
+      d.className = 'd';
+      var days = daysUntil(ev.date);
+      if (days > 0) d.innerHTML = 'あと ' + days + '<small>にち</small>';
+      else if (days === 0) d.innerHTML = 'きょう！🎉';
+      else { d.className = 'past-label'; d.textContent = 'おわったよ'; }
+      card.appendChild(d);
+
+      var when = document.createElement('div');
+      when.className = 'when';
+      when.textContent = fmtDate(ev.date);
+      card.appendChild(when);
+
+      card.addEventListener('click', function(){
+        state.selectedId = ev.id;
+        save(); renderAll();
+      });
+      cardList.appendChild(card);
+    });
+  }
+
+  function renderAll(){
+    renderToday();
+    renderMain();
+    renderCards();
+  }
+
+  /* ---- confetti ---- */
+  var confettiTimer = null;
+  function startConfetti(){
+    if (confettiTimer) return;
+    var colors = ['#ff7a9c','#5b6ef5','#f5d34e','#3dbf7a','#8e5bf5','#38b6d9'];
+    confettiTimer = setInterval(function(){
+      for (var i = 0; i < 3; i++) {
+        var c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.background = colors[Math.floor(Math.random()*colors.length)];
+        c.style.left = Math.random()*100 + '%';
+        var dur = 2500 + Math.random()*2000;
+        var sway = (Math.random()*160 - 80);
+        c.animate([
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+          { transform: 'translate(' + sway + 'px,' + (mainStage.offsetHeight + 40) + 'px) rotate(' + (360 + Math.random()*360) + 'deg)', opacity: .7 }
+        ], { duration: dur, easing: 'ease-in' });
+        mainStage.appendChild(c);
+        (function(el, t){ setTimeout(function(){ el.remove(); }, t); })(c, dur);
+      }
+    }, 220);
+  }
+  function stopConfetti(){
+    if (confettiTimer) { clearInterval(confettiTimer); confettiTimer = null; }
+  }
+  // stop confetti when main event is not today
+  var origRenderMain = renderMain;
+  renderMain = function(){
+    var ev = pickMain();
+    if (!(ev && daysUntil(ev.date) === 0)) stopConfetti();
+    origRenderMain();
+  };
+
+  /* ---- dialog ---- */
+  var dialog = document.getElementById('addDialog');
+  var evName = document.getElementById('evName');
+  var evDate = document.getElementById('evDate');
+
+  document.getElementById('btnAdd').addEventListener('click', function(){
+    evName.value = '';
+    var t = new Date();
+    evDate.value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+    dialog.classList.add('show');
+    evName.focus();
+  });
+  document.getElementById('btnCancel').addEventListener('click', function(){
+    dialog.classList.remove('show');
+  });
+  dialog.addEventListener('click', function(e){
+    if (e.target === dialog) dialog.classList.remove('show');
+  });
+  document.getElementById('btnSave').addEventListener('click', function(){
+    var name = evName.value.trim();
+    var date = evDate.value;
+    if (!name) { alert('よていのなまえを かいてね'); return; }
+    if (!date) { alert('ひにちを えらんでね'); return; }
+    var ev = { id: Date.now(), name: name, date: date };
+    state.events.push(ev);
+    state.selectedId = ev.id;
+    save();
+    dialog.classList.remove('show');
+    renderAll();
+  });
+
+  // refresh at intervals so the display stays correct across midnight (TV常時掲示想定)
+  setInterval(renderAll, 60000);
+
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

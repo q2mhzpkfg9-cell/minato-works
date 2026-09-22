@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>れきし ならべ（人物・できごと年表）</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f6f1e7;color:#1f2a37;font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","BIZ UDPGothic","Meiryo",sans-serif;font-size:18px;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#1f3a5f;color:#fff}
+header a.back{color:#fff;text-decoration:none;font-size:15px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:14px}
+header h1{margin:0;font-size:clamp(20px,3.4vw,30px);letter-spacing:.05em}
+main{max-width:1180px;margin:0 auto;padding:14px 16px 30px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(31,58,95,.08);margin-bottom:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab,.btn{border:2px solid #1f3a5f;background:#fff;color:#1f3a5f;border-radius:14px;padding:8px 16px;font-size:18px;font-family:inherit;cursor:pointer;min-height:48px}
+.tab.on,.btn.on{background:#1f3a5f;color:#fff}
+.btn.main{background:#e0a526;border-color:#e0a526;color:#fff;font-weight:bold}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.lbl{font-weight:bold;color:#1f3a5f;min-width:90px}
+.pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;min-height:80px}
+.ev{border:2px solid #cfd8e6;background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;text-align:left;font-family:inherit;font-size:17px;min-height:84px}
+.ev .who{font-size:21px;font-weight:bold;color:#1f3a5f;display:block}
+.ev.used{opacity:.25;pointer-events:none}
+.line{position:relative;padding-left:28px;margin-top:6px}
+.line:before{content:"";position:absolute;left:10px;top:6px;bottom:6px;width:6px;border-radius:3px;background:#1f3a5f}
+.slot{position:relative;border:2px dashed #cfd8e6;border-radius:14px;padding:8px 12px;margin-bottom:8px;min-height:56px;background:#fbf7ee;cursor:pointer}
+.slot:before{content:attr(data-n);position:absolute;left:-28px;top:12px;width:26px;height:26px;border-radius:50%;background:#e0a526;color:#fff;font-size:15px;text-align:center;line-height:26px}
+.slot.fill{border-style:solid;border-color:#1f3a5f;background:#fff}
+.slot.ok{border-color:#2e8b57;background:#eaf6ee}
+.slot.ng{border-color:#c8553d;background:#fbeae6}
+.yr{float:right;font-weight:bold;color:#a4541a}
+.era{display:inline-block;border-radius:999px;padding:0 10px;font-size:14px;color:#fff;margin-right:6px}
+.msg{font-size:24px;font-weight:bold;text-align:center;min-height:1.5em}
+.hint{color:#6b7280;font-size:15px}
+table{border-collapse:collapse;width:100%;font-size:16px}
+td{border-bottom:1px solid #e5e7eb;padding:6px 8px;vertical-align:top}
+.hide{display:none}
+footer{text-align:center;font-size:13px;color:#6b7280;padding:16px}
+footer a{color:#1f3a5f}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>📜 れきし ならべ</h1></header>
+<main>
+  <div class="tabs">
+    <button class="tab on" data-t="game">ならべて あそぶ</button>
+    <button class="tab" data-t="list">年表を 見る</button>
+  </div>
+
+  <section id="game">
+    <div class="card">
+      <div class="row"><span class="lbl">時代の はんい</span><span id="ranges"></span></div>
+      <div class="row"><span class="lbl">カードの数</span><span id="counts"></span>
+        <button class="btn main" id="start">新しい もんだい</button></div>
+      <div class="row hint">記録：<span id="rec"></span></div>
+    </div>
+    <div class="card">
+      <b>① カードを 古いじゅんに タップ</b> <span class="hint">（まちがえたら 下の ならびを タップすると もどせる）</span>
+      <div class="pool" id="pool" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <b>② 年表（上が 古い）</b>
+      <div class="line" id="line"></div>
+      <div class="msg" id="msg"></div>
+      <div class="row" style="justify-content:center"><button class="btn main" id="check">こたえあわせ</button><button class="btn" id="reset">ならべなおす</button></div>
+    </div>
+  </section>
+
+  <section id="list" class="hide">
+    <div class="card">
+      <div class="hint">6年社会で 学ぶ おもな 人物・できごと（年は 教科書で よく使われる 年）</div>
+      <table id="tbl"></table>
+    </div>
+  </section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const KEY='mw_教科_23_rec';
+const ERA={'弥生':'#8d6e63','飛鳥':'#6d8f3c','奈良':'#3c8f7a','平安':'#b5557d','鎌倉':'#5a6fb0','室町':'#7a5ab0','戦国':'#a0522d','安土桃山':'#c7862a','江戸':'#2f7d8f','明治':'#1f3a5f','大正':'#6b4f9b','昭和':'#8f3c3c'};
+const D=[
+ {w:'卑弥呼',y:239,yt:'239年',e:'弥生',d:'邪馬台国の 女王。中国（魏）に 使いを送る'},
+ {w:'聖徳太子',y:604,yt:'604年',e:'飛鳥',d:'十七条の憲法を つくる'},
+ {w:'小野妹子',y:607,yt:'607年',e:'飛鳥',d:'遣隋使として 中国（隋）へ わたる'},
+ {w:'中大兄皇子・中臣鎌足',y:645,yt:'645年',e:'飛鳥',d:'蘇我氏を たおし、大化の改新を はじめる'},
+ {w:'聖武天皇',y:752,yt:'752年',e:'奈良',d:'東大寺の 大仏が 完成する（開眼式）'},
+ {w:'鑑真',y:753,yt:'753年',e:'奈良',d:'何度も 失敗しながら 唐から 日本に 着く'},
+ {w:'紫式部',y:1005,yt:'1000年ごろ',e:'平安',d:'『源氏物語』を 書く'},
+ {w:'藤原道長',y:1016,yt:'1016年',e:'平安',d:'摂政になり、貴族の 政治の 中心となる'},
+ {w:'平清盛',y:1167,yt:'1167年',e:'平安',d:'武士として はじめて 太政大臣に なる'},
+ {w:'源頼朝',y:1192,yt:'1192年',e:'鎌倉',d:'征夷大将軍に なる（鎌倉幕府）'},
+ {w:'北条時宗',y:1274,yt:'1274年',e:'鎌倉',d:'元が せめてくる（1274年・1281年）'},
+ {w:'足利義満',y:1397,yt:'1397年',e:'室町',d:'京都の 北山に 金閣を たてる'},
+ {w:'雪舟',y:1467,yt:'1467年',e:'室町',d:'中国（明）に わたり、水墨画を 学ぶ'},
+ {w:'足利義政',y:1489,yt:'1489年',e:'室町',d:'京都の 東山に 銀閣を たてる'},
+ {w:'ザビエル',y:1549,yt:'1549年',e:'戦国',d:'鹿児島に 来て キリスト教を 伝える'},
+ {w:'織田信長',y:1573,yt:'1573年',e:'安土桃山',d:'室町幕府を ほろぼす'},
+ {w:'豊臣秀吉',y:1590,yt:'1590年',e:'安土桃山',d:'全国を 統一する'},
+ {w:'徳川家康',y:1603,yt:'1603年',e:'江戸',d:'征夷大将軍に なり、江戸幕府を 開く'},
+ {w:'徳川家光',y:1635,yt:'1635年',e:'江戸',d:'参勤交代を 制度として 定める'},
+ {w:'近松門左衛門',y:1703,yt:'1703年',e:'江戸',d:'人形浄瑠璃『曽根崎心中』を 書く'},
+ {w:'杉田玄白',y:1774,yt:'1774年',e:'江戸',d:'『解体新書』を 出版する'},
+ {w:'本居宣長',y:1798,yt:'1798年',e:'江戸',d:'『古事記伝』を 完成させる'},
+ {w:'伊能忠敬',y:1800,yt:'1800年',e:'江戸',d:'全国の 測量を はじめる'},
+ {w:'ペリー',y:1853,yt:'1853年',e:'江戸',d:'黒船で 浦賀に 来て、開国を もとめる'},
+ {w:'勝海舟・西郷隆盛',y:1868,yt:'1868年',e:'明治',d:'話し合いで 江戸城を あけわたす'},
+ {w:'福沢諭吉',y:1872,yt:'1872年',e:'明治',d:'『学問のすゝめ』を 書きはじめる'},
+ {w:'伊藤博文',y:1885,yt:'1885年',e:'明治',d:'初代 内閣総理大臣に なる'},
+ {w:'大日本帝国憲法',y:1889,yt:'1889年',e:'明治',d:'天皇が 国民に あたえる形で 発布される',ev:1},
+ {w:'陸奥宗光',y:1894,yt:'1894年',e:'明治',d:'イギリスとの 領事裁判権を なくす'},
+ {w:'小村寿太郎',y:1911,yt:'1911年',e:'明治',d:'関税自主権を 回復する'},
+ {w:'野口英世',y:1918,yt:'1918年',e:'大正',d:'南アメリカで 黄熱病の 研究を はじめる'},
+ {w:'平塚らいてう',y:1920,yt:'1920年',e:'大正',d:'新婦人協会を つくり、女性の 地位向上を うったえる'},
+ {w:'戦争が 終わる',y:1945,yt:'1945年',e:'昭和',d:'8月15日、第二次世界大戦が 終わる',ev:1},
+ {w:'日本国憲法',y:1946,yt:'1946年',e:'昭和',d:'11月3日に 公布される（施行は1947年5月3日）',ev:1},
+ {w:'東京オリンピック',y:1964,yt:'1964年',e:'昭和',d:'アジアで はじめての オリンピック。東海道新幹線も 開通',ev:1}
+];
+const RANGES=[['all','ぜんぶ',0,9999],['old','弥生〜平安',0,1185],['mid','鎌倉〜江戸',1185,1867],['new','江戸〜昭和',1600,9999]];
+let range='all',count=5,cards=[],picked=[],checked=false;
+let rec={play:0,perfect:0};
+try{rec=JSON.parse(localStorage.getItem(KEY))||rec}catch(e){}
+function saveRec(){try{localStorage.setItem(KEY,JSON.stringify(rec))}catch(e){}}
+
+function btns(el,list,cur,fn){
+  $(el).innerHTML=list.map(x=>`<button class="btn${x[0]===cur?' on':''}" data-v="${x[0]}">${x[1]}</button>`).join(' ');
+  $(el).querySelectorAll('button').forEach(b=>b.onclick=()=>fn(b.dataset.v));
+}
+function drawCtl(){
+  btns('ranges',RANGES,range,v=>{range=v;drawCtl();newQ()});
+  btns('counts',[['4','4まい'],['5','5まい'],['6','6まい'],['8','8まい']],String(count),v=>{count=+v;drawCtl();newQ()});
+  $('rec').textContent='あそんだ回数 '+rec.play+'回 ／ ぜんぶ正解 '+rec.perfect+'回';
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function newQ(){
+  const r=RANGES.find(x=>x[0]===range);
+  const src=D.filter(x=>x.y>=r[2]&&x.y<r[3]);
+  const used=new Set();cards=[];
+  for(const x of shuffle(src)){if(used.has(x.y))continue;used.add(x.y);cards.push(x);if(cards.length>=count)break;}
+  picked=[];checked=false;$('msg').textContent='';draw();
+}
+function eraTag(e){return `<span class="era" style="background:${ERA[e]}">${e}</span>`}
+function draw(){
+  $('pool').innerHTML=cards.map((c,i)=>`<button class="ev${picked.includes(i)?' used':''}" data-i="${i}"><span class="who">${c.w}</span>${c.d}</button>`).join('');
+  $('pool').querySelectorAll('.ev').forEach(b=>b.onclick=()=>{if(checked)return;picked.push(+b.dataset.i);draw()});
+  const sorted=cards.slice().sort((a,b)=>a.y-b.y);
+  let h='';
+  for(let k=0;k<cards.length;k++){
+    const i=picked[k];
+    if(i===undefined){h+=`<div class="slot" data-n="${k+1}"><span class="hint">ここに ${k===0?'いちばん 古い':k+1+'番目の'} カード</span></div>`;continue}
+    const c=cards[i];let cls='slot fill',extra='';
+    if(checked){const ok=c===sorted[k];cls+=ok?' ok':' ng';extra=`<span class="yr">${c.yt}</span>`+eraTag(c.e);
+      if(!ok)extra+=`<div class="hint">正しくは ${k+1}番目は「${sorted[k].w}」（${sorted[k].yt}）</div>`;}
+    h+=`<div class="${cls}" data-n="${k+1}" data-k="${k}">${checked?extra:''}<b>${c.w}</b>　${c.d}</div>`;
+  }
+  $('line').innerHTML=h;
+  $('line').querySelectorAll('.slot.fill').forEach(s=>s.onclick=()=>{if(checked)return;picked.splice(+s.dataset.k,1);draw()});
+  $('check').disabled=picked.length<cards.length||checked;
+  $('check').style.opacity=$('check').disabled?.4:1;
+}
+$('check').onclick=()=>{
+  checked=true;const sorted=cards.slice().sort((a,b)=>a.y-b.y);
+  const n=picked.filter((i,k)=>cards[i]===sorted[k]).length;
+  rec.play++;if(n===cards.length)rec.perfect++;saveRec();drawCtl();
+  $('msg').textContent=n===cards.length?'🎉 ぜんぶ 正解！ れきしの ながれが つかめているね':`${cards.length}まい中 ${n}まい 正解。時代の じゅんばんを たしかめよう`;
+  $('msg').style.color=n===cards.length?'#2e8b57':'#a4541a';
+  draw();
+};
+$('reset').onclick=()=>{picked=[];checked=false;$('msg').textContent='';draw()};
+$('start').onclick=newQ;
+
+// 年表
+let h='',last='';
+D.forEach(x=>{h+=`<tr><td style="white-space:nowrap">${x.e!==last?eraTag(x.e):''}</td><td style="white-space:nowrap;color:#a4541a;font-weight:bold">${x.yt}</td><td><b>${x.w}</b><br>${x.d}</td></tr>`;last=x.e});
+$('tbl').innerHTML=h;
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  $('game').classList.toggle('hide',t.dataset.t!=='game');$('list').classList.toggle('hide',t.dataset.t!=='list');
+}));
+drawCtl();newQ();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ルーブリックメーカー</title>
+<style>
+  :root{
+    --accent:#16A085;
+    --accent-dark:#117A65;
+    --bg:#F7F5F0;
+    --card:#FFFFFF;
+    --ink:#333333;
+    --sub:#888888;
+    --line:#E4E0D8;
+    --danger:#E05B4B;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  /* ===== header ===== */
+  header.appbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(247,245,240,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;
+  }
+  header.appbar h1{
+    font-size:1.15rem;margin:0;font-weight:700;letter-spacing:.02em;
+  }
+  header.appbar a.backlink{
+    color:var(--accent);text-decoration:none;font-weight:600;
+    padding:8px 12px;border-radius:10px;font-size:.95rem;
+  }
+  header.appbar a.backlink:hover{background:rgba(22,160,133,.1);}
+  main{max-width:1100px;margin:0 auto;padding:16px 16px 80px;}
+  .card{
+    background:var(--card);border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:16px;margin-bottom:16px;
+  }
+  /* ===== buttons ===== */
+  button{
+    font-family:inherit;font-size:.95rem;cursor:pointer;
+    border:none;border-radius:12px;padding:12px 16px;
+    background:#EFECE5;color:var(--ink);font-weight:600;
+    min-height:44px;
+    transition:filter .15s, transform .05s;
+  }
+  button:hover{filter:brightness(.96);}
+  button:active{transform:scale(.97);}
+  button.primary{background:var(--accent);color:#fff;}
+  button.primary:hover{background:var(--accent-dark);filter:none;}
+  button.ghost{background:transparent;border:1.5px solid var(--line);}
+  button.danger{background:#FBEAE7;color:var(--danger);}
+  button.mini{
+    min-height:32px;padding:4px 8px;font-size:.8rem;border-radius:8px;
+  }
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .toolbar .spacer{flex:1;}
+  /* ===== meta inputs ===== */
+  .meta-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  @media(min-width:640px){
+    .meta-grid{grid-template-columns:2fr 1fr 1fr 2fr;}
+  }
+  .field label{
+    display:block;font-size:.78rem;color:var(--sub);font-weight:700;
+    margin-bottom:4px;letter-spacing:.05em;
+  }
+  .field input{
+    width:100%;font-family:inherit;font-size:1rem;
+    padding:12px;border:1.5px solid var(--line);border-radius:12px;
+    background:#FCFBF8;color:var(--ink);
+  }
+  .field input:focus{outline:2px solid var(--accent);border-color:var(--accent);}
+  #inpTitle{font-size:1.1rem;font-weight:700;}
+  /* ===== table ===== */
+  .table-scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+  table.rubric{
+    border-collapse:collapse;width:100%;min-width:620px;table-layout:fixed;
+  }
+  table.rubric th,table.rubric td{
+    border:1.5px solid var(--line);vertical-align:top;padding:0;
+  }
+  table.rubric thead th{
+    background:rgba(22,160,133,.09);
+  }
+  table.rubric th.col-kanten{width:180px;background:#F3F1EA;}
+  table.rubric col.level-col{}
+  .th-inner{display:flex;align-items:center;gap:4px;padding:8px;}
+  .level-name{
+    flex:1;min-width:40px;font-weight:700;text-align:center;
+    padding:6px;border-radius:8px;outline:none;
+  }
+  .level-name:focus{background:#fff;box-shadow:0 0 0 2px var(--accent);}
+  .btn-delcol{
+    background:transparent;border:none;color:#B9B4A8;min-height:28px;
+    padding:2px 6px;border-radius:8px;font-size:.9rem;line-height:1;
+  }
+  .btn-delcol:hover{color:var(--danger);background:#FBEAE7;}
+  td.cell .cell-edit{
+    min-height:84px;padding:10px;outline:none;white-space:pre-wrap;
+    word-break:break-word;font-size:.92rem;
+  }
+  td.cell .cell-edit:focus{box-shadow:inset 0 0 0 2px var(--accent);border-radius:4px;}
+  td.cell .cell-edit:empty::before{content:"タップして入力";color:#C8C3B7;}
+  td.kanten{background:#FCFBF8;}
+  .kanten-inner{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:100px;}
+  .kanten-top{display:flex;gap:6px;align-items:flex-start;}
+  .btn-emoji{
+    min-height:36px;min-width:36px;padding:0;font-size:1.15rem;
+    background:#F1EEE7;border-radius:10px;flex:none;
+  }
+  .kanten-name{
+    flex:1;font-weight:700;outline:none;padding:6px;border-radius:8px;
+    min-height:36px;font-size:.95rem;
+  }
+  .kanten-name:focus{background:#fff;box-shadow:0 0 0 2px var(--accent);}
+  .kanten-name:empty::before{content:"観点名";color:#C8C3B7;font-weight:400;}
+  .row-ctrls{display:flex;gap:4px;margin-top:auto;}
+  .row-ctrls button{
+    min-height:30px;min-width:34px;padding:2px 6px;font-size:.85rem;
+    background:#EFECE5;border-radius:8px;color:#7A7568;
+  }
+  .row-ctrls button:disabled{opacity:.3;cursor:default;}
+  .row-ctrls button.del:hover{color:var(--danger);background:#FBEAE7;}
+  .table-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  /* level presets */
+  .preset-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;}
+  .preset-row .lbl{font-size:.8rem;color:var(--sub);font-weight:700;}
+  .chip{
+    background:#F1EEE7;border-radius:999px;padding:8px 14px;min-height:38px;
+    font-size:.85rem;
+  }
+  .chip:hover{background:rgba(22,160,133,.15);}
+  /* ===== print option toggles ===== */
+  .opt-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+  .switch{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:.9rem;font-weight:600;}
+  .switch input{display:none;}
+  .switch .knob{
+    width:46px;height:26px;border-radius:999px;background:#DAD6CC;position:relative;
+    transition:background .2s;flex:none;
+  }
+  .switch .knob::after{
+    content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;
+    border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+  .switch input:checked + .knob{background:var(--accent);}
+  .switch input:checked + .knob::after{left:23px;}
+  /* ===== emoji popover ===== */
+  #emojiPop{
+    position:absolute;z-index:100;background:#fff;border-radius:14px;
+    box-shadow:0 6px 24px rgba(0,0,0,.18);padding:10px;
+    display:none;grid-template-columns:repeat(6,44px);gap:4px;
+  }
+  #emojiPop.open{display:grid;}
+  #emojiPop button{
+    min-height:44px;min-width:44px;padding:0;font-size:1.3rem;background:transparent;border-radius:10px;
+  }
+  #emojiPop button:hover{background:#F1EEE7;}
+  #emojiPop button.none{font-size:.75rem;color:var(--sub);}
+  /* ===== modal ===== */
+  #overlay{
+    position:fixed;inset:0;background:rgba(40,38,32,.45);z-index:200;
+    display:none;align-items:flex-start;justify-content:center;
+    padding:24px 16px;overflow-y:auto;
+  }
+  #overlay.open{display:flex;}
+  #modal{
+    background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25);
+    width:100%;max-width:560px;padding:20px;margin-top:4vh;
+  }
+  #modal h2{margin:0 0 4px;font-size:1.1rem;}
+  #modal .modal-sub{font-size:.85rem;color:var(--sub);margin:0 0 14px;}
+  .tpl-item,.doc-item{
+    display:flex;align-items:center;gap:10px;
+    border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;
+  }
+  .tpl-item{cursor:pointer;transition:border-color .15s,background .15s;}
+  .tpl-item:hover{border-color:var(--accent);background:rgba(22,160,133,.05);}
+  .tpl-emoji{font-size:1.6rem;flex:none;}
+  .tpl-body{flex:1;min-width:0;}
+  .tpl-body .t{font-weight:700;}
+  .tpl-body .d{font-size:.8rem;color:var(--sub);}
+  .doc-item .tpl-body .d{font-size:.78rem;}
+  .doc-btns{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
+  .doc-btns button{min-height:38px;padding:6px 10px;font-size:.82rem;border-radius:10px;}
+  .modal-close-row{display:flex;justify-content:flex-end;margin-top:8px;}
+  .empty-note{color:var(--sub);text-align:center;padding:24px 0;font-size:.9rem;}
+  /* ===== toast ===== */
+  #toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#333;color:#fff;padding:12px 22px;border-radius:999px;
+    font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+    z-index:300;max-width:88vw;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .hint{font-size:.78rem;color:var(--sub);margin-top:8px;}
+  .save-state{font-size:.78rem;color:var(--sub);}
+  /* ===================== PRINT ===================== */
+  #printArea{display:none;}
+  @page{size:A4 landscape;margin:12mm;}
+  @media print{
+    body{background:#fff;}
+    body > *:not(#printArea){display:none !important;}
+    #printArea{display:block;color:#000;}
+    .p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:4mm;border-bottom:2.5px solid #000;padding-bottom:2.5mm;}
+    .p-title{font-size:19pt;font-weight:700;margin:0;}
+    .p-meta{font-size:10pt;margin-top:1mm;color:#222;}
+    .p-name{font-size:12pt;white-space:nowrap;flex:none;}
+    table.p-table{border-collapse:collapse;width:100%;table-layout:fixed;}
+    table.p-table th,table.p-table td{
+      border:1.2pt solid #000;padding:2.2mm 2.5mm;vertical-align:top;
+      font-size:10.5pt;line-height:1.55;word-break:break-word;
+    }
+    table.p-table thead th{background:#EFEFEF;text-align:center;font-size:11.5pt;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    table.p-table th.pk{width:17%;}
+    table.p-table th.psc{width:13%;}
+    td.pkc{font-weight:700;background:#FAFAFA;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    td.pscc{text-align:center;color:#555;font-size:10.5pt;letter-spacing:.1em;}
+    tr{page-break-inside:avoid;}
+    .p-foot{margin-top:3mm;font-size:8.5pt;color:#666;text-align:right;}
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <h1>📋 ルーブリックメーカー</h1>
+  <a class="backlink" href="index.html">← いちらん</a>
+</header>
+
+<main>
+  <!-- toolbar -->
+  <div class="card">
+    <div class="toolbar">
+      <button class="primary" id="btnSave">💾 保存</button>
+      <button id="btnList">📚 保存一覧</button>
+      <button id="btnTpl">📦 テンプレート</button>
+      <button id="btnNew">🆕 新規作成</button>
+      <span class="spacer"></span>
+      <span class="save-state" id="saveState"></span>
+    </div>
+  </div>
+
+  <!-- meta -->
+  <div class="card">
+    <div class="meta-grid">
+      <div class="field">
+        <label for="inpTitle">タイトル</label>
+        <input id="inpTitle" type="text" placeholder="例：スピーチ発表 評価表">
+      </div>
+      <div class="field">
+        <label for="inpGrade">学年</label>
+        <input id="inpGrade" type="text" placeholder="例：3年">
+      </div>
+      <div class="field">
+        <label for="inpSubject">教科</label>
+        <input id="inpSubject" type="text" placeholder="例：国語">
+      </div>
+      <div class="field">
+        <label for="inpUnit">単元・メモ</label>
+        <input id="inpUnit" type="text" placeholder="例：「わたしの町のじまん」発表会">
+      </div>
+    </div>
+  </div>
+
+  <!-- table editor -->
+  <div class="card">
+    <div class="preset-row">
+      <span class="lbl">段階プリセット：</span>
+      <button class="chip" data-preset="A,B,C">A / B / C</button>
+      <button class="chip" data-preset="S,A,B,C">S / A / B / C</button>
+      <button class="chip" data-preset="◎,○,△">◎ / ○ / △</button>
+      <button class="chip" data-preset="よくできた,できた,もうすこし">よくできた / できた / もうすこし</button>
+    </div>
+    <div class="table-scroller">
+      <table class="rubric" id="rubricTable"></table>
+    </div>
+    <div class="table-foot">
+      <button id="btnAddRow">＋ 観点（行）を追加</button>
+      <button id="btnAddCol">＋ 段階（列）を追加</button>
+    </div>
+    <p class="hint">セルをタップすると直接編集できます。段階名（A/B/C など）もタップで変更できます。</p>
+  </div>
+
+  <!-- print & export -->
+  <div class="card">
+    <div class="opt-row" style="margin-bottom:14px;">
+      <label class="switch">
+        <input type="checkbox" id="optName">
+        <span class="knob"></span>
+        名前記入欄（なまえ＿＿＿）
+      </label>
+      <label class="switch">
+        <input type="checkbox" id="optSelf">
+        <span class="knob"></span>
+        自己評価チェック列
+      </label>
+    </div>
+    <div class="toolbar">
+      <button class="primary" id="btnPrint">🖨 印刷（A4横）</button>
+      <button id="btnMd">📋 Markdownをコピー</button>
+    </div>
+    <p class="hint">印刷は表だけがA4横できれいに出ます。Markdownは校務支援システムや週案にそのまま貼れます。</p>
+  </div>
+</main>
+
+<!-- emoji popover -->
+<div id="emojiPop"></div>
+
+<!-- modal -->
+<div id="overlay">
+  <div id="modal"></div>
+</div>
+
+<!-- print area -->
+<div id="printArea"></div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+(function(){
+
+  /* ================= state ================= */
+  var LS_DOCS  = "bo10_rubric_docs";
+  var LS_DRAFT = "bo10_rubric_draft";
+
+  var EMOJIS = ["🎤","📖","✏️","📝","🔍","🧪","📊","💬","🗣️","👂","🤝","💡","🎨","🎵","🏃","⭐","🌟","😊","👍","🙌","🧠","📚","🖐","❤️"];
+
+  var state = null;          // current rubric
+  var emojiTargetRow = -1;   // row index for emoji popover
+
+  function uid(){ return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function blankState(){
+    return {
+      id: null,
+      title: "",
+      grade: "", subject: "", unit: "",
+      levels: ["A","B","C"],
+      rows: [
+        {emoji:"", name:"", cells:["","",""]},
+        {emoji:"", name:"", cells:["","",""]},
+        {emoji:"", name:"", cells:["","",""]}
+      ],
+      options: {showName:true, showSelf:true}
+    };
+  }
+
+  /* ================= templates ================= */
+  var TEMPLATES = [
+    {
+      emoji:"🎤", name:"スピーチ発表", desc:"声・内容・話し方・聞く態度の4観点",
+      data:{
+        title:"スピーチ発表 評価表", grade:"", subject:"国語", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🎤", name:"声の大きさ", cells:[
+            "教室のすみまで聞こえる声で、はっきりと話すことができる",
+            "近くの人に聞こえる声で話すことができる",
+            "声が小さく、聞き取りにくいところがある"]},
+          {emoji:"📝", name:"内容", cells:[
+            "伝えたいことがはっきりしていて、理由や例を入れて話すことができる",
+            "伝えたいことを順序よく話すことができる",
+            "伝えたいことがまとまっていない"]},
+          {emoji:"👀", name:"話し方・態度", cells:[
+            "聞き手のほうを見て、姿勢よく堂々と話すことができる",
+            "ときどき聞き手のほうを見て話すことができる",
+            "原稿や下ばかり見て話している"]},
+          {emoji:"👂", name:"聞く態度", cells:[
+            "友だちの発表を最後まで聞き、感想や質問を伝えることができる",
+            "友だちの発表を静かに聞くことができる",
+            "発表を聞いていないときがある"]}
+        ]
+      }
+    },
+    {
+      emoji:"📖", name:"音読", desc:"声・正確さ・工夫・姿勢の4観点",
+      data:{
+        title:"音読 評価表", grade:"", subject:"国語", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🔊", name:"声の大きさ・はっきりさ", cells:[
+            "教室全体に届く声で、一音一音はっきり読むことができる",
+            "聞き取れる声の大きさで読むことができる",
+            "声が小さく、聞き取りにくい"]},
+          {emoji:"📖", name:"正確さ", cells:[
+            "言葉のまとまりに気をつけて、すらすらと正しく読むことができる",
+            "少しつかえるところはあるが、正しく読むことができる",
+            "読みまちがいやとばし読みが多い"]},
+          {emoji:"🎭", name:"読み方の工夫", cells:[
+            "場面の様子や気持ちに合わせて、速さや強さを工夫して読むことができる",
+            "句読点に気をつけて、間をとって読むことができる",
+            "同じ調子のまま読んでいる"]},
+          {emoji:"🧍", name:"姿勢・持ち方", cells:[
+            "背すじをのばし、本を正しく持って最後まで読むことができる",
+            "正しい姿勢を意識して読むことができる",
+            "姿勢がくずれたまま読んでいる"]}
+        ]
+      }
+    },
+    {
+      emoji:"✏️", name:"ノートづくり", desc:"ていねいさ・見やすさ・自分の考えの3観点＋基本",
+      data:{
+        title:"ノートづくり 評価表", grade:"", subject:"", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"✏️", name:"文字のていねいさ", cells:[
+            "とめ・はね・はらいに気をつけて、ていねいな文字で書くことができる",
+            "読みやすい文字で書くことができる",
+            "文字が乱れていて読みにくい"]},
+          {emoji:"📐", name:"見やすさ（見出し・線）", cells:[
+            "見出しや色分け、定規の線を使って、あとで見返しやすくまとめることができる",
+            "行やマスをそろえて書くことができる",
+            "つめこみすぎていて、どこに何があるかわかりにくい"]},
+          {emoji:"💡", name:"自分の考え", cells:[
+            "気づいたこと・考えたこと・ぎもんを自分の言葉で書き加えることができる",
+            "先生や友だちの考えをメモすることができる",
+            "板書を写すだけになっている"]},
+          {emoji:"📅", name:"日付・ページ", cells:[
+            "毎時間、日付・ページ・めあてをそろえて書くことができる",
+            "日付やめあてをだいたい書くことができる",
+            "日付やめあてが書かれていないことが多い"]}
+        ]
+      }
+    },
+    {
+      emoji:"🔍", name:"自由研究", desc:"課題・調べ方・まとめ方・考察の4観点",
+      data:{
+        title:"自由研究 評価表", grade:"", subject:"理科", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🔍", name:"課題の設定", cells:[
+            "身のまわりのふしぎから、自分で調べたい課題を見つけることができる",
+            "興味のあることから課題を決めることができる",
+            "課題がはっきりしないまま進めている"]},
+          {emoji:"🧪", name:"調べ方", cells:[
+            "予想を立て、実験や観察の方法を工夫して、くり返し確かめることができる",
+            "本やインターネット、実験などで調べることができる",
+            "調べた方法や回数が少なく、たしかめが足りない"]},
+          {emoji:"📊", name:"まとめ方", cells:[
+            "表・グラフ・写真・図を使って、見る人に伝わるようにまとめることができる",
+            "調べたことを順序よくまとめることができる",
+            "調べたことがばらばらで、まとまっていない"]},
+          {emoji:"💬", name:"考察・ふり返り", cells:[
+            "結果からわかったことと、新しいぎもんや次に調べたいことを書くことができる",
+            "結果からわかったことを書くことができる",
+            "結果を書いただけで、わかったことがない"]}
+        ]
+      }
+    },
+    {
+      emoji:"🗣️", name:"話し合い活動", desc:"発言・聞き方・つなげ方・協力の4観点",
+      data:{
+        title:"話し合い活動 評価表", grade:"", subject:"", unit:"",
+        levels:["A","B","C"],
+        rows:[
+          {emoji:"🗣️", name:"自分の考えを話す", cells:[
+            "理由をつけて、自分の考えをわかりやすく話すことができる",
+            "自分の考えを話すことができる",
+            "自分から考えを話すことができない"]},
+          {emoji:"👂", name:"友だちの話を聞く", cells:[
+            "話す人のほうを見て、うなずきながら最後まで聞くことができる",
+            "友だちの話を静かに聞くことができる",
+            "話の途中で口をはさんだり、よそ見をしたりする"]},
+          {emoji:"🔗", name:"考えをつなげる", cells:[
+            "「〜さんに付け足して」「〜とちがって」など、友だちの考えとつなげて話すことができる",
+            "友だちの考えに賛成・反対を伝えることができる",
+            "自分の考えを言うだけになっている"]},
+          {emoji:"🤝", name:"協力してまとめる", cells:[
+            "みんなの考えのよいところを合わせて、グループの考えをまとめることができる",
+            "グループの話し合いに参加してまとめに協力できる",
+            "話し合いに参加できていない"]}
+        ]
+      }
+    }
+  ];
+
+  /* ================= storage ================= */
+  function loadDocs(){
+    try{
+      var raw = localStorage.getItem(LS_DOCS);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveDocs(docs){
+    try{ localStorage.setItem(LS_DOCS, JSON.stringify(docs)); }
+    catch(e){ toast("保存できませんでした（容量オーバーの可能性）"); }
+  }
+  var draftTimer = null;
+  function autosaveDraft(){
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function(){
+      try{ localStorage.setItem(LS_DRAFT, JSON.stringify(state)); }catch(e){}
+      updateSaveState();
+    }, 300);
+  }
+  function loadDraft(){
+    try{
+      var raw = localStorage.getItem(LS_DRAFT);
+      if(!raw) return null;
+      var d = JSON.parse(raw);
+      if(d && Array.isArray(d.levels) && Array.isArray(d.rows)) return normalize(d);
+      return null;
+    }catch(e){ return null; }
+  }
+  function normalize(d){
+    var b = blankState();
+    b.id = d.id || null;
+    b.title = d.title || ""; b.grade = d.grade || "";
+    b.subject = d.subject || ""; b.unit = d.unit || "";
+    b.levels = d.levels.map(String);
+    if(b.levels.length < 1) b.levels = ["A","B","C"];
+    b.rows = d.rows.map(function(r){
+      var cells = Array.isArray(r.cells) ? r.cells.map(String) : [];
+      while(cells.length < b.levels.length) cells.push("");
+      cells.length = b.levels.length;
+      return {emoji: r.emoji || "", name: r.name || "", cells: cells};
+    });
+    if(b.rows.length < 1) b.rows = [{emoji:"",name:"",cells:b.levels.map(function(){return "";})}];
+    b.options = {
+      showName: !d.options || d.options.showName !== false,
+      showSelf: !d.options || d.options.showSelf !== false
+    };
+    return b;
+  }
+
+  /* ================= dom refs ================= */
+  var $ = function(id){ return document.getElementById(id); };
+  var tableEl = $("rubricTable");
+  var overlay = $("overlay");
+  var modal = $("modal");
+  var emojiPop = $("emojiPop");
+
+  /* ================= render: meta ================= */
+  function renderMeta(){
+    $("inpTitle").value = state.title;
+    $("inpGrade").value = state.grade;
+    $("inpSubject").value = state.subject;
+    $("inpUnit").value = state.unit;
+    $("optName").checked = state.options.showName;
+    $("optSelf").checked = state.options.showSelf;
+  }
+
+  function updateSaveState(){
+    var el = $("saveState");
+    if(state.id){
+      el.textContent = "保存済みルーブリックを編集中（自動下書きあり）";
+    }else{
+      el.textContent = "未保存（下書きは自動保存中）";
+    }
+  }
+
+  /* ================= render: table ================= */
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function renderTable(){
+    var h = "";
+    // header
+    h += "<thead><tr>";
+    h += '<th class="col-kanten"><div class="th-inner" style="justify-content:center;font-weight:700;">観点</div></th>';
+    state.levels.forEach(function(lv, ci){
+      h += '<th><div class="th-inner">' +
+        '<div class="level-name" contenteditable="true" data-level="'+ci+'" spellcheck="false">'+esc(lv)+'</div>' +
+        (state.levels.length > 2 ? '<button class="btn-delcol" data-delcol="'+ci+'" title="この列を削除" aria-label="列を削除">✕</button>' : '') +
+        "</div></th>";
+    });
+    h += "</tr></thead><tbody>";
+    // rows
+    state.rows.forEach(function(row, ri){
+      h += "<tr>";
+      h += '<td class="kanten"><div class="kanten-inner">' +
+        '<div class="kanten-top">' +
+          '<button class="btn-emoji" data-emoji-row="'+ri+'" title="絵文字を選ぶ">'+(row.emoji ? esc(row.emoji) : "＋")+'</button>' +
+          '<div class="kanten-name" contenteditable="true" data-rowname="'+ri+'" spellcheck="false">'+esc(row.name)+'</div>' +
+        "</div>" +
+        '<div class="row-ctrls">' +
+          '<button data-moveup="'+ri+'" title="上へ" '+(ri===0?"disabled":"")+'>▲</button>' +
+          '<button data-movedown="'+ri+'" title="下へ" '+(ri===state.rows.length-1?"disabled":"")+'>▼</button>' +
+          '<button class="del" data-delrow="'+ri+'" title="この行を削除" '+(state.rows.length<=1?"disabled":"")+'>✕</button>' +
+        "</div>" +
+      "</div></td>";
+      row.cells.forEach(function(c, ci){
+        h += '<td class="cell"><div class="cell-edit" contenteditable="true" data-row="'+ri+'" data-col="'+ci+'" spellcheck="false">'+esc(c)+"</div></td>";
+      });
+      h += "</tr>";
+    });
+    h += "</tbody>";
+    tableEl.innerHTML = h;
+  }
+
+  function renderAll(){
+    renderMeta();
+    renderTable();
+    updateSaveState();
+  }
+
+  /* ================= table events (delegated) ================= */
+  tableEl.addEventListener("input", function(e){
+    var t = e.target;
+    if(t.dataset.row !== undefined && t.dataset.col !== undefined){
+      state.rows[+t.dataset.row].cells[+t.dataset.col] = t.innerText.replace(/ /g," ");
+    }else if(t.dataset.rowname !== undefined){
+      state.rows[+t.dataset.rowname].name = t.innerText.replace(/\n/g," ").trim();
+    }else if(t.dataset.level !== undefined){
+      state.levels[+t.dataset.level] = t.innerText.replace(/\n/g," ").trim();
+    }
+    autosaveDraft();
+  });
+
+  // paste as plain text
+  tableEl.addEventListener("paste", function(e){
+    var t = e.target;
+    if(t.isContentEditable){
+      e.preventDefault();
+      var txt = (e.clipboardData || window.clipboardData).getData("text/plain");
+      document.execCommand("insertText", false, txt);
+    }
+  });
+
+  // prevent line breaks in single-line editables
+  tableEl.addEventListener("keydown", function(e){
+    var t = e.target;
+    if(e.key === "Enter" && (t.dataset.rowname !== undefined || t.dataset.level !== undefined)){
+      e.preventDefault();
+      t.blur();
+    }
+  });
+
+  tableEl.addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if(!btn) return;
+    if(btn.dataset.emojiRow !== undefined){
+      openEmojiPop(+btn.dataset.emojiRow, btn);
+      return;
+    }
+    if(btn.dataset.delcol !== undefined){
+      var ci = +btn.dataset.delcol;
+      if(state.levels.length <= 2){ toast("段階は2つ以上必要です"); return; }
+      state.levels.splice(ci,1);
+      state.rows.forEach(function(r){ r.cells.splice(ci,1); });
+      renderTable(); autosaveDraft();
+      toast("列を削除しました");
+      return;
+    }
+    if(btn.dataset.delrow !== undefined){
+      if(state.rows.length <= 1){ return; }
+      var removed = state.rows.splice(+btn.dataset.delrow,1)[0];
+      renderTable(); autosaveDraft();
+      toast("「"+(removed.name || "観点")+"」の行を削除しました");
+      return;
+    }
+    if(btn.dataset.moveup !== undefined){
+      var i = +btn.dataset.moveup;
+      if(i > 0){
+        var tmp = state.rows[i-1]; state.rows[i-1] = state.rows[i]; state.rows[i] = tmp;
+        renderTable(); autosaveDraft();
+      }
+      return;
+    }
+    if(btn.dataset.movedown !== undefined){
+      var j = +btn.dataset.movedown;
+      if(j < state.rows.length-1){
+        var tmp2 = state.rows[j+1]; state.rows[j+1] = state.rows[j]; state.rows[j] = tmp2;
+        renderTable(); autosaveDraft();
+      }
+      return;
+    }
+  });
+
+  /* ================= add row / col / presets ================= */
+  $("btnAddRow").addEventListener("click", function(){
+    state.rows.push({emoji:"", name:"", cells: state.levels.map(function(){return "";})});
+    renderTable(); autosaveDraft();
+  });
+  $("btnAddCol").addEventListener("click", function(){
+    if(state.levels.length >= 6){ toast("段階は最大6つまでです"); return; }
+    state.levels.push("新");
+    state.rows.forEach(function(r){ r.cells.push(""); });
+    renderTable(); autosaveDraft();
+  });
+  document.querySelectorAll(".chip[data-preset]").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      var names = chip.dataset.preset.split(",");
+      var old = state.levels.length;
+      state.levels = names.slice();
+      state.rows.forEach(function(r){
+        while(r.cells.length < names.length) r.cells.push("");
+        r.cells.length = names.length;
+      });
+      renderTable(); autosaveDraft();
+      toast("段階を「"+names.join(" / ")+"」にしました" + (old !== names.length ? "（列数が変わりました）" : ""));
+    });
+  });
+
+  /* ================= meta events ================= */
+  [["inpTitle","title"],["inpGrade","grade"],["inpSubject","subject"],["inpUnit","unit"]].forEach(function(p){
+    $(p[0]).addEventListener("input", function(){
+      state[p[1]] = this.value;
+      autosaveDraft();
+    });
+  });
+  $("optName").addEventListener("change", function(){ state.options.showName = this.checked; autosaveDraft(); });
+  $("optSelf").addEventListener("change", function(){ state.options.showSelf = this.checked; autosaveDraft(); });
+
+  /* ================= emoji popover ================= */
+  function buildEmojiPop(){
+    var h = '<button class="none" data-pick="">なし</button>';
+    EMOJIS.forEach(function(em){
+      h += '<button data-pick="'+em+'">'+em+"</button>";
+    });
+    emojiPop.innerHTML = h;
+  }
+  function openEmojiPop(rowIdx, anchor){
+    emojiTargetRow = rowIdx;
+    emojiPop.classList.add("open");
+    var r = anchor.getBoundingClientRect();
+    var popW = 300;
+    var left = Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - popW - 8);
+    emojiPop.style.left = Math.max(8, left) + "px";
+    emojiPop.style.top = (r.bottom + window.scrollY + 6) + "px";
+  }
+  function closeEmojiPop(){
+    emojiPop.classList.remove("open");
+    emojiTargetRow = -1;
+  }
+  emojiPop.addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if(!btn) return;
+    if(emojiTargetRow >= 0 && state.rows[emojiTargetRow]){
+      state.rows[emojiTargetRow].emoji = btn.dataset.pick || "";
+      renderTable(); autosaveDraft();
+    }
+    closeEmojiPop();
+  });
+  document.addEventListener("click", function(e){
+    if(emojiPop.classList.contains("open") &&
+       !emojiPop.contains(e.target) &&
+       !e.target.closest(".btn-emoji")){
+      closeEmojiPop();
+    }
+  });
+
+  /* ================= modal ================= */
+  function openModal(html){
+    modal.innerHTML = html;
+    overlay.classList.add("open");
+  }
+  function closeModal(){
+    overlay.classList.remove("open");
+    modal.innerHTML = "";
+  }
+  overlay.addEventListener("click", function(e){
+    if(e.target === overlay) closeModal();
+  });
+
+  /* ================= templates modal ================= */
+  $("btnTpl").addEventListener("click", function(){
+    var h = "<h2>📦 テンプレートから作る</h2>" +
+      '<p class="modal-sub">選ぶと今の内容が置きかわります（下書きは上書きされます）。</p>';
+    TEMPLATES.forEach(function(t, i){
+      h += '<div class="tpl-item" data-tpl="'+i+'">' +
+        '<span class="tpl-emoji">'+t.emoji+"</span>" +
+        '<div class="tpl-body"><div class="t">'+esc(t.name)+'</div><div class="d">'+esc(t.desc)+"</div></div>" +
+        "</div>";
+    });
+    h += '<div class="modal-close-row"><button class="ghost" data-close="1">とじる</button></div>';
+    openModal(h);
+  });
+
+  modal.addEventListener("click", function(e){
+    var closeBtn = e.target.closest("[data-close]");
+    if(closeBtn){ closeModal(); return; }
+
+    var tpl = e.target.closest(".tpl-item");
+    if(tpl){
+      var t = TEMPLATES[+tpl.dataset.tpl];
+      var d = JSON.parse(JSON.stringify(t.data));
+      d.id = null;
+      d.options = {showName: state.options.showName, showSelf: state.options.showSelf};
+      state = normalize(d);
+      renderAll(); autosaveDraft();
+      closeModal();
+      toast("テンプレート「"+t.name+"」を読み込みました");
+      return;
+    }
+
+    var btn = e.target.closest("button");
+    if(!btn) return;
+
+    if(btn.dataset.open !== undefined){
+      var docs = loadDocs();
+      var doc = docs.find(function(x){ return x.id === btn.dataset.open; });
+      if(doc){
+        state = normalize(doc);
+        renderAll(); autosaveDraft();
+        closeModal();
+        toast("「"+(state.title||"無題")+"」を開きました");
+      }
+      return;
+    }
+    if(btn.dataset.dup !== undefined){
+      var docs2 = loadDocs();
+      var src = docs2.find(function(x){ return x.id === btn.dataset.dup; });
+      if(src){
+        var copy = JSON.parse(JSON.stringify(src));
+        copy.id = uid();
+        copy.title = (copy.title || "無題") + "（コピー）";
+        copy.updatedAt = Date.now();
+        docs2.unshift(copy);
+        saveDocs(docs2);
+        renderDocsModal();
+        toast("複製しました");
+      }
+      return;
+    }
+    if(btn.dataset.del !== undefined){
+      // two-step confirm inside the button itself
+      if(btn.dataset.armed === "1"){
+        var docs3 = loadDocs().filter(function(x){ return x.id !== btn.dataset.del; });
+        saveDocs(docs3);
+        if(state.id === btn.dataset.del){ state.id = null; updateSaveState(); autosaveDraft(); }
+        renderDocsModal();
+        toast("削除しました");
+      }else{
+        btn.dataset.armed = "1";
+        btn.textContent = "本当に削除？";
+        setTimeout(function(){
+          if(btn && btn.isConnected){ btn.dataset.armed = ""; btn.textContent = "削除"; }
+        }, 2500);
+      }
+      return;
+    }
+  });
+
+  /* ================= save & docs list ================= */
+  $("btnSave").addEventListener("click", function(){
+    var docs = loadDocs();
+    var snap = JSON.parse(JSON.stringify(state));
+    if(!snap.title){ snap.title = "無題のルーブリック"; state.title = snap.title; $("inpTitle").value = snap.title; }
+    snap.updatedAt = Date.now();
+    if(state.id){
+      var idx = docs.findIndex(function(x){ return x.id === state.id; });
+      if(idx >= 0){
+        snap.id = state.id;
+        docs[idx] = snap;
+      }else{
+        snap.id = state.id = uid();
+        docs.unshift(snap);
+      }
+      saveDocs(docs);
+      toast("上書き保存しました：" + snap.title);
+    }else{
+      snap.id = state.id = uid();
+      docs.unshift(snap);
+      saveDocs(docs);
+      toast("保存しました：" + snap.title);
+    }
+    updateSaveState();
+    autosaveDraft();
+  });
+
+  function fmtDate(ts){
+    if(!ts) return "";
+    var d = new Date(ts);
+    return (d.getMonth()+1) + "/" + d.getDate() + " " +
+      ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
+  }
+
+  function renderDocsModal(){
+    var docs = loadDocs();
+    var h = "<h2>📚 保存したルーブリック</h2>" +
+      '<p class="modal-sub">この端末（ブラウザ）に保存されています。</p>';
+    if(docs.length === 0){
+      h += '<div class="empty-note">まだ保存されたルーブリックはありません。<br>「💾 保存」を押すとここに並びます。</div>';
+    }else{
+      docs.forEach(function(d){
+        var isCurrent = d.id === state.id;
+        h += '<div class="doc-item">' +
+          '<div class="tpl-body">' +
+            '<div class="t">'+esc(d.title || "無題")+(isCurrent ? ' <span style="color:var(--accent);font-size:.75rem;">（編集中）</span>' : "")+"</div>" +
+            '<div class="d">'+esc([d.grade, d.subject, d.unit].filter(Boolean).join("・"))+
+              (d.rows ? "　観点" + d.rows.length + "・" + fmtDate(d.updatedAt) + "更新" : "")+"</div>" +
+          "</div>" +
+          '<div class="doc-btns">' +
+            '<button class="primary" data-open="'+d.id+'">開く</button>' +
+            '<button data-dup="'+d.id+'">複製</button>' +
+            '<button class="danger" data-del="'+d.id+'">削除</button>' +
+          "</div>" +
+        "</div>";
+      });
+    }
+    h += '<div class="modal-close-row"><button class="ghost" data-close="1">とじる</button></div>';
+    openModal(h);
+  }
+  $("btnList").addEventListener("click", renderDocsModal);
+
+  /* ================= new ================= */
+  $("btnNew").addEventListener("click", function(){
+    var opts = {showName: state.options.showName, showSelf: state.options.showSelf};
+    state = blankState();
+    state.options = opts;
+    renderAll(); autosaveDraft();
+    toast("新しいルーブリックを作成しました");
+  });
+
+  /* ================= markdown ================= */
+  function mdEsc(s){
+    return String(s || "").replace(/\|/g,"｜").replace(/\r?\n+/g," / ").trim();
+  }
+  function buildMarkdown(){
+    var md = "# " + (state.title || "ルーブリック") + "\n\n";
+    var meta = [
+      state.grade ? "学年: " + state.grade : "",
+      state.subject ? "教科: " + state.subject : "",
+      state.unit ? "単元: " + state.unit : ""
+    ].filter(Boolean).join("　");
+    if(meta) md += meta + "\n\n";
+    md += "| 観点 | " + state.levels.map(mdEsc).join(" | ") + " |\n";
+    md += "|" + new Array(state.levels.length + 2).join(" --- |") + "\n";
+    state.rows.forEach(function(r){
+      var name = (r.emoji ? r.emoji + " " : "") + mdEsc(r.name);
+      md += "| " + name + " | " + r.cells.map(mdEsc).join(" | ") + " |\n";
+    });
+    return md;
+  }
+  $("btnMd").addEventListener("click", function(){
+    var md = buildMarkdown();
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = md;
+      ta.style.position = "fixed"; ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try{ ok = document.execCommand("copy"); }catch(e){}
+      document.body.removeChild(ta);
+      toast(ok ? "Markdownをコピーしました" : "コピーできませんでした");
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(md).then(function(){
+        toast("Markdownをコピーしました（週案などに貼れます）");
+      }).catch(fallback);
+    }else{
+      fallback();
+    }
+  });
+
+  /* ================= print ================= */
+  function buildPrint(){
+    var area = $("printArea");
+    var h = "";
+    h += '<div class="p-head">';
+    h += '<div><h2 class="p-title">' + esc(state.title || "ルーブリック評価表") + "</h2>";
+    var meta = [state.grade, state.subject, state.unit].filter(Boolean).join("　／　");
+    if(meta) h += '<div class="p-meta">' + esc(meta) + "</div>";
+    h += "</div>";
+    if(state.options.showName){
+      h += '<div class="p-name">なまえ＿＿＿＿＿＿＿＿＿＿</div>';
+    }
+    h += "</div>";
+
+    h += '<table class="p-table"><thead><tr>';
+    h += '<th class="pk">観点</th>';
+    state.levels.forEach(function(lv){
+      h += "<th>" + esc(lv) + "</th>";
+    });
+    if(state.options.showSelf){
+      h += '<th class="psc">自己評価</th>';
+    }
+    h += "</tr></thead><tbody>";
+    state.rows.forEach(function(r){
+      h += "<tr>";
+      h += '<td class="pkc">' + (r.emoji ? esc(r.emoji) + " " : "") + esc(r.name) + "</td>";
+      r.cells.forEach(function(c){
+        h += "<td>" + esc(c).replace(/\n/g,"<br>") + "</td>";
+      });
+      if(state.options.showSelf){
+        h += '<td class="pscc">' + state.levels.map(esc).join(" ・ ") + "</td>";
+      }
+      h += "</tr>";
+    });
+    h += "</tbody></table>";
+    h += '<div class="p-foot">ルーブリックメーカーで作成</div>';
+    area.innerHTML = h;
+  }
+  $("btnPrint").addEventListener("click", function(){
+    buildPrint();
+    window.print();
+  });
+  window.addEventListener("beforeprint", buildPrint);
+
+  /* ================= toast ================= */
+  var toastTimer = null;
+  function toast(msg){
+    var el = $("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2400);
+  }
+
+  /* ================= init ================= */
+  buildEmojiPop();
+  var draft = loadDraft();
+  if(draft){
+    state = draft;
+  }else{
+    // first launch: load speech template so the value is visible immediately
+    var d0 = JSON.parse(JSON.stringify(TEMPLATES[0].data));
+    d0.id = null;
+    state = normalize(d0);
+  }
+  renderAll();
+  autosaveDraft();
+
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

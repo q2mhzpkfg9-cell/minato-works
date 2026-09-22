@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行事の役割分担表</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ok:#2f855a;--okbg:#e6f4ea;--warn:#b7791f;--warnbg:#fdf3dc;--ng:#b83232;--ngbg:#fbe9e7;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1300px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.2rem;letter-spacing:.03em}
+main{max-width:1300px;margin:0 auto;padding:16px}
+.lead{margin:0 0 12px;color:var(--sub);font-size:.9rem}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:120px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+#toast.show{opacity:1}
+#printArea{display:none}
+/* app */
+.layout{display:grid;gap:14px}
+@media(min-width:1050px){.layout{grid-template-columns:minmax(0,1fr) 330px}.side{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto}}
+.evs{display:flex;gap:6px;flex-wrap:wrap}
+.evs button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 12px;min-height:44px;font-family:inherit;font-size:.9rem;cursor:pointer}
+.evs button.on{border-color:var(--navy);background:var(--navy);color:#fff;font-weight:700}
+.roles{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.role{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.role.short{border-color:var(--warn);background:#fffcf3}
+.role.full{border-color:#b9dcc3}
+.role .h{display:flex;gap:6px;align-items:center}
+.role .h input{flex:1;font-weight:700;min-height:38px}
+.role .meta{display:grid;grid-template-columns:1fr 1fr 70px;gap:4px;margin:6px 0}
+.role .meta input{min-height:34px;padding:2px 6px;font-size:.84rem;min-width:0;width:100%}
+.role .memo{width:100%;min-height:34px;padding:2px 6px;font-size:.84rem}
+.mem{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.mem span{display:inline-flex;align-items:center;gap:2px;background:#eef2f7;border-radius:999px;padding:2px 4px 2px 10px;font-size:.86rem;font-weight:700;color:var(--navy)}
+.mem span.cf{background:var(--ngbg);color:var(--ng)}
+.mem span button{border:0;background:transparent;cursor:pointer;font-size:1rem;color:inherit;min-width:26px;min-height:26px}
+.role select{min-height:36px;padding:2px 6px;font-size:.85rem;width:100%}
+.cnt{font-size:.78rem;font-weight:700}
+.cnt.short{color:var(--warn)}.cnt.ok{color:var(--ok)}
+.load{display:flex;flex-direction:column;gap:3px}
+.ld{display:grid;grid-template-columns:1fr 40px 44px;gap:6px;align-items:center;font-size:.86rem;padding:3px 6px;border-radius:8px}
+.ld.zero{background:var(--warnbg)}
+.ld.many{background:var(--ngbg)}
+.ld b{text-align:right}
+.ld small{text-align:right;color:var(--sub)}
+.warnbox{background:var(--ngbg);color:var(--ng);border-radius:10px;padding:6px 10px;font-size:.85rem;margin-bottom:6px}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block;color:#000;font-size:10pt}
+  #printArea h1{font-size:14pt;margin:0 0 4pt}
+  #printArea table{border-collapse:collapse;width:100%}
+  #printArea th,#printArea td{border:1px solid #555;padding:3pt 5pt;text-align:left;vertical-align:top}
+  #printArea tr{page-break-inside:avoid}
+  .slips{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .slip{border:1px dashed #888;padding:5mm;min-height:60mm;page-break-inside:avoid}
+  .slip h3{margin:0 0 2mm;font-size:12pt}
+  .slip table td,.slip table th{font-size:9.5pt}
+  @page{size:A4;margin:10mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><a class="back" href="../index.html">← MINATO WORKS</a><h1>行事の役割分担表</h1></div></header>
+<main>
+<p class="lead">運動会・学習発表会・入学式などの教職員の係分担を作る表。係ごとに必要人数と時間帯を入れて担当を割り当てると、<b>時間が重なる二重担当</b>と<b>担当の偏り（年間を通しての回数）</b>を自動でチェック。係別一覧と「あなたの担当」メモを印刷できます。</p>
+
+<div class="layout">
+<div>
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">行事</h2>
+      <div class="row">
+        <select id="tpl"><option value="">ひな形から新しい行事…</option><option value="undokai">運動会</option><option value="happyokai">学習発表会</option><option value="nyugaku">入学式</option><option value="sotsugyo">卒業式</option><option value="blank">空の行事</option></select>
+      </div>
+    </div>
+    <div class="evs" id="evs" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:10px" id="evEdit">
+      <label class="f">行事名<input id="evName" style="width:200px"></label>
+      <label class="f">日付<input type="date" id="evDate"></label>
+      <button class="btn s d" id="evDel" style="align-self:flex-end">この行事を削除</button>
+      <button class="btn s" id="evCopy" style="align-self:flex-end">複製（来年度用）</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <h2 style="margin:0">係と担当 <span class="note" id="roleSum"></span></h2>
+      <div class="row">
+        <button class="btn s" id="addRole">＋ 係を追加</button>
+        <button class="btn s p" id="autoFill">足りない係を自動で埋める</button>
+      </div>
+    </div>
+    <div id="warn"></div>
+    <div class="roles" id="roles"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="prRoles">🖨 係別一覧を印刷</button>
+      <button class="btn" id="prPerson">🖨 個人別「あなたの担当」を印刷</button>
+    </div>
+  </section>
+</div>
+
+<div class="side">
+  <section class="card">
+    <h2>担当数（この行事／年間）</h2>
+    <p class="note">黄色＝まだ担当なし、赤＝多め。自動で埋めるときは年間の回数が少ない人から選びます。</p>
+    <div class="load" id="load"></div>
+  </section>
+  <section class="card">
+    <details id="staffBox">
+      <summary>職員名簿（<span id="sc">0</span>人）</summary>
+      <p class="note">1行に1人。「名前,学年や担当」の形でもOK（例：山田,3年）。</p>
+      <textarea id="staff" placeholder="校長,管理職&#10;教頭,管理職&#10;山田,1年&#10;佐藤,2年"></textarea>
+      <button class="btn s p" id="staffSave" style="margin-top:6px">名簿を保存</button>
+    </details>
+  </section>
+  <section class="card">
+    <details><summary>データの管理</summary>
+      <div class="row" style="margin-top:8px">
+        <button class="btn s" id="bk">バックアップ（JSON）</button>
+        <label class="btn s" style="display:inline-flex;align-items:center">復元<input type="file" id="rs" accept=".json" style="display:none"></label>
+        <button class="btn s d" id="reset">すべて消去</button>
+      </div>
+      <p class="note">職員室のPCで作る場合も、データはそのPCのブラウザの中だけに保存されます。</p>
+    </details>
+  </section>
+</div>
+</div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+var KEY="mw_gyomu_08_data";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},2000)}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
+function toMin(t){if(!t)return null;var m=String(t).match(/^(\d{1,2}):(\d{2})$/);return m?(+m[1])*60+(+m[2]):null}
+function fmtDate(s){if(!s)return"";var d=new Date(s+"T00:00:00");return (d.getMonth()+1)+"月"+d.getDate()+"日（"+"日月火水木金土"[d.getDay()]+"）"}
+function download(name,text,type){var b=new Blob([text],{type:type||"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function R(n,f,t,need,place,memo){return{id:uid(),name:n,from:f||"",to:t||"",need:need||1,place:place||"",memo:memo||"",mem:[]}}
+var TPL={
+ undokai:{name:"運動会",roles:function(){return[R("総務・進行","8:00","15:30",2,"本部"),R("放送","8:30","15:00",2,"本部テント","児童放送委員の指導"),R("用具","8:00","15:30",3,"用具係テント"),R("招集","8:45","12:00",2,"入場門"),R("決勝審判","9:00","12:00",2,"ゴール"),R("出発合図（スターター）","9:00","12:00",1,"スタート"),R("救護","8:30","15:00",1,"救護テント","養護教諭＋1名"),R("受付・来賓接待","8:00","10:00",2,"正門"),R("駐車場・交通整理","7:30","9:30",2,"正門前"),R("児童席の指導","9:00","15:00",3,"児童席"),R("写真・記録","9:00","15:00",1,""),R("片付け指揮","14:30","15:30",2,"")]}},
+ happyokai:{name:"学習発表会",roles:function(){return[R("総合司会・進行","8:30","12:00",1,"体育館"),R("音響","8:30","12:00",2,"ステージ袖"),R("照明","8:30","12:00",1,"2階"),R("幕・舞台転換","8:30","12:00",2,"ステージ"),R("受付","8:00","10:00",2,"玄関"),R("会場整理（保護者席）","8:30","12:00",2,"体育館後方"),R("児童誘導","8:30","12:00",2,"控室"),R("撮影・記録","8:30","12:00",1,"")]}},
+ nyugaku:{name:"入学式",roles:function(){return[R("司会","9:30","11:30",1,"体育館"),R("新入生受付","8:30","9:30",3,"昇降口"),R("来賓受付・接待","8:30","10:00",2,"校長室前"),R("新入生誘導","9:00","11:30",2,""),R("音響","9:00","11:30",1,"ステージ袖"),R("記念撮影","11:00","11:45",2,"正門前"),R("会場準備・片付け","7:45","12:30",4,"")]}},
+ sotsugyo:{name:"卒業式",roles:function(){return[R("司会","9:30","11:30",1,"体育館"),R("卒業証書授与補助","9:30","11:00",2,"ステージ"),R("来賓受付・接待","8:30","10:00",2,"校長室前"),R("保護者受付","8:30","9:30",2,"玄関"),R("在校生指導","9:00","11:30",2,""),R("音響・ピアノ","9:00","11:30",2,""),R("見送り整理","11:30","12:30",3,"正門"),R("会場片付け","12:30","14:00",4,"")]}},
+ blank:{name:"新しい行事",roles:function(){return[R("係1")]}}
+};
+var D=null;try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!D||!D.events)D={staff:[],events:[],cur:null};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("保存できませんでした")}}
+function ev(){return D.events.filter(function(e){return e.id===D.cur})[0]||null}
+
+/* 職員 */
+$("#staff").value=D.staff.map(function(s){return s.name+(s.grp?","+s.grp:"")}).join("\n");
+if(!D.staff.length)$("#staffBox").open=true;
+$("#staffSave").onclick=function(){
+  D.staff=$("#staff").value.split(/\r?\n/).map(function(l){l=l.trim();if(!l)return null;var p=l.split(/[,\t，]/);return{name:p[0].trim(),grp:(p[1]||"").trim()}}).filter(Boolean);
+  save();render();toast("職員名簿を保存しました（"+D.staff.length+"人）");
+};
+
+/* 行事 */
+$("#tpl").onchange=function(){
+  var k=this.value;if(!k)return;var t=TPL[k];
+  var e={id:uid(),name:t.name,date:"",roles:t.roles()};D.events.push(e);D.cur=e.id;this.value="";save();render();
+};
+$("#evName").oninput=function(){var e=ev();if(e){e.name=this.value;save();renderEvs()}};
+$("#evDate").onchange=function(){var e=ev();if(e){e.date=this.value;save();renderEvs()}};
+$("#evDel").onclick=function(){var e=ev();if(!e)return;if(!confirm("「"+e.name+"」を削除しますか？"))return;D.events=D.events.filter(function(x){return x!==e});D.cur=D.events.length?D.events[D.events.length-1].id:null;save();render()};
+$("#evCopy").onclick=function(){var e=ev();if(!e)return;var c=JSON.parse(JSON.stringify(e));c.id=uid();c.name=e.name+"（コピー）";c.date="";c.roles.forEach(function(r){r.id=uid();r.mem=[]});D.events.push(c);D.cur=c.id;save();render();toast("係だけ複製しました（担当は空）")};
+function renderEvs(){
+  $("#evs").innerHTML=D.events.map(function(e){return"<button data-ev='"+e.id+"' class='"+(e.id===D.cur?"on":"")+"'>"+esc(e.name)+(e.date?" <small>"+fmtDate(e.date)+"</small>":"")+"</button>"}).join("")||"<span class='note'>右上の「ひな形から新しい行事…」で始めましょう。</span>";
+  var e=ev();$("#evEdit").style.display=e?"":"none";if(e){if(document.activeElement!==$("#evName"))$("#evName").value=e.name;$("#evDate").value=e.date||""}
+}
+$("#evs").addEventListener("click",function(x){var b=x.target.closest("[data-ev]");if(!b)return;D.cur=b.dataset.ev;save();render()});
+
+/* 係 */
+function overlap(a,b){var af=toMin(a.from),at=toMin(a.to),bf=toMin(b.from),bt=toMin(b.to);if(af==null||at==null||bf==null||bt==null)return false;return af<bt&&bf<at}
+function conflicts(e){ // name -> [role pairs]
+  var res={};var byP={};e.roles.forEach(function(r){r.mem.forEach(function(m){(byP[m]=byP[m]||[]).push(r)})});
+  Object.keys(byP).forEach(function(p){var rs=byP[p];for(var i=0;i<rs.length;i++)for(var j=i+1;j<rs.length;j++)if(overlap(rs[i],rs[j])){(res[p]=res[p]||[]).push([rs[i],rs[j]])}});
+  return res;
+}
+function countIn(e,name){return e.roles.reduce(function(s,r){return s+(r.mem.indexOf(name)>=0?1:0)},0)}
+function yearCount(name){return D.events.reduce(function(s,e){return s+countIn(e,name)},0)}
+function renderRoles(){
+  var e=ev();var box=$("#roles");
+  if(!e){box.innerHTML="";$("#warn").innerHTML="";$("#roleSum").textContent="";return}
+  var cf=conflicts(e);
+  var W=[];Object.keys(cf).forEach(function(p){cf[p].forEach(function(pr){W.push(p+" さんが「"+pr[0].name+"」と「"+pr[1].name+"」で時間が重なっています")})});
+  $("#warn").innerHTML=W.map(function(w){return"<div class='warnbox'>⚠ "+esc(w)+"</div>"}).join("");
+  var need=e.roles.reduce(function(s,r){return s+(+r.need||0)},0),have=e.roles.reduce(function(s,r){return s+r.mem.length},0);
+  $("#roleSum").textContent="（係 "+e.roles.length+"・必要 "+need+"人／割当 "+have+"人）";
+  box.innerHTML=e.roles.map(function(r){
+    var short=r.mem.length<r.need,full=r.mem.length>=r.need;
+    var opts="<option value=''>＋ 担当を追加…</option>"+D.staff.filter(function(s){return r.mem.indexOf(s.name)<0}).map(function(s){var c=countIn(e,s.name);var busy=e.roles.some(function(o){return o!==r&&o.mem.indexOf(s.name)>=0&&overlap(o,r)});return"<option value='"+esc(s.name)+"'>"+esc(s.name)+(s.grp?"（"+esc(s.grp)+"）":"")+" "+c+"件"+(busy?" ⚠重なり":"")+"</option>"}).join("");
+    return"<div class='role"+(short?" short":full?" full":"")+"'><div class='h'><input data-rf='name' data-r='"+r.id+"' value='"+esc(r.name)+"'><button class='btn s d' data-delr='"+r.id+"' title='係を削除'>×</button></div>"+
+      "<div class='meta'><input data-rf='from' data-r='"+r.id+"' placeholder='開始 8:30' value='"+esc(r.from)+"'><input data-rf='to' data-r='"+r.id+"' placeholder='終了 12:00' value='"+esc(r.to)+"'><input type='number' min='1' data-rf='need' data-r='"+r.id+"' value='"+r.need+"' title='必要人数'></div>"+
+      "<input class='memo' data-rf='place' data-r='"+r.id+"' placeholder='場所' value='"+esc(r.place)+"' style='margin-bottom:4px'><input class='memo' data-rf='memo' data-r='"+r.id+"' placeholder='仕事内容・メモ' value='"+esc(r.memo)+"'>"+
+      "<div class='cnt "+(short?"short":"ok")+"'>"+r.mem.length+" / "+r.need+"人"+(short?"（あと"+(r.need-r.mem.length)+"人）":" ✓")+"</div>"+
+      "<div class='mem'>"+r.mem.map(function(m){return"<span class='"+(cf[m]&&cf[m].some(function(p){return p[0]===r||p[1]===r})?"cf":"")+"'>"+esc(m)+"<button data-rm='"+esc(m)+"' data-r='"+r.id+"' aria-label='外す'>×</button></span>"}).join("")+"</div>"+
+      (D.staff.length?"<select data-add='"+r.id+"'>"+opts+"</select>":"<div class='note'>右の職員名簿を入れると選べます</div>")+"</div>";
+  }).join("");
+}
+function role(id){var e=ev();return e?e.roles.filter(function(r){return r.id===id})[0]:null}
+$("#roles").addEventListener("input",function(x){var t=x.target;if(!t.dataset.rf)return;var r=role(t.dataset.r);if(!r)return;r[t.dataset.rf]=t.dataset.rf==="need"?Math.max(1,parseInt(t.value,10)||1):t.value;save()});
+$("#roles").addEventListener("change",function(x){var t=x.target;
+  if(t.dataset.rf){renderRoles();renderLoad();return}
+  if(t.dataset.add&&t.value){var r=role(t.dataset.add);if(r&&r.mem.indexOf(t.value)<0)r.mem.push(t.value);save();renderRoles();renderLoad()}
+});
+$("#roles").addEventListener("click",function(x){
+  var b=x.target.closest("[data-rm]");if(b){var r=role(b.dataset.r);r.mem=r.mem.filter(function(m){return m!==b.dataset.rm});save();renderRoles();renderLoad();return}
+  b=x.target.closest("[data-delr]");if(b){if(!confirm("この係を削除しますか？"))return;var e=ev();e.roles=e.roles.filter(function(r){return r.id!==b.dataset.delr});save();renderRoles();renderLoad()}
+});
+$("#addRole").onclick=function(){var e=ev();if(!e){toast("先に行事を作ってください");return}e.roles.push(R("新しい係"));save();renderRoles()};
+$("#autoFill").onclick=function(){
+  var e=ev();if(!e)return;if(!D.staff.length){toast("職員名簿を入れてください");return}
+  var added=0,miss=0;
+  e.roles.forEach(function(r){
+    while(r.mem.length<r.need){
+      var cands=D.staff.map(function(s){return s.name}).filter(function(n){return r.mem.indexOf(n)<0&&!e.roles.some(function(o){return o!==r&&o.mem.indexOf(n)>=0&&(overlap(o,r)||(!toMin(o.from)||!toMin(r.from)))})});
+      if(!cands.length){miss+=r.need-r.mem.length;break}
+      cands.sort(function(a,b){return (countIn(e,a)-countIn(e,b))||(yearCount(a)-yearCount(b))||(Math.random()-.5)});
+      r.mem.push(cands[0]);added++;
+    }
+  });
+  save();renderRoles();renderLoad();toast(added+"人を割り当てました"+(miss?"（"+miss+"人分は候補なし）":""));
+};
+
+/* 担当数 */
+function renderLoad(){
+  var e=ev();$("#sc").textContent=D.staff.length;
+  if(!D.staff.length){$("#load").innerHTML="<span class='note'>職員名簿を入れてください。</span>";return}
+  var arr=D.staff.map(function(s){return{n:s.name,g:s.grp,c:e?countIn(e,s.name):0,y:yearCount(s.name)}});
+  var avg=arr.reduce(function(s,a){return s+a.c},0)/arr.length;
+  $("#load").innerHTML="<div class='ld note'><span>名前</span><small>行事</small><small>年間</small></div>"+arr.map(function(a){return"<div class='ld"+(a.c===0?" zero":a.c>Math.max(2,avg*1.8)?" many":"")+"'><span>"+esc(a.n)+(a.g?" <small>"+esc(a.g)+"</small>":"")+"</span><b>"+a.c+"</b><small>"+a.y+"</small></div>"}).join("");
+}
+
+/* 印刷 */
+function doPrint(h){$("#printArea").innerHTML=h;window.print()}
+$("#prRoles").onclick=function(){
+  var e=ev();if(!e)return;
+  var h="<h1>"+esc(e.name)+" 係分担表"+(e.date?"　"+fmtDate(e.date):"")+"</h1><table><thead><tr><th style='width:18%'>係</th><th style='width:13%'>時間</th><th style='width:12%'>場所</th><th style='width:27%'>担当</th><th>仕事内容</th></tr></thead><tbody>";
+  e.roles.forEach(function(r){h+="<tr><td><b>"+esc(r.name)+"</b></td><td>"+esc(r.from)+(r.to?"〜"+esc(r.to):"")+"</td><td>"+esc(r.place)+"</td><td>"+esc(r.mem.join("、"))+(r.mem.length<r.need?" <span style='color:#b83232'>（あと"+(r.need-r.mem.length)+"人）</span>":"")+"</td><td>"+esc(r.memo)+"</td></tr>"});
+  h+="</tbody></table>";doPrint(h);
+};
+$("#prPerson").onclick=function(){
+  var e=ev();if(!e)return;var names=D.staff.map(function(s){return s.name}).filter(function(n){return countIn(e,n)});
+  if(!names.length){toast("担当が入っていません");return}
+  var h="<div class='slips'>";
+  names.forEach(function(n){var rs=e.roles.filter(function(r){return r.mem.indexOf(n)>=0}).sort(function(a,b){return (toMin(a.from)||0)-(toMin(b.from)||0)});
+    h+="<div class='slip'><h3>"+esc(n)+" 先生の担当 ／ "+esc(e.name)+(e.date?" "+fmtDate(e.date):"")+"</h3><table><tr><th>時間</th><th>係</th><th>場所・内容</th><th>一緒の人</th></tr>"+rs.map(function(r){return"<tr><td>"+esc(r.from)+(r.to?"〜"+esc(r.to):"")+"</td><td>"+esc(r.name)+"</td><td>"+esc([r.place,r.memo].filter(Boolean).join(" ／ "))+"</td><td>"+esc(r.mem.filter(function(m){return m!==n}).join("、"))+"</td></tr>"}).join("")+"</table></div>"});
+  h+="</div>";doPrint(h);
+};
+$("#bk").onclick=function(){download("役割分担_backup.json",JSON.stringify(D),"application/json")};
+$("#rs").onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var o=JSON.parse(rd.result);if(!o.events)throw 0;if(!confirm("今のデータを置きかえますか？"))return;D=o;save();location.reload()}catch(e){toast("読み込めませんでした")}};rd.readAsText(f);this.value=""};
+$("#reset").onclick=function(){if(!confirm("すべて消去しますか？"))return;try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+
+function render(){if(D.cur&&!ev())D.cur=D.events.length?D.events[0].id:null;renderEvs();renderRoles();renderLoad()}
+render();
+})();
+</script>
+</body>
+</html>

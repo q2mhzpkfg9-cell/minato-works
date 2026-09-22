@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>えいようバランス 3つのグループ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f6f1e7;color:#1f2a37;font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","BIZ UDPGothic","Meiryo",sans-serif;font-size:19px;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#1f3a5f;color:#fff}
+header a.back{color:#fff;text-decoration:none;font-size:15px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:14px}
+header h1{margin:0;font-size:clamp(20px,3.4vw,30px);letter-spacing:.05em}
+main{max-width:1180px;margin:0 auto;padding:14px 16px 30px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(31,58,95,.08);margin-bottom:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab,.btn{border:2px solid #1f3a5f;background:#fff;color:#1f3a5f;border-radius:14px;padding:8px 16px;font-size:18px;font-family:inherit;cursor:pointer;min-height:48px}
+.tab.on,.btn.on{background:#1f3a5f;color:#fff}
+.btn.main{background:#e0a526;border-color:#e0a526;color:#fff;font-weight:bold}
+.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:640px){.groups{grid-template-columns:1fr}}
+.g{border:none;border-radius:14px;padding:12px;color:#fff;font-family:inherit;font-size:18px;text-align:left;cursor:pointer;min-height:110px}
+.g b{font-size:24px;display:block}
+.gR{background:#d0453b}.gY{background:#e0a526}.gG{background:#3f8f3f}
+.food{font-size:clamp(40px,8vw,64px);text-align:center;font-weight:bold;color:#1f3a5f;margin:8px 0}
+.food .e{display:block;font-size:clamp(60px,12vw,96px);line-height:1.1}
+.msg{font-size:22px;font-weight:bold;text-align:center;min-height:1.6em}
+.ex{background:#fbf7ee;border-radius:14px;padding:10px 14px;font-size:17px;min-height:2.6em}
+.dishes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.dish{border:2px solid #cfd8e6;background:#fff;border-radius:14px;padding:8px;font-family:inherit;font-size:17px;cursor:pointer;min-height:70px}
+.dish.sel{border-color:#1f3a5f;background:#e7edf5;font-weight:bold}
+.dish .e{font-size:28px;display:block}
+.bars{display:grid;gap:8px;margin:10px 0}
+.bar{display:grid;grid-template-columns:100px 1fr;align-items:center;gap:8px}
+.bar .t{height:28px;border-radius:14px;background:#eef2f7;overflow:hidden}
+.bar .t div{height:100%;transition:width .3s}
+.tray{min-height:60px;background:#fbf7ee;border-radius:14px;padding:8px 12px}
+.ing{display:inline-block;border-radius:999px;padding:2px 10px;margin:2px;font-size:15px;color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.small{font-size:14px;color:#6b7280}
+.hide{display:none}
+footer{text-align:center;font-size:13px;color:#6b7280;padding:16px}
+footer a{color:#1f3a5f}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>🍱 えいようバランス 3つのグループ</h1></header>
+<main>
+  <div class="tabs">
+    <button class="tab on" data-t="sort">なかまわけ</button>
+    <button class="tab" data-t="menu">こんだてチェック</button>
+    <button class="tab" data-t="learn">3つの グループとは</button>
+  </div>
+
+  <section id="sort">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><b id="sq">だい1もん</b><span class="small" id="ss"></span></div>
+      <div class="food" id="food"></div>
+      <div class="groups">
+        <button class="g gR" data-g="R"><b>赤</b>おもに 体を つくる もとになる</button>
+        <button class="g gY" data-g="Y"><b>黄</b>おもに エネルギーの もとになる</button>
+        <button class="g gG" data-g="G"><b>緑</b>おもに 体の 調子を ととのえる もとになる</button>
+      </div>
+      <div class="msg" id="smsg"></div>
+      <div class="ex" id="sex"></div>
+      <div class="row" style="justify-content:center"><button class="btn main hide" id="snext">つぎへ ▶</button></div>
+    </div>
+  </section>
+
+  <section id="menu" class="hide">
+    <div class="card">
+      <b>1食分の こんだてを えらぼう</b>（主食・主菜・副菜・しる物 など）
+      <div class="dishes" id="dishes" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <b>つかわれている 食品</b>
+      <div class="tray" id="tray"></div>
+      <div class="bars" id="bars"></div>
+      <div class="ex" id="advice"></div>
+      <div class="row"><button class="btn" id="mclear">ぜんぶ はずす</button></div>
+    </div>
+  </section>
+
+  <section id="learn" class="hide">
+    <div class="card">
+      <div class="groups">
+        <div class="g gR" style="cursor:default"><b>赤のグループ</b>おもに 体を つくる もとになる（たんぱく質・無機質）<br>魚・肉・卵・豆・豆製品・牛乳・乳製品・小魚・海そう</div>
+        <div class="g gY" style="cursor:default"><b>黄のグループ</b>おもに エネルギーの もとになる（炭水化物・脂質）<br>米・パン・めん・いも・さとう・油・バター</div>
+        <div class="g gG" style="cursor:default"><b>緑のグループ</b>おもに 体の 調子を ととのえる もとになる（ビタミン・無機質）<br>野菜・果物・きのこ</div>
+      </div>
+      <p class="small">5年 家庭科「食べて 元気に」の 3つの グループ分けに もとづいています。食品には いくつもの 栄養素が ふくまれているので「おもに」と いいます。1食の中で 3つの グループが そろうと バランスが よくなります。海そうは 教科書や 給食だよりによって 緑に 入れることも あります。</p>
+    </div>
+  </section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const KEY='mw_教科_28_score';
+const GN={R:'赤',Y:'黄',G:'緑'},GC={R:'#d0453b',Y:'#e0a526',G:'#3f8f3f'};
+const FOODS=[
+ ['🐟','さけ','R','魚は たんぱく質が 多く、体（筋肉や血）を つくる。'],['🥩','ぶた肉','R','肉は たんぱく質が 多い。'],['🍗','とり肉','R','肉は たんぱく質が 多い。'],
+ ['🥚','卵','R','卵は たんぱく質が 多い。'],['🧈','とうふ','R','とうふは 大豆（豆）から できた 豆製品。'],['🫘','なっとう','R','なっとうも 大豆の 豆製品。'],
+ ['🥛','牛乳','R','牛乳は 無機質（カルシウム）が 多く、骨や歯を つくる。'],['🧀','チーズ','R','チーズは 乳製品。'],['🍶','ヨーグルト','R','ヨーグルトは 乳製品。'],
+ ['🐠','しらす（小魚）','R','小魚は カルシウムが 多い。'],['🥣','みそ','R','みそは 大豆から できた 豆製品。'],['🍤','えび','R','えびも たんぱく質が 多い。'],
+ ['🍚','ごはん','Y','米は 炭水化物が 多く、エネルギーの もとに なる。'],['🍞','パン','Y','パンは 小麦から できていて 炭水化物が 多い。'],['🍜','うどん','Y','めんは 炭水化物が 多い。'],
+ ['🥔','じゃがいも','Y','いもは 炭水化物（でんぷん）が 多い。'],['🍠','さつまいも','Y','いもは 炭水化物（でんぷん）が 多い。'],['🧂','さとう','Y','さとうは 炭水化物。'],
+ ['🫒','サラダ油','Y','油は 脂質で、エネルギーの もとに なる。'],['🧈','バター','Y','バターは 脂質が 多い。'],['🍝','スパゲッティ','Y','めんは 炭水化物が 多い。'],
+ ['🥕','にんじん','G','野菜は ビタミンが 多い。'],['🥬','キャベツ','G','野菜は ビタミンが 多い。'],['🥦','ブロッコリー','G','野菜は ビタミンが 多い。'],
+ ['🍅','トマト','G','野菜は ビタミンが 多い。'],['🥒','きゅうり','G','野菜。'],['🧅','たまねぎ','G','野菜。'],['🍄','しいたけ','G','きのこも 緑の グループ。'],
+ ['🍎','りんご','G','果物は ビタミンが 多い。'],['🍊','みかん','G','果物は ビタミンCが 多い。'],['🍌','バナナ','G','果物。'],['🥬','ほうれんそう','G','野菜。ビタミンや 鉄分が 多い。']
+];
+let order=[],qi=0,ok=0,answered=false;
+let rec={best:0};try{rec=JSON.parse(localStorage.getItem(KEY))||rec}catch(e){}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startSort(){order=shuffle(FOODS).slice(0,10);qi=0;ok=0;showFood()}
+function showFood(){
+  answered=false;$('snext').classList.add('hide');$('smsg').textContent='';$('sex').textContent='この 食品は どの グループ？';
+  if(qi>=order.length){
+    $('sq').textContent='おわり！';$('food').innerHTML=`<span class="e">🏅</span>10もん中 ${ok}もん`;
+    if(ok>rec.best){rec.best=ok;try{localStorage.setItem(KEY,JSON.stringify(rec))}catch(e){}}
+    $('sex').textContent='これまでの さいこう：'+rec.best+'もん';$('snext').textContent='もう一度';$('snext').classList.remove('hide');return;
+  }
+  const f=order[qi];$('sq').textContent='だい'+(qi+1)+'もん';$('ss').textContent='せいかい '+ok;
+  $('food').innerHTML=`<span class="e">${f[0]}</span>${f[1]}`;$('snext').textContent='つぎへ ▶';
+}
+document.querySelectorAll('.g[data-g]').forEach(b=>b.onclick=()=>{
+  if(answered||qi>=order.length)return;answered=true;
+  const f=order[qi],right=b.dataset.g===f[2];if(right)ok++;
+  $('smsg').textContent=right?'⭕ せいかい！':'❌ こたえは 「'+GN[f[2]]+'」';
+  $('smsg').style.color=right?'#2e8b57':'#c8553d';$('sex').textContent=f[3];$('ss').textContent='せいかい '+ok;
+  $('snext').classList.remove('hide');
+});
+$('snext').onclick=()=>{if(qi>=order.length)startSort();else{qi++;showFood()}};
+
+// こんだて
+const I=(n,g)=>({n,g});
+const DISHES=[
+ {e:'🍚',n:'ごはん',k:'主食',i:[I('米','Y')]},{e:'🍞',n:'食パン',k:'主食',i:[I('パン','Y')]},{e:'🍜',n:'かけうどん',k:'主食',i:[I('うどん','Y'),I('ねぎ','G')]},
+ {e:'🍛',n:'カレーライス',k:'主食',i:[I('米','Y'),I('ぶた肉','R'),I('じゃがいも','Y'),I('にんじん','G'),I('たまねぎ','G'),I('油','Y')]},
+ {e:'🐟',n:'さけの 塩やき',k:'主菜',i:[I('さけ','R')]},{e:'🍳',n:'目玉やき',k:'主菜',i:[I('卵','R'),I('油','Y')]},
+ {e:'🍖',n:'ハンバーグ',k:'主菜',i:[I('ひき肉','R'),I('たまねぎ','G'),I('パン粉','Y'),I('卵','R')]},{e:'🍗',n:'からあげ',k:'主菜',i:[I('とり肉','R'),I('小麦粉','Y'),I('油','Y')]},
+ {e:'🥗',n:'野菜いため',k:'副菜',i:[I('キャベツ','G'),I('にんじん','G'),I('ぶた肉','R'),I('油','Y')]},{e:'🥬',n:'ほうれんそうの おひたし',k:'副菜',i:[I('ほうれんそう','G')]},
+ {e:'🥔',n:'ポテトサラダ',k:'副菜',i:[I('じゃがいも','Y'),I('きゅうり','G'),I('にんじん','G'),I('マヨネーズ','Y')]},{e:'🥗',n:'トマトサラダ',k:'副菜',i:[I('トマト','G'),I('レタス','G')]},
+ {e:'🥣',n:'とうふの みそしる',k:'しる物',i:[I('とうふ','R'),I('ねぎ','G'),I('みそ','R')]},{e:'🍲',n:'野菜スープ',k:'しる物',i:[I('キャベツ','G'),I('たまねぎ','G'),I('ベーコン','R')]},
+ {e:'🥛',n:'牛乳',k:'のみ物',i:[I('牛乳','R')]},{e:'🍊',n:'みかん',k:'デザート',i:[I('みかん','G')]},{e:'🍶',n:'ヨーグルト',k:'デザート',i:[I('ヨーグルト','R')]}
+];
+let sel=[];
+function drawMenu(){
+  $('dishes').innerHTML=DISHES.map((d,i)=>`<button class="dish${sel.includes(i)?' sel':''}" data-i="${i}"><span class="e">${d.e}</span>${d.n}<br><span class="small">${d.k}</span></button>`).join('');
+  $('dishes').querySelectorAll('.dish').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;sel=sel.includes(i)?sel.filter(x=>x!==i):sel.concat(i);drawMenu()});
+  const ings=[];sel.forEach(i=>DISHES[i].i.forEach(x=>{if(!ings.find(y=>y.n===x.n))ings.push(x)}));
+  $('tray').innerHTML=ings.map(x=>`<span class="ing" style="background:${GC[x.g]}">${x.n}</span>`).join('')||'<span class="small">りょうりを えらぶと ここに 食品が ならぶよ</span>';
+  const c={R:0,Y:0,G:0};ings.forEach(x=>c[x.g]++);const mx=Math.max(3,c.R,c.Y,c.G);
+  $('bars').innerHTML=['R','Y','G'].map(g=>`<div class="bar"><b style="color:${GC[g]}">${GN[g]}　${c[g]}こ</b><div class="t"><div style="width:${c[g]/mx*100}%;background:${GC[g]}"></div></div></div>`).join('');
+  let adv='';
+  if(!sel.length)adv='りょうりを えらんでみよう。';
+  else{
+    const miss=['R','Y','G'].filter(g=>!c[g]);
+    const kinds=new Set(sel.map(i=>DISHES[i].k));
+    if(!miss.length)adv='🎉 赤・黄・緑の 3つの グループが そろっているね！';
+    else adv='⚠️ '+miss.map(g=>GN[g]).join('と')+'の グループが たりないよ。'+miss.map(g=>g==='R'?'魚・肉・卵・豆・牛乳の おかずを たそう。':g==='Y'?'ごはん・パン・めんなどの 主食を たそう。':'野菜や 果物の おかずを たそう。').join('');
+    if(!kinds.has('主食'))adv+='<br>主食（ごはん・パン・めん）が ないよ。';
+    const cnt=kinds.has('主食')&&kinds.has('主菜')&&kinds.has('副菜');
+    if(cnt)adv+='<br>主食・主菜・副菜 が そろっているね。';
+  }
+  $('advice').innerHTML=adv;
+}
+$('mclear').onclick=()=>{sel=[];drawMenu()};
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  ['sort','menu','learn'].forEach(id=>$(id).classList.toggle('hide',t.dataset.t!==id));
+}));
+startSort();drawMenu();
+})();
+</script>
+</body>
+</html>

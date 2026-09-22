@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ならべかた じゅけいず</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button{font-family:inherit;font-size:1.05rem;min-height:48px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+button:disabled{opacity:.35}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700;margin-right:4px}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+#prob{font-size:clamp(1.2rem,3vw,1.7rem);font-weight:800;color:var(--navy)}
+svg{width:100%;height:auto;display:block}
+.items button{font-size:1.6rem;min-width:72px;min-height:64px}
+.seq{font-size:2rem;font-weight:800;min-height:64px;border:3px dashed var(--line);border-radius:var(--r);padding:6px 14px;letter-spacing:.2em;display:flex;align-items:center}
+.list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.list span{background:#eef2f7;border-radius:10px;padding:4px 12px;font-size:1.3rem;font-weight:700;letter-spacing:.1em}
+.list span.dup{background:#f7dede;color:var(--ng);text-decoration:line-through}
+#fb{font-size:1.15rem;font-weight:700;min-height:2em;margin-top:8px}
+.big{font-size:2.2rem;font-weight:800;color:var(--acc)}
+.hide{display:none!important}
+.note{font-size:.9rem;color:var(--sub)}
+.league td,.league th{border:2px solid #8a8173;width:56px;height:52px;text-align:center;font-size:1.3rem;font-weight:700}
+.league th{background:#eef2f7}
+.league td.x{background:#e9e3d6}
+.league td.o{color:var(--ok)}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>ならべかた じゅけいず</h1></header>
+<main>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px"><span class="lbl">しゅるい</span>
+      <span class="tabs row" id="kindTabs"><button data-k="perm" class="on">ならべかた（じゅんばん あり）</button><button data-k="comb">くみあわせ（じゅんばん なし）</button></span></div>
+    <div class="row" style="margin-bottom:8px"><span class="lbl">ぜんぶで</span>
+      <span class="tabs row" id="nTabs"><button data-n="3" class="on">3つ</button><button data-n="4">4つ</button><button data-n="5">5つ</button></span>
+      <span class="lbl" style="margin-left:10px">えらぶ かず</span>
+      <span class="tabs row" id="rTabs"><button data-r="2">2つ</button><button data-r="3" class="on">3つ</button><button data-r="4">4つ</button></span></div>
+    <div class="row"><span class="lbl">もの</span>
+      <span class="tabs row" id="setTabs"><button data-s="kana" class="on">ア イ ウ</button><button data-s="card">1 2 3（カード）</button><button data-s="fruit">🍎🍌🍇</button></span></div>
+  </div>
+  <div class="card">
+    <div id="prob"></div>
+    <div class="row" style="margin-top:10px"><span class="tabs row" id="modeTabs"><button data-m="self" class="on">✏️ じぶんで かきだす</button><button data-m="tree">🌳 じゅけいずで たしかめる</button></span></div>
+  </div>
+  <div class="card" id="selfBox">
+    <p class="note">ものを じゅんに タップして 1つ つくったら「ついか」。もれなく、かさならずに ぜんぶ かきだそう。</p>
+    <div class="row items" id="items" style="margin:8px 0"></div>
+    <div class="row"><div class="seq" id="seq" style="flex:1"></div><button id="undoBtn">1つ もどす</button><button class="pri" id="addBtn">ついか</button></div>
+    <div id="fb"></div>
+    <div class="list" id="list"></div>
+    <div class="row" style="margin-top:10px"><button id="doneBtn">これで ぜんぶ？</button><button id="resetBtn">やりなおす</button></div>
+  </div>
+  <div class="card hide" id="treeBox">
+    <div class="row" style="margin-bottom:8px"><span class="lbl">さいしょ</span><span class="tabs row" id="firstTabs"></span></div>
+    <div id="treeInfo" style="font-size:1.2rem;font-weight:700;margin-bottom:6px"></div>
+    <div style="overflow-x:auto"><svg id="svg"></svg></div>
+    <div id="leagueBox" class="hide" style="margin-top:12px"><p class="note">たいせんひょう（リーグひょう）で たしかめると…</p><div id="league"></div></div>
+  </div>
+  <div class="card note">
+    <b style="color:var(--navy)">かんがえかた</b>　さいしょを 1つに きめて、のこりを じゅんに えだわかれ させると もれや かさなりが なくなるよ。「アから はじまるのが ○とおり、それが □つ分」と かんがえよう。くみあわせ では「ア−イ」と「イ−ア」は おなじ だから 1つと かぞえる。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_19_set';
+const $=id=>document.getElementById(id);
+const SETS={kana:['ア','イ','ウ','エ','オ'],card:['1','2','3','4','5'],fruit:['🍎','🍌','🍇','🍓','🍊']};
+const S={kind:'perm',n:3,r:3,set:'kana',mode:'self',first:0};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s)Object.assign(S,s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let seq=[],made=[];
+function items(){return SETS[S.set].slice(0,S.n);}
+function fact(n){return n<=1?1:n*fact(n-1);}
+function total(){const p=fact(S.n)/fact(S.n-S.r);return S.kind==='perm'?p:p/fact(S.r);}
+function canon(a){return S.kind==='perm'?a.join(''):[...a].sort((x,y)=>items().indexOf(x)-items().indexOf(y)).join('');}
+function problemText(){
+  const it=items().join(' ');
+  if(S.set==='card'){
+    if(S.kind==='perm')return `${it} の カードから ${S.r}まい ならべて ${S.r}けたの 数を つくります。何とおり できるかな？`;
+    return `${it} の カードから ${S.r}まい えらびます。えらびかたは 何とおり？`;
+  }
+  if(S.kind==='perm')return S.r===S.n?`${it} の ${S.n}人が 1れつに ならびます。ならびかたは 何とおり？`:`${it} から ${S.r}つ えらんで じゅんばんに ならべます（1ばん・2ばん…）。何とおり？`;
+  if(S.r===2)return `${it} の ${S.n}チームが どの チームとも 1かいずつ しあいを します。しあいは ぜんぶで 何しあい？`;
+  return `${it} から ${S.r}つ えらびます（じゅんばんは かんけい なし）。えらびかたは 何とおり？`;
+}
+function renderItems(){
+  $('items').innerHTML=items().map(x=>`<button data-x="${x}">${x}</button>`).join('');
+  $('items').querySelectorAll('button').forEach(b=>{b.disabled=seq.includes(b.dataset.x)||seq.length>=S.r;b.onclick=()=>{if(seq.length<S.r&&!seq.includes(b.dataset.x)){seq.push(b.dataset.x);renderSelf();}};});
+}
+function renderSelf(){
+  renderItems();
+  $('seq').textContent=seq.join(S.kind==='perm'?' → ':' ・ ');
+  $('addBtn').disabled=seq.length!==S.r;
+  const seen=new Set();
+  $('list').innerHTML=made.map(a=>{const c=canon(a);const d=seen.has(c);seen.add(c);return `<span class="${d?'dup':''}">${a.join(S.kind==='perm'?'':'・')}</span>`;}).join('');
+}
+$('addBtn').onclick=()=>{
+  if(seq.length!==S.r)return;
+  const c=canon(seq);const dup=made.some(a=>canon(a)===c);
+  made.push(seq.slice());
+  $('fb').innerHTML=dup?`<span style="color:#c0392b">それは もう あるよ（${S.kind==='comb'?'じゅんばんが ちがっても おなじ くみあわせ':'かさなり'}）</span>`:`<span style="color:#2e8b57">OK！ いま ${uniq()}とおり</span>`;
+  seq=[];renderSelf();
+};
+function uniq(){return new Set(made.map(canon)).size;}
+$('undoBtn').onclick=()=>{seq.pop();renderSelf();};
+$('resetBtn').onclick=()=>{seq=[];made=[];$('fb').textContent='';renderSelf();};
+$('doneBtn').onclick=()=>{
+  const u=uniq(),T=total();
+  if(u===T)$('fb').innerHTML=`<span style="color:#2e8b57">🎉 ぜんぶで ${T}とおり！ もれなく かきだせたね。じゅけいずでも たしかめよう。</span>`;
+  else $('fb').innerHTML=`<span style="color:#c0392b">いま ${u}とおり。まだ ${T-u}とおり たりないよ。さいしょを きめて じゅんに かんがえよう。</span>`;
+};
+// ---- tree ----
+function buildTree(prefix){
+  // children for next level
+  if(prefix.length===S.r)return [];
+  const it=items();
+  return it.filter(x=>!prefix.includes(x)&&(S.kind==='perm'||prefix.length===0||it.indexOf(x)>it.indexOf(prefix[prefix.length-1])));
+}
+function drawTree(){
+  const it=items();const first=it[S.first];
+  // collect leaves via DFS; layout by leaf order
+  const nodes=[],edges=[];let leaf=0;
+  const colW=150,rowH=46,X0=60,Y0=30;
+  function dfs(prefix,depth){
+    const kids=buildTree(prefix);
+    let ys=[];
+    if(!kids.length){const y=Y0+leaf*rowH;leaf++;nodes.push({x:X0+depth*colW,y,t:prefix[prefix.length-1],leaf:true,full:prefix.length===S.r,path:prefix.slice()});return y;}
+    kids.forEach(k=>{const y=dfs(prefix.concat(k),depth+1);ys.push(y);edges.push([depth,k,y]);});
+    const y=(ys[0]+ys[ys.length-1])/2;
+    nodes.push({x:X0+depth*colW,y,t:prefix[prefix.length-1],leaf:false,kidsY:ys,depth});
+    return y;
+  }
+  const hasKids=buildTree([first]).length>0||S.r===1;
+  dfs([first],0);
+  const H=Math.max(Y0*2+leaf*rowH,120),W=X0+S.r*colW+200;
+  const svg=$('svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.minWidth=Math.min(W,700)+'px';
+  let h='';
+  nodes.forEach(nd=>{if(nd.kidsY)nd.kidsY.forEach(y=>{h+=`<line x1="${nd.x+22}" y1="${nd.y}" x2="${nd.x+colW-22}" y2="${y}" stroke="#8a8173" stroke-width="2.5"/>`;});});
+  nodes.forEach(nd=>{
+    h+=`<circle cx="${nd.x}" cy="${nd.y}" r="20" fill="${nd.x===X0?'#e07a3f':'#fff'}" stroke="#1f3a5f" stroke-width="2.5"/><text x="${nd.x}" y="${nd.y+8}" text-anchor="middle" font-size="22" font-weight="800" fill="${nd.x===X0?'#fff':'#1f3a5f'}">${nd.t}</text>`;
+    if(nd.leaf)h+=nd.full?`<text x="${nd.x+40}" y="${nd.y+8}" font-size="22" font-weight="700" fill="#2e8b57">${nd.path.join(S.kind==='perm'?'':'・')}</text>`:`<text x="${nd.x+40}" y="${nd.y+8}" font-size="20" fill="#c0392b">この あとに えらべる ものが ない（ほかと かさなる）</text>`;
+  });
+  svg.innerHTML=h;
+  // counts per first element
+  const counts=it.map((x,i)=>{let c=0;(function d(p){const k=buildTree(p);if(!k.length){if(p.length===S.r)c++;return;}k.forEach(z=>d(p.concat(z)));})([x]);return c;});
+  const T=total();
+  let info=`${first} から はじまるのは <span class="big">${counts[S.first]}</span> とおり。`;
+  if(S.kind==='perm')info+=`<br>さいしょは ${S.n}とおり あるから　${counts[S.first]} × ${S.n} ＝ <span class="big">${T}</span> とおり`;
+  else info+=`<br>かさなる ものを けすと、${counts.map((c,i)=>c+'').join(' ＋ ')} ＝ <span class="big">${T}</span> とおり`;
+  $('treeInfo').innerHTML=info;
+  // league table for comb r=2
+  $('leagueBox').classList.toggle('hide',!(S.kind==='comb'&&S.r===2));
+  if(S.kind==='comb'&&S.r===2){
+    let t='<table class="league"><tr><th></th>'+it.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+    it.forEach((a,i)=>{t+=`<tr><th>${a}</th>`+it.map((b,j)=>`<td class="${i===j?'x':(j>i?'o':'')}">${i===j?'':(j>i?'○':'')}</td>`).join('')+'</tr>';});
+    t+='</table><p class="note">ななめの 線より 上の ○だけ かぞえると '+T+'しあい（下半分は おなじ しあいの くりかえし）</p>';
+    $('league').innerHTML=t;
+  }
+}
+function renderFirst(){
+  const it=items();
+  if(S.first>=it.length)S.first=0;
+  $('firstTabs').innerHTML=it.map((x,i)=>`<button data-f="${i}" class="${i===S.first?'on':''}">${x}</button>`).join('');
+  $('firstTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.first=+b.dataset.f;renderFirst();drawTree();});
+}
+function syncAll(){
+  if(S.r>S.n)S.r=S.n;
+  document.querySelectorAll('#kindTabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===S.kind));
+  document.querySelectorAll('#nTabs button').forEach(b=>b.classList.toggle('on',+b.dataset.n===S.n));
+  document.querySelectorAll('#rTabs button').forEach(b=>{b.classList.toggle('on',+b.dataset.r===S.r);b.disabled=+b.dataset.r>S.n;});
+  document.querySelectorAll('#setTabs button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.set));
+  document.querySelectorAll('#modeTabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
+  $('selfBox').classList.toggle('hide',S.mode!=='self');$('treeBox').classList.toggle('hide',S.mode!=='tree');
+  $('prob').textContent=problemText();
+  seq=[];made=[];$('fb').textContent='';renderSelf();renderFirst();drawTree();save();
+}
+document.querySelectorAll('#kindTabs button').forEach(b=>b.onclick=()=>{S.kind=b.dataset.k;if(S.kind==='comb'&&S.r===S.n)S.r=Math.max(2,S.n-1);syncAll();});
+document.querySelectorAll('#nTabs button').forEach(b=>b.onclick=()=>{S.n=+b.dataset.n;syncAll();});
+document.querySelectorAll('#rTabs button').forEach(b=>b.onclick=()=>{S.r=+b.dataset.r;syncAll();});
+document.querySelectorAll('#setTabs button').forEach(b=>b.onclick=()=>{S.set=b.dataset.s;syncAll();});
+document.querySelectorAll('#modeTabs button').forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;$('selfBox').classList.toggle('hide',S.mode!=='self');$('treeBox').classList.toggle('hide',S.mode!=='tree');save();if(S.mode==='tree')drawTree();});
+syncAll();
+</script>
+</body>
+</html>

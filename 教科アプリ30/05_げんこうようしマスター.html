@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>げんこうようし マスター</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b665c;--line:#e3dccd;--r:14px;--ok:#2e8b57;--ng:#c0392b;--grid:#c98f6b;--c:30px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;line-height:1.7}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:bold;font-size:.95rem;padding:6px 12px;border:1px solid rgba(255,255,255,.5);border-radius:10px}
+header h1{font-size:1.25rem;margin:0}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+h2{font-size:1.15rem;color:var(--navy);margin:0 0 10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button,.btn{font-family:inherit;font-size:1.05rem;font-weight:bold;min-height:52px;padding:8px 16px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.tabs button{flex:1;min-width:110px}
+.tabs button.on,.btn.main{background:var(--navy);color:#fff}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.scroller{overflow-x:auto;padding:6px 0;direction:rtl}
+.sheet{display:inline-flex;flex-direction:row;direction:rtl;border:2px solid var(--grid);background:#fffdf8;margin-bottom:10px}
+.col{display:flex;flex-direction:column;direction:ltr}
+.col+.col{border-right:1px solid var(--grid)}
+.col.hashira{width:calc(var(--c)*.9);border-right:2px solid var(--grid);background:#fbf3ea;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;font-size:.7rem;color:var(--grid)}
+.col.hashira+.col{border-right:2px solid var(--grid)}
+.cell{width:var(--c);height:var(--c);border-bottom:1px solid #e7c9b5;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-size:calc(var(--c)*.68);line-height:1;cursor:default;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;color:#222}
+.cell:last-child{border-bottom:none}
+.cell.two{font-size:calc(var(--c)*.46)}
+.tap .cell{cursor:pointer}
+.tap .cell:hover{background:#fff1d6}
+.cell.hit{background:#ffd9d4;outline:3px solid var(--ng);outline-offset:-3px}
+.cell.fix{background:#dff3e6}
+.cell.miss{background:#eee}
+.msg{min-height:3.4em;text-align:center;font-size:1.15rem;font-weight:bold;margin-top:8px}
+.msg.ok{color:var(--ok)}.msg.ng{color:var(--ng)}
+.bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-weight:bold;color:var(--sub)}
+.rules{counter-reset:r;list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.rules li{border:2px solid var(--line);border-radius:var(--r);padding:10px 12px 10px 48px;position:relative;background:#fffdf8}
+.rules li::before{counter-increment:r;content:counter(r);position:absolute;left:10px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;text-align:center;font-weight:bold;line-height:28px}
+label{font-weight:bold;display:block;margin:8px 0 4px}
+input,textarea{font-family:inherit;font-size:1.1rem;padding:10px;border:2px solid var(--line);border-radius:10px;background:#fffdf8;width:100%}
+textarea{min-height:170px}
+.grid2{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.note{font-size:.9rem;color:var(--sub)}
+.size{display:flex;gap:6px;align-items:center;justify-content:flex-end;font-size:.9rem;color:var(--sub)}
+.size button{min-height:40px;min-width:44px;font-size:1rem;padding:2px 8px}
+footer{text-align:center;font-size:.85rem;color:var(--sub);padding:20px 12px 30px}
+footer a{color:var(--navy)}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}:root{--c:24px}}
+@media(min-width:1400px){:root{--c:40px}}
+@media print{header,.tabs,footer,.noprint{display:none!important}body{background:#fff}.card{box-shadow:none;padding:0}.scroller{overflow:visible}.sheet{page-break-after:always}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>げんこうようし マスター</h1></header>
+<main>
+  <div class="card noprint">
+    <div class="tabs" id="tabs">
+      <button data-v="rule" class="on">📏 きまり</button>
+      <button data-v="quiz">🔍 まちがいさがし</button>
+      <button data-v="write">✏️ かいてみよう</button>
+    </div>
+  </div>
+
+  <section id="v-rule">
+    <div class="card">
+      <h2>げんこうようし（たてがき）の きまり</h2>
+      <ol class="rules">
+        <li><b>だいめい</b>は 1ぎょうめ。うえを <b>2〜3マス</b> あけて かく。</li>
+        <li><b>なまえ</b>は 2ぎょうめ。したを <b>1マス</b> あける。みょうじと なまえの あいだも 1マス あける。</li>
+        <li><b>ほんぶん</b>は なまえの つぎの ぎょうから。（せんせいの しじで 1ぎょう あける ことも あるよ）</li>
+        <li><b>だんらく</b>の はじめは <b>1マス</b> さげる。</li>
+        <li><b>。、</b>・ちいさい じ（っ ゃ ゅ ょ）・<b>「 」</b>は、それぞれ <b>1マス</b> つかう。たてがきでは マスの <b>みぎうえ</b>に かく。</li>
+        <li>。や 、や 」が <b>ぎょうの いちばん うえ</b>に きそうな ときは、まえの ぎょうの <b>さいごの マス</b>に もじと いっしょに いれる。</li>
+        <li><b>かいわ</b>は ぎょうを かえて、いちばん うえの マスから「 を かく。</li>
+        <li>かいわの おわりの <b>。」</b>は <b>おなじ マス</b>に いれる。</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="bar"><h2>おてほん</h2><div class="size noprint">もじの おおきさ <button class="btn" data-z="-1">－</button><button class="btn" data-z="1">＋</button></div></div>
+      <div class="scroller"><div id="sample"></div></div>
+      <p class="note">みぎから ひだりへ よみます。</p>
+    </div>
+  </section>
+
+  <section id="v-quiz" hidden>
+    <div class="card">
+      <div class="bar"><span id="qc"></span><span id="qs"></span></div>
+      <h2 style="text-align:center;margin-top:6px">まちがって いる マスを タップしよう</h2>
+      <div class="scroller"><div id="qsheet" class="tap"></div></div>
+      <div class="msg" id="qmsg"></div>
+      <div class="row"><button class="btn" id="qhint">ヒント</button><button class="btn main" id="qnext" disabled>つぎへ ▶</button></div>
+    </div>
+  </section>
+
+  <section id="v-write" hidden>
+    <div class="card noprint">
+      <div class="grid2">
+        <div><label for="wt">だいめい</label><input id="wt" value="はじめての さかあがり"></div>
+        <div><label for="wn">なまえ</label><input id="wn" value="みなと はな"></div>
+      </div>
+      <label for="wb">ほんぶん（だんらくや かいわが かわる ところで かいぎょう）</label>
+      <textarea id="wb"></textarea>
+      <p class="note">うった ぶんしょうを、げんこうようしの きまりどおりに ならべて みせます。1マスさげ・かいわ・ぎょうの さいごの 。や 、も じどうで ととのえるよ。（ほぞんは この たんまつの なかだけ）</p>
+    </div>
+    <div class="card">
+      <div class="bar"><span id="wc"></span><span class="noprint"><button class="btn" onclick="print()">いんさつ</button></span></div>
+      <div class="scroller"><div id="wsheet"></div></div>
+    </div>
+  </section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_05_';
+function load(k,d){try{const v=localStorage.getItem(KEY+k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v))}catch(e){}}
+const $=id=>document.getElementById(id);
+const N=20; // 1ぎょう 20マス
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// "[いっ]" は 1マスに 2もじ
+function parse(line){const out=[];for(let i=0;i<line.length;i++){if(line[i]==='['){const j=line.indexOf(']',i);out.push(line.slice(i+1,j));i=j}else out.push(line[i])}return out}
+function sheetHTML(lines,cols){ // lines: 配列の配列（セル）
+  cols=cols||Math.max(10,Math.ceil(lines.length/10)*10);
+  let h='';
+  for(let p=0;p<cols;p+=20){
+    h+='<div class="sheet">';
+    for(let l=p;l<Math.min(p+20,cols);l++){
+      if(l===p+10)h+='<div class="col hashira">'+(p/20+1)+'まいめ</div>';
+      const cells=lines[l]||[];
+      h+='<div class="col">';
+      for(let c=0;c<N;c++){const t=cells[c]||'';const ch=(t==='　'||t===' ')?'':t;h+='<div class="cell'+(ch.length>1?' two':'')+'" data-l="'+l+'" data-c="'+c+'">'+esc(ch)+'</div>'}
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  return h;
+}
+// ----- まちがいさがし
+const QUIZ=[
+ {l:["なつやすみのおもいで","　　　　　　　　　　　　みなと　はな　","　なつやすみに、うみへいきました。"],e:[[0,0],[0,1],[0,2]],fix:[[0,0],[0,1],[0,2]],x:"だいめいは、うえを 2〜3マス あけて かくよ。"},
+ {l:["　　　わたしのたからもの","　　　　　　　　　　　　みなと　はな　","わたしのたからものは、おばあちゃんからも","らったオルゴールです。"],e:[[2,0]],fix:[[2,0]],x:"だんらくの はじめは 1マス さげて かくよ。"},
+ {l:["　　　おばあちゃんの家","　　　　　　　　　　　　みなと　はな　","　きのう、ぼくはおばあちゃんの家へいった","。おばあちゃんは、にこにこしてむかえて","くれました。"],e:[[3,0]],fix:[[2,19]],x:"。が ぎょうの あたまに きたら、まえの ぎょうの さいごの マスに もじと いっしょに いれるよ。"},
+ {l:["　　　うんどうかい","　　　　　　　　　　　　みなと　はな　","　うんどうかいで、リレーのせんしゅにえら","ばれました。足がおそいぼくは、それから[いっ]","しょうけんめいれんしゅうしました。"],e:[[3,19]],fix:[[3,19]],x:"ちいさい「っ」も 1マス つかうよ。「い」と「っ」を おなじ マスに かいては だめ。"},
+ {l:["　　　かえりみち","　　　　　　　　　　　　みなと　はな　","　いえにかえってドアをあけると、「おかえ","り。」とおかあさんがいいました。"],e:[[2,16]],fix:[[2,16]],x:"かいわは ぎょうを かえて、いちばん うえの マスから「 を かくよ。"},
+ {l:["　　　わたしのゆめ","　　　　　　　　　　　　　　みなと　はな","　わたしのゆめは、どうぶつのおいしゃさん","になることです。"],e:[[1,19]],fix:[[1,19]],x:"なまえの したは 1マス あけるよ。"},
+ {l:["　　　あさのじかん","　　　　　　　　　　　　みなと　はな　","「いってきます。」","　ぼくは、げんきよくいえをでました。"],e:[[2,8]],fix:[[2,7]],x:"かいわの おわりの 。と 」は、おなじ マスに いれるよ。"},
+ {l:["　　　なつまつり","　　　　　　　　　　　　みなと　はな　","　なつまつりでは、わたがしをたべたあとに","、きんぎょすくいをしました。"],e:[[3,0]],fix:[[2,19]],x:"、も ぎょうの あたまには こないよ。まえの ぎょうの さいごの マスに いっしょに いれよう。"}
+];
+let qorder=[],qi=0,qscore=0,qmiss=false,qdone=false;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function qStart(){qorder=shuffle(QUIZ.map((_,i)=>i));qi=0;qscore=0;qShow()}
+function qShow(){
+  const q=QUIZ[qorder[qi]];qmiss=false;qdone=false;
+  $('qc').textContent=(qi+1)+' / '+QUIZ.length+'もん';$('qs').textContent='いっぱつ せいかい '+qscore;
+  $('qsheet').innerHTML=sheetHTML(q.l.map(parse),10);$('qmsg').textContent='';$('qmsg').className='msg';$('qnext').disabled=true;
+  $('qsheet').querySelectorAll('.cell').forEach(c=>c.onclick=()=>qTap(c));
+}
+function qTap(c){
+  if(qdone)return;const q=QUIZ[qorder[qi]],l=+c.dataset.l,ci=+c.dataset.c;
+  if(q.e.some(([a,b])=>a===l&&b===ci)){
+    qdone=true;if(!qmiss)qscore++;
+    q.e.forEach(([a,b])=>{const el=$('qsheet').querySelector('[data-l="'+a+'"][data-c="'+b+'"]');el&&el.classList.add('hit')});
+    q.fix.forEach(([a,b])=>{const el=$('qsheet').querySelector('[data-l="'+a+'"][data-c="'+b+'"]');el&&el.classList.add('fix')});
+    $('qmsg').className='msg ok';$('qmsg').innerHTML='みつけた！<br>'+q.x+(q.fix.some(f=>!q.e.some(e=>e[0]===f[0]&&e[1]===f[1]))?'<br><small>（みどりの マスが ただしい いち）</small>':'');
+    $('qs').textContent='いっぱつ せいかい '+qscore;$('qnext').disabled=false;
+  }else{qmiss=true;c.classList.add('miss');$('qmsg').className='msg ng';$('qmsg').textContent='そこは だいじょうぶ。ほかを さがしてみよう。'}
+}
+$('qhint').onclick=()=>{qmiss=true;$('qmsg').className='msg';$('qmsg').textContent='ヒント：「きまり」の ページの 8この きまりと くらべてみよう。'};
+$('qnext').onclick=()=>{qi++;if(qi<QUIZ.length)qShow();else{
+  const best=load('best',0);if(qscore>best)save('best',qscore);
+  $('qsheet').innerHTML='<h2 style="text-align:center;direction:ltr">'+QUIZ.length+'もんちゅう '+qscore+'もん いっぱつ せいかい！<br><small>さいこう きろく '+Math.max(best,qscore)+'もん</small></h2>';
+  $('qmsg').innerHTML='<button class="btn main" onclick="qStart()">もういちど</button>';$('qnext').disabled=true}};
+// ----- かいてみよう（じどう レイアウト）
+const HANG='。、」』）';
+function layout(title,name,body){
+  const lines=[];
+  const t=[...title.trim()].map(ch=>ch===' '?'　':ch);
+  let first=['　','　','　'];const tl=first.concat(t);
+  for(let i=0;i<tl.length;i+=N)lines.push(tl.slice(i,i+N));
+  const nm=[...name.trim().replace(/[ 　]+/g,'　')];
+  if(nm.length){const nl=Array(Math.max(0,N-1-nm.length)).fill('　').concat(nm).slice(0,N);lines.push(nl)}
+  body.replace(/\r/g,'').split('\n').forEach(p=>{
+    p=p.replace(/^[ 　]+/,'');
+    if(!p){lines.push([]);return}
+    const dialog=/^[「『]/.test(p);
+    let cur=dialog?[]:['　'];
+    for(const ch of [...p]){
+      const last=cur.length?cur[cur.length-1]:'';
+      if((ch==='」'||ch==='』')&&/。$/.test(last)){cur[cur.length-1]=last+ch;continue}
+      if(cur.length>=N){
+        if(HANG.includes(ch)){cur[N-1]=cur[N-1]+ch;continue}
+        lines.push(cur);cur=[];
+      }
+      cur.push(ch===' '?'　':ch);
+    }
+    lines.push(cur);
+  });
+  return lines;
+}
+const DEF="わたしは、きのう、はじめてさかあがりができました。\nさいしょは、なんかいやってもおなかがてつぼうからはなれてしまいました。そこで、お父さんが、\n「足をけるときに、おへそを見てごらん。」\nと教えてくれました。\n言われたとおりにやってみると、くるっとまわれました。とてもうれしかったです。";
+function renderWrite(){
+  const t=$('wt').value,n=$('wn').value,b=$('wb').value;
+  save('draft',{t,n,b});
+  const ls=layout(t,n,b);const cols=Math.max(20,Math.ceil(ls.length/20)*20);
+  $('wsheet').innerHTML=sheetHTML(ls,cols);
+  const chars=ls.slice(2).reduce((a,l)=>a+l.filter(c=>c&&c!=='　').length,0);
+  $('wc').textContent='ほんぶん やく '+chars+'もじ ／ '+ls.length+'ぎょう（400じづめ '+Math.ceil(ls.length/20)+'まい）';
+}
+const d=load('draft',null);
+$('wt').value=d?d.t:$('wt').value;$('wn').value=d?d.n:$('wn').value;$('wb').value=d?d.b:DEF;
+['wt','wn','wb'].forEach(id=>$(id).addEventListener('input',renderWrite));
+// サイズ
+let cz=load('cz',0);
+function applyZ(){document.documentElement.style.setProperty('--c',cz?(30+cz*6)+'px':'')}
+document.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{cz=Math.max(-2,Math.min(4,cz+ +b.dataset.z));save('cz',cz);applyZ()});
+applyZ();
+$('sample').innerHTML=sheetHTML(layout('はじめての さかあがり','みなと はな',DEF),20);
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  ['rule','quiz','write'].forEach(v=>$('v-'+v).hidden=v!==b.dataset.v);
+  if(b.dataset.v==='quiz')qStart();if(b.dataset.v==='write')renderWrite();
+});
+</script>
+</body>
+</html>

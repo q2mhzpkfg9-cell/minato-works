@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>かんじフラッシュ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;min-height:100vh;color:#333;
+  font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+  background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+  background-attachment:fixed;
+}
+header{text-align:center;padding:18px 10px 6px}
+h1{margin:0;font-size:clamp(1.6rem,4vw,2.6rem);color:#5b6ef5;letter-spacing:.06em}
+.sub{color:#7a86a8;font-size:1.05rem;margin-top:4px}
+main{max-width:900px;margin:0 auto;padding:12px 16px 40px}
+.card{background:#fff;border-radius:22px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:26px;margin-bottom:20px}
+.btn{
+  border:none;border-radius:999px;background:#5b6ef5;color:#fff;cursor:pointer;
+  font-family:inherit;font-size:1.35rem;padding:16px 34px;margin:8px;
+  box-shadow:0 4px 12px rgba(91,110,245,.35);transition:transform .1s;
+}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:#eef1ff;color:#5b6ef5;box-shadow:none}
+.btn.big{font-size:1.7rem;padding:20px 44px}
+.btn.ok{background:#2ec27e;box-shadow:0 4px 12px rgba(46,194,126,.35)}
+.btn.ng{background:#f56b8d;box-shadow:0 4px 12px rgba(245,107,141,.35)}
+.btn.sel{outline:5px solid #ffd83d}
+.btn:disabled{opacity:.4;cursor:default}
+.center{text-align:center}
+.screen{display:none}
+.screen.show{display:block}
+.kanji-big{
+  font-size:clamp(9rem,32vmin,17rem);line-height:1.15;text-align:center;
+  font-weight:bold;color:#2f3a68;user-select:none;min-height:1.2em;
+}
+.yomi{font-size:clamp(1.8rem,6vmin,3rem);text-align:center;color:#e8618c;min-height:1.4em;font-weight:bold}
+.progress{font-size:1.3rem;color:#7a86a8;text-align:center;margin-bottom:6px}
+.slider-row{display:flex;align-items:center;justify-content:center;gap:14px;font-size:1.2rem;flex-wrap:wrap;margin-top:10px}
+input[type=range]{width:min(320px,70%);height:36px;accent-color:#5b6ef5}
+.badge{display:inline-block;background:#f56b8d;color:#fff;border-radius:999px;font-size:1rem;padding:3px 12px;margin-left:6px}
+.result-num{font-size:3rem;font-weight:bold;color:#5b6ef5}
+.tap-hint{color:#a5aecb;font-size:1.15rem;text-align:center}
+.flash-card{cursor:pointer}
+h2{color:#5b6ef5;font-size:1.4rem;margin:4px 0 10px}
+footer{text-align:center;color:#9aa4c4;font-size:.95rem;padding-bottom:24px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🈁 かんじフラッシュ</h1>
+  <div class="sub">1ねん・2ねん・3ねんの かんじで あそぼう</div>
+</header>
+<main>
+
+<!-- ホーム -->
+<section id="scr-home" class="screen show">
+  <div class="card center">
+    <h2>① がくねんを えらぼう</h2>
+    <button class="btn big grade-btn sel" data-g="1" onclick="pickGrade(1,this)">1ねん</button>
+    <button class="btn big grade-btn" data-g="2" onclick="pickGrade(2,this)">2ねん</button>
+    <button class="btn big grade-btn" data-g="3" onclick="pickGrade(3,this)">3ねん</button>
+    <div class="tap-hint" id="grade-info"></div>
+  </div>
+  <div class="card center">
+    <h2>② あそびかたを えらぼう</h2>
+    <button class="btn big" onclick="startFlash()">⚡ フラッシュ</button>
+    <button class="btn big" onclick="startQuiz(false)">❓ よみクイズ</button>
+    <br>
+    <button class="btn big ghost" onclick="startQuiz(true)">💪 にがてだけ ふくしゅう<span class="badge" id="nigate-count">0</span></button>
+    <br>
+    <button class="btn ghost" onclick="clearNigate()">🗑 にがてカードを ぜんぶけす</button>
+  </div>
+</section>
+
+<!-- フラッシュ -->
+<section id="scr-flash" class="screen">
+  <div class="progress" id="flash-prog"></div>
+  <div class="card flash-card" onclick="flashNext(1)">
+    <div class="kanji-big" id="flash-kanji"></div>
+    <div class="yomi" id="flash-yomi"></div>
+    <div class="tap-hint">カードを タップしても すすむよ</div>
+  </div>
+  <div class="center">
+    <button class="btn ghost" onclick="flashNext(-1)">◀ まえ</button>
+    <button class="btn" id="flash-play" onclick="toggleFlashPlay()">▶ じどうめくり</button>
+    <button class="btn ghost" onclick="flashNext(1)">つぎ ▶</button>
+  </div>
+  <div class="slider-row">
+    🐢 <input type="range" id="flash-speed" min="1" max="6" step="0.5" value="2"> 🐇
+    <span id="flash-speed-label">2びょう</span>
+  </div>
+  <div class="center">
+    <button class="btn ghost" id="yomi-toggle" onclick="toggleYomi()">よみを みせる：OFF</button>
+    <button class="btn ghost" onclick="goHome()">🏠 もどる</button>
+  </div>
+</section>
+
+<!-- クイズ -->
+<section id="scr-quiz" class="screen">
+  <div class="progress" id="quiz-prog"></div>
+  <div class="card">
+    <div class="kanji-big" id="quiz-kanji"></div>
+    <div class="yomi" id="quiz-yomi"></div>
+    <div class="center" id="quiz-reveal-area">
+      <button class="btn big" onclick="revealAnswer()">👀 こたえを みる</button>
+    </div>
+    <div class="center" id="quiz-judge-area" style="display:none">
+      <div class="tap-hint">よめたかな？ じぶんで はんてい！</div>
+      <button class="btn big ok" onclick="judge(true)">⭕ よめた</button>
+      <button class="btn big ng" onclick="judge(false)">❌ にがて</button>
+    </div>
+  </div>
+  <div class="center"><button class="btn ghost" onclick="goHome()">🏠 とちゅうで やめる</button></div>
+</section>
+
+<!-- けっか -->
+<section id="scr-result" class="screen">
+  <div class="card center">
+    <h2>🎉 おつかれさま！</h2>
+    <div><span class="result-num" id="res-ok">0</span> こ よめた ⭕</div>
+    <div><span class="result-num" id="res-ng" style="color:#f56b8d">0</span> こ にがて ❌</div>
+    <p class="tap-hint" id="res-msg"></p>
+    <button class="btn big" onclick="retryQuiz()">🔁 もういちど</button>
+    <button class="btn big ghost" onclick="goHome()">🏠 ホームへ</button>
+  </div>
+</section>
+
+</main>
+<footer>せんせいアプリ25 ／ かんじフラッシュ</footer>
+
+<script>
+"use strict";
+/* ===== 配当漢字データ [漢字, よみ] ===== */
+const DATA = {
+1:[["一","いち"],["右","みぎ"],["雨","あめ"],["円","えん"],["王","おう"],["音","おと"],["下","した"],["火","ひ"],["花","はな"],["貝","かい"],
+["学","がく"],["気","き"],["九","きゅう"],["休","やすむ"],["玉","たま"],["金","きん"],["空","そら"],["月","つき"],["犬","いぬ"],["見","みる"],
+["五","ご"],["口","くち"],["校","こう"],["左","ひだり"],["三","さん"],["山","やま"],["子","こ"],["四","し"],["糸","いと"],["字","じ"],
+["耳","みみ"],["七","しち"],["車","くるま"],["手","て"],["十","じゅう"],["出","でる"],["女","おんな"],["小","ちいさい"],["上","うえ"],["森","もり"],
+["人","ひと"],["水","みず"],["正","ただしい"],["生","いきる"],["青","あお"],["夕","ゆう"],["石","いし"],["赤","あか"],["千","せん"],["川","かわ"],
+["先","さき"],["早","はやい"],["草","くさ"],["足","あし"],["村","むら"],["大","おおきい"],["男","おとこ"],["竹","たけ"],["中","なか"],["虫","むし"],
+["町","まち"],["天","てん"],["田","た"],["土","つち"],["二","に"],["日","ひ"],["入","はいる"],["年","とし"],["白","しろ"],["八","はち"],
+["百","ひゃく"],["文","ぶん"],["木","き"],["本","ほん"],["名","な"],["目","め"],["立","たつ"],["力","ちから"],["林","はやし"],["六","ろく"]],
+2:[["引","ひく"],["羽","はね"],["雲","くも"],["園","えん"],["遠","とおい"],["何","なに"],["科","か"],["夏","なつ"],["家","いえ"],["歌","うた"],
+["画","が"],["回","まわる"],["会","あう"],["海","うみ"],["絵","え"],["外","そと"],["角","かど"],["楽","たのしい"],["活","かつ"],["間","あいだ"],
+["丸","まる"],["岩","いわ"],["顔","かお"],["汽","き"],["記","しるす"],["帰","かえる"],["弓","ゆみ"],["牛","うし"],["魚","さかな"],["京","きょう"],
+["強","つよい"],["教","おしえる"],["近","ちかい"],["兄","あに"],["形","かたち"],["計","はかる"],["元","もと"],["言","いう"],["原","はら"],["戸","と"],
+["古","ふるい"],["午","ご"],["後","あと"],["語","かたる"],["工","こう"],["公","こう"],["広","ひろい"],["交","まじわる"],["光","ひかり"],["考","かんがえる"],
+["行","いく"],["高","たかい"],["黄","き"],["合","あう"],["谷","たに"],["国","くに"],["黒","くろい"],["今","いま"],["才","さい"],["細","ほそい"],
+["作","つくる"],["算","さん"],["止","とまる"],["市","いち"],["矢","や"],["姉","あね"],["思","おもう"],["紙","かみ"],["寺","てら"],["自","じ"],
+["時","とき"],["室","しつ"],["社","しゃ"],["弱","よわい"],["首","くび"],["秋","あき"],["週","しゅう"],["春","はる"],["書","かく"],["少","すくない"]],
+3:[["悪","わるい"],["安","やすい"],["暗","くらい"],["医","い"],["委","い"],["意","い"],["育","そだつ"],["員","いん"],["院","いん"],["飲","のむ"],
+["運","はこぶ"],["泳","およぐ"],["駅","えき"],["央","おう"],["横","よこ"],["屋","や"],["温","あたたかい"],["化","ばける"],["荷","に"],["界","かい"],
+["開","ひらく"],["階","かい"],["寒","さむい"],["感","かん"],["漢","かん"],["館","かん"],["岸","きし"],["起","おきる"],["期","き"],["客","きゃく"],
+["究","きゅう"],["急","いそぐ"],["級","きゅう"],["宮","みや"],["球","たま"],["去","さる"],["橋","はし"],["業","ぎょう"],["曲","まがる"],["局","きょく"],
+["銀","ぎん"],["区","く"],["苦","くるしい"],["具","ぐ"],["君","きみ"],["係","かかり"],["軽","かるい"],["血","ち"],["決","きめる"],["研","けん"],
+["県","けん"],["庫","こ"],["湖","みずうみ"],["向","むく"],["幸","しあわせ"],["港","みなと"],["号","ごう"],["根","ね"],["祭","まつり"],["皿","さら"],
+["仕","つかえる"],["死","しぬ"],["使","つかう"],["始","はじめる"],["指","ゆび"],["歯","は"],["詩","し"],["次","つぎ"],["事","こと"],["持","もつ"],
+["式","しき"],["実","み"],["写","うつす"],["者","もの"],["主","ぬし"],["守","まもる"],["取","とる"],["酒","さけ"],["受","うける"],["州","しゅう"]]
+};
+
+const LS_NIGATE = "sensei25_kanji_nigate";
+let grade = 1;
+let deck = [], idx = 0;
+let flashTimer = null, showYomi = false;
+let quizMode = false, reviewMode = false, okCount = 0, ngCount = 0;
+
+/* ===== 効果音 (Web Audio) ===== */
+let actx = null;
+function ac(){ if(!actx){ actx = new (window.AudioContext||window.webkitAudioContext)(); } if(actx.state==="suspended") actx.resume(); return actx; }
+function tone(freq, dur, type, vol, when){
+  const c = ac(), o = c.createOscillator(), g = c.createGain();
+  o.type = type||"sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol||0.2, c.currentTime+(when||0));
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+(when||0)+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+(when||0)); o.stop(c.currentTime+(when||0)+dur+0.05);
+}
+function seTick(){ tone(880,0.06,"square",0.08); }
+function sePinpon(){ tone(784,0.15,"sine",0.25); tone(1046,0.3,"sine",0.25,0.13); }
+function seBoo(){ tone(220,0.35,"sawtooth",0.15); tone(180,0.35,"sawtooth",0.15,0.08); }
+
+/* ===== 共通 ===== */
+function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show"));
+  document.getElementById(id).classList.add("show");
+}
+function getNigate(){ try{ return JSON.parse(localStorage.getItem(LS_NIGATE)||"[]"); }catch(e){ return []; } }
+function setNigate(arr){ localStorage.setItem(LS_NIGATE, JSON.stringify(arr)); updateNigateCount(); }
+function updateNigateCount(){ document.getElementById("nigate-count").textContent = getNigate().length; }
+function clearNigate(){
+  if(getNigate().length===0){ alert("にがてカードは ありません"); return; }
+  if(confirm("にがてカードを ぜんぶ けしますか？")){ setNigate([]); }
+}
+function pickGrade(g, btn){
+  grade = g;
+  document.querySelectorAll(".grade-btn").forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+  document.getElementById("grade-info").textContent = g+"ねんの かんじ "+DATA[g].length+"もじ";
+}
+function goHome(){ stopFlashTimer(); show("scr-home"); updateNigateCount(); }
+
+/* ===== フラッシュモード ===== */
+function startFlash(){
+  deck = shuffle(DATA[grade]); idx = 0; showYomi = false;
+  document.getElementById("yomi-toggle").textContent = "よみを みせる：OFF";
+  show("scr-flash"); renderFlash();
+}
+function renderFlash(){
+  const c = deck[idx];
+  document.getElementById("flash-kanji").textContent = c[0];
+  document.getElementById("flash-yomi").textContent = showYomi ? c[1] : "";
+  document.getElementById("flash-prog").textContent = (idx+1)+" / "+deck.length+"　（"+grade+"ねん）";
+}
+function flashNext(dir){
+  idx = (idx + dir + deck.length) % deck.length;
+  seTick(); renderFlash();
+}
+function toggleYomi(){
+  showYomi = !showYomi;
+  document.getElementById("yomi-toggle").textContent = "よみを みせる：" + (showYomi?"ON":"OFF");
+  renderFlash();
+}
+function flashSpeed(){ return parseFloat(document.getElementById("flash-speed").value)*1000; }
+function toggleFlashPlay(){
+  if(flashTimer){ stopFlashTimer(); }
+  else{
+    ac();
+    flashTimer = setInterval(()=>flashNext(1), flashSpeed());
+    document.getElementById("flash-play").textContent = "⏸ ストップ";
+  }
+}
+function stopFlashTimer(){
+  if(flashTimer){ clearInterval(flashTimer); flashTimer = null; }
+  const b = document.getElementById("flash-play");
+  if(b) b.textContent = "▶ じどうめくり";
+}
+document.getElementById("flash-speed").addEventListener("input", function(){
+  document.getElementById("flash-speed-label").textContent = this.value+"びょう";
+  if(flashTimer){ clearInterval(flashTimer); flashTimer = setInterval(()=>flashNext(1), flashSpeed()); }
+});
+
+/* ===== クイズモード ===== */
+function startQuiz(review){
+  reviewMode = review;
+  if(review){
+    const ng = getNigate();
+    const all = DATA[1].concat(DATA[2], DATA[3]);
+    deck = shuffle(all.filter(c=>ng.includes(c[0])));
+    if(deck.length===0){ alert("にがてカードは まだ ありません。\nよみクイズで ❌ を おすと ふえるよ！"); return; }
+  }else{
+    deck = shuffle(DATA[grade]);
+  }
+  idx = 0; okCount = 0; ngCount = 0;
+  quizMode = true;
+  show("scr-quiz"); renderQuiz();
+}
+function renderQuiz(){
+  const c = deck[idx];
+  document.getElementById("quiz-kanji").textContent = c[0];
+  document.getElementById("quiz-yomi").textContent = "";
+  document.getElementById("quiz-reveal-area").style.display = "";
+  document.getElementById("quiz-judge-area").style.display = "none";
+  document.getElementById("quiz-prog").textContent =
+    (reviewMode?"💪 にがてふくしゅう　":"") + (idx+1)+" / "+deck.length + "　⭕"+okCount+"　❌"+ngCount;
+}
+function revealAnswer(){
+  seTick();
+  document.getElementById("quiz-yomi").textContent = deck[idx][1];
+  document.getElementById("quiz-reveal-area").style.display = "none";
+  document.getElementById("quiz-judge-area").style.display = "";
+}
+function judge(ok){
+  const kanji = deck[idx][0];
+  let ng = getNigate();
+  if(ok){
+    okCount++; sePinpon();
+    if(reviewMode){ ng = ng.filter(k=>k!==kanji); setNigate(ng); }
+  }else{
+    ngCount++; seBoo();
+    if(!ng.includes(kanji)){ ng.push(kanji); setNigate(ng); }
+  }
+  idx++;
+  if(idx >= deck.length){ finishQuiz(); } else { renderQuiz(); }
+}
+function finishQuiz(){
+  document.getElementById("res-ok").textContent = okCount;
+  document.getElementById("res-ng").textContent = ngCount;
+  const msg = document.getElementById("res-msg");
+  if(ngCount===0) msg.textContent = "パーフェクト！ すごい！🌟";
+  else if(reviewMode) msg.textContent = "⭕になった カードは にがてから そつぎょうしたよ！";
+  else msg.textContent = "❌のカードは「にがてだけ ふくしゅう」で れんしゅうできるよ";
+  show("scr-result");
+}
+function retryQuiz(){ startQuiz(reviewMode); }
+
+updateNigateCount();
+pickGrade(1, document.querySelector(".grade-btn"));
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>
