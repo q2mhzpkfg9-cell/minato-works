@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>どくしょの き</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b665c;--line:#e3dccd;--r:14px;--gold:#d9a21b;--ok:#2e8b57}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;line-height:1.7}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:bold;font-size:.95rem;padding:6px 12px;border:1px solid rgba(255,255,255,.5);border-radius:10px}
+header h1{font-size:1.25rem;margin:0}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+h2{font-size:1.15rem;color:var(--navy);margin:0 0 10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button,.btn{font-family:inherit;font-size:1.05rem;font-weight:bold;min-height:52px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.tabs button{flex:1;min-width:100px}
+.tabs button.on,.btn.main{background:var(--navy);color:#fff}
+.btn.sm{min-height:38px;font-size:.85rem;padding:2px 10px}
+.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input,textarea{font-family:inherit;font-size:1.1rem;padding:10px;border:2px solid var(--line);border-radius:10px;background:#fffdf8;width:100%;min-height:48px}
+.top select{width:auto;flex:1;min-width:160px}
+label{font-weight:bold;display:block;margin:10px 0 4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.genres{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.genres button{font-family:inherit;font-size:1rem;min-height:56px;border-radius:12px;border:3px solid var(--line);background:#fff;cursor:pointer;text-align:left;padding:4px 10px;color:var(--ink)}
+.genres button.on{border-color:var(--navy);background:#e7eef8;font-weight:bold}
+.stars{display:flex;gap:6px}
+.stars button{font-size:2rem;background:none;border:none;cursor:pointer;color:#ddd;padding:0 2px;min-width:44px;min-height:48px}
+.stars button.on{color:var(--gold)}
+.msg{text-align:center;font-weight:bold;color:var(--ok);min-height:1.6em}
+/* 木 */
+.tree{position:relative;background:linear-gradient(#eaf4fb,#fffdf8);border-radius:var(--r);overflow:hidden}
+.tree svg{display:block;width:100%;height:auto}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}
+.stat div{background:#faf6ee;border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.8rem;color:var(--navy)}
+.prog{height:18px;background:#eee6d6;border-radius:9px;overflow:hidden;margin:6px 0}
+.prog div{height:100%;background:var(--ok)}
+.gbar{display:grid;grid-template-columns:9em 1fr 2.5em;gap:8px;align-items:center;margin:4px 0;font-size:.95rem}
+.gbar .b{height:16px;border-radius:8px;background:#eee6d6;overflow:hidden}
+.gbar .b div{height:100%}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{border-radius:20px;padding:4px 12px;font-size:.9rem;border:2px dashed var(--line);color:#aaa}
+.badge.got{border-style:solid;color:#fff;font-weight:bold}
+.books{display:grid;gap:8px}
+.bk{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;border:2px solid var(--line);border-radius:12px;padding:8px 10px}
+.bk .c{height:100%;border-radius:5px}
+.bk .t{font-weight:bold}
+.bk small{color:var(--sub)}
+.note{font-size:.9rem;color:var(--sub)}
+.sugg{background:#fff7e0;border-radius:12px;padding:10px 14px}
+footer{text-align:center;font-size:.85rem;color:var(--sub);padding:20px 12px 30px}
+footer a{color:var(--navy)}
+@media(max-width:520px){.g2{grid-template-columns:1fr}.gbar{grid-template-columns:7em 1fr 2em}}
+@media print{header,.tabs,footer,.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>どくしょの き</h1></header>
+<main>
+  <div class="card noprint">
+    <div class="top">
+      <select id="who" aria-label="だれの きろく"></select>
+      <button class="btn" id="addWho">＋ ひと</button>
+      <select id="grade" aria-label="がくねん">
+        <option value="1">1ねんせい</option><option value="2">2ねんせい</option><option value="3">3ねんせい</option>
+        <option value="4">4ねんせい</option><option value="5">5ねんせい</option><option value="6">6ねんせい</option>
+      </select>
+    </div>
+    <p class="note" style="margin:8px 0 0">きろくは この たんまつの なかだけに ほぞんされます。きょうだいで つかう ときは「＋ ひと」で わけられるよ。</p>
+  </div>
+  <div class="card noprint">
+    <div class="tabs" id="tabs">
+      <button data-v="tree" class="on">🌳 き</button>
+      <button data-v="add">📗 よんだ！</button>
+      <button data-v="list">📚 ほんだな</button>
+    </div>
+  </div>
+
+  <section id="v-tree">
+    <div class="card">
+      <div class="tree" id="tree"></div>
+      <p class="note" style="text-align:center">1さつ よむごとに はっぱが 1まい。ジャンルの いろで ふえていくよ。</p>
+      <div class="stat" id="stat"></div>
+    </div>
+    <div class="card"><h2 id="goalT"></h2><div class="prog"><div id="goalBar"></div></div><div id="goalTxt" class="note"></div>
+      <label for="goal">1かげつの もくひょう（さつ）</label><input id="goal" type="number" min="1" inputmode="numeric" style="max-width:160px"></div>
+    <div class="card"><h2>ジャンルの バランス</h2><div id="gbars"></div><div class="sugg" id="sugg" style="margin-top:10px"></div></div>
+    <div class="card"><h2>ジャンル バッジ</h2><div class="badges" id="badges"></div></div>
+  </section>
+
+  <section id="v-add" hidden>
+    <div class="card">
+      <label for="bt">ほんの なまえ</label><input id="bt" placeholder="れい：ぐりとぐら">
+      <div class="g2">
+        <div><label for="ba">かいた ひと（なくても OK）</label><input id="ba"></div>
+        <div><label for="bp">ページすう（なくても OK）</label><input id="bp" type="number" min="0" inputmode="numeric"></div>
+      </div>
+      <label for="bd">よみおわった ひ</label><input id="bd" type="date" style="max-width:220px">
+      <label>ジャンル</label><div class="genres" id="genres"></div>
+      <label>おもしろさ</label><div class="stars" id="stars"></div>
+      <label for="bc">ひとこと かんそう</label><input id="bc" placeholder="れい：さいごの ばめんで ドキドキした">
+      <div style="margin-top:14px;text-align:center"><button class="btn main" id="saveBtn" style="min-width:200px">きろくする 🌱</button></div>
+      <div class="msg" id="msg"></div>
+    </div>
+  </section>
+
+  <section id="v-list" hidden>
+    <div class="card">
+      <div class="top"><h2 style="flex:1;margin:0" id="listT"></h2><button class="btn sm" onclick="print()">いんさつ</button></div>
+      <div class="books" id="books" style="margin-top:10px"></div>
+    </div>
+  </section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_10_';
+function load(k,d){try{const v=localStorage.getItem(KEY+k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v))}catch(e){}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// 図書館の分類（日本十進分類法）を こども向けに まとめた ジャンル
+const GEN=[
+ ["ehon","えほん","#f28c8c"],["mono","ものがたり（9）","#e6a23c"],["den","むかしばなし・でんき（2・9）","#b07d4f"],
+ ["shizen","しぜん・いきもの（4）","#5aa469"],["kagaku","かがく・のりもの（4・5）","#3b8bd0"],["shakai","くらし・しゃかい（3）","#8e6cc1"],
+ ["rekishi","れきし・ちり（2）","#a0522d"],["geijutsu","スポーツ・げいじゅつ（7）","#e07bb5"],["kotoba","ことば・し（8・9）","#2aa198"],["zukan","ずかん・しらべる（0）","#6b7b8c"]
+];
+const GM=Object.fromEntries(GEN.map(g=>[g[0],g]));
+const GOAL={1:10,2:10,3:8,4:6,5:5,6:4}; // 1かげつの めやす（さつ）
+let data=load('data',{users:[{id:'u1',name:'わたし',grade:2,goal:10,books:[]}],cur:'u1'});
+const U=()=>data.users.find(u=>u.id===data.cur)||data.users[0];
+function persist(){save('data',data)}
+let pick={g:null,s:3};
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function renderWho(){$('who').innerHTML=data.users.map(u=>'<option value="'+u.id+'">'+esc(u.name)+'</option>').join('');$('who').value=U().id;$('grade').value=U().grade;$('goal').value=U().goal}
+$('who').onchange=()=>{data.cur=$('who').value;persist();renderWho();renderAll()};
+$('addWho').onclick=()=>{const n=prompt('なまえ（ニックネームでも OK）');if(!n)return;const u={id:'u'+Date.now(),name:n.trim(),grade:+$('grade').value,goal:GOAL[$('grade').value],books:[]};data.users.push(u);data.cur=u.id;persist();renderWho();renderAll()};
+$('grade').onchange=()=>{const u=U();u.grade=+$('grade').value;u.goal=GOAL[u.grade];persist();renderWho();renderAll()};
+$('goal').oninput=()=>{const v=parseInt($('goal').value);if(v>0){U().goal=v;persist();renderGoal()}};
+// 木のえ
+function renderTree(){
+  const bs=U().books,W=600,H=420;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="よんだ ほんの き"><ellipse cx="300" cy="405" rx="220" ry="16" fill="#cfe3b4"/>';
+  const lvl=Math.min(1,bs.length/40),trunkH=110+lvl*60;
+  s+='<path d="M285 405 Q290 '+(405-trunkH/2)+' 280 '+(405-trunkH)+' L320 '+(405-trunkH)+' Q310 '+(405-trunkH/2)+' 315 405 Z" fill="#8b5a2b"/>';
+  const cy=405-trunkH-90,R=90+lvl*80;
+  s+='<ellipse cx="300" cy="'+cy+'" rx="'+(R+30)+'" ry="'+R+'" fill="#e3efd3" opacity=".8"/>';
+  // はっぱ（決まった ならびで おく）
+  bs.forEach((b,i)=>{const a=i*2.39996,r=Math.sqrt(i+1)/Math.sqrt(Math.max(bs.length,20)+1)*R*.95;
+    const x=300+Math.cos(a)*r*1.25,y=cy+Math.sin(a)*r;const c=(GM[b.g]||GEN[1])[2];
+    s+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="11" ry="7" transform="rotate('+((i*47)%180)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="'+c+'"><title>'+esc(b.t)+'</title></ellipse>'});
+  if(!bs.length)s+='<text x="300" y="'+cy+'" text-anchor="middle" font-size="22" fill="#6b665c">「よんだ！」で はっぱを ふやそう</text>';
+  $('tree').innerHTML=s+'</svg>';
+  const pages=bs.reduce((a,b)=>a+(+b.p||0),0);
+  $('stat').innerHTML='<div><b>'+bs.length+'</b>さつ</div><div><b>'+pages+'</b>ページ</div><div><b>'+new Set(bs.map(b=>b.g)).size+'</b>/ 10 ジャンル</div>';
+}
+function renderGoal(){
+  const u=U(),ym=today().slice(0,7),n=u.books.filter(b=>(b.d||'').startsWith(ym)).length;
+  $('goalT').textContent=(+ym.slice(5))+'がつの もくひょう：'+n+' / '+u.goal+'さつ';
+  $('goalBar').style.width=Math.min(100,n/u.goal*100)+'%';
+  $('goalTxt').textContent=n>=u.goal?'🎉 もくひょう たっせい！':'あと '+(u.goal-n)+'さつ。（'+u.grade+'ねんせいの めやすは 1かげつ '+GOAL[u.grade]+'さつ。じぶんで かえても OK）';
+}
+function renderBal(){
+  const bs=U().books,cnt={};bs.forEach(b=>cnt[b.g]=(cnt[b.g]||0)+1);const mx=Math.max(1,...Object.values(cnt));
+  $('gbars').innerHTML=GEN.map(g=>'<div class="gbar"><span>'+g[1].replace(/（.*）/,'')+'</span><div class="b"><div style="width:'+((cnt[g[0]]||0)/mx*100)+'%;background:'+g[2]+'"></div></div><span>'+(cnt[g[0]]||0)+'</span></div>').join('');
+  const none=GEN.filter(g=>!cnt[g[0]]&&(U().grade>=3||g[0]!=='zukan'));
+  $('sugg').innerHTML=bs.length<3?'💡 いろいろな ジャンルを よむと、はっぱの いろが カラフルに なるよ。':none.length?'💡 つぎは「<b>'+none[Math.floor(Math.random()*none.length)][1].replace(/（.*）/,'')+'</b>」の ほんに チャレンジしてみない？':'🌈 ぜんぶの ジャンルを よんだね！すごい！';
+  $('badges').innerHTML=GEN.map(g=>'<span class="badge'+(cnt[g[0]]?' got':'')+'" style="'+(cnt[g[0]]?'background:'+g[2]+';border-color:'+g[2]:'')+'">'+g[1].replace(/（.*）/,'')+'</span>').join('');
+}
+function renderForm(){
+  $('genres').innerHTML=GEN.map(g=>'<button data-g="'+g[0]+'" class="'+(pick.g===g[0]?'on':'')+'" style="border-left:10px solid '+g[2]+'">'+g[1]+'</button>').join('');
+  $('genres').querySelectorAll('button').forEach(b=>b.onclick=()=>{pick.g=b.dataset.g;renderForm()});
+  $('stars').innerHTML=[1,2,3,4,5].map(i=>'<button data-s="'+i+'" class="'+(i<=pick.s?'on':'')+'" aria-label="'+i+'">★</button>').join('');
+  $('stars').querySelectorAll('button').forEach(b=>b.onclick=()=>{pick.s=+b.dataset.s;renderForm()});
+  if(!$('bd').value)$('bd').value=today();
+}
+$('saveBtn').onclick=()=>{
+  const t=$('bt').value.trim();if(!t){$('msg').textContent='ほんの なまえを いれてね';$('bt').focus();return}
+  if(!pick.g){$('msg').textContent='ジャンルを えらんでね（わからなければ「ものがたり」）';return}
+  U().books.push({id:Date.now(),t,a:$('ba').value.trim(),p:parseInt($('bp').value)||0,d:$('bd').value||today(),g:pick.g,s:pick.s,c:$('bc').value.trim()});persist();
+  $('msg').textContent='🌱 はっぱが 1まい ふえたよ！（'+U().books.length+'さつめ）';
+  ['bt','ba','bp','bc'].forEach(id=>$(id).value='');pick={g:null,s:3};renderForm();
+};
+function renderList(){
+  const bs=U().books.slice().sort((a,b)=>(b.d||'').localeCompare(a.d||'')||b.id-a.id);
+  $('listT').textContent=U().name+' さんの ほんだな（'+bs.length+'さつ）';
+  $('books').innerHTML=bs.length?bs.map(b=>{const g=GM[b.g]||GEN[1];return '<div class="bk"><div class="c" style="background:'+g[2]+'"></div><div><div class="t">'+esc(b.t)+'</div><small>'+(b.d||'').replace(/-/g,'/')+'　'+g[1].replace(/（.*）/,'')+(b.a?'　'+esc(b.a):'')+(b.p?'　'+b.p+'ページ':'')+'</small><div>'+'<span style="color:var(--gold)">'+'★'.repeat(b.s)+'</span>'+'<span style="color:#ddd">'+'★'.repeat(5-b.s)+'</span> '+esc(b.c)+'</div></div><button class="btn sm noprint" data-del="'+b.id+'">けす</button></div>'}).join(''):'<p class="note">まだ ありません。「よんだ！」から きろくしよう。</p>';
+  $('books').querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{if(confirm('この ほんの きろくを けしますか？')){const u=U();u.books=u.books.filter(b=>b.id!=x.dataset.del);persist();renderList()}});
+}
+function renderAll(){renderTree();renderGoal();renderBal();renderForm();renderList()}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');['tree','add','list'].forEach(v=>$('v-'+v).hidden=v!==b.dataset.v);renderAll()});
+renderWho();renderAll();
+</script>
+</body>
+</html>

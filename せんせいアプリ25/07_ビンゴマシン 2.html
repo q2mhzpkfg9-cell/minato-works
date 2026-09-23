@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ビンゴマシン</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height: 100vh;
+    padding: 16px;
+    color: #333;
+  }
+  header { text-align: center; margin-bottom: 12px; }
+  h1 { font-size: clamp(28px, 4vw, 44px); color: #5b6ef5; text-shadow: 0 2px 0 #fff; }
+  .mode-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  button {
+    font-family: inherit; border: none; cursor: pointer;
+    border-radius: 999px; font-weight: bold;
+    font-size: clamp(18px, 2.2vw, 24px);
+    padding: 12px 28px;
+    background: rgba(255,255,255,.75); color: #5b6ef5;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15);
+    transition: transform .12s;
+  }
+  button:active { transform: scale(.94); }
+  .mode-tabs button.on { background: #5b6ef5; color: #fff; }
+  .layout {
+    display: grid; gap: 18px;
+    grid-template-columns: 1fr;
+    max-width: 1300px; margin: 0 auto;
+  }
+  @media (min-width: 980px) { .layout { grid-template-columns: 5fr 4fr; } }
+  .card {
+    background: #fff; border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: 22px;
+  }
+  .settings { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .settings label { font-size: clamp(16px, 2vw, 22px); font-weight: bold; color: #666; }
+  .settings input[type=number] {
+    font-family: inherit; font-size: clamp(20px, 2.4vw, 26px);
+    width: 110px; padding: 8px 12px;
+    border: 3px solid #d6dcff; border-radius: 14px;
+    text-align: center; outline: none;
+  }
+  .settings input[type=number]:focus { border-color: #5b6ef5; }
+  #wordArea { display: none; margin-bottom: 12px; }
+  #wordArea textarea {
+    font-family: inherit; width: 100%;
+    min-height: 110px; font-size: clamp(18px, 2vw, 22px);
+    border: 3px solid #d6dcff; border-radius: 16px;
+    padding: 12px; outline: none; resize: vertical;
+  }
+  #wordArea textarea:focus { border-color: #5b6ef5; }
+  #wordArea .hint { font-size: 15px; color: #999; margin-top: 4px; }
+  .drum-wrap { text-align: center; }
+  .drum {
+    margin: 6px auto 14px;
+    width: min(72vw, 380px); height: min(72vw, 380px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #ffffff 0%, #eef1ff 45%, #cdd6ff 100%);
+    border: 10px solid #5b6ef5;
+    box-shadow: 0 10px 34px rgba(91,110,245,.35), inset 0 -14px 30px rgba(91,110,245,.18);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    user-select: none;
+  }
+  .drum .balls {
+    position: absolute; inset: 0;
+    display: none;
+  }
+  .drum.spinning .balls { display: block; animation: spin .5s linear infinite; }
+  .drum .balls span {
+    position: absolute; font-size: 44px;
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .drum .value {
+    font-size: clamp(64px, 12vw, 130px);
+    font-weight: bold; color: #333;
+    padding: 0 16px; text-align: center;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    z-index: 2;
+  }
+  .drum .value.word { font-size: clamp(34px, 7vw, 72px); }
+  .drum.reveal .value { animation: reveal .6s cubic-bezier(.2,1.6,.4,1); color: #5b6ef5; }
+  @keyframes reveal {
+    0% { transform: scale(.2) rotate(-15deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .btn-spin {
+    background: #5b6ef5; color: #fff;
+    font-size: clamp(26px, 3.4vw, 40px);
+    padding: 18px 60px;
+  }
+  .btn-spin:disabled { opacity: .5; cursor: default; }
+  .btn-reset { background: #ff7a9c; color: #fff; margin-left: 10px; }
+  .remain { margin-top: 12px; font-size: clamp(16px, 2vw, 22px); color: #888; font-weight: bold; }
+  h2 { font-size: clamp(20px, 2.4vw, 28px); color: #5b6ef5; margin-bottom: 12px; text-align: center; }
+  #historyGrid {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  }
+  #historyGrid.words { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .cell {
+    border-radius: 14px;
+    background: #f1f3fa; color: #b6bcd0;
+    font-weight: bold;
+    font-size: clamp(18px, 2.2vw, 26px);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 58px; padding: 4px;
+    text-align: center; overflow-wrap: anywhere;
+    transition: background .25s, color .25s, transform .25s;
+  }
+  .cell.hit { background: #5b6ef5; color: #fff; box-shadow: 0 3px 10px rgba(91,110,245,.4); }
+  .cell.latest { background: #ff7a9c; transform: scale(1.08); box-shadow: 0 4px 14px rgba(255,122,156,.5); }
+  footer { text-align: center; margin-top: 20px; color: #888; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎱 ビンゴマシン</h1>
+</header>
+
+<div class="mode-tabs">
+  <button id="tabNum" class="on">🔢 すうじビンゴ</button>
+  <button id="tabWord">📛 なまえ・ことばビンゴ</button>
+</div>
+
+<div class="layout">
+  <div class="card drum-wrap">
+    <div class="settings" id="numSettings">
+      <label>すうじ：</label>
+      <input type="number" id="minNum" min="1" max="998" value="1">
+      <label>〜</label>
+      <input type="number" id="maxNum" min="2" max="999" value="75">
+    </div>
+    <div id="wordArea">
+      <textarea id="wordList" placeholder="なまえ や ことば を かいてね（1ぎょうに 1つ、または「、」でくぎる）&#10;れい：&#10;たろう&#10;はなこ&#10;けんた"></textarea>
+      <div class="hint">※かきかえたら じどうで リストがあたらしくなるよ</div>
+    </div>
+    <div class="drum" id="drum">
+      <div class="balls" id="balls"></div>
+      <div class="value" id="drumValue">？</div>
+    </div>
+    <div>
+      <button class="btn-spin" id="btnSpin">まわす！</button>
+      <button class="btn-reset" id="btnReset">🔄 リセット</button>
+    </div>
+    <div class="remain" id="remain"></div>
+  </div>
+
+  <div class="card">
+    <h2>でた ばんごう・ことば</h2>
+    <div id="historyGrid"></div>
+  </div>
+</div>
+
+<footer>とちゅうまでのけっかは じどうでほぞんされるよ（このタブレット・パソコンのなか）</footer>
+
+<script>
+(function(){
+  'use strict';
+  var STORE_KEY = 'sensei25_bingo';
+
+  var state = load();
+
+  function defaultState(){
+    return {
+      mode: 'num',          // 'num' | 'word'
+      min: 1, max: 75,
+      drawnNums: [],        // numbers already drawn
+      words: [],            // full word list
+      drawnWords: [],       // indices into words already drawn
+      wordText: ''
+    };
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && (s.mode === 'num' || s.mode === 'word')) {
+          var d = defaultState();
+          for (var k in d) if (!(k in s)) s[k] = d[k];
+          return s;
+        }
+      }
+    } catch(e){}
+    return defaultState();
+  }
+  function save(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){}
+  }
+
+  /* ---- audio ---- */
+  var actx = null;
+  function audio(){
+    if (!actx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) actx = new AC();
+    }
+    if (actx && actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  function tone(freq, start, dur, type, vol){
+    var ctx = audio(); if (!ctx) return;
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+    g.gain.exponentialRampToValueAtTime(vol || 0.25, ctx.currentTime + start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime + start); o.stop(ctx.currentTime + start + dur + 0.05);
+  }
+  function tick(){ tone(900 + Math.random()*500, 0, .05, 'square', .08); }
+  function fanfare(){
+    tone(523,0,.14,'triangle',.3); tone(659,.1,.14,'triangle',.3);
+    tone(784,.2,.14,'triangle',.3); tone(1047,.3,.4,'triangle',.35);
+  }
+
+  /* ---- elements ---- */
+  var tabNum = document.getElementById('tabNum');
+  var tabWord = document.getElementById('tabWord');
+  var numSettings = document.getElementById('numSettings');
+  var wordArea = document.getElementById('wordArea');
+  var minNum = document.getElementById('minNum');
+  var maxNum = document.getElementById('maxNum');
+  var wordListEl = document.getElementById('wordList');
+  var drum = document.getElementById('drum');
+  var drumValue = document.getElementById('drumValue');
+  var balls = document.getElementById('balls');
+  var btnSpin = document.getElementById('btnSpin');
+  var btnReset = document.getElementById('btnReset');
+  var remainEl = document.getElementById('remain');
+  var grid = document.getElementById('historyGrid');
+
+  // decorate drum with little balls
+  (function(){
+    var emo = ['🔴','🟡','🔵','🟢','🟣','🟠'];
+    for (var i = 0; i < 10; i++) {
+      var s = document.createElement('span');
+      s.textContent = emo[i % emo.length];
+      var ang = (i / 10) * Math.PI * 2;
+      s.style.left = (50 + Math.cos(ang) * 32) + '%';
+      s.style.top = (50 + Math.sin(ang) * 32) + '%';
+      balls.appendChild(s);
+    }
+  })();
+
+  function parseWords(text){
+    return text.split(/[\n、,，]/).map(function(w){ return w.trim(); }).filter(function(w){ return w.length > 0; });
+  }
+
+  function pool(){
+    if (state.mode === 'num') {
+      var arr = [];
+      for (var n = state.min; n <= state.max; n++) {
+        if (state.drawnNums.indexOf(n) === -1) arr.push(n);
+      }
+      return arr;
+    } else {
+      var idxs = [];
+      for (var i = 0; i < state.words.length; i++) {
+        if (state.drawnWords.indexOf(i) === -1) idxs.push(i);
+      }
+      return idxs;
+    }
+  }
+
+  function renderMode(){
+    tabNum.classList.toggle('on', state.mode === 'num');
+    tabWord.classList.toggle('on', state.mode === 'word');
+    numSettings.style.display = state.mode === 'num' ? 'flex' : 'none';
+    wordArea.style.display = state.mode === 'word' ? 'block' : 'none';
+    minNum.value = state.min;
+    maxNum.value = state.max;
+    wordListEl.value = state.wordText;
+  }
+
+  function renderGrid(latest){
+    grid.innerHTML = '';
+    if (state.mode === 'num') {
+      grid.classList.remove('words');
+      for (var n = state.min; n <= state.max; n++) {
+        var c = document.createElement('div');
+        c.className = 'cell';
+        c.textContent = n;
+        if (state.drawnNums.indexOf(n) !== -1) c.classList.add('hit');
+        if (latest !== undefined && latest === n) c.classList.add('latest');
+        grid.appendChild(c);
+      }
+    } else {
+      grid.classList.add('words');
+      state.words.forEach(function(w, i){
+        var c = document.createElement('div');
+        c.className = 'cell';
+        c.textContent = w;
+        if (state.drawnWords.indexOf(i) !== -1) c.classList.add('hit');
+        if (latest !== undefined && latest === i) c.classList.add('latest');
+        grid.appendChild(c);
+      });
+      if (state.words.length === 0) {
+        var msg = document.createElement('div');
+        msg.style.cssText = 'grid-column:1/-1;text-align:center;color:#aaa;font-size:18px;padding:20px;';
+        msg.textContent = 'ことばリストが からっぽだよ。ひだりに かいてね。';
+        grid.appendChild(msg);
+      }
+    }
+  }
+
+  function renderRemain(){
+    var p = pool().length;
+    if (state.mode === 'num') {
+      var total = state.max - state.min + 1;
+      remainEl.textContent = 'のこり ' + p + ' こ ／ ぜんぶで ' + total + ' こ';
+    } else {
+      remainEl.textContent = 'のこり ' + p + ' こ ／ ぜんぶで ' + state.words.length + ' こ';
+    }
+  }
+
+  function renderAll(latest){
+    renderMode();
+    renderGrid(latest);
+    renderRemain();
+  }
+
+  /* ---- spin ---- */
+  var spinning = false;
+  btnSpin.addEventListener('click', function(){
+    if (spinning) return;
+    audio();
+    var p = pool();
+    if (p.length === 0) {
+      drumValue.classList.remove('word');
+      drumValue.textContent = 'おしまい！';
+      drumValue.classList.add('word');
+      return;
+    }
+    spinning = true;
+    btnSpin.disabled = true;
+    drum.classList.add('spinning');
+    drum.classList.remove('reveal');
+
+    var isWord = state.mode === 'word';
+    var elapsed = 0;
+    var interval = 60;
+    var totalTime = 1800 + Math.random() * 600;
+
+    function step(){
+      // show random candidate flicker
+      var cand = p[Math.floor(Math.random() * p.length)];
+      if (isWord) {
+        drumValue.textContent = state.words[cand];
+        drumValue.classList.add('word');
+      } else {
+        drumValue.textContent = cand;
+        drumValue.classList.remove('word');
+      }
+      tick();
+      elapsed += interval;
+      if (elapsed < totalTime) {
+        interval = Math.min(220, interval * 1.13); // slow down
+        setTimeout(step, interval);
+      } else {
+        finish();
+      }
+    }
+
+    function finish(){
+      var pick = p[Math.floor(Math.random() * p.length)];
+      if (isWord) {
+        state.drawnWords.push(pick);
+        drumValue.textContent = state.words[pick];
+        drumValue.classList.add('word');
+      } else {
+        state.drawnNums.push(pick);
+        drumValue.textContent = pick;
+        drumValue.classList.toggle('word', String(pick).length > 3);
+      }
+      save();
+      drum.classList.remove('spinning');
+      drum.classList.add('reveal');
+      fanfare();
+      renderGrid(pick);
+      renderRemain();
+      spinning = false;
+      btnSpin.disabled = false;
+    }
+
+    setTimeout(step, interval);
+  });
+
+  /* ---- settings handlers ---- */
+  tabNum.addEventListener('click', function(){
+    if (spinning) return;
+    state.mode = 'num'; save(); drumValue.textContent='？'; drumValue.classList.remove('word'); drum.classList.remove('reveal'); renderAll();
+  });
+  tabWord.addEventListener('click', function(){
+    if (spinning) return;
+    state.mode = 'word'; save(); drumValue.textContent='？'; drumValue.classList.remove('word'); drum.classList.remove('reveal'); renderAll();
+  });
+
+  function applyRange(){
+    var lo = parseInt(minNum.value, 10);
+    var hi = parseInt(maxNum.value, 10);
+    if (isNaN(lo)) lo = 1;
+    if (isNaN(hi)) hi = 75;
+    lo = Math.max(1, Math.min(998, lo));
+    hi = Math.max(lo + 1, Math.min(999, hi));
+    if (lo !== state.min || hi !== state.max) {
+      state.min = lo; state.max = hi;
+      state.drawnNums = state.drawnNums.filter(function(n){ return n >= lo && n <= hi; });
+      save(); renderAll();
+    } else {
+      minNum.value = lo; maxNum.value = hi;
+    }
+  }
+  minNum.addEventListener('change', applyRange);
+  maxNum.addEventListener('change', applyRange);
+
+  wordListEl.addEventListener('input', function(){
+    state.wordText = wordListEl.value;
+    var newWords = parseWords(state.wordText);
+    // keep drawn state for unchanged words (match by text)
+    var oldDrawnTexts = state.drawnWords.map(function(i){ return state.words[i]; });
+    state.words = newWords;
+    state.drawnWords = [];
+    newWords.forEach(function(w, i){
+      var oi = oldDrawnTexts.indexOf(w);
+      if (oi !== -1) { state.drawnWords.push(i); oldDrawnTexts.splice(oi, 1); }
+    });
+    save();
+    renderGrid();
+    renderRemain();
+  });
+
+  btnReset.addEventListener('click', function(){
+    if (spinning) return;
+    if (!confirm('でたきろくを ぜんぶけして、さいしょから はじめる？')) return;
+    state.drawnNums = [];
+    state.drawnWords = [];
+    save();
+    drumValue.textContent = '？';
+    drumValue.classList.remove('word');
+    drum.classList.remove('reveal');
+    renderAll();
+  });
+
+  // initial paint: show last drawn if any
+  renderAll();
+  (function showLast(){
+    if (state.mode === 'num' && state.drawnNums.length) {
+      drumValue.textContent = state.drawnNums[state.drawnNums.length - 1];
+    } else if (state.mode === 'word' && state.drawnWords.length) {
+      var li = state.drawnWords[state.drawnWords.length - 1];
+      if (state.words[li] !== undefined) {
+        drumValue.textContent = state.words[li];
+        drumValue.classList.add('word');
+      }
+    }
+  })();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

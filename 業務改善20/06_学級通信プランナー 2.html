@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学級通信プランナー</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ok:#2f855a;--okbg:#e6f4ea;--warn:#b7791f;--warnbg:#fdf3dc;--ng:#b83232;--ngbg:#fbe9e7;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1300px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.2rem;letter-spacing:.03em}
+main{max-width:1300px;margin:0 auto;padding:16px}
+.lead{margin:0 0 12px;color:var(--sub);font-size:.9rem}
+.priv{display:inline-block;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:4px 10px;font-size:.8rem;color:var(--sub);margin-bottom:12px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:80px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+#toast.show{opacity:1}
+#printArea{display:none}
+/* app */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{flex:1;min-width:120px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;font-family:inherit;font-weight:700;font-size:.95rem;cursor:pointer;color:var(--navy)}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pane{display:none}.pane.on{display:block}
+.kids{display:flex;flex-wrap:wrap;gap:5px;max-height:160px;overflow:auto;padding:4px;border:1px solid var(--line);border-radius:10px}
+.kids button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;min-height:34px;font-family:inherit;font-size:.84rem;cursor:pointer}
+.kids button.on{background:#dfe7f1;border-color:var(--navy2);font-weight:700}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tags button{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:3px 10px;min-height:34px;font-family:inherit;font-size:.84rem;cursor:pointer}
+.tags button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.neta{border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px;background:#fff}
+.neta .h{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:.8rem;color:var(--sub)}
+.neta p{margin:4px 0;white-space:pre-wrap;font-size:.92rem}
+.neta.used{background:#f7f7f5;opacity:.8}
+.tg{display:inline-block;border-radius:999px;padding:0 8px;font-size:.74rem;font-weight:700;background:#eef2f7;color:var(--navy)}
+.kd{display:inline-block;border-radius:999px;padding:0 8px;font-size:.74rem;background:var(--okbg);color:var(--ok)}
+.issues{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.iss{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.iss.st-done{background:#f3f8f4;border-color:#b9dcc3}
+.iss.st-wip{border-color:var(--warn)}
+.iss .h{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.iss .no{font-weight:800;color:var(--navy);font-size:1.05rem}
+.iss input.th{width:100%;margin:6px 0}
+.iss ul{margin:4px 0;padding-left:18px;font-size:.86rem}
+.iss.over .dt{color:var(--ng);font-weight:700}
+.bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 16px}
+.bar{display:grid;grid-template-columns:110px 1fr 28px;gap:6px;align-items:center;font-size:.85rem}
+.bar .b{height:12px;background:#eee;border-radius:6px;overflow:hidden}
+.bar .b i{display:block;height:100%;background:var(--navy2)}
+.bar.zero span:first-child{color:var(--ng);font-weight:700}
+.hint{background:#f8f5ee;border-radius:10px;padding:8px 12px;font-size:.86rem;margin-bottom:10px}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block;color:#000;font-size:10pt}
+  #printArea h1{font-size:14pt;margin:0 0 6pt}
+  #printArea table{border-collapse:collapse;width:100%}
+  #printArea th,#printArea td{border:1px solid #555;padding:3pt 5pt;text-align:left;vertical-align:top}
+  @page{size:A4;margin:12mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><a class="back" href="../index.html">← MINATO WORKS</a><h1>学級通信プランナー</h1></div></header>
+<main>
+<p class="lead">学級通信の「年間の発行予定」と「話題のネタ帳」をひとつに。ネタには登場した子を記録しておくと、1年間で<b>だれが何回載ったか</b>が一目でわかり、まだ載っていない子を見落としません。</p>
+<div class="priv">🔒 名簿とメモはこの端末（ブラウザ）の中だけに保存されます。</div>
+
+<div class="tabs" id="tabs">
+  <button data-t="neta" class="on">📝 ネタ帳</button>
+  <button data-t="plan">📅 発行予定</button>
+  <button data-t="kids">👀 登場回数</button>
+</div>
+
+<!-- ネタ帳 -->
+<div class="pane on" id="p-neta">
+  <section class="card">
+    <h2>ネタをメモする</h2>
+    <div class="row">
+      <label class="f">日付<input type="date" id="nDate"></label>
+      <div class="f" style="flex:1"><span class="note" style="font-weight:700">種類</span><div class="tags" id="nTags"></div></div>
+    </div>
+    <label class="f" style="margin-top:8px">できごと・子どもの言葉<textarea id="nText" placeholder="例：図工で、みさきさんが『色がまざると新しい色が生まれるね』とつぶやいた。"></textarea></label>
+    <div class="note" style="margin:6px 0 4px;font-weight:700">登場する子（タップで選択）</div>
+    <div class="kids" id="nKids"></div>
+    <div class="row" style="margin-top:10px"><button class="btn p" id="nAdd">メモする</button><span class="note" id="nKidNote"></span></div>
+  </section>
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <h2 style="margin:0">ネタ一覧</h2>
+      <div class="row"><select id="nFilter"><option value="unused">まだ使っていない</option><option value="">すべて</option><option value="used">使用済み</option></select><input id="nQ" placeholder="🔍 検索" style="width:160px"></div>
+    </div>
+    <div id="netaList"></div>
+  </section>
+</div>
+
+<!-- 発行予定 -->
+<div class="pane" id="p-plan">
+  <section class="card">
+    <h2>年間の発行予定をつくる</h2>
+    <div class="row">
+      <label class="f">通信の名前<input id="title" placeholder="にじいろ" style="width:160px"></label>
+      <label class="f">年度の始まり<input type="date" id="gStart"></label>
+      <label class="f">発行ペース<select id="gPace"><option value="7">毎週</option><option value="14" selected>2週に1回</option><option value="m1">月1回</option><option value="m2">月2回</option></select></label>
+      <label class="f">曜日<select id="gDow"><option value="1">月</option><option value="2">火</option><option value="3">水</option><option value="4">木</option><option value="5" selected>金</option></select></label>
+      <button class="btn" id="gen" style="align-self:flex-end">予定を自動で並べる</button>
+      <button class="btn s" id="addIss" style="align-self:flex-end">＋ 1号追加</button>
+    </div>
+    <p class="note">夏休み（7/21〜8/31）・冬休み（12/26〜1/7）・春休み（3/25〜）はとばします。日付はあとから直せます。</p>
+  </section>
+  <div class="hint" id="monthHint"></div>
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <h2 style="margin:0">発行予定 <span class="note" id="issCount"></span></h2>
+      <button class="btn s" id="prPlan">🖨 年間計画を印刷</button>
+    </div>
+    <div class="issues" id="issues"></div>
+  </section>
+</div>
+
+<!-- 登場回数 -->
+<div class="pane" id="p-kids">
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">だれが何回載ったか</h2>
+      <select id="kScope"><option value="issued">発行済みの号に載せたネタ</option><option value="assigned">号に割り当てたネタ（予定含む）</option><option value="all">ネタ帳すべて</option></select>
+    </div>
+    <p class="note" id="kSum"></p>
+    <div class="bars" id="bars"></div>
+  </section>
+  <section class="card">
+    <details id="rosterBox">
+      <summary>名簿（<span id="rc">0</span>人）</summary>
+      <p class="note">1行に1人。名前を変えると、それまでの記録とのつながりが切れるので注意してください。</p>
+      <textarea id="roster" style="min-height:140px"></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn s p" id="rSave">名簿を保存</button><button class="btn s" id="rCommon">共通名簿から読み込む</button></div>
+    </details>
+  </section>
+  <section class="card">
+    <details><summary>データの管理</summary>
+      <div class="row" style="margin-top:8px">
+        <button class="btn s" id="bk">バックアップ（JSON）</button>
+        <label class="btn s" style="display:inline-flex;align-items:center">復元<input type="file" id="rs" accept=".json" style="display:none"></label>
+        <button class="btn s d" id="reset">すべて消去</button>
+      </div>
+    </details>
+  </section>
+</div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+var KEY="mw_gyomu_06_data";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},1800)}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
+function pad(n){return String(n).padStart(2,"0")}
+function ymd(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function today(){return ymd(new Date())}
+function fmtDate(s){if(!s)return"";var d=new Date(s+"T00:00:00");return (d.getMonth()+1)+"/"+d.getDate()+"("+"日月火水木金土"[d.getDay()]+")"}
+function download(name,text,type){var b=new Blob([text],{type:type||"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+var TAGS=["行事","授業","生活","友だち","お願い","成長","その他"];
+var HINT={4:"学級開き・担任紹介・学級目標・1年間の見通し",5:"遠足・家庭訪問のお礼・運動会の練習",6:"プール開き・梅雨の過ごし方・授業参観",7:"1学期のふりかえり・夏休みの過ごし方",8:"夏休み明けの様子",9:"2学期の目標・運動会・残暑の体調管理",10:"運動会のふりかえり・読書週間・校外学習",11:"学習発表会・音楽会・個人懇談",12:"2学期のふりかえり・冬休みの過ごし方",1:"新年の目標・書き初め・寒さ対策",2:"学年のまとめ・参観・なわとび",3:"1年間のありがとう・進級に向けて"};
+var D=null;try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!D||!D.netas)D={roster:[],netas:[],issues:[],title:""};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("保存できませんでした")}}
+var sel={tag:"授業",kids:[]};
+
+/* tabs */
+$("#tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",x===b)});document.querySelectorAll(".pane").forEach(function(p){p.classList.toggle("on",p.id==="p-"+b.dataset.t)});render()});
+
+/* ネタ */
+$("#nDate").value=today();
+function renderNetaForm(){
+  $("#nTags").innerHTML=TAGS.map(function(t){return"<button data-tag='"+t+"' class='"+(t===sel.tag?"on":"")+"'>"+t+"</button>"}).join("");
+  var cnt=counts("all");
+  $("#nKids").innerHTML=D.roster.length?D.roster.map(function(n){return"<button data-k='"+esc(n)+"' class='"+(sel.kids.indexOf(n)>=0?"on":"")+"'>"+esc(n)+"<small style='color:#999'> "+(cnt[n]||0)+"</small></button>"}).join(""):"<span class='note'>「登場回数」タブで名簿を入れると、ここで選べます。</span>";
+  $("#nKidNote").textContent=sel.kids.length?sel.kids.length+"人選択中":"";
+}
+$("#nTags").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;sel.tag=b.dataset.tag;renderNetaForm()});
+$("#nKids").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var n=b.dataset.k;var i=sel.kids.indexOf(n);if(i>=0)sel.kids.splice(i,1);else sel.kids.push(n);renderNetaForm()});
+$("#nAdd").onclick=function(){
+  var t=$("#nText").value.trim();if(!t){toast("内容を書いてください");return}
+  D.netas.push({id:uid(),date:$("#nDate").value||today(),tag:sel.tag,text:t,kids:sel.kids.slice(),issue:""});
+  $("#nText").value="";sel.kids=[];save();render();toast("メモしました");
+};
+function issueById(id){return D.issues.filter(function(i){return i.id===id})[0]}
+function issueLabel(i){return"第"+i.no+"号（"+fmtDate(i.date)+"）"}
+function renderNetas(){
+  var f=$("#nFilter").value,q=$("#nQ").value.trim();
+  var L=D.netas.slice().sort(function(a,b){return b.date.localeCompare(a.date)}).filter(function(n){
+    var used=!!(n.issue&&issueById(n.issue));
+    if(f==="unused"&&used)return false;if(f==="used"&&!used)return false;
+    if(q&&(n.text+n.kids.join(" ")+n.tag).indexOf(q)<0)return false;return true;
+  });
+  var opts="<option value=''>号に割り当てる…</option>"+D.issues.map(function(i){return"<option value='"+i.id+"'>"+issueLabel(i)+(i.theme?" "+esc(i.theme):"")+"</option>"}).join("");
+  $("#netaList").innerHTML=L.length?L.map(function(n){var used=n.issue&&issueById(n.issue);
+    return"<div class='neta"+(used?" used":"")+"'><div class='h'><span>"+fmtDate(n.date)+"</span><span class='tg'>"+esc(n.tag)+"</span>"+n.kids.map(function(k){return"<span class='kd'>"+esc(k)+"</span>"}).join("")+(used?"<span>→ "+issueLabel(used)+"</span>":"")+"</div><p>"+esc(n.text)+"</p><div class='row'><select data-assign='"+n.id+"' style='min-height:36px;padding:2px 6px;font-size:.84rem'>"+opts.replace("value='"+n.issue+"'","value='"+n.issue+"' selected")+"</select><button class='btn s d' data-deln='"+n.id+"'>削除</button></div></div>"}).join(""):"<p class='note'>ネタはまだありません。</p>";
+}
+$("#nFilter").onchange=renderNetas;$("#nQ").oninput=renderNetas;
+document.addEventListener("change",function(e){
+  var s=e.target;
+  if(s.dataset.assign){var n=D.netas.filter(function(x){return x.id===s.dataset.assign})[0];if(n){n.issue=s.value;save();render()}}
+});
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-deln]");if(b){if(!confirm("このネタを削除しますか？"))return;D.netas=D.netas.filter(function(x){return x.id!==b.dataset.deln});save();render();return}
+  b=e.target.closest("[data-deli]");if(b){if(!confirm("この号を削除しますか？（割り当てたネタは未使用に戻ります）"))return;var id=b.dataset.deli;D.issues=D.issues.filter(function(x){return x.id!==id});D.netas.forEach(function(n){if(n.issue===id)n.issue=""});renumber();save();render();return}
+  b=e.target.closest("[data-st]");if(b){var i=issueById(b.dataset.st);var order=["plan","wip","done"];i.st=order[(order.indexOf(i.st||"plan")+1)%3];save();render();return}
+  b=e.target.closest("[data-unassign]");if(b){e.preventDefault();var n=D.netas.filter(function(x){return x.id===b.dataset.unassign})[0];if(n){n.issue="";save();render()}}
+});
+
+/* 発行予定 */
+(function(){var d=new Date();var y=d.getMonth()<3?d.getFullYear()-1:d.getFullYear();$("#gStart").value=y+"-04-07"})();
+$("#title").value=D.title||"";$("#title").onchange=function(){D.title=this.value;save()};
+function isBreak(d){var m=d.getMonth()+1,day=d.getDate();return (m===7&&day>=21)||m===8||(m===12&&day>=26)||(m===1&&day<=7)||(m===3&&day>=25)}
+$("#gen").onclick=function(){
+  if(D.issues.length&&!confirm("今の発行予定を作り直しますか？（ネタの割り当ては外れます）"))return;
+  var s=new Date($("#gStart").value+"T00:00:00");if(isNaN(s)){toast("年度の始まりを入れてください");return}
+  var end=new Date(s.getFullYear()+1,2,24);var pace=$("#gPace").value;var dow=+$("#gDow").value;var dates=[];
+  if(pace==="m1"||pace==="m2"){
+    for(var m=0;m<12;m++){var base=new Date(s.getFullYear(),s.getMonth()+m,1);var targets=pace==="m1"?[20]:[8,22];
+      targets.forEach(function(day){var d=new Date(base.getFullYear(),base.getMonth(),day);while(d.getDay()!==dow)d.setDate(d.getDate()+1);if(d>=s&&d<=end&&!isBreak(d))dates.push(ymd(d))})}
+  }else{
+    var d=new Date(s);while(d.getDay()!==dow)d.setDate(d.getDate()+1);
+    while(d<=end){if(!isBreak(d))dates.push(ymd(d));d.setDate(d.getDate()+(+pace))}
+  }
+  D.netas.forEach(function(n){n.issue=""});
+  D.issues=dates.map(function(dt,i){return{id:uid(),no:i+1,date:dt,theme:"",st:"plan"}});
+  save();render();toast(dates.length+"号ぶん並べました");
+};
+$("#addIss").onclick=function(){var last=D.issues[D.issues.length-1];var d=last?new Date(last.date+"T00:00:00"):new Date();if(last)d.setDate(d.getDate()+14);D.issues.push({id:uid(),no:0,date:ymd(d),theme:"",st:"plan"});renumber();save();render()};
+function renumber(){D.issues.sort(function(a,b){return a.date.localeCompare(b.date)});D.issues.forEach(function(i,k){i.no=k+1})}
+function renderIssues(){
+  var t=today();var m=new Date().getMonth()+1;
+  $("#monthHint").innerHTML="💡 <b>"+m+"月の話題の例：</b>"+esc(HINT[m])+"　／　<b>"+(m%12+1)+"月：</b>"+esc(HINT[m%12+1]);
+  $("#issCount").textContent=D.issues.length?"（全"+D.issues.length+"号・発行済 "+D.issues.filter(function(i){return i.st==="done"}).length+"）":"";
+  var stL={plan:"予定",wip:"作成中",done:"発行済"};
+  $("#issues").innerHTML=D.issues.length?D.issues.map(function(i){
+    var ns=D.netas.filter(function(n){return n.issue===i.id});var over=i.st!=="done"&&i.date<t;
+    return"<div class='iss st-"+(i.st||"plan")+(over?" over":"")+"'><div class='h'><span class='no'>第"+i.no+"号</span><input type='date' class='dt' data-idate='"+i.id+"' value='"+i.date+"' style='min-height:36px;padding:2px 6px'><button class='btn s' data-st='"+i.id+"'>"+stL[i.st||"plan"]+"</button></div><input class='th' data-itheme='"+i.id+"' placeholder='テーマ（例：運動会ありがとう）' value='"+esc(i.theme)+"'>"+(ns.length?"<ul>"+ns.map(function(n){return"<li>"+esc(n.text.slice(0,40))+(n.text.length>40?"…":"")+(n.kids.length?" <span class='note'>("+esc(n.kids.join("・"))+")</span>":"")+" <a href='#' data-unassign='"+n.id+"' style='font-size:.75rem'>外す</a></li>"}).join("")+"</ul>":"<div class='note'>ネタ未割り当て</div>")+"<div style='text-align:right'><button class='btn s d' data-deli='"+i.id+"'>削除</button></div></div>";
+  }).join(""):"<p class='note'>まだ予定がありません。上の「予定を自動で並べる」を押してください。</p>";
+}
+document.addEventListener("input",function(e){var s=e.target;if(s.dataset.itheme){var i=issueById(s.dataset.itheme);if(i){i.theme=s.value;save()}}});
+document.addEventListener("change",function(e){var s=e.target;if(s.dataset.idate){var i=issueById(s.dataset.idate);if(i&&s.value){i.date=s.value;renumber();save();render()}}});
+$("#prPlan").onclick=function(){
+  if(!D.issues.length){toast("発行予定がありません");return}
+  var stL={plan:"",wip:"作成中",done:"発行済"};
+  var h="<h1>学級通信"+(D.title?"「"+esc(D.title)+"」":"")+" 年間発行計画</h1><table><thead><tr><th style='width:8%'>号</th><th style='width:13%'>発行日</th><th style='width:25%'>テーマ</th><th>載せるネタ（登場する子）</th><th style='width:9%'>状況</th></tr></thead><tbody>";
+  D.issues.forEach(function(i){var ns=D.netas.filter(function(n){return n.issue===i.id});h+="<tr><td>第"+i.no+"号</td><td>"+fmtDate(i.date)+"</td><td>"+esc(i.theme)+"</td><td>"+ns.map(function(n){return"・"+esc(n.text.slice(0,50))+(n.kids.length?"（"+esc(n.kids.join("・"))+"）":"")}).join("<br>")+"</td><td>"+stL[i.st||"plan"]+"</td></tr>"});
+  h+="</tbody></table>";$("#printArea").innerHTML=h;window.print();
+};
+
+/* 登場回数 */
+function counts(scope){
+  var c={};D.netas.forEach(function(n){var i=n.issue&&issueById(n.issue);
+    if(scope==="issued"&&!(i&&i.st==="done"))return;if(scope==="assigned"&&!i)return;
+    n.kids.forEach(function(k){c[k]=(c[k]||0)+1})});return c;
+}
+$("#kScope").onchange=renderKids;
+function renderKids(){
+  var c=counts($("#kScope").value);var max=1;D.roster.forEach(function(n){max=Math.max(max,c[n]||0)});
+  var zero=D.roster.filter(function(n){return !c[n]});
+  $("#kSum").innerHTML=D.roster.length?"まだ0回の子："+(zero.length?"<b style='color:var(--ng)'>"+zero.length+"人</b>（"+esc(zero.join("、"))+"）":"<b style='color:var(--ok)'>いません 🎉</b>"):"下の名簿を入れてください。";
+  var order=D.roster.slice().sort(function(a,b){return (c[a]||0)-(c[b]||0)});
+  $("#bars").innerHTML=order.map(function(n){var v=c[n]||0;return"<div class='bar"+(v?"":" zero")+"'><span>"+esc(n)+"</span><span class='b'><i style='width:"+(v/max*100)+"%'></i></span><span>"+v+"</span></div>"}).join("");
+  $("#rc").textContent=D.roster.length;
+}
+$("#roster").value=D.roster.join("\n");if(!D.roster.length)$("#rosterBox").open=true;
+$("#rSave").onclick=function(){D.roster=$("#roster").value.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean);save();render();toast("名簿を保存しました")};
+$("#rCommon").onclick=function(){var t="";try{t=localStorage.getItem("sensei25_names")||""}catch(e){}if(!t.trim()){toast("共通名簿が見つかりません");return}$("#roster").value=t;toast("読み込みました。「名簿を保存」を押してください")};
+$("#bk").onclick=function(){download("学級通信プランナー_backup.json",JSON.stringify(D),"application/json")};
+$("#rs").onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var o=JSON.parse(rd.result);if(!o.netas)throw 0;if(!confirm("今のデータを置きかえますか？"))return;D=o;save();location.reload()}catch(e){toast("読み込めませんでした")}};rd.readAsText(f);this.value=""};
+$("#reset").onclick=function(){if(!confirm("すべて消去しますか？"))return;try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+
+function render(){renderNetaForm();renderNetas();renderIssues();renderKids()}
+render();
+})();
+</script>
+</body>
+</html>

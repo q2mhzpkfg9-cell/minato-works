@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>きょうしつスクリーン</title>
+<style>
+  :root{
+    --toolbar-bg: rgba(255,255,255,0.92);
+    --accent:#5b6ef5;
+    --accent-d:#4453d6;
+    --card:rgba(255,255,255,0.96);
+    --text:#2b2f42;
+    --shadow:0 8px 30px rgba(0,0,0,.25);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+  html,body{margin:0;height:100%;font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;overflow:hidden;}
+  #stage{
+    position:fixed;inset:0;
+    background-size:cover;background-position:center;
+    transition:background .4s ease;
+  }
+  /* ===== ツールバー ===== */
+  #toolbar{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+    display:flex;gap:6px;padding:10px 14px;
+    background:var(--toolbar-bg);border-radius:30px;box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);z-index:1000;flex-wrap:wrap;justify-content:center;max-width:94vw;
+  }
+  .tool{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    width:78px;height:70px;border:none;background:transparent;border-radius:18px;
+    cursor:pointer;color:var(--text);transition:.15s;gap:4px;
+  }
+  .tool:hover{background:rgba(91,110,245,.14);}
+  .tool:active{transform:scale(.94);}
+  .tool .ic{font-size:30px;line-height:1;}
+  .tool .lb{font-size:13px;font-weight:700;}
+
+  /* ===== 付箋ウィジェット共通 ===== */
+  .widget{
+    position:absolute;background:var(--card);border-radius:var(--radius);
+    box-shadow:var(--shadow);min-width:240px;z-index:10;color:var(--text);
+    display:flex;flex-direction:column;overflow:hidden;
+    transform-origin:0 0;
+  }
+
+  /* ===== 四隅のリサイズハンドル ===== */
+  .rz{
+    position:absolute;width:34px;height:34px;z-index:30;
+    opacity:0;transition:opacity .15s;touch-action:none;
+  }
+  .widget:hover .rz{opacity:.85;}
+  .rz::after{
+    content:'';position:absolute;inset:7px;background:#fff;
+    border:3px solid var(--accent);border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+  }
+  .rz.nw{left:0;top:0;transform-origin:top left;cursor:nwse-resize;transform:scale(var(--inv,1));}
+  .rz.ne{right:0;top:0;transform-origin:top right;cursor:nesw-resize;transform:scale(var(--inv,1));}
+  .rz.sw{left:0;bottom:0;transform-origin:bottom left;cursor:nesw-resize;transform:scale(var(--inv,1));}
+  .rz.se{right:0;bottom:0;transform-origin:bottom right;cursor:nwse-resize;transform:scale(var(--inv,1));}
+  .w-head{
+    display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:grab;
+    background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;
+    font-weight:800;font-size:18px;
+  }
+  .w-head:active{cursor:grabbing;}
+  .w-head .grip{flex:1;}
+  .w-head button{
+    border:none;background:rgba(255,255,255,.25);color:#fff;width:30px;height:30px;
+    border-radius:50%;font-size:18px;cursor:pointer;line-height:1;font-weight:800;
+  }
+  .w-head button:hover{background:rgba(255,255,255,.45);}
+  .w-body{padding:14px;}
+
+  /* ToDo */
+  .todo-list{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .todo-item{
+    display:flex;align-items:center;gap:10px;font-size:22px;
+    background:#f1f3ff;border-radius:14px;padding:8px 12px;
+  }
+  .todo-item .chk{
+    width:30px;height:30px;border-radius:9px;border:3px solid var(--accent);
+    cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:22px;color:#fff;
+  }
+  .todo-item.done .chk{background:var(--accent);}
+  .todo-item.done .txt{text-decoration:line-through;opacity:.5;}
+  .todo-item .txt{flex:1;outline:none;}
+  .todo-item .del{border:none;background:transparent;color:#c44;font-size:20px;cursor:pointer;}
+  .add-btn{
+    width:100%;border:none;background:var(--accent);color:#fff;font-size:19px;font-weight:800;
+    padding:11px;border-radius:14px;cursor:pointer;
+  }
+  .add-btn:hover{background:var(--accent-d);}
+
+  /* テキスト */
+  .text-area{
+    width:340px;min-height:120px;border:none;outline:none;resize:both;background:transparent;
+    font-size:34px;font-weight:800;color:var(--text);font-family:inherit;line-height:1.3;
+  }
+
+  /* タイマー＋信号 */
+  .timer-wrap{display:flex;gap:16px;align-items:center;}
+  .signal{
+    background:#222;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px;
+  }
+  .light{
+    width:54px;height:54px;border-radius:50%;background:#444;transition:.2s;cursor:pointer;
+    box-shadow:inset 0 0 8px rgba(0,0,0,.6);
+  }
+  .light.red.on{background:#ff3b30;box-shadow:0 0 22px #ff3b30,inset 0 0 6px rgba(0,0,0,.3);}
+  .light.yellow.on{background:#ffcc00;box-shadow:0 0 22px #ffcc00,inset 0 0 6px rgba(0,0,0,.3);}
+  .light.green.on{background:#34c759;box-shadow:0 0 22px #34c759,inset 0 0 6px rgba(0,0,0,.3);}
+  .timer-main{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .time-disp{font-size:64px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:1px;}
+  .time-set{display:flex;gap:6px;align-items:center;}
+  .time-set button{
+    width:40px;height:40px;border-radius:50%;border:none;background:#eef0ff;color:var(--accent);
+    font-size:24px;font-weight:900;cursor:pointer;
+  }
+  .time-set button:hover{background:#dfe3ff;}
+  .timer-ctrl{display:flex;gap:8px;}
+  .timer-ctrl button{
+    border:none;border-radius:14px;padding:10px 18px;font-size:19px;font-weight:800;cursor:pointer;color:#fff;
+  }
+  .btn-start{background:#34c759;}
+  .btn-pause{background:#ff9500;}
+  .btn-reset{background:#8e8e93;}
+  .timer-name{
+    font-size:24px;font-weight:900;color:var(--accent);text-align:center;
+    padding:6px 10px;margin-bottom:10px;border-radius:12px;background:#f1f3ff;
+    outline:none;min-height:1.4em;
+  }
+  .timer-name:empty:before{content:attr(data-ph);color:#aab;font-weight:700;font-size:17px;}
+  .timer-name:focus{background:#e6eaff;}
+  .sig-mode{font-size:13px;text-align:center;color:#888;margin-top:6px;}
+  .sig-mode b{color:var(--accent);}
+
+  /* 背景パネル */
+  #bg-panel{
+    position:fixed;right:-380px;top:0;bottom:0;width:360px;background:#fff;z-index:1100;
+    box-shadow:-6px 0 30px rgba(0,0,0,.2);transition:right .3s ease;display:flex;flex-direction:column;
+  }
+  #bg-panel.open{right:0;}
+  .bp-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #eee;}
+  .bp-head h2{margin:0;font-size:22px;color:var(--text);}
+  .bp-head button{border:none;background:#f0f0f0;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;}
+  .bp-body{overflow-y:auto;padding:16px 20px;}
+  .bp-body h3{font-size:15px;color:#888;margin:18px 0 8px;}
+  .thumbs{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .thumb{height:78px;border-radius:14px;background-size:cover;background-position:center;cursor:pointer;border:3px solid transparent;}
+  .thumb:hover{border-color:var(--accent);}
+  .upload-lab{
+    grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;height:60px;
+    border:3px dashed #ccd;border-radius:14px;color:var(--accent);font-weight:800;cursor:pointer;font-size:16px;
+  }
+  /* 時計表示 */
+  #clock{
+    position:fixed;left:22px;top:18px;color:#fff;font-size:30px;font-weight:800;
+    text-shadow:0 2px 8px rgba(0,0,0,.5);z-index:5;
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="clock"></div>
+
+<!-- ツールバー -->
+<div id="toolbar">
+  <button class="tool" onclick="openBg()"><span class="ic">🖼️</span><span class="lb">はいけい</span></button>
+  <button class="tool" onclick="addTodo()"><span class="ic">✅</span><span class="lb">やること</span></button>
+  <button class="tool" onclick="addTimer()"><span class="ic">⏱️</span><span class="lb">タイマー</span></button>
+  <button class="tool" onclick="addText()"><span class="ic">🅰️</span><span class="lb">もじ</span></button>
+  <button class="tool" onclick="clearAll()"><span class="ic">🧹</span><span class="lb">ぜんぶ消す</span></button>
+</div>
+
+<!-- 背景パネル -->
+<div id="bg-panel">
+  <div class="bp-head"><h2>はいけいを えらぶ</h2><button onclick="closeBg()">✕</button></div>
+  <div class="bp-body" id="bp-body"></div>
+</div>
+
+<script>
+/* ============ 背景データ ============ */
+const BG = {
+  "しぜん":[
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1280&q=70",
+    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1280&q=70",
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1280&q=70",
+    "https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=1280&q=70",
+    "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=1280&q=70",
+    "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1280&q=70"
+  ],
+  "うみ・そら":[
+    "https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?w=1280&q=70",
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1280&q=70",
+    "https://images.unsplash.com/photo-1530908295418-a12e326966ba?w=1280&q=70",
+    "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1280&q=70"
+  ],
+  "どうぶつ":[
+    "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=1280&q=70",
+    "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=1280&q=70",
+    "https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=1280&q=70"
+  ],
+  "おちついた色":[
+    "linear-gradient(135deg,#a8edea,#fed6e3)",
+    "linear-gradient(135deg,#d4fc79,#96e6a1)",
+    "linear-gradient(135deg,#fbc2eb,#a6c1ee)",
+    "linear-gradient(135deg,#fdfbfb,#ebedee)",
+    "linear-gradient(135deg,#ffecd2,#fcb69f)",
+    "linear-gradient(135deg,#a1c4fd,#c2e9fb)"
+  ],
+  "むじ（単色）":[
+    "#2d3047","#1b998b","#3d5a80","#e07a5f","#3a405a","#f4f1de"
+  ]
+};
+const stage=document.getElementById('stage');
+function applyBg(v){
+  if(v.startsWith('http')) stage.style.background=`url('${v}') center/cover`;
+  else if(v.startsWith('linear')) stage.style.background=v;
+  else stage.style.background=v;
+  localStorage.setItem('bg',v);
+}
+function buildBg(){
+  const body=document.getElementById('bp-body');
+  body.innerHTML='';
+  // アップロード
+  const lab=document.createElement('label');
+  lab.className='upload-lab';lab.innerHTML='📷 しゃしんを えらぶ';
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.style.display='none';
+  inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=ev=>applyBg(ev.target.result);r.readAsDataURL(f);};
+  lab.appendChild(inp);
+  const wrap=document.createElement('div');wrap.className='thumbs';wrap.appendChild(lab);
+  body.appendChild(wrap);
+  for(const cat in BG){
+    const h=document.createElement('h3');h.textContent=cat;body.appendChild(h);
+    const g=document.createElement('div');g.className='thumbs';
+    BG[cat].forEach(v=>{
+      const t=document.createElement('div');t.className='thumb';
+      t.style.background = v.startsWith('http')?`url('${v}') center/cover`:v;
+      t.onclick=()=>applyBg(v);
+      g.appendChild(t);
+    });
+    body.appendChild(g);
+  }
+}
+function openBg(){document.getElementById('bg-panel').classList.add('open');}
+function closeBg(){document.getElementById('bg-panel').classList.remove('open');}
+
+/* ============ 付箋：ドラッグ移動 ============ */
+let zTop=10;
+function makeWidget(html,x,y){
+  const w=document.createElement('div');w.className='widget';
+  w.style.left=x+'px';w.style.top=y+'px';
+  w.innerHTML=html;
+  w._scale=1;w.style.setProperty('--inv',1);
+  w.insertAdjacentHTML('beforeend',
+    '<div class="rz nw"></div><div class="rz ne"></div><div class="rz sw"></div><div class="rz se"></div>');
+  w.addEventListener('mousedown',()=>{w.style.zIndex=++zTop;},true);
+  document.body.appendChild(w);
+  const head=w.querySelector('.w-head');
+  let dx,dy,drag=false;
+  const start=(cx,cy)=>{const r=w.getBoundingClientRect();dx=cx-r.left;dy=cy-r.top;drag=true;w.style.zIndex=++zTop;};
+  const move=(cx,cy)=>{if(!drag)return;w.style.left=(cx-dx)+'px';w.style.top=(cy-dy)+'px';};
+  head.addEventListener('mousedown',e=>{if(e.target.tagName==='BUTTON')return;start(e.clientX,e.clientY);e.preventDefault();});
+  document.addEventListener('mousemove',e=>move(e.clientX,e.clientY));
+  document.addEventListener('mouseup',()=>drag=false);
+  head.addEventListener('touchstart',e=>{if(e.target.tagName==='BUTTON')return;const t=e.touches[0];start(t.clientX,t.clientY);},{passive:true});
+  document.addEventListener('touchmove',e=>{if(drag){const t=e.touches[0];move(t.clientX,t.clientY);e.preventDefault();}},{passive:false});
+  document.addEventListener('touchend',()=>drag=false);
+
+  /* ---- 四隅ドラッグで拡大・縮小（文字ごと） ---- */
+  w.querySelectorAll('.rz').forEach(h=>{
+    const corner=h.classList.contains('nw')?'nw':h.classList.contains('ne')?'ne':h.classList.contains('sw')?'sw':'se';
+    let rz=false,ax,ay,d0,s0,W0,H0;
+    const rstart=(cx,cy)=>{
+      const r=w.getBoundingClientRect();
+      s0=w._scale;W0=w.offsetWidth;H0=w.offsetHeight;
+      if(corner==='se'){ax=r.left;ay=r.top;}
+      else if(corner==='nw'){ax=r.right;ay=r.bottom;}
+      else if(corner==='ne'){ax=r.left;ay=r.bottom;}
+      else{ax=r.right;ay=r.top;}
+      d0=Math.hypot(cx-ax,cy-ay)||1;rz=true;w.style.zIndex=++zTop;
+    };
+    const rmove=(cx,cy)=>{
+      if(!rz)return;
+      const d1=Math.hypot(cx-ax,cy-ay);
+      const s=Math.max(0.5,Math.min(6,s0*(d1/d0)));
+      if(corner==='se'){w.style.left=ax+'px';w.style.top=ay+'px';}
+      else if(corner==='nw'){w.style.left=(ax-W0*s)+'px';w.style.top=(ay-H0*s)+'px';}
+      else if(corner==='ne'){w.style.left=ax+'px';w.style.top=(ay-H0*s)+'px';}
+      else{w.style.left=(ax-W0*s)+'px';w.style.top=ay+'px';}
+      w._scale=s;w.style.transform='scale('+s+')';w.style.setProperty('--inv',1/s);
+    };
+    h.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();rstart(e.clientX,e.clientY);});
+    document.addEventListener('mousemove',e=>rmove(e.clientX,e.clientY));
+    document.addEventListener('mouseup',()=>rz=false);
+    h.addEventListener('touchstart',e=>{e.stopPropagation();const t=e.touches[0];rstart(t.clientX,t.clientY);},{passive:true});
+    document.addEventListener('touchmove',e=>{if(rz){const t=e.touches[0];rmove(t.clientX,t.clientY);e.preventDefault();}},{passive:false});
+    document.addEventListener('touchend',()=>rz=false);
+  });
+  return w;
+}
+function closeW(btn){btn.closest('.widget').remove();}
+
+/* ============ ToDo ============ */
+function addTodo(){
+  const html=`
+    <div class="w-head"><span>📋 やることリスト</span><span class="grip"></span>
+      <button onclick="closeW(this)">✕</button></div>
+    <div class="w-body">
+      <ul class="todo-list"></ul>
+      <button class="add-btn" onclick="todoAdd(this)">＋ ついか</button>
+    </div>`;
+  const w=makeWidget(html,120,120);
+  todoAdd(w.querySelector('.add-btn'),'あたらしいこと');
+}
+function todoAdd(btn,text){
+  const ul=btn.closest('.w-body').querySelector('.todo-list');
+  const li=document.createElement('li');li.className='todo-item';
+  li.innerHTML=`<span class="chk" onclick="this.parentNode.classList.toggle('done')">✓</span>
+    <span class="txt" contenteditable="true"></span>
+    <button class="del" onclick="this.parentNode.remove()">🗑</button>`;
+  li.querySelector('.txt').textContent=text||'';
+  ul.appendChild(li);
+  if(!text){const t=li.querySelector('.txt');t.focus();}
+}
+
+/* ============ テキスト ============ */
+function addText(){
+  const html=`
+    <div class="w-head"><span>🅰️ もじ</span><span class="grip"></span>
+      <button onclick="closeW(this)">✕</button></div>
+    <div class="w-body"><div class="text-area" contenteditable="true">ここに かこう</div></div>`;
+  const w=makeWidget(html,200,200);
+  const ta=w.querySelector('.text-area');
+  ta.addEventListener('focus',function(){if(ta.textContent==='ここに かこう'){ta.textContent='';}},{once:true});
+}
+
+/* ============ タイマー＋信号 ============ */
+function addTimer(){
+  const html=`
+   <div class="w-head"><span>⏱️ タイマー</span><span class="grip"></span>
+     <button onclick="closeW(this)">✕</button></div>
+   <div class="w-body">
+     <div class="timer-name" contenteditable="true" data-ph="なんのタイマー？（れい：ごちそうさままで）"></div>
+     <div class="timer-wrap">
+       <div class="signal">
+         <div class="light red" data-c="red"></div>
+         <div class="light yellow" data-c="yellow"></div>
+         <div class="light green" data-c="green"></div>
+       </div>
+       <div class="timer-main">
+         <div class="time-set">
+           <button onclick="tAdj(this,-60)">－</button>
+           <div class="time-disp">05:00</div>
+           <button onclick="tAdj(this,60)">＋</button>
+         </div>
+         <div class="timer-ctrl">
+           <button class="btn-start" onclick="tStart(this)">▶ スタート</button>
+           <button class="btn-reset" onclick="tReset(this)">⟲ リセット</button>
+         </div>
+       </div>
+     </div>
+     <div class="sig-mode">信号機をタップ → <b>手動切替</b>／スタート中 → <b>自動</b>で青→黄→赤</div>
+   </div>`;
+  const w=makeWidget(html,260,160);
+  w._sec=300;w._left=300;w._run=false;w._timer=null;w._auto=true;
+  // 手動タップ
+  w.querySelectorAll('.light').forEach(l=>{
+    l.onclick=()=>{ if(w._run) return; w._auto=false; setSignal(w,l.dataset.c); };
+  });
+  setSignal(w,'green');
+  renderTime(w);
+}
+function fmt(s){const m=Math.floor(s/60),x=s%60;return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0');}
+function renderTime(w){w.querySelector('.time-disp').textContent=fmt(w._left);}
+function tAdj(btn,d){const w=btn.closest('.widget');if(w._run)return;
+  w._sec=Math.max(0,Math.min(99*60,w._sec+d));w._left=w._sec;renderTime(w);}
+function setSignal(w,c){
+  w.querySelectorAll('.light').forEach(l=>l.classList.toggle('on',l.dataset.c===c));
+}
+function autoSignal(w){
+  const r=w._left/w._sec;
+  if(w._left<=0) setSignal(w,'red');
+  else if(r>0.5) setSignal(w,'green');
+  else if(r>0.2) setSignal(w,'yellow');
+  else setSignal(w,'red');
+}
+function tStart(btn){
+  const w=btn.closest('.widget');
+  if(w._run){ // 一時停止
+    w._run=false;clearInterval(w._timer);btn.textContent='▶ スタート';btn.className='btn-start';return;
+  }
+  if(w._left<=0){w._left=w._sec;}
+  w._run=true;w._auto=true;btn.textContent='⏸ ストップ';btn.className='btn-pause';
+  autoSignal(w);
+  w._timer=setInterval(()=>{
+    w._left--;renderTime(w);
+    if(w._auto) autoSignal(w);
+    if(w._left<=0){clearInterval(w._timer);w._run=false;setSignal(w,'red');
+      btn.textContent='▶ スタート';btn.className='btn-start';
+      w.querySelector('.time-disp').style.color='#ff3b30';
+      try{beep();}catch(e){}
+    }
+  },1000);
+}
+function tReset(btn){
+  const w=btn.closest('.widget');clearInterval(w._timer);w._run=false;w._left=w._sec;
+  renderTime(w);w.querySelector('.time-disp').style.color='';
+  const s=w.querySelector('.btn-start');s.textContent='▶ スタート';s.className='btn-start';
+  w._auto=true;setSignal(w,'green');
+}
+function beep(){
+  const ac=new (window.AudioContext||window.webkitAudioContext)();
+  [0,0.3,0.6].forEach(t=>{const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.frequency.value=880;
+    g.gain.setValueAtTime(.3,ac.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.25);
+    o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.25);});
+}
+
+/* ============ その他 ============ */
+function clearAll(){if(confirm('画面のものを ぜんぶ消しますか？'))
+  document.querySelectorAll('.widget').forEach(w=>w.remove());}
+
+function tick(){const d=new Date();
+  document.getElementById('clock').textContent=
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+setInterval(tick,1000);tick();
+
+/* 起動 */
+buildBg();
+applyBg(localStorage.getItem('bg')||BG["おちついた色"][5]);
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

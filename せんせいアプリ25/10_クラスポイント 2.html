@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>クラスポイント</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height: 100vh;
+    padding: 16px;
+    color: #333;
+  }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 { font-size: clamp(28px, 4vw, 44px); color: #5b6ef5; text-shadow: 0 2px 0 #fff; }
+  .layout {
+    display: grid; gap: 18px;
+    grid-template-columns: 1fr;
+    max-width: 1300px; margin: 0 auto;
+  }
+  @media (min-width: 980px) { .layout { grid-template-columns: 1fr 1fr; } }
+  .card {
+    background: #fff; border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: 22px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  h2 { font-size: clamp(19px, 2.2vw, 26px); color: #5b6ef5; margin-bottom: 12px; }
+  button {
+    font-family: inherit; border: none; cursor: pointer;
+    border-radius: 999px; font-weight: bold;
+    font-size: clamp(17px, 2vw, 22px);
+    padding: 12px 24px;
+    background: #fff; color: #5b6ef5;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15);
+    transition: transform .12s;
+  }
+  button:active { transform: scale(.94); }
+  .points-num {
+    font-size: clamp(56px, 8vw, 100px);
+    font-weight: bold; color: #f5a623;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .points-num.pop { animation: ppop .5s ease; }
+  @keyframes ppop { 0%{transform:scale(1);} 40%{transform:scale(1.3); color:#ff7a9c;} 100%{transform:scale(1);} }
+  .points-label { font-size: clamp(16px, 2vw, 22px); color: #999; font-weight: bold; margin-bottom: 6px; }
+  .goal-line { font-size: clamp(16px, 2vw, 22px); color: #888; font-weight: bold; margin: 8px 0 4px; }
+  .goal-line input {
+    font-family: inherit; font-size: clamp(18px, 2.2vw, 24px);
+    width: 100px; text-align: center;
+    border: 3px solid #d6dcff; border-radius: 12px;
+    padding: 4px 8px; outline: none; font-weight: bold;
+  }
+  .goal-line input:focus { border-color: #5b6ef5; }
+  #jarWrap { margin: 4px auto; width: min(70vw, 330px); }
+  .reason-grid {
+    display: grid; gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    margin-bottom: 14px;
+  }
+  .reason-btn {
+    background: #eef1ff; color: #5b6ef5;
+    font-size: clamp(17px, 2vw, 23px);
+    padding: 14px 10px;
+    position: relative;
+  }
+  .reason-btn.on { background: #5b6ef5; color: #fff; }
+  .amount-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .amount-row button {
+    background: #f5a623; color: #fff;
+    font-size: clamp(24px, 3vw, 36px);
+    padding: 16px 34px;
+  }
+  .amount-row button:nth-child(2) { background: #ff7a9c; }
+  .amount-row button:nth-child(3) { background: #5b6ef5; }
+  .small-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .small-row button { background: #f0f2fb; color: #778; font-size: 16px; }
+  .reward-area { margin-top: 12px; }
+  .reward-area textarea {
+    font-family: inherit; width: 100%;
+    font-size: clamp(17px, 2vw, 22px);
+    border: 3px dashed #f5c96b; background: #fffbee;
+    border-radius: 16px; padding: 12px;
+    min-height: 76px; resize: vertical; outline: none;
+  }
+  .reward-area textarea:focus { border-color: #f5a623; }
+  #historyList {
+    list-style: none; text-align: left;
+    max-height: 300px; overflow-y: auto;
+  }
+  #historyList li {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 8px;
+    padding: 9px 12px; border-bottom: 2px solid #f2f4fb;
+    font-size: clamp(15px, 1.8vw, 19px);
+  }
+  #historyList li .pt { font-weight: bold; color: #f5a623; white-space: nowrap; }
+  #historyList li .when { color: #bbb; font-size: .85em; white-space: nowrap; }
+  #historyList li.empty { justify-content: center; color: #aab; border: none; }
+  .confetti {
+    position: fixed; top: -24px;
+    width: 12px; height: 20px; border-radius: 4px;
+    pointer-events: none; z-index: 100;
+  }
+  #goalBanner {
+    position: fixed; inset: 0; z-index: 90;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(91,110,245,.25);
+    pointer-events: none;
+  }
+  #goalBanner.show { display: flex; }
+  #goalBanner .msg {
+    background: #fff; border-radius: 28px;
+    box-shadow: 0 14px 50px rgba(0,0,0,.3);
+    padding: clamp(28px, 5vw, 60px) clamp(36px, 7vw, 90px);
+    font-size: clamp(34px, 6vw, 72px);
+    font-weight: bold; color: #ff7a9c;
+    animation: banner .7s cubic-bezier(.2,1.5,.4,1);
+    text-align: center;
+  }
+  @keyframes banner { 0%{transform:scale(.3); opacity:0;} 100%{transform:scale(1); opacity:1;} }
+  .star-fly {
+    position: fixed; font-size: 34px; z-index: 80; pointer-events: none;
+  }
+  footer { text-align: center; margin-top: 20px; color: #888; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⭐ クラスポイント</h1>
+</header>
+
+<div class="layout">
+  <!-- left: jar -->
+  <div class="card">
+    <div class="points-label">みんなの がんばりちょきん</div>
+    <div class="points-num" id="pointsNum">0</div>
+    <div class="goal-line">
+      もくひょう：
+      <input type="number" id="goalInput" min="1" max="9999" value="50"> ポイント
+    </div>
+    <div id="jarWrap">
+      <svg id="jarSvg" viewBox="0 0 300 360" xmlns="http://www.w3.org/2000/svg" aria-label="ちょきんばこ">
+        <defs>
+          <clipPath id="jarClip">
+            <path d="M75 82 L225 82 L245 120 L245 300 Q245 336 209 336 L91 336 Q55 336 55 300 L55 120 Z"/>
+          </clipPath>
+          <linearGradient id="fillGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#ffd76b"/>
+            <stop offset="100%" stop-color="#ffe9a8"/>
+          </linearGradient>
+        </defs>
+        <!-- fill (level animated via JS) -->
+        <g clip-path="url(#jarClip)">
+          <rect id="fillRect" x="45" y="336" width="210" height="0" fill="url(#fillGrad)"/>
+          <g id="jarStars"></g>
+        </g>
+        <!-- jar glass -->
+        <path d="M75 82 L225 82 L245 120 L245 300 Q245 336 209 336 L91 336 Q55 336 55 300 L55 120 Z"
+              fill="rgba(200,220,255,.16)" stroke="#5b6ef5" stroke-width="7" stroke-linejoin="round"/>
+        <!-- lid -->
+        <rect x="88" y="44" width="124" height="40" rx="14" fill="#5b6ef5"/>
+        <rect x="122" y="30" width="56" height="22" rx="10" fill="#4054d8"/>
+        <!-- shine -->
+        <path d="M78 130 Q74 220 80 290" stroke="rgba(255,255,255,.8)" stroke-width="9" fill="none" stroke-linecap="round"/>
+        <!-- goal line -->
+        <line id="goalLine" x1="55" y1="100" x2="245" y2="100" stroke="#ff7a9c" stroke-width="4" stroke-dasharray="10 8"/>
+        <text id="goalText" x="150" y="96" text-anchor="middle" font-size="17" font-weight="bold" fill="#ff7a9c">もくひょう</text>
+      </svg>
+    </div>
+    <div class="reward-area">
+      <div class="points-label">🎁 ごほうびメモ（たまったら なにする？）</div>
+      <textarea id="rewardMemo" placeholder="れい：おたのしみかいで ドッジボールたいかい！"></textarea>
+    </div>
+  </div>
+
+  <!-- right: controls & history -->
+  <div>
+    <div class="card" style="margin-bottom:18px;">
+      <h2>どうして ポイント？（りゆうをえらんでね）</h2>
+      <div class="reason-grid" id="reasonGrid"></div>
+      <div class="amount-row">
+        <button id="btnP1">＋1</button>
+        <button id="btnP3">＋3</button>
+        <button id="btnP5">＋5</button>
+      </div>
+      <div class="small-row">
+        <button id="btnAddReason">➕ りゆうをふやす</button>
+        <button id="btnDelReason">➖ りゆうをけす</button>
+        <button id="btnUndo">↩️ もどす</button>
+        <button id="btnReset">🔄 リセット</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📖 きろく</h2>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+</div>
+
+<div id="goalBanner"><div class="msg">🎉 もくひょう たっせい！ 🎉<br>みんな よくがんばったね！</div></div>
+
+<footer>りゆうをタップしてから ＋ボタンをおしてね。データはこの きき のなかに ほぞんされるよ。</footer>
+
+<script>
+(function(){
+  'use strict';
+  var STORE_KEY = 'sensei25_classpoint';
+
+  var state = load();
+
+  function defaultState(){
+    return {
+      points: 0,
+      goal: 50,
+      reasons: ['⚡ はやい','💗 やさしい','✨ きれい','🤝 きょうりょく'],
+      selectedReason: 0,
+      reward: '',
+      history: [],       // {pt, reason, time}
+      celebrated: false  // goal celebration already shown for current goal
+    };
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && typeof s.points === 'number') {
+          var d = defaultState();
+          for (var k in d) if (!(k in s)) s[k] = d[k];
+          return s;
+        }
+      }
+    } catch(e){}
+    return defaultState();
+  }
+  function save(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){}
+  }
+
+  /* ---- audio ---- */
+  var actx = null;
+  function audio(){
+    if (!actx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) actx = new AC();
+    }
+    if (actx && actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  function tone(freq, start, dur, type, vol){
+    var ctx = audio(); if (!ctx) return;
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+    g.gain.exponentialRampToValueAtTime(vol || .25, ctx.currentTime + start + .02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime + start); o.stop(ctx.currentTime + start + dur + .05);
+  }
+  function soundCoin(){ tone(988, 0, .1, 'square', .12); tone(1319, .08, .25, 'square', .12); }
+  function soundFanfare(){
+    var seq = [[523,0],[523,.15],[523,.3],[659,.45],[784,.7],[659,.9],[784,1.05]];
+    seq.forEach(function(s){ tone(s[0], s[1], .22, 'triangle', .3); });
+    tone(1047, 1.25, .7, 'triangle', .35);
+    tone(523, 1.25, .7, 'triangle', .2);
+  }
+  function soundUndo(){ tone(440, 0, .12, 'sine', .2); tone(330, .1, .18, 'sine', .2); }
+
+  /* ---- elements ---- */
+  var pointsNum = document.getElementById('pointsNum');
+  var goalInput = document.getElementById('goalInput');
+  var fillRect = document.getElementById('fillRect');
+  var jarStars = document.getElementById('jarStars');
+  var goalLine = document.getElementById('goalLine');
+  var goalText = document.getElementById('goalText');
+  var reasonGrid = document.getElementById('reasonGrid');
+  var historyList = document.getElementById('historyList');
+  var rewardMemo = document.getElementById('rewardMemo');
+  var goalBanner = document.getElementById('goalBanner');
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var JAR_TOP = 92, JAR_BOTTOM = 336; // usable inner y range
+
+  function renderJar(){
+    var ratio = state.goal > 0 ? Math.min(1, state.points / state.goal) : 0;
+    var h = (JAR_BOTTOM - JAR_TOP) * ratio;
+    fillRect.setAttribute('y', JAR_BOTTOM - h);
+    fillRect.setAttribute('height', h);
+
+    // stars inside jar: 1 star per point, cap at 60 drawn
+    jarStars.innerHTML = '';
+    var starCount = Math.min(state.points, 60);
+    for (var i = 0; i < starCount; i++) {
+      var t = document.createElementNS(SVGNS, 'text');
+      // deterministic pseudo-random placement so stars don't jump around
+      var rx = ((i * 137.5) % 160) + 72;
+      var levelTop = JAR_BOTTOM - h;
+      var ry = JAR_BOTTOM - 14 - ((i * 61.8) % Math.max(10, h - 18));
+      if (ry < levelTop + 12) ry = levelTop + 12 + ((i * 13) % 10);
+      t.setAttribute('x', rx);
+      t.setAttribute('y', ry);
+      t.setAttribute('font-size', 18 + (i % 3) * 4);
+      t.setAttribute('text-anchor', 'middle');
+      t.textContent = '⭐';
+      jarStars.appendChild(t);
+    }
+    // goal line always at top of jar
+    goalLine.setAttribute('y1', JAR_TOP + 8);
+    goalLine.setAttribute('y2', JAR_TOP + 8);
+    goalText.textContent = 'もくひょう ' + state.goal;
+  }
+
+  function renderPoints(pop){
+    pointsNum.textContent = state.points;
+    if (pop) {
+      pointsNum.classList.remove('pop');
+      void pointsNum.offsetWidth;
+      pointsNum.classList.add('pop');
+    }
+  }
+
+  function renderReasons(){
+    reasonGrid.innerHTML = '';
+    state.reasons.forEach(function(r, i){
+      var b = document.createElement('button');
+      b.className = 'reason-btn' + (i === state.selectedReason ? ' on' : '');
+      b.textContent = r;
+      b.addEventListener('click', function(){
+        state.selectedReason = i;
+        save(); renderReasons();
+      });
+      reasonGrid.appendChild(b);
+    });
+  }
+
+  function fmtTime(ts){
+    var d = new Date(ts);
+    return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  function renderHistory(){
+    historyList.innerHTML = '';
+    if (state.history.length === 0) {
+      var li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = 'まだ きろくがないよ';
+      historyList.appendChild(li);
+      return;
+    }
+    state.history.slice().reverse().slice(0, 60).forEach(function(h){
+      var li = document.createElement('li');
+      var reason = document.createElement('span');
+      reason.textContent = h.reason;
+      var pt = document.createElement('span');
+      pt.className = 'pt';
+      pt.textContent = '＋' + h.pt;
+      var when = document.createElement('span');
+      when.className = 'when';
+      when.textContent = fmtTime(h.time);
+      li.appendChild(reason); li.appendChild(pt); li.appendChild(when);
+      historyList.appendChild(li);
+    });
+  }
+
+  function renderAll(pop){
+    renderPoints(pop);
+    renderJar();
+    renderReasons();
+    renderHistory();
+    goalInput.value = state.goal;
+    rewardMemo.value = state.reward;
+  }
+
+  /* ---- star fly animation ---- */
+  function flyStar(fromEl){
+    var jarRect = document.getElementById('jarSvg').getBoundingClientRect();
+    var from = fromEl.getBoundingClientRect();
+    var s = document.createElement('div');
+    s.className = 'star-fly';
+    s.textContent = '⭐';
+    s.style.left = (from.left + from.width/2 - 17) + 'px';
+    s.style.top = (from.top + from.height/2 - 17) + 'px';
+    document.body.appendChild(s);
+    var dx = (jarRect.left + jarRect.width/2) - (from.left + from.width/2);
+    var dy = (jarRect.top + jarRect.height*0.25) - (from.top + from.height/2);
+    s.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.6)', opacity: .9 }
+    ], { duration: 600, easing: 'cubic-bezier(.3,-.2,.6,1)' });
+    setTimeout(function(){ s.remove(); }, 620);
+  }
+
+  /* ---- confetti ---- */
+  function confettiBurst(durationMs){
+    var colors = ['#ff7a9c','#5b6ef5','#f5d34e','#3dbf7a','#8e5bf5','#38b6d9'];
+    var end = Date.now() + durationMs;
+    var iv = setInterval(function(){
+      if (Date.now() > end) { clearInterval(iv); return; }
+      for (var i = 0; i < 5; i++) {
+        var c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.background = colors[Math.floor(Math.random()*colors.length)];
+        c.style.left = Math.random()*100 + 'vw';
+        var dur = 2200 + Math.random()*2200;
+        var sway = Math.random()*200 - 100;
+        c.animate([
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+          { transform: 'translate(' + sway + 'px, 110vh) rotate(' + (400 + Math.random()*400) + 'deg)', opacity: .75 }
+        ], { duration: dur, easing: 'ease-in' });
+        document.body.appendChild(c);
+        (function(el, t){ setTimeout(function(){ el.remove(); }, t); })(c, dur);
+      }
+    }, 160);
+  }
+
+  function celebrate(){
+    goalBanner.classList.add('show');
+    confettiBurst(4500);
+    soundFanfare();
+    setTimeout(function(){ goalBanner.classList.remove('show'); }, 5200);
+  }
+
+  /* ---- add points ---- */
+  function addPoints(pt, btnEl){
+    state.points += pt;
+    var reason = state.reasons[state.selectedReason] || 'がんばり';
+    state.history.push({ pt: pt, reason: reason, time: Date.now() });
+    if (state.history.length > 500) state.history.shift();
+    var hitGoal = !state.celebrated && state.points >= state.goal;
+    if (hitGoal) state.celebrated = true;
+    save();
+    renderAll(true);
+    flyStar(btnEl);
+    soundCoin();
+    if (hitGoal) setTimeout(celebrate, 500);
+  }
+
+  document.getElementById('btnP1').addEventListener('click', function(){ addPoints(1, this); });
+  document.getElementById('btnP3').addEventListener('click', function(){ addPoints(3, this); });
+  document.getElementById('btnP5').addEventListener('click', function(){ addPoints(5, this); });
+
+  document.getElementById('btnUndo').addEventListener('click', function(){
+    if (state.history.length === 0) return;
+    var last = state.history.pop();
+    state.points = Math.max(0, state.points - last.pt);
+    if (state.points < state.goal) state.celebrated = false;
+    save(); renderAll();
+    soundUndo();
+  });
+
+  document.getElementById('btnReset').addEventListener('click', function(){
+    if (!confirm('ポイントときろくを ぜんぶ 0 にもどしてもいい？')) return;
+    state.points = 0;
+    state.history = [];
+    state.celebrated = false;
+    save(); renderAll();
+  });
+
+  /* ---- reasons ---- */
+  document.getElementById('btnAddReason').addEventListener('click', function(){
+    var r = prompt('あたらしい りゆうを かいてね（れい：🎵 しずか）');
+    if (r === null) return;
+    r = r.trim();
+    if (!r) return;
+    state.reasons.push(r);
+    state.selectedReason = state.reasons.length - 1;
+    save(); renderReasons();
+  });
+  document.getElementById('btnDelReason').addEventListener('click', function(){
+    if (state.reasons.length <= 1) { alert('りゆうは 1つ のこしてね'); return; }
+    var cur = state.reasons[state.selectedReason];
+    if (!confirm('えらんでいる「' + cur + '」を けしてもいい？')) return;
+    state.reasons.splice(state.selectedReason, 1);
+    state.selectedReason = 0;
+    save(); renderReasons();
+  });
+
+  /* ---- goal & reward ---- */
+  goalInput.addEventListener('change', function(){
+    var g = parseInt(goalInput.value, 10);
+    if (isNaN(g) || g < 1) g = 1;
+    if (g > 9999) g = 9999;
+    state.goal = g;
+    state.celebrated = state.points >= g; // don't re-celebrate for already-passed goals
+    save(); renderAll();
+  });
+  rewardMemo.addEventListener('input', function(){
+    state.reward = rewardMemo.value;
+    save();
+  });
+
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

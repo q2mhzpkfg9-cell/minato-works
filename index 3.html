@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MINATO WORKS</title>
+<meta name="description" content="元小学校教員がつくった、教室で使える無料アプリ集。登録なし・広告なし・すぐ使える。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Kiwi+Maru:wght@500&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f1e7;
+    --card:#fffdf8;
+    --ink:#1e2a3a;
+    --ink-sub:#6b6f76;
+    --line:#e4dccb;
+    --chip:#efe8da;
+    --brand1:#1f3a5f;
+    --brand2:#b8923f;
+    --new:#e76f51;
+    --shadow:0 1px 3px rgba(30,42,58,.06), 0 6px 18px rgba(30,42,58,.07);
+    --radius:14px;
+    --c-kokugo:#c8553d;
+    --c-sansu:#2a7f9e;
+    --c-hoka:#5a8f4e;
+    --c-jugyo:#1f3a5f;
+    --c-gakkyu:#b5577b;
+    --c-time:#6b5ca5;
+    --c-komu:#6b7a86;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111826; --card:#1a2332; --ink:#ece8df; --ink-sub:#a0a7b3; --line:#2b3648; --chip:#232e40;
+      --brand1:#8fb3de; --c-jugyo:#6f98c9; --c-komu:#9aa9b6;
+      --shadow:0 1px 3px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111826; --card:#1a2332; --ink:#ece8df; --ink-sub:#a0a7b3; --line:#2b3648; --chip:#232e40;
+    --brand1:#8fb3de; --c-jugyo:#6f98c9; --c-komu:#9aa9b6;
+    --shadow:0 1px 3px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box}
+  html{overflow-x:hidden}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+    line-height:1.6;-webkit-text-size-adjust:100%;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit}
+
+  /* ---------- ヘッダーバー ---------- */
+  .bar{
+    position:sticky;top:0;z-index:50;background:var(--card);
+    border-bottom:1px solid var(--line);box-shadow:0 1px 4px rgba(0,0,0,.05);
+  }
+  .bar-in{
+    max-width:1120px;margin:0 auto;height:60px;padding:0 20px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .logo{line-height:1;flex:none}
+  .logo-en{
+    display:block;font-family:"Josefin Sans",sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.12em;
+    background:linear-gradient(135deg,var(--brand1),#2a7f9e 60%,var(--brand2));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .logo-ja{display:block;font-size:.64rem;color:var(--ink-sub);margin-top:3px}
+  .feats{display:flex;gap:6px;align-items:center;font-size:.74rem;color:var(--ink-sub);font-weight:700;flex-wrap:nowrap}
+  .feats span{white-space:nowrap}
+  .feats i{font-style:normal;opacity:.4;margin:0 2px}
+  .shelf-switch{display:flex;background:var(--chip);border-radius:999px;padding:3px;gap:2px;flex:none}
+  .shelf-switch button{
+    border:0;background:none;cursor:pointer;font-size:.8rem;font-weight:800;color:var(--ink-sub);
+    padding:6px 13px;border-radius:999px;white-space:nowrap;
+  }
+  .shelf-switch button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  @media (max-width:860px){ .feats{display:none} }
+  @media (max-width:480px){
+    .logo-en{font-size:1.25rem} .logo-ja{display:none}
+    .bar-in{padding:0 16px}
+    .shelf-switch button{padding:6px 10px;font-size:.76rem}
+  }
+
+  /* ---------- ヒーロー ---------- */
+  .hero{max-width:1120px;margin:0 auto;padding:26px 20px 6px}
+  .hero h1,.shelf-ttl,.name,.dlg-in h3{font-family:"Kiwi Maru",serif;font-weight:500}
+  .hero h1{font-size:1.35rem;margin:0 0 4px;font-weight:800}
+  .hero p{margin:0;color:var(--ink-sub);font-size:.88rem}
+  .tools{display:flex;gap:10px;margin:18px 0 0;flex-wrap:wrap}
+  .search{position:relative;flex:1 1 320px}
+  .search input{
+    width:100%;padding:12px 40px;font-size:.98rem;font-family:inherit;border:1px solid var(--line);
+    border-radius:999px;background:var(--card);color:var(--ink);box-shadow:var(--shadow);
+  }
+  .search input:focus{outline:2px solid var(--brand1);outline-offset:1px}
+  .search .ico{position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:.5}
+  .search .clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;
+    color:var(--ink-sub);cursor:pointer;padding:6px 10px;border-radius:50%;display:none;font-size:1rem}
+  .jump{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .jump a{
+    font-size:.8rem;font-weight:700;padding:7px 13px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--ink-sub);white-space:nowrap;
+  }
+  .jump a:hover{border-color:currentColor}
+
+  /* ---------- 棚（カテゴリ） ---------- */
+  main{max-width:1120px;margin:0 auto;padding:10px 20px 70px}
+  .shelf{margin-top:34px;scroll-margin-top:76px}
+  .shelf-head{display:flex;align-items:center;gap:14px;padding-bottom:12px;position:relative}
+  .shelf-head::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line)}
+  .shelf-head::before{content:"";position:absolute;left:0;bottom:-1px;width:64px;height:3px;border-radius:3px;background:var(--c);z-index:1}
+  .shelf-ico{
+    width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:var(--c);color:#fff;font-size:1.5rem;box-shadow:0 4px 12px color-mix(in srgb,var(--c) 35%,transparent);
+  }
+  .shelf-ttl{margin:0;font-size:1.35rem;font-weight:800;display:flex;align-items:center;gap:10px}
+  .shelf-n{font-size:.74rem;font-weight:800;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);
+    padding:2px 10px;border-radius:999px}
+  .shelf-sub{margin:1px 0 0;font-size:.82rem;color:var(--ink-sub)}
+
+  .grid{display:grid;gap:18px;margin-top:18px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .card{
+    position:relative;display:flex;flex-direction:column;background:var(--card);
+    border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
+    border-top:4px solid var(--c);transition:transform .15s, box-shadow .15s;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 6px 14px rgba(15,23,42,.1),0 16px 32px rgba(15,23,42,.1)}
+  .thumb{display:block;aspect-ratio:16/10;background:var(--chip);overflow:hidden;border-bottom:1px solid var(--line)}
+  .thumb img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform .3s}
+  .card:hover .thumb img{transform:scale(1.04)}
+  .new{
+    position:absolute;top:10px;right:10px;background:var(--new);color:#fff;font-family:"Josefin Sans",sans-serif;
+    font-size:.72rem;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.18)
+  }
+  .fav{
+    position:absolute;top:8px;left:8px;border:0;cursor:pointer;width:30px;height:30px;border-radius:50%;
+    background:rgba(255,255,255,.88);color:#b8bcc4;font-size:.95rem;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.15)
+  }
+  .fav[aria-pressed="true"]{color:var(--new)}
+  .card-body{padding:12px 12px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;flex:1}
+  .name{font-weight:800;font-size:1rem;margin:2px 0 10px;line-height:1.35}
+  .btns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+  .pill{
+    border:1.5px solid color-mix(in srgb,var(--brand2) 45%,var(--line));background:color-mix(in srgb,var(--brand2) 8%,var(--card));
+    color:color-mix(in srgb,var(--brand2) 60%,var(--ink));font-size:.76rem;font-weight:800;padding:4px 11px;border-radius:999px;cursor:pointer;
+  }
+  .pill:hover{background:color-mix(in srgb,var(--brand2) 18%,var(--card))}
+  .grade{margin-top:auto;padding-top:12px;font-size:1.12rem;font-weight:800;color:var(--c)}
+  .grade.small{font-size:.86rem}
+  .pro{margin-top:10px;font-size:.74rem;font-weight:800;color:var(--brand1);border-bottom:1.5px solid var(--brand2);padding-bottom:1px}
+  .dlg-pro{display:block;margin-top:12px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--brand2) 14%,var(--card));
+    color:var(--ink);font-size:.84rem;font-weight:700;text-align:center}
+
+  .empty{text-align:center;color:var(--ink-sub);padding:60px 20px}
+
+  /* ---------- モーダル ---------- */
+  dialog{
+    border:0;border-radius:18px;padding:0;max-width:520px;width:calc(100% - 32px);background:var(--card);color:var(--ink);
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  dialog::backdrop{background:rgba(15,23,42,.45)}
+  .dlg-img{aspect-ratio:16/9;background:var(--chip)}
+  .dlg-img img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  .dlg-in{padding:18px 22px 22px}
+  .dlg-tag{font-size:.74rem;font-weight:800;color:var(--c)}
+  .dlg-in h3{margin:2px 0 12px;font-size:1.25rem}
+  .dlg-in h4{margin:14px 0 4px;font-size:.86rem;color:var(--ink-sub)}
+  .dlg-in p,.dlg-in ol{margin:0;font-size:.92rem}
+  .dlg-in ol{padding-left:1.3em}
+  .dlg-act{display:flex;gap:8px;margin-top:20px}
+  .dlg-act a,.dlg-act button{
+    flex:1;text-align:center;padding:11px;border-radius:12px;font-weight:800;font-size:.92rem;cursor:pointer;border:0
+  }
+  .dlg-act a{background:var(--c);color:#fff}
+  .dlg-act button{background:var(--chip);color:var(--ink)}
+
+  /* ---------- フッター ---------- */
+  footer{max-width:1120px;margin:0 auto;padding:0 20px 40px}
+  .note-in{background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);padding:14px 16px;font-size:.78rem;color:var(--ink-sub)}
+  .note-in b{color:var(--ink)}
+  .credit{text-align:center;font-size:.82rem;color:var(--ink-sub);margin-top:26px}
+  .credit a{color:var(--brand1);font-weight:800;text-decoration:underline;text-underline-offset:3px}
+
+  @media (max-width:520px){
+    .hero{padding:20px 16px 4px}
+    main{padding:6px 16px 60px}
+    footer{padding:0 16px 30px}
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .name{font-size:.88rem}
+    .pill{font-size:.68rem;padding:3px 7px}
+    .btns{gap:4px;flex-wrap:nowrap}
+    .card-body{padding:10px 6px 12px}
+    .grade{font-size:.98rem}
+    .shelf-ico{width:44px;height:44px;font-size:1.25rem}
+    .shelf-ttl{font-size:1.15rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-in">
+    <a class="logo" href="./">
+      <span class="logo-en">MINATO WORKS</span>
+      <span class="logo-ja">元小学校教員がつくる、教室のためのアプリ</span>
+    </a>
+    <div class="feats">
+      <span>🎁 完全無料</span><i>/</i><span>📝 登録なし</span><i>/</i><span>📥 DLなし</span><i>/</i><span>▶ すぐ使える</span>
+    </div>
+    <div class="shelf-switch" id="shelfSwitch">
+      <button data-shelf="kids" aria-pressed="true">🎒 こども</button>
+      <button data-shelf="teacher" aria-pressed="false">🧑‍🏫 せんせい</button>
+    </div>
+  </div>
+</div>
+
+<section class="hero">
+  <h1 id="heroTitle"></h1>
+  <p id="heroLead"></p>
+  <div class="tools">
+    <div class="search">
+      <span class="ico">🔍</span>
+      <input id="q" type="search" placeholder="さがす（例：かんじ、とけい、せきがえ）" autocomplete="off">
+      <button class="clear" id="clear" aria-label="消す">✕</button>
+    </div>
+    <nav class="jump" id="jump"></nav>
+  </div>
+</section>
+
+<main id="list"></main>
+
+<footer>
+  <div class="note-in"><b>データについて</b>　入力した名簿や記録は、使っている端末のブラウザの中だけに保存されます。外部には送信されません。</div>
+  <p class="credit">このアプリは、教室で困ったことから作っています。<br>
+    <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">note「教室ノオト」</a></p>
+</footer>
+
+<dialog id="dlg"></dialog>
+
+<script>
+/* ===== 棚の定義 ===== */
+const SHELVES = {
+  kids: {
+    title: "こどもが つかう",
+    lead: "じゅぎょうや すきまじかんに。ひらいたら すぐ あそべる。",
+    cats: [
+      {id:"kokugo", n:"こくご",  ico:"あ", c:"var(--c-kokugo)", sub:"かんじ・ことば・はなすちから"},
+      {id:"sansu",  n:"さんすう", ico:"＋", c:"var(--c-sansu)",  sub:"けいさんの きほんを きたえよう"},
+      {id:"hoka",   n:"しゃかい・えいご・おんがく", ico:"🌏", c:"var(--c-hoka)", sub:"ちず・えいたんご・リズム・タイピング"},
+    ]
+  },
+  teacher: {
+    title: "せんせいが つかう",
+    lead: "授業・学級経営・校務の「ちょっと困った」をアプリで。",
+    cats: [
+      {id:"jugyo",  n:"授業を進める", ico:"🖍️", c:"var(--c-jugyo)",  sub:"板書・提示・発言の記録"},
+      {id:"gakkyu", n:"学級経営",     ico:"🪑", c:"var(--c-gakkyu)", sub:"席替え・班分け・当番・ごほうび"},
+      {id:"time",   n:"時間・タイマー", ico:"⏰", c:"var(--c-time)",   sub:"見せるタイマーと、会議の時間管理"},
+      {id:"komu",   n:"校務・事務",   ico:"📋", c:"var(--c-komu)",   sub:"懇談・評価・行事の段取り"},
+    ]
+  }
+};
+
+/* ===== アプリ一覧 =====
+   c   : 棚の中のカテゴリid
+   g   : 対象学年（こども用） / 使う場面（せんせい用）
+   how : あそびかた・つかいかた（配列で手順）
+   aim : ねらい（こども用） / こんなときに（せんせい用）
+   th  : サムネイル画像
+   new : 1 なら NEW マーク
+   u   : 公開ずみURL（あれば優先）
+   pro : Pro版を売っている note 記事のURL（あれば「Pro版」ボタンが出る）
+*/
+const APPS = [
+  // ── こくご
+  {n:"かんじアプリ", c:"kokugo", g:"2年生", p:"かんじアプリ.html", th:"thumbs/00.jpg", new:1, t:"漢字 読み 書き ドリル",
+   how:["「よむ」か「かく」をえらぶ","でてきた かんじを よんだり、ゆびで かいたりする","まちがえた かんじは あとで もういちど"],
+   aim:"2年で習う160字を、読みと書きの両方からくり返し練習し、定着させる。"},
+  {n:"かんじフラッシュ", c:"kokugo", g:"1年生〜", p:"せんせいアプリ25/21_かんじフラッシュ.html", th:"thumbs/01.jpg", t:"漢字 フラッシュ 暗記",
+   how:["がくねんと モードを えらぶ","つぎつぎ でてくる かんじを こえに だして よむ"],
+   aim:"テンポよく読むことで、既習漢字の読みを素早く思い出せるようにする。"},
+  {n:"はやくちことば", c:"kokugo", g:"1年生〜", p:"せんせいアプリ25/15_はやくちことば.html", th:"thumbs/02.jpg", t:"音読 話す あそび",
+   how:["むずかしさを えらんで ルーレットを まわす","でた ことばを 3かい はやく いえるか チャレンジ"],
+   aim:"口や舌をよく動かし、はっきりした発音・発声につなげる。音読前のウォーミングアップに。"},
+  {n:"ごしちごチェッカー", c:"kokugo", g:"3年生〜", p:"ブルーオーシャン10/06_ごしちごチェッカー.html", th:"thumbs/03.jpg", t:"俳句 短歌 五七五 音数",
+   how:["つくった はいく・たんかを ひらがなで いれる","5・7・5（・7・7）に なっているか その場で わかる"],
+   aim:"音の数を数える感覚を身につけ、リズムを意識して言葉を選べるようにする。"},
+  {n:"おだいガチャ", c:"kokugo", g:"1年生〜", p:"せんせいアプリ25/14_おだいガチャ.html", th:"thumbs/05.jpg", t:"お題 スピーチ 作文 一分間",
+   how:["カテゴリを えらぶ","ガチャを まわして でた おだいで はなす・かく"],
+   aim:"話題を自分で決める負担をなくし、「話す・書く」そのものに時間を使えるようにする。"},
+
+  // ── さんすう
+  {n:"1000までのかず", c:"sansu", g:"2年生", p:"1000までのかず.html", th:"thumbs/06.jpg", new:1, t:"位取り 数直線 くらい",
+   how:["「つくる」で 百・十・一の ブロックを おいて かずを つくる","10こ たまったら りょうがえ","「かずのせん」「クイズ」で たしかめる"],
+   aim:"十が10こで百になる仕組み（十進位取り記数法）を、両替の操作で実感的に理解する。"},
+  {n:"100ますけいさん", c:"sansu", g:"1年生〜", p:"せんせいアプリ25/16_100ますけいさん.html", th:"thumbs/07.jpg", t:"計算 百ます たし算 ひき算 かけ算",
+   how:["たしざん・ひきざん・かけざんを えらぶ","よこと たての かずで けいさんして うめていく","タイムを きろくして じぶんと しょうぶ"],
+   aim:"基本的な計算を速く正確にできるようにする。自分の記録の伸びで意欲を保つ。"},
+  {n:"計算フラッシュ", c:"sansu", g:"1年生〜", p:"keisan.html", th:"thumbs/08.jpg", t:"計算 四則 ドリル フラッシュ 暗算",
+   how:["しゅるいと もんだいすうを えらぶ","でてきた しきを あんざんで こたえる"],
+   aim:"四則計算を暗算で素早く処理する力を高める。授業はじめの5分に。"},
+  {n:"くくれんしゅう", c:"sansu", g:"2年生〜", p:"kuku.html", th:"thumbs/09.jpg", t:"九九 かけ算",
+   how:["だんを えらぶか、ランダムで れんしゅう","タイムアタックで じぶんの きろくに チャレンジ"],
+   aim:"九九を唱えられるだけでなく、ばらばらに出されても答えられるようにする。"},
+  {n:"わりざん れんしゅう", c:"sansu", g:"3年生〜", p:"division_app.html", th:"thumbs/10.jpg", t:"わり算 除法",
+   how:["カードを えらぶ","わりざんの こたえを だす"],
+   aim:"九九を使ってわり算の答えを求める手順に慣れる。"},
+  {n:"ぶんすうピザ", c:"sansu", g:"2年生〜", p:"せんせいアプリ25/18_ぶんすうピザ.html", th:"thumbs/11.jpg", t:"分数 図 視覚",
+   how:["ピザを いくつに きるか きめる","たべる ぶんを タップして ぶんすうで あらわす"],
+   aim:"等しく分けた大きさを図で見て、分数の意味をイメージできるようにする。"},
+  {n:"とけいマスター", c:"sansu", g:"1年生〜", p:"せんせいアプリ25/17_とけいマスター.html", th:"thumbs/12.jpg", t:"時計 時刻",
+   how:["むずかしさを えらぶ","とけいを よむ・はりを あわせる"],
+   aim:"アナログ時計の長針・短針を読み取り、生活の中で時刻を使えるようにする。"},
+  {n:"たんいへんかん", c:"sansu", g:"2年生〜", p:"せんせいアプリ25/19_たんいへんかん.html", th:"thumbs/13.jpg", t:"単位 換算 長さ かさ 重さ",
+   how:["ながさ・かさ・おもさ などを えらぶ","10もん チャレンジで たんいを なおす"],
+   aim:"単位の関係（1m=100cm など）を理解し、場面に合わせて換算できるようにする。"},
+  {n:"ジャマイカ", c:"sansu", g:"1年生〜", p:"jamaica.html", th:"thumbs/14.jpg", t:"ジャマイカ 計算 ゲーム あそび",
+   how:["サイコロを ふる","白い サイコロの かずを ぜんぶ つかって、黒い サイコロの かずを つくる"],
+   aim:"答えに合う式を自分で考え、数の組み合わせを柔軟に捉える力を育てる。"},
+
+  // ── しゃかい・えいご・おんがく
+  {n:"とどうふけんクイズ", c:"hoka", g:"4年生〜", p:"せんせいアプリ25/22_とどうふけんクイズ.html", th:"thumbs/15.jpg", t:"都道府県 社会 地理 クイズ",
+   how:["なまえ→ばしょ、けんちょうしょざいち などを えらぶ","クイズに こたえて ぜんぶ おぼえよう"],
+   aim:"47都道府県の名称と位置を覚え、地図で日本の様子を捉えられるようにする。"},
+  {n:"ちずきごうフラッシュ", c:"hoka", g:"3年生〜", p:"せんせいアプリ25/23_ちずきごうフラッシュ.html", th:"thumbs/16.jpg", t:"地図記号 社会 フラッシュ",
+   how:["フラッシュか クイズを えらぶ","きごうを みて なにを あらわすか こたえる"],
+   aim:"主な地図記号を覚え、地図から土地の様子を読み取れるようにする。"},
+  {n:"えいごフラッシュ", c:"hoka", g:"3年生〜", p:"せんせいアプリ25/25_えいごフラッシュ.html", th:"thumbs/17.jpg", t:"英語 単語 フラッシュ 外国語",
+   how:["カテゴリ（どうぶつ・いろ など）を えらぶ","えと ことばを みて、こえに だして いう"],
+   aim:"身近な英単語に繰り返し触れ、聞いたり言ったりすることに慣れる。"},
+  {n:"タイピングれんしゅう", c:"hoka", g:"3年生〜", p:"せんせいアプリ25/20_タイピングれんしゅう.html", th:"thumbs/18.jpg", t:"タイピング ICT キーボード 情報",
+   how:["レベルを えらぶ（ホームポジション→ことば→ぶん）","でてきた もじを うつ"],
+   aim:"ローマ字入力に慣れ、1人1台端末で考えを書き表す力の土台をつくる。"},
+  {n:"リズムマシン", c:"hoka", g:"1年生〜", p:"せんせいアプリ25/24_リズムマシン.html", th:"thumbs/19.jpg", t:"音楽 リズム メトロノーム 体育",
+   how:["はやさ（BPM）を きめる","おとに あわせて てを たたく・うごく"],
+   aim:"一定の拍を感じ取り、リズムに合わせて演奏したり体を動かしたりできるようにする。"},
+
+  // ── 授業を進める
+  {n:"きょうしつ板書", c:"jugyo", g:"授業中", p:"きょうしつ板書.html", u:"https://q2mhzpkfg9-cell.github.io/kyoshitsu-bansho/", th:"thumbs/21.jpg", t:"板書 記録 授業 流れ 写真",
+   how:["板書を写真で残す","授業の流れをメモして単元ごとにたまる"], aim:"板書写真がカメラロールに埋もれて、次の年に見返せないとき。"},
+  {n:"きょうしつスクリーン", c:"jugyo", g:"授業中", p:"きょうしつスクリーン.html", th:"thumbs/22.jpg", t:"電子黒板 付箋 テレビ 提示 話し合い",
+   how:["教室のテレビに映す","付箋を貼って、ドラッグで動かしながら話し合う"], aim:"電子黒板がなく、みんなの意見をその場で整理して見せたいとき。"},
+  {n:"きょうしつトーク", c:"jugyo", g:"授業中", p:"きょうしつトーク.html", th:"thumbs/23.jpg", t:"チャット 意見 交流 板書 共有",
+   how:["LINE風の画面に子どもが意見を書く","板書アルバムとして残す"], aim:"手を挙げない子の考えも拾いたいとき。"},
+  {n:"作文・要約かべうちAI", c:"jugyo", g:"国語", p:"作文要約かべうちAI.html", th:"thumbs/04.jpg", t:"作文 要約 添削 AI 評価 国語",
+   how:["観点とねらいを先生が設定する","子どもの作文・要約に、観点に沿ったコメントを返す"], aim:"一人ひとりの作文に赤ペンを入れる時間が足りないとき。"},
+  {n:"ドレミ楽譜メーカー", c:"jugyo", g:"音楽", p:"ドレミ楽譜メーカー.html", th:"thumbs/20.jpg", new:1, t:"音楽 楽譜 音符 ドレミ 階名 低学年 鍵盤ハーモニカ 印刷",
+   how:["ドレミを打ち込む","低学年用の大きな楽譜になる。再生・印刷もできる"], aim:"教科書にない曲を、低学年でも読める楽譜にして配りたいとき。"},
+  {n:"さんすう5分プリント", c:"jugyo", g:"算数", p:"さんすう5分プリント.html", th:"thumbs/52.jpg", new:1, t:"算数 プリント 計算 B6 B4 印刷 導入 5分",
+   how:["学年とテーマを選ぶ","番号つきでB6プリントを作る（B4に4面付けも可）","同じ番号でいつでも同じプリントを再現"], aim:"授業はじめの5分に、学年に合った計算プリントをさっと配りたいとき。"},
+  {n:"じゅぎょうタイムライン", c:"jugyo", g:"授業準備", p:"ブルーオーシャン10/10_じゅぎょうタイムライン.html", th:"thumbs/24.jpg", t:"授業 流れ 時間配分 指導案",
+   how:["45分の流れをブロックで並べる","時間配分が一目でわかる"], aim:"指導案の時間配分がいつも押してしまうとき。"},
+  {n:"はつげんマップ", c:"jugyo", g:"授業中", p:"ブルーオーシャン10/02_はつげんマップ.html", th:"thumbs/25.jpg", t:"発言 記録 座席 評価 参加",
+   how:["座席図の上で発言した子をタップ","回数が色で見える"], aim:"発言が一部の子にかたよっていないか確かめたいとき。"},
+  {n:"単元進度トラッカー", c:"jugyo", g:"授業準備", p:"ブルーオーシャン10/03_単元進度トラッカー.html", th:"thumbs/26.jpg", t:"単元 進度 進捗 計画 教科",
+   how:["教科ごとに単元を登録","どこまで進んだかをチェック"], aim:"学期末に「この単元、間に合う？」と焦りたくないとき。"},
+  {n:"こえのメーター", c:"jugyo", g:"授業中", p:"せんせいアプリ25/05_こえのメーター.html", th:"thumbs/27.jpg", t:"声 音量 静か マイク 学級",
+   how:["マイクをオンにする","教室の声の大きさがメーターで見える"], aim:"「静かに」を言葉ではなく目で伝えたいとき。"},
+
+  // ── 学級経営
+  {n:"なまえルーレット", c:"gakkyu", g:"朝の会・授業", p:"せんせいアプリ25/02_なまえルーレット.html", th:"thumbs/28.jpg", t:"指名 ランダム 名簿 ルーレット",
+   how:["名簿を入れる","ルーレットで指名。順番モードもある"], aim:"指名のかたよりをなくしたいとき。"},
+  {n:"せきがえメーカー", c:"gakkyu", g:"席替え", p:"せんせいアプリ25/03_せきがえメーカー.html", th:"thumbs/29.jpg", t:"席替え 座席 ランダム",
+   how:["名簿と座席の列数を入れる","ランダムで座席が決まる"], aim:"くじ引きの準備をする時間がないとき。"},
+  {n:"せきがえヒストリー", c:"gakkyu", g:"席替え", p:"ブルーオーシャン10/01_せきがえヒストリー.html", th:"thumbs/30.jpg", pro:"https://note.com/minato_smile2525/n/nbd04e0487c70", t:"席替え 履歴 座席 重複 回避",
+   how:["過去の席替えを記録","同じ席・同じ隣を避けて組む"], aim:"「また同じ隣！」を防ぎたいとき。"},
+  {n:"グループわけメーカー", c:"gakkyu", g:"班活動", p:"せんせいアプリ25/04_グループわけメーカー.html", th:"thumbs/31.jpg", t:"班 グループ 分け ランダム 班分け",
+   how:["名簿を入れて、何人組か決める","一緒にしない組み合わせも指定できる"], aim:"班分けにいつも時間がかかるとき。"},
+  {n:"とうばんひょう", c:"gakkyu", g:"当番・係", p:"せんせいアプリ25/09_とうばんひょう.html", th:"thumbs/32.jpg", t:"当番 係 日直 そうじ 分担",
+   how:["当番の種類と班を登録","ボタンひとつで次へ回す"], aim:"掲示物の当番表を毎週動かすのが大変なとき。"},
+  {n:"クラスポイント", c:"gakkyu", g:"ごほうび", p:"せんせいアプリ25/10_クラスポイント.html", th:"thumbs/33.jpg", t:"ポイント 加点 班 ごほうび 意欲",
+   how:["理由をつけてポイントを加点","ビンにたまっていく様子を見せる"], aim:"クラス全体のがんばりを見える形でほめたいとき。"},
+  {n:"きもちメーター", c:"gakkyu", g:"朝の会", p:"せんせいアプリ25/11_きもちメーター.html", th:"thumbs/34.jpg", t:"気持ち 心 アンケート 朝の会 SEL",
+   how:["子どもが今の気持ちを選ぶ","クラスの様子をまとめて見る"], aim:"朝のうちに、元気がない子に気づきたいとき。"},
+  {n:"しゅくだいチェッカー", c:"gakkyu", g:"朝の時間", p:"せんせいアプリ25/13_しゅくだいチェッカー.html", th:"thumbs/35.jpg", t:"宿題 提出 チェック 名簿",
+   how:["課題を登録","出した子をタップしてチェック"], aim:"提出物の確認を名簿に手書きしているとき。"},
+  {n:"わすれものトラッカー", c:"gakkyu", g:"朝の時間", p:"ブルーオーシャン10/09_わすれものトラッカー.html", th:"thumbs/36.jpg", pro:"https://note.com/minato_smile2525/n/n832ef44dbcda", t:"忘れ物 記録 持ち物 傾向",
+   how:["忘れ物を記録","子どもごと・曜日ごとの傾向を見る"], aim:"忘れ物が続く子への声かけ・連絡の根拠がほしいとき。"},
+  {n:"ビンゴマシン", c:"gakkyu", g:"お楽しみ会", p:"せんせいアプリ25/07_ビンゴマシン.html", th:"thumbs/37.jpg", t:"ビンゴ お楽しみ会 レク あそび",
+   how:["数字の範囲を決める","「まわす」で番号を出す"], aim:"お楽しみ会でビンゴをしたいけど、機械がないとき。"},
+  {n:"スコアボード", c:"gakkyu", g:"レク・体育", p:"せんせいアプリ25/06_スコアボード.html", th:"thumbs/38.jpg", t:"得点 スコア 対抗戦 レク 体育",
+   how:["チームを決める","+1 / +5 で得点を大きく表示"], aim:"チーム対抗戦の得点を黒板に書いている時間がもったいないとき。"},
+  {n:"せってい・なまえちょう", c:"gakkyu", g:"はじめに", p:"せんせいアプリ25/00_せってい.html", th:"thumbs/39.jpg", t:"設定 名簿 名前 共通 初期設定",
+   how:["名簿を1回だけ入れる","ルーレット・席替えなど25本で共通に使える"], aim:"アプリごとに名簿を入れ直すのが面倒なとき。"},
+
+  // ── 時間・タイマー
+  {n:"きょうしつタイマー", c:"time", g:"授業中", p:"せんせいアプリ25/01_きょうしつタイマー.html", th:"thumbs/40.jpg", t:"タイマー 時間 カウントダウン 提示",
+   how:["時間をタップで選ぶ","大きく映してスタート"], aim:"「あと何分？」を何度も聞かれるとき。"},
+  {n:"もくそうタイマー", c:"time", g:"切りかえ", p:"せんせいアプリ25/12_もくそうタイマー.html", th:"thumbs/41.jpg", t:"黙想 静かに 落ち着く タイマー",
+   how:["じゅんびができたらスタート","しずかな画面で時間をはかる"], aim:"休み時間のあと、気持ちを落ち着けて授業に入りたいとき。"},
+  {n:"職員会議タイマー", c:"time", g:"会議", p:"職員会議タイマー.html", th:"thumbs/42.jpg", new:1, t:"会議 職員会議 タイマー 進行 時間管理",
+   how:["提案ごとに持ち時間を入れる","順番に進めて、押したら見える"], aim:"職員会議がいつも時間どおりに終わらないとき。"},
+  {n:"カウントダウンデー", c:"time", g:"行事", p:"せんせいアプリ25/08_カウントダウンデー.html", th:"thumbs/43.jpg", t:"あと何日 行事 卒業 運動会 カウントダウン",
+   how:["行事と日付を登録","「あと○日」を表示"], aim:"運動会や卒業まで、見通しを持たせたいとき。"},
+  {n:"タイマーアプリ", c:"time", g:"いつでも", p:"タイマー・タスク管理/index.html", th:"thumbs/44.jpg", t:"タイマー 時間",
+   how:["時間を入れてスタート"], aim:"シンプルなタイマーだけがほしいとき。"},
+
+  // ── 校務・事務
+  {n:"こんだんスケジューラー", c:"komu", g:"個人懇談", p:"ブルーオーシャン10/08_こんだんスケジューラー.html", th:"thumbs/45.jpg", t:"懇談 個人懇談 面談 割り当て 日程",
+   how:["保護者の希望を入れる","きょうだい調整も含めて自動で割り当て"], aim:"懇談の日程調整を手作業でやっているとき。"},
+  {n:"ルーブリックメーカー", c:"komu", g:"評価", p:"ブルーオーシャン10/07_ルーブリックメーカー.html", th:"thumbs/46.jpg", t:"ルーブリック 評価 規準 観点",
+   how:["観点と段階を決める","表にして印刷・共有"], aim:"評価の基準を子どもと共有したいとき。"},
+  {n:"走順くみわけメーカー", c:"komu", g:"運動会", p:"ブルーオーシャン10/04_走順くみわけメーカー.html", th:"thumbs/47.jpg", t:"運動会 リレー 走順 徒競走 体育",
+   how:["タイムを入れる","力が均等になるように組と走順を決める"], aim:"リレーのチーム分けに毎年悩むとき。"},
+  {n:"プール入水チェッカー", c:"komu", g:"水泳", p:"ブルーオーシャン10/05_プール入水チェッカー.html", th:"thumbs/48.jpg", t:"プール 水泳 カード 健康観察 入水",
+   how:["プールカードの提出をチェック","入水できる子・見学の子が一目でわかる"], aim:"プールの日の朝、カード確認でバタバタするとき。"},
+  {n:"タスク管理", c:"komu", g:"いつでも", p:"タイマー・タスク管理/tasks.html", th:"thumbs/49.jpg", t:"タスク やること todo 仕事",
+   how:["やることを書いてチェック"], aim:"放課後のやることを忘れないようにしたいとき。"},
+  {n:"学習指導要領リンク集", c:"komu", g:"授業準備", p:"指導要領リンク集.html", th:"thumbs/50.jpg", t:"指導要領 学習指導要領 PDF 公式 教科",
+   how:["学年・教科でしぼる","本文を全文検索（例：2年 読むこと）"], aim:"指導要領のあの一文を、すぐに確かめたいとき。"},
+  {n:"せんせいツールボックス20", c:"komu", g:"いつでも", p:"せんせいツールボックス20.html", th:"thumbs/51.jpg", t:"ツール 便利 リンク集 web 業務改善",
+   how:["学校で使える外部Webツール20選から探す"], aim:"「こういうツールないかな」と思ったとき。"},
+];
+
+/* NEW_APPS:start（tools/add_new_apps.py が自動生成） */
+APPS.push(...[
+  {"n": "しゅご・じゅつご さがし", "c": "kokugo", "g": "2年生〜", "p": "教科アプリ30/01_しゅごじゅつごさがし.html", "th": "thumbs/kyouka_01.jpg", "new": 1, "t": "主語 述語 文の組み立て 文法 修飾語", "how": ["レベル（2年・3年・4年〜）を えらぶ", "まず じゅつご（どうする・どんなだ・なんだ）を タップ", "つぎに「だれが？なにが？」と きいて しゅごを タップ"], "aim": "述語から先に見つけ、「だれが（なにが）」と問い返して主語を見つける手順を身につける。修飾語・「〜も」「〜こそ」・倒置の文にも対応する。"},
+  {"n": "つなぎことばクイズ", "c": "kokugo", "g": "3年生〜", "p": "教科アプリ30/02_つなぎことばクイズ.html", "th": "thumbs/kyouka_02.jpg", "new": 1, "t": "接続語 つなぎ言葉 順接 逆接 文と文", "how": ["「あなうめ」で 二つの ぶんを つなぐ ことばを えらぶ", "「なかまわけ」で はたらき（順接・逆接・つけくわえ など）を こたえる", "「ずかん」で 6つの はたらきを たしかめる"], "aim": "接続語が前後の文をどんな関係でつなぐかを理解し、文章を読むときや書くときに使い分けられるようにする。"},
+  {"n": "ことわざ・かんようく どうじょう", "c": "kokugo", "g": "3年生〜", "p": "教科アプリ30/03_ことわざかんようく.html", "th": "thumbs/kyouka_03.jpg", "new": 1, "t": "ことわざ 慣用句 言葉 語彙 伝統的な言語文化", "how": ["ことわざ か かんようく を えらぶ", "「いみクイズ」か「あなうめ」で 10もん チャレンジ", "いっぱつ せいかいで ずかんに ★が つく"], "aim": "よく使われることわざ28・慣用句25の意味と使い方を知り、日常の言葉として使えるようにする。"},
+  {"n": "おんどくカード", "c": "kokugo", "g": "1年生〜", "p": "教科アプリ30/04_おんどくカード.html", "th": "thumbs/kyouka_04.jpg", "new": 1, "t": "音読 音読カード 宿題 家庭学習 記録 スピード", "how": ["「きょうざい」で よむ さくひんを ついか（もじすう・もくひょう かいすう）", "「よむ」で よみはじめ／よみおわりを おして じかんを はかる", "こえ・はやさ・はっきりを ◎○△で ふりかえり、カレンダーと グラフで たしかめる"], "aim": "音読の回数と時間を自分で記録し、読みの伸びを実感しながら家庭学習の音読を続けられるようにする。紙の音読カードの代わりに。"},
+  {"n": "げんこうようし マスター", "c": "kokugo", "g": "2年生〜", "p": "教科アプリ30/05_げんこうようしマスター.html", "th": "thumbs/kyouka_05.jpg", "new": 1, "t": "原稿用紙 作文 書き方 句読点 段落 縦書き", "how": ["「きまり」で 8つの ルールと おてほんを みる", "「まちがいさがし」で おかしな マスを タップ", "「かいてみよう」で うった ぶんが げんこうようしに ならぶ（いんさつ できる）"], "aim": "題名・名前・段落の一字下げ・句読点やかぎの位置など、原稿用紙（縦書き）の使い方を身につける。"},
+  {"n": "どうおんいぎご・どうくんいじ クイズ", "c": "kokugo", "g": "3年生〜", "p": "教科アプリ30/06_どうおんいぎごクイズ.html", "th": "thumbs/kyouka_06.jpg", "new": 1, "t": "同音異義語 同訓異字 漢字 使い分け 熟語", "how": ["3・4年 か 5・6年 を えらぶ", "ぶんに あう かんじを えらぶ（あつい→暑い・熱い・厚い など）", "まちがえた もんだいは「にがて ふくしゅう」で もういちど"], "aim": "読みが同じで意味の違う言葉を、文脈から判断して正しく使い分けられるようにする。"},
+  {"n": "けいご へんかん どうじょう", "c": "kokugo", "g": "5年生〜", "p": "教科アプリ30/07_けいごへんかん.html", "th": "thumbs/kyouka_07.jpg", "new": 1, "t": "敬語 尊敬語 謙譲語 丁寧語 言葉づかい", "how": ["「なかまわけ」で 尊敬語・謙譲語・丁寧語を 見分ける", "「へんかん」で 場面に合う敬語を えらぶ", "「○×チェック」で まちがい敬語を 見ぬく（「ひょう」でまとめて確認）"], "aim": "だれの動作かを手がかりに尊敬語・謙譲語・丁寧語を使い分け、相手や場面に応じた言葉づかいができるようにする。"},
+  {"n": "場面カードボード", "c": "jugyo", "g": "国語・物語文の読み取り", "p": "教科アプリ30/08_ばめんカードボード.html", "th": "thumbs/kyouka_08.jpg", "new": 1, "t": "物語 場面 読解 心情曲線 板書 提示 国語", "how": ["作品を作り、場面ごとに「時・場所・人物・出来事・気持ち」を入れる", "「映す」でテレビに提示。カードをタップして隠す／見せる（発問用）", "「気持ちの変化」で中心人物の心情曲線を見せる"], "aim": "物語文の授業で、場面の移り変わりと人物の気持ちの変化を板書代わりに整理したいときに。見本「ももたろう」入り。"},
+  {"n": "ぶしゅパズル", "c": "kokugo", "g": "2年生〜", "p": "教科アプリ30/09_ぶしゅパズル.html", "th": "thumbs/kyouka_09.jpg", "new": 1, "t": "部首 漢字 へん つくり かんむり パズル", "how": ["ぶしゅ（さんずい・にんべん・くさかんむり など）を えらぶ", "ぶしゅと もう ひとつの ぶぶんを タップして かんじを つくる", "ぜんぶ みつけたら クリア。ミックスステージにも ちょうせん"], "aim": "部首とほかの部分の組み合わせで漢字ができていることに気づき、部首の意味から漢字を捉えられるようにする。"},
+  {"n": "どくしょの き", "c": "kokugo", "g": "1年生〜", "p": "教科アプリ30/10_どくしょのき.html", "th": "thumbs/kyouka_10.jpg", "new": 1, "t": "読書 読書記録 読書カード 図書館 ジャンル", "how": ["がくねんを えらぶ（1かげつの もくひょうが きまる）", "「よんだ！」で ほんの なまえ・ジャンル・★・ひとこと かんそうを きろく", "1さつごとに きに はっぱが ふえる。ジャンルの バランスと バッジを たしかめる"], "aim": "読んだ本を記録して読書量の伸びを実感し、図書館の分類をもとにしたジャンルの偏りに気づいて、いろいろな本に手をのばせるようにする。"},
+  {"n": "ひっさんステップ", "c": "sansu", "g": "2〜3年生", "p": "教科アプリ30/11_ひっさんステップ.html", "th": "thumbs/kyouka_11.jpg", "new": 1, "t": "筆算 ひっ算 たし算 ひき算 くり上がり くり下がり 2年 3年", "how": ["たしざんか ひきざん、けたを えらぶ", "きいろの れつの こたえを すうじボタンで いれる", "ひけない ときは「となりから 1 かりる」を おす"], "aim": "筆算を一の位から1段ずつ進め、くり上がり・くり下がりの手順を目で見て身につける。"},
+  {"n": "しょうすうの かずのせん", "c": "sansu", "g": "3〜4年生", "p": "教科アプリ30/12_しょうすうのかずのせん.html", "th": "thumbs/kyouka_12.jpg", "new": 1, "t": "小数 数直線 0.1 0.01 めもり 3年 4年", "how": ["めもり（0.1・0.01・0.001）を えらぶ", "「たんけん」で せんを タップして かずを しらべる", "クイズで めもりを よんだり、ばしょを さがしたりする"], "aim": "小数を数直線上の位置として捉え、「0.1が いくつ分」という見方で大きさを理解する。"},
+  {"n": "ぶんどきマスター", "c": "sansu", "g": "4年生", "p": "教科アプリ30/13_ぶんどきマスター.html", "th": "thumbs/kyouka_13.jpg", "new": 1, "t": "角 角度 分度器 180度 360度 4年 図形", "how": ["「つくる」か「はかる」、レベルを えらぶ", "へんを ドラッグして かくを つくる／ぶんどきの めもりを よんで こたえる", "180°より大きい かくにも ちょうせん"], "aim": "分度器の中心・0°の線の合わせ方と、内側・外側の目もりの読み分けを身につける。"},
+  {"n": "めんせきブロック", "c": "sansu", "g": "4年生", "p": "教科アプリ30/14_めんせきブロック.html", "th": "thumbs/kyouka_14.jpg", "new": 1, "t": "面積 cm2 平方センチメートル 長方形 正方形 複合図形 4年", "how": ["ますを ぬって かたちを つくり、めんせきを しらべる", "おだいの めんせきの かたちを つくる", "ながしかくや L字の めんせきを もとめる（ヒントで わけかたが 見える）"], "aim": "面積を1cm²のいくつ分として捉え、長方形の公式や複合図形の分け方・ひき方を考える。"},
+  {"n": "たいせきつみき", "c": "sansu", "g": "5年生", "p": "教科アプリ30/15_たいせきつみき.html", "th": "thumbs/kyouka_15.jpg", "new": 1, "t": "体積 cm3 立方センチメートル 直方体 立方体 つみき 5年", "how": ["上から見た ずを タップして つみきを つむ", "ちょくほうたいや かいだんの たいせきを こたえる", "「だんごとに わけて見る」で 1だんずつ かぞえる"], "aim": "体積を1cm³のいくつ分として捉え、たて×よこ×高さの意味を段の積み重ねから理解する。"},
+  {"n": "わりあい おびず", "c": "sansu", "g": "5年生", "p": "教科アプリ30/16_わりあいおびず.html", "th": "thumbs/kyouka_16.jpg", "new": 1, "t": "割合 百分率 パーセント 歩合 もとにする量 くらべる量 数直線 テープ図 5年", "how": ["もとめるもの（わりあい・くらべる量・もとにする量）を えらぶ", "もんだいを よんで こたえる（こまったら「ずを かく」）", "「ずで しらべる」で スライダーを うごかして 小数・百分率・歩合を くらべる"], "aim": "もとにする量を1（100%）とみる考え方を、テープ図と数直線で視覚的に理解する。"},
+  {"n": "はやさ ずかん", "c": "sansu", "g": "5〜6年生", "p": "教科アプリ30/17_はやさずかん.html", "th": "thumbs/kyouka_17.jpg", "new": 1, "t": "速さ 道のり 時間 時速 分速 秒速 単位量あたり 数直線 5年 6年", "how": ["もとめるもの（はやさ・みちのり・じかん）を えらぶ", "ずを 見て こたえる。▶で 1めもりずつ すすむ ようすを 見る", "「どっちが はやい？」で 1びょうあたりに そろえて くらべる"], "aim": "「はじき」に頼らず、1単位時間あたりに進む道のりとして速さを図で理解する。"},
+  {"n": "表とグラフ提示ボード", "c": "jugyo", "g": "3〜4年 算数の授業", "p": "教科アプリ30/18_表とグラフ提示ボード.html", "th": "thumbs/kyouka_18.jpg", "new": 1, "t": "表 棒グラフ 折れ線グラフ 目もり 波線 提示 3年 4年 算数", "how": ["ひな形を読みこむか、表に項目と数を入れる", "棒グラフ・折れ線・表を切りかえ、1目もりや並べ方を設定する", "提示モードの「1本ずつ出す」で予想させながら見せる"], "aim": "こんなときに：子どもが調べたデータをその場でグラフにして、目もりの取り方や波線の意味を全体で比べたいときに。"},
+  {"n": "ならべかた じゅけいず", "c": "sansu", "g": "6年生", "p": "教科アプリ30/19_ならべかたじゅけいず.html", "th": "thumbs/kyouka_19.jpg", "new": 1, "t": "場合の数 並べ方 組み合わせ 樹形図 リーグ表 6年", "how": ["ならべかた か くみあわせ、ものの かずを えらぶ", "じぶんで タップして ぜんぶ かきだす（かさなりは あかで おしえて くれる）", "じゅけいずや たいせんひょうで たしかめる"], "aim": "樹形図や表を使って、落ちや重なりなく場合の数を調べる方法を身につける。"},
+  {"n": "倍数・約数ボード", "c": "jugyo", "g": "5年 算数の授業", "p": "教科アプリ30/20_倍数約数ボード.html", "th": "thumbs/kyouka_20.jpg", "new": 1, "t": "倍数 約数 公倍数 公約数 最小公倍数 最大公約数 偶数 奇数 5年 算数", "how": ["A・Bの数と、横に並べる数（10・12など）を決める", "倍数・約数・偶数奇数を1つずつ、または全部色分けして見せる", "「手でぬる」で子どもの予想をぬってから答え合わせ"], "aim": "こんなときに：1〜100の数表で倍数・公倍数・約数の並び方のきまりに気づかせたいときに。"},
+  {"n": "つきの みちかけ", "c": "hoka", "g": "4年・6年 理科", "p": "教科アプリ30/21_つきのみちかけ.html", "th": "thumbs/kyouka_21.jpg", "new": 1, "t": "理科 月 満ち欠け 月と太陽 月と星 天体 シミュレーション", "how": ["スライダーで 新月から 何日目かを うごかす", "うちゅうから見た ならびと、日本から見た 月の形を くらべる", "「クイズ」で 名前・見える時こく・方角を たしかめる"], "aim": "太陽・地球・月の位置関係と月の形の変化を結びつけ、見える時刻や方角まで説明できるようにする。"},
+  {"n": "でんきの かいろ", "c": "hoka", "g": "3年・4年 理科", "p": "教科アプリ30/22_でんきのかいろ.html", "th": "thumbs/kyouka_22.jpg", "new": 1, "t": "理科 電気 回路 豆電球 導体 直列 並列 モーター 検流計", "how": ["どう線を ＋きょく・－きょくに つないで あかりが つくか ためす", "いろいろな ものを 回路に はさんで 電気を 通すか しらべる（よそう→けっか）", "4年は かん電池2こで 直列・へい列を くらべる"], "aim": "回路が「わ」になると電気が通ること、金属は電気を通すこと、直列・並列で電流の大きさが変わることを、操作しながら理解する。"},
+  {"n": "れきし ならべ", "c": "hoka", "g": "6年 社会", "p": "教科アプリ30/23_れきしならべ.html", "th": "thumbs/kyouka_23.jpg", "new": 1, "t": "社会 歴史 年表 人物 時代 並べ替え 6年", "how": ["時代の はんいと カードの数を えらぶ", "人物・できごとの カードを 古いじゅんに タップして 年表に ならべる", "こたえあわせで 年と 時代を たしかめる"], "aim": "歴史上の人物やできごとを時代の流れの中に位置づけ、前後関係をつかめるようにする。"},
+  {"n": "しょくぶつの かんさつカード", "c": "hoka", "g": "1・2年 生活科／3年 理科", "p": "教科アプリ30/24_かんさつカード.html", "th": "thumbs/kyouka_24.jpg", "new": 1, "t": "生活科 理科 観察 植物 あさがお ミニトマト 成長記録 絵日記", "how": ["そだてる しょくぶつを えらぶ", "ゆびで えを かき、せの たかさ・はっぱの数・きづいたことを かく", "カードを ためて、せの たかさグラフで のびかたを 見る"], "aim": "色・形・大きさ・手ざわりなど観察の視点を意識し、成長の変化を記録して比べられるようにする。"},
+  {"n": "みちあんない イングリッシュ", "c": "hoka", "g": "5年 外国語", "p": "教科アプリ30/25_みちあんないイングリッシュ.html", "th": "thumbs/kyouka_25.jpg", "new": 1, "t": "外国語 英語 道案内 Where is 5年 リスニング 地図", "how": ["①「きいて さがす」：英語の道案内を きいて、地図の たてものを タップ", "②「あんない する」：Where is ～? に、Go straight／Turn right などの ボタンで こたえる", "音声を ききながら 声に 出して いってみる"], "aim": "道案内の表現（Go straight. Turn right/left. You can see it on your right.）を、聞いて・使って身につける。"},
+  {"n": "えのぐ いろまぜ", "c": "hoka", "g": "1年生〜 図工", "p": "教科アプリ30/26_えのぐいろまぜ.html", "th": "thumbs/kyouka_26.jpg", "new": 1, "t": "図工 絵の具 混色 色づくり 色 三原色", "how": ["えのぐを タップして パレットに 1てきずつ いれる", "まざった 色を 見て、気に入った 色を とっておく", "「おだい」の 色に にせて つくってみる"], "aim": "色の組み合わせや量で色が変わることを試しながら知り、絵の具の混色を見通して使えるようにする。"},
+  {"n": "なわとびカード", "c": "hoka", "g": "1年生〜 体育", "p": "教科アプリ30/27_なわとびカード.html", "th": "thumbs/kyouka_27.jpg", "new": 1, "t": "体育 なわとび 縄跳び 記録 カード 二重とび はやぶさ", "how": ["ともだちが とぶ 回数を 大きな ボタンで かぞえる", "きろくすると わざごとの スタンプが たまる", "つぎの めあてを 見て れんしゅうする（いんさつも できる）"], "aim": "技ごとに自分の記録と次の目標を把握し、段階的に挑戦する意欲を高める。"},
+  {"n": "えいようバランス 3つのグループ", "c": "hoka", "g": "5・6年 家庭科", "p": "教科アプリ30/28_えいようバランス.html", "th": "thumbs/kyouka_28.jpg", "new": 1, "t": "家庭科 栄養 3つのグループ 赤黄緑 献立 食育", "how": ["「なかまわけ」で 食品を 赤・黄・緑の グループに 分ける", "「こんだてチェック」で りょうりを えらび、3つの グループが そろうか 見る", "たりない グループの アドバイスを 見て こんだてを なおす"], "aim": "食品を体内での主な働きで3つのグループに分け、バランスのよい食事を考えられるようにする。"},
+  {"n": "道徳 心情メーター", "c": "jugyo", "g": "道徳の授業（投影）", "p": "教科アプリ30/29_心情メーター.html", "th": "thumbs/kyouka_29.jpg", "new": 1, "t": "道徳 心情曲線 心情円 気持ち 数直線 話し合い 投影 評価", "how": ["教材名・人数・場面ごとの発問と両端のことばを設定する", "子どもの名札（出席番号）をメーター上にドラッグして、気持ちの位置を見える化する", "場面ごとの分布を比較し、理由メモとあわせてCSVで保存する"], "aim": "登場人物の気持ちの「ゆれ」を数直線で見える化したいときに。立場の違いから話し合いを生み、評価の記録にも使える。"},
+  {"n": "おんぷよみ けんばん", "c": "hoka", "g": "2年生〜 音楽", "p": "教科アプリ30/30_おんぷよみけんばん.html", "th": "thumbs/kyouka_30.jpg", "new": 1, "t": "音楽 楽譜 音符 読譜 鍵盤ハーモニカ リコーダー ドレミ ハニホ", "how": ["五線に でた おんぷを 見て、けんばんを おす", "音が なるので、ドレミ（ハニホ）と 音の高さを いっしょに おぼえる", "「10もん チャレンジ」で せいかい数と タイムに ちょうせん"], "aim": "ト音記号の五線上の音符の位置と音名・鍵盤の位置を結びつけ、楽譜を読んで演奏できるようにする。"},
+  {"n": "集金・提出物チェック表", "c": "komu", "g": "集金・書類の回収（全学年）", "p": "業務改善20/01_集金提出物チェック表.html", "th": "thumbs/gyomu_01.jpg", "new": 1, "t": "集金 提出物 回収 チェック 未提出 金額 金種 同意書 アンケート 名簿", "how": ["名簿を入れ、集める項目（集金なら金額つき）を追加する", "名簿×項目の表をタップして済・一部・対象外を記録する", "未提出者の一覧や連絡帳用の文面をコピーし、集めたお金は金種で照合する", "チェック表・未提出者メモを印刷、CSVで保存"], "aim": "こんなときに：集金袋や同意書の回収を紙の名簿にチェックしていて、誰がまだか・合計がいくらかをすぐ確かめたいとき"},
+  {"n": "お便り・連絡帳 文例メーカー", "c": "komu", "g": "連絡帳・お便りを書くとき", "p": "業務改善20/02_お便り文例メーカー.html", "th": "thumbs/gyomu_02.jpg", "new": 1, "t": "連絡帳 お便り 文例 保護者 手紙 お知らせ 季節のあいさつ 定型文 返事", "how": ["連絡帳（短め）かお便り（ていねい）かを選ぶ", "行事・持ち物・けが・よかった様子などの連絡の種類を選ぶ", "書き出し・本題・結びをパーツで選び、空欄を埋める", "できた文を直してコピー、またはA4のお便りとして印刷"], "aim": "こんなときに：連絡帳の返事やお知らせ文を毎回ゼロから考えていて、失礼のない定型文をすばやく組み立てたいとき"},
+  {"n": "保護者対応きろく帳", "c": "gakkyu", "g": "保護者対応の記録", "p": "業務改善20/03_保護者対応きろく帳.html", "th": "thumbs/gyomu_03.jpg", "new": 1, "t": "保護者対応 記録 電話 相談 苦情 経過 報告 管理職 フォロー ケース会議", "how": ["電話・連絡帳・来校などの対応を、日時・相手・内容・こちらの対応で記録する", "「次にすること」と期限を入れると、フォロー待ちに並ぶ", "管理職への報告済み・学年共有済みをチェックする", "児童ごとの経過記録を時系列で印刷し、報告やケース会議に使う"], "aim": "こんなときに：保護者とのやりとりをメモ帳に書き散らしていて、後から経過をたどれない・約束したフォローを忘れそうになるとき"},
+  {"n": "校外学習しおりメーカー", "c": "komu", "g": "遠足・社会科見学・宿泊学習", "p": "業務改善20/04_校外学習しおりメーカー.html", "th": "thumbs/gyomu_04.jpg", "new": 1, "t": "しおり 遠足 校外学習 社会科見学 宿泊学習 修学旅行 冊子 印刷 日程 持ち物", "how": ["遠足・社会科見学・宿泊学習のひな形を選ぶ", "表紙・日程・持ち物・やくそく・班などを埋める", "プレビューで4ページの仕上がりを確認する", "A4横で両面印刷して半分に折ると、A5の冊子になる"], "aim": "こんなときに：しおりをワープロで作って、面付けや両面の順番で毎回つまずくとき"},
+  {"n": "家庭訪問ルートメーカー", "c": "komu", "g": "家庭訪問・家庭確認", "p": "業務改善20/05_家庭訪問ルートメーカー.html", "th": "thumbs/gyomu_05.jpg", "new": 1, "t": "家庭訪問 家庭確認 ルート 日程 地区 時刻 希望日 お知らせ 保護者", "how": ["訪問日と時間帯、1軒あたりの時間・移動時間、地区を回る順番を入れる", "家庭ごとに地区と訪問できる日（希望日）を入れる", "「自動で組む」で日ごとのルートと到着予定時刻を作り、▲▼で調整する", "管理職提出用の一覧と、保護者向けのお知らせ（切り取り式）を印刷"], "aim": "こんなときに：家庭訪問の希望日アンケートを見ながら、地図と時刻表を手で組んでいて時間がかかるとき"},
+  {"n": "学級通信プランナー", "c": "gakkyu", "g": "学級通信づくり", "p": "業務改善20/06_学級通信プランナー.html", "th": "thumbs/gyomu_06.jpg", "new": 1, "t": "学級通信 学年通信 ネタ 年間計画 発行 登場回数 偏り 保護者 お便り", "how": ["ネタ帳に、できごとや子どもの言葉と「登場する子」をメモする", "年度はじめと発行ペースから、年間の発行予定を自動で並べる", "ネタを号に割り当て、発行したら「発行済」にする", "登場回数で、まだ載っていない子を確かめる"], "aim": "こんなときに：学級通信のネタに困ったり、特定の子ばかり載せてしまっていないか気になったりするとき"},
+  {"n": "保護者会 出欠・座席", "c": "komu", "g": "学級懇談会・保護者会", "p": "業務改善20/07_保護者会出欠座席.html", "th": "thumbs/gyomu_07.jpg", "new": 1, "t": "保護者会 学級懇談会 出欠 受付 座席表 名札 参観 未回答", "how": ["名簿（児童名・保護者名）を入れる", "出欠の回答をタップで記録し、未回答の家庭をコピーする", "当日は受付画面で来場をタップする", "座席を配置して、座席表と机上の名札（二つ折り）を印刷"], "aim": "こんなときに：懇談会の出欠票を集計して、座席表や名札を毎回手書き・手作業で用意しているとき"},
+  {"n": "行事の役割分担表", "c": "komu", "g": "運動会・発表会・式典", "p": "業務改善20/08_行事役割分担表.html", "th": "thumbs/gyomu_08.jpg", "new": 1, "t": "役割分担 係分担 運動会 学習発表会 入学式 卒業式 行事 教職員 分掌", "how": ["職員名簿を入れ、運動会・学習発表会・入学式・卒業式のひな形から行事を作る", "係ごとに時間帯・必要人数・場所を入れて担当を選ぶ（自動で埋めることもできる）", "時間が重なる二重担当と、担当数の偏りを確かめる", "係別一覧と個人別「あなたの担当」を印刷"], "aim": "こんなときに：行事の係分担をExcelで作っていて、同じ時間に二つの係が入っていたり、特定の先生に仕事が集中したりしていないか確かめたいとき"},
+  {"n": "持ち物おしらせメーカー", "c": "komu", "g": "持ち物の連絡（全学年）", "p": "業務改善20/09_持ち物おしらせメーカー.html", "th": "thumbs/gyomu_09.jpg", "new": 1, "t": "持ち物 お知らせ チェックリスト 遠足 水泳 習字 調理実習 忘れ物 印刷 配布", "how": ["遠足・水泳・習字・調理実習などのひな形を選ぶ", "持ち物と備考を直し、いつ持ってくるかを入れる", "A4に1・2・4面付けを選び、名前欄・おうちの人チェック欄をつける", "配る人数ぶん印刷して切って配る（直したものはマイひな形に保存）"], "aim": "こんなときに：持ち物のお知らせを毎回作り直していて、忘れ物も減らしたいとき"},
+  {"n": "健康観察・欠席集計", "c": "gakkyu", "g": "朝の健康観察", "p": "業務改善20/10_健康観察欠席集計.html", "th": "thumbs/gyomu_10.jpg", "new": 1, "t": "健康観察 欠席 出席簿 遅刻 早退 出席停止 連続欠席 不登校 保健室 感染症 学級閉鎖", "how": ["名簿を入れ、毎朝、欠席・遅刻・早退・出席停止と症状をタップで記録する", "保健室への報告文をコピーする", "連続欠席や年度の累計欠席が基準をこえた子をアラートで確かめる", "月の一覧（出席簿の転記用）と日ごとの欠席数グラフを見て印刷する"], "aim": "こんなときに：健康観察簿と出席簿を別々に書いていて、連続欠席や欠席が増えている子に早く気づきたいとき"},
+  {"n": "見取りメモ帳", "c": "komu", "g": "所見・通知表の準備（全学年）", "p": "業務改善20/11_見取りメモ帳.html", "th": "thumbs/gyomu_11.jpg", "new": 1, "t": "所見 見取り 通知表 評価 記録 メモ 学期末 児童理解", "how": ["名簿・設定で名簿を入れる", "子どもをえらび（複数OK）、場面と「よさ／成長／課題」をつけてメモをためる", "赤い0件の子を見て、見取れていない子に目を向ける", "学期末に一覧を印刷して所見の下書きに使う"], "aim": "こんなときに：学期末に所見を書こうとして「この子のエピソードがない」と困らないよう、日々の見取りを日付つきでためておきたいとき"},
+  {"n": "テスト観点別集計", "c": "komu", "g": "成績処理（全学年）", "p": "業務改善20/12_テスト観点別集計.html", "th": "thumbs/gyomu_12.jpg", "new": 1, "t": "テスト 点数 集計 観点別 評価 成績 通知表 平均 ABC CSV", "how": ["名簿を入れる（出席番号だけでもOK）", "テスト名と観点ごとの配点を入れて作る", "点数を入力（Enterで下へ、欠席は「欠」）", "観点別まとめで教科ごとの％とA・B・Cを確認し、印刷・CSV出力"], "aim": "こんなときに：市販テストの点数を観点別に積み上げて、通知表の観点別評価の下資料をExcelなしで作りたいとき"},
+  {"n": "授業時数カウンター", "c": "komu", "g": "週案・時数管理（1〜6年）", "p": "業務改善20/13_授業時数カウンター.html", "th": "thumbs/gyomu_13.jpg", "new": 1, "t": "時数 授業時数 標準時数 週案 時間割 教育課程 カウント", "how": ["学年をえらぶ（標準時数が自動で入る）", "週ごとに時間割のコマへ教科を入れる（前週コピー・基本時間割あり）", "累計タブで計画時数との差と「残り週あたり何時間」を確認"], "aim": "こんなときに：学期末になって時数が足りない教科に気づくのを防ぎ、教科ごとの標準時数との差をいつでも見たいとき"},
+  {"n": "議事録メーカー", "c": "time", "g": "学年会・職員会議・部会", "p": "業務改善20/14_議事録メーカー.html", "th": "thumbs/gyomu_14.jpg", "new": 1, "t": "議事録 会議 学年会 職員会議 決定事項 担当 期限 タスク 記録", "how": ["ひな形（学年会・職員会議など）をえらぶ", "議題ごとにメモ・決定事項・やること（担当・期限）を書く", "できあがりタブで印刷、またはテキストでコピーして共有", "宿題タブで全会議の未完了タスクを期限順に確認"], "aim": "こんなときに：会議の記録をその場で整え、決まったことと「だれがいつまでに」を取りこぼさず共有したいとき"},
+  {"n": "分掌引き継ぎシート", "c": "komu", "g": "年度末・年度はじめの校務分掌", "p": "業務改善20/15_分掌引き継ぎシート.html", "th": "thumbs/gyomu_15.jpg", "new": 1, "t": "校務分掌 引き継ぎ 年度末 異動 年間計画 マニュアル 分掌", "how": ["分掌名と前任・後任を入れる", "4月〜3月の月ごとのやることを書く", "データの置き場所・困ったときQ&A・反省を書く", "A4で印刷するか、ファイルに書き出して後任に渡す"], "aim": "こんなときに：異動や担当替えで分掌を引き継ぐとき、「いつ何をするか」「データはどこか」を1枚にまとめて渡したいとき"},
+  {"n": "在校時間ログ", "c": "time", "g": "働き方・自分の勤務記録", "p": "業務改善20/16_在校時間ログ.html", "th": "thumbs/gyomu_16.jpg", "new": 1, "t": "在校時間 勤務時間 残業 時間外 働き方改革 退勤 記録 グラフ 45時間", "how": ["出勤・退勤ボタンを押して時刻を記録（あとから表で修正可）", "月のグラフと時間外の合計、月末の見込みを確認", "休日出勤は「休」にチェック", "月ごとに印刷・CSV出力"], "aim": "こんなときに：自分の在校時間と時間外を記録し、月45時間・年360時間の目安にどれだけ近いかを見える化したいとき"},
+  {"n": "参観見どころカード", "c": "jugyo", "g": "授業参観・学校公開", "p": "業務改善20/17_参観見どころカード.html", "th": "thumbs/gyomu_17.jpg", "new": 1, "t": "授業参観 学校公開 保護者 配布 見どころ めあて 印刷 カード", "how": ["教科のひな形をえらんで例文を入れる", "めあてと「ここを見てください」3つを自分の授業に書きかえる", "色とレイアウト（A4 1面／2面）をえらんで印刷し、受付で配る"], "aim": "こんなときに：授業参観で保護者に「どこを見てほしいか」を伝え、家での声かけにつなげる配布カードを短時間で作りたいとき"},
+  {"n": "協議会ふせんボード", "c": "jugyo", "g": "研究授業の協議会・校内研修", "p": "業務改善20/18_協議会ふせんボード.html", "th": "thumbs/gyomu_18.jpg", "new": 1, "t": "研究授業 協議会 付箋 KJ法 校内研修 授業研究 まとめ 記録", "how": ["ボードを作り、協議会の名前を入れる", "よかった点・課題・改善案・質問の色をえらんで付箋を貼る", "付箋を観点の列へドラッグ（タブレットはタップ→列をタップ）", "まとめをコピー・印刷して記録にする"], "aim": "こんなときに：研究授業の協議会で出た意見を電子付箋で整理し、そのまま記録にしたいとき（テレビ用の大きな字あり）"},
+  {"n": "備品貸出ノート", "c": "komu", "g": "学年・校内の備品管理", "p": "業務改善20/19_備品貸出ノート.html", "th": "thumbs/gyomu_19.jpg", "new": 1, "t": "備品 貸出 管理 返却 在庫 ICT機器 体育用具 教具", "how": ["備品の登録で名前・数・保管場所を入れる（例が入っています）", "借りる：備品をえらび、人と返す日を入れて貸し出す", "貸出中タブで期限切れを確認し、返ったら「返した」", "一覧印刷・履歴のCSV出力"], "aim": "こんなときに：デジカメや体育用具などの「だれが持っているか分からない」をなくし、残り数と返却期限をひと目で見たいとき"},
+  {"n": "所見文チェッカー", "c": "komu", "g": "通知表所見の点検", "p": "業務改善20/20_所見文チェッカー.html", "th": "thumbs/gyomu_20.jpg", "new": 1, "t": "所見 通知表 チェック 文字数 NG表現 言いかえ 表記ゆれ 点検 校正", "how": ["所見を1人ずつ空行で区切って貼る（Excelの2列コピーもOK）", "文字数の範囲を決めて「チェックする」", "否定的な表現・家庭への言及・比較・他の子と同じ文・表記ゆれ・長い文の色分けを見て直す", "気をつけたい言葉のリストは自分で編集できる"], "aim": "こんなときに：通知表の所見を提出前に見直し、文字数オーバーやNG表現、コピペの重複、表記ゆれをまとめて見つけたいとき"},
+]);
+/* NEW_APPS:end */
+
+/* 公開版：非公開のアプリを外す */
+for (let i = APPS.length - 1; i >= 0; i--) if (["きょうしつトーク.html"].includes(APPS[i].p)) APPS.splice(i, 1);
+
+/* ===== 状態 ===== */
+const KEY_FAV = "senseiPortal.favs.v1";
+const KEY_SHELF = "senseiPortal.shelf.v1";
+const load = (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb } catch { return fb } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} };
+
+let favs = load(KEY_FAV, []);
+let shelf = load(KEY_SHELF, "kids");
+if (!SHELVES[shelf]) shelf = "kids";
+let query = "";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[m]));
+const catOf = id => Object.values(SHELVES).flatMap(s => s.cats).find(c => c.id === id);
+const shelfOf = a => SHELVES.kids.cats.some(c => c.id === a.c) ? "kids" : "teacher";
+
+function match(a){
+  if (!query) return true;
+  const hay = (a.n + " " + a.g + " " + catOf(a.c).n + " " + (a.t || "") + " " + a.aim).toLowerCase();
+  return query.toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w));
+}
+
+/* ===== 描画 ===== */
+function cardHTML(a){
+  const cat = catOf(a.c), kid = shelfOf(a) === "kids";
+  const i = APPS.indexOf(a), isFav = favs.includes(a.n);
+  return `
+    <div class="card" style="--c:${cat.c}">
+      <a class="thumb" href="${esc(a.u || a.p)}"><img src="${esc(a.th)}" alt="${esc(a.n)}の画面" loading="lazy"></a>
+      ${a.new ? `<span class="new">NEW</span>` : ""}
+      <button class="fav" data-fav="${esc(a.n)}" aria-pressed="${isFav}" aria-label="お気に入り">${isFav ? "★" : "☆"}</button>
+      <div class="card-body">
+        <a href="${esc(a.u || a.p)}"><p class="name">${esc(a.n)}</p></a>
+        <div class="btns">
+          <button class="pill" data-info="${i}" data-tab="how">📖 ${kid ? "あそびかた" : "つかいかた"}</button>
+          <button class="pill" data-info="${i}" data-tab="aim">🎯 ${kid ? "ねらい" : "こんなとき"}</button>
+        </div>
+        ${a.pro ? `<a class="pro" href="${esc(a.pro)}" target="_blank" rel="noopener">⭐ Pro版をみる（note）</a>` : ""}
+        <div class="grade ${kid ? "" : "small"}">${esc(a.g)}</div>
+      </div>
+    </div>`;
+}
+
+function shelfHTML(cat, apps, id){
+  if (!apps.length) return "";
+  return `
+    <section class="shelf" id="${id || "s-" + cat.id}" style="--c:${cat.c}">
+      <div class="shelf-head">
+        <div class="shelf-ico">${cat.ico}</div>
+        <div>
+          <h2 class="shelf-ttl">${esc(cat.n)}<span class="shelf-n">${apps.length}つ</span></h2>
+          <p class="shelf-sub">${esc(cat.sub)}</p>
+        </div>
+      </div>
+      <div class="grid">${apps.map(cardHTML).join("")}</div>
+    </section>`;
+}
+
+function render(){
+  const S = SHELVES[shelf];
+  $("#heroTitle").textContent = S.title;
+  $("#heroLead").textContent = S.lead;
+  document.querySelectorAll("#shelfSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.shelf === shelf));
+  $("#jump").innerHTML = query ? "" : S.cats.map(c => `<a href="#s-${c.id}" style="color:${c.c}">${c.ico} ${esc(c.n)}</a>`).join("");
+
+  let html = "";
+  if (query){
+    const hits = APPS.filter(match);
+    html = hits.length
+      ? shelfHTML({n:`「${query}」の けっか`, ico:"🔍", c:"var(--brand1)", sub:"こども用・せんせい用の両方からさがしています"}, hits, "s-search")
+      : `<p class="empty">みつかりませんでした。<br>ちがう ことばで さがしてみてください。</p>`;
+  } else {
+    const favApps = APPS.filter(a => favs.includes(a.n) && shelfOf(a) === shelf);
+    html += shelfHTML({n:"おきにいり", ico:"★", c:"var(--new)", sub:"☆ をおすと ここに あつまります"}, favApps, "s-fav");
+    for (const c of S.cats) html += shelfHTML(c, APPS.filter(a => a.c === c.id));
+  }
+  $("#list").innerHTML = html;
+}
+
+/* ===== あそびかた・ねらい ===== */
+function openInfo(i, tab){
+  const a = APPS[i], cat = catOf(a.c), kid = shelfOf(a) === "kids";
+  const howT = kid ? "あそびかた" : "つかいかた", aimT = kid ? "ねらい" : "こんなときに";
+  const how = `<h4>📖 ${howT}</h4><ol>${a.how.map(s => `<li>${esc(s)}</li>`).join("")}</ol>`;
+  const aim = `<h4>🎯 ${aimT}</h4><p>${esc(a.aim)}</p>`;
+  const dlg = $("#dlg");
+  dlg.style.setProperty("--c", cat.c);
+  dlg.innerHTML = `
+    <div class="dlg-img"><img src="${esc(a.th)}" alt=""></div>
+    <div class="dlg-in">
+      <div class="dlg-tag">${esc(cat.n)}・${esc(a.g)}</div>
+      <h3>${esc(a.n)}</h3>
+      ${tab === "aim" ? aim + how : how + aim}
+      <div class="dlg-act">
+        <a href="${esc(a.u || a.p)}">▶ ${kid ? "あそぶ" : "ひらく"}</a>
+        <button data-close>とじる</button>
+      </div>
+      ${a.pro ? `<a class="dlg-pro" href="${esc(a.pro)}" target="_blank" rel="noopener">⭐ 複数クラス対応・引き継ぎ機能つきの Pro版（500円）を note で見る</a>` : ""}
+      <div>
+      </div>
+    </div>`;
+  dlg.showModal();
+}
+
+/* ===== 操作 ===== */
+$("#shelfSwitch").addEventListener("click", e => {
+  const b = e.target.closest("[data-shelf]");
+  if (!b) return;
+  shelf = b.dataset.shelf; save(KEY_SHELF, shelf);
+  render(); window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+$("#q").addEventListener("input", e => {
+  query = e.target.value.trim();
+  $("#clear").style.display = query ? "block" : "none";
+  render();
+});
+$("#clear").addEventListener("click", () => {
+  $("#q").value = ""; query = ""; $("#clear").style.display = "none"; render(); $("#q").focus();
+});
+
+$("#list").addEventListener("click", e => {
+  const fav = e.target.closest("[data-fav]");
+  if (fav){
+    const n = fav.dataset.fav;
+    favs = favs.includes(n) ? favs.filter(x => x !== n) : [n, ...favs];
+    save(KEY_FAV, favs); render(); return;
+  }
+  const info = e.target.closest("[data-info]");
+  if (info) openInfo(+info.dataset.info, info.dataset.tab);
+});
+
+$("#dlg").addEventListener("click", e => {
+  if (e.target.closest("[data-close]") || e.target === e.currentTarget) e.currentTarget.close();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== $("#q")){ e.preventDefault(); $("#q").focus(); }
+});
+
+render();
+</script>
+</body>
+</html>

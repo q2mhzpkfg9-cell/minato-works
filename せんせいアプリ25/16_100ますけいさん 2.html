@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100ますけいさん</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height: 100vh;
+    color: #3a3f5c;
+    padding: 16px;
+  }
+  header { text-align: center; margin-bottom: 16px; }
+  h1 { font-size: clamp(1.6rem, 4.5vw, 2.6rem); color: #5b6ef5; }
+  .sub { font-size: 1.05rem; color: #7a80a8; margin-top: 4px; }
+  .card {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: clamp(16px, 3vw, 32px);
+    max-width: 1100px;
+    margin: 0 auto 20px;
+  }
+  .btn {
+    font-family: inherit; border: none; border-radius: 999px;
+    background: #5b6ef5; color: #fff;
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem); padding: 16px 34px;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(91,110,245,.35);
+    transition: transform .1s, opacity .15s; font-weight: bold;
+  }
+  .btn:active { transform: scale(.95); }
+  .btn.ghost { background: #eef0ff; color: #5b6ef5; box-shadow: none; }
+  .btn.big { font-size: clamp(1.4rem, 3.5vw, 2rem); padding: 20px 48px; }
+  .btn.op {
+    background: #fff; color: #3a3f5c; border: 4px solid #d9defc; box-shadow: none;
+    font-size: clamp(1.5rem, 4vw, 2.2rem); padding: 16px 30px;
+  }
+  .btn.op.sel { border-color: #5b6ef5; background: #eef0ff; color: #5b6ef5; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: center; margin: 14px 0; }
+  .label { font-size: 1.3rem; font-weight: bold; color: #5b6ef5; text-align: center; margin-top: 10px; }
+
+  /* ===== ホーム（演算えらび） ===== */
+  . opgrid { }
+  .opgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 760px; margin: 0 auto; }
+  .opbig {
+    border-radius: 24px; padding: 24px 18px; text-align: center; cursor: pointer;
+    border: 5px solid; transition: transform .1s, box-shadow .15s; user-select: none;
+  }
+  .opbig:active { transform: scale(.97); }
+  .opbig .sym { font-size: 3.2rem; font-weight: bold; line-height: 1; }
+  .opbig .nm { font-size: 1.4rem; font-weight: bold; margin-top: 6px; }
+  .opbig .pg { font-size: 1.05rem; margin-top: 10px; font-weight: bold; }
+  .opbig .bar { height: 12px; border-radius: 999px; background: #fff; margin-top: 8px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.15); }
+  .opbig .bar > i { display: block; height: 100%; border-radius: 999px; }
+  .opbig.add { background: #eef2ff; border-color: #8ea2ff; color: #3a4bd0; }
+  .opbig.add .bar > i { background: #5b6ef5; }
+  .opbig.sub { background: #eafaf0; border-color: #79d69b; color: #1c8a53; }
+  .opbig.sub .bar > i { background: #23a35b; }
+  .opbig.mul { background: #fff3e8; border-color: #ffb877; color: #d97016; }
+  .opbig.mul .bar > i { background: #ff8a3d; }
+
+  /* ===== レベルマップ ===== */
+  .maptop { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; margin-bottom: 4px; }
+  .starcount { background: #fff7e6; color: #ff8a3d; font-weight: bold; border-radius: 999px; padding: 8px 20px; font-size: 1.15rem; box-shadow: 0 3px 10px rgba(255,138,61,.2); }
+  .world { font-size: 1.2rem; font-weight: bold; color: #5b6ef5; text-align: center; margin: 20px 0 10px; }
+  .lvgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; max-width: 900px; margin: 0 auto; }
+  .lvcard {
+    background: #fff; border: 4px solid #e4e8ff; border-radius: 20px; padding: 14px 10px 12px;
+    text-align: center; cursor: pointer; transition: transform .1s, box-shadow .15s, border-color .15s;
+    box-shadow: 0 4px 12px rgba(91,110,245,.12); position: relative; user-select: none;
+  }
+  .lvcard:active { transform: scale(.96); }
+  .lvcard.current { box-shadow: 0 0 0 4px #ffd88a, 0 6px 18px rgba(255,184,72,.4); }
+  .lvcard.locked { background: #f1f2f7; border-color: #e2e4ee; color: #b7bace; cursor: not-allowed; box-shadow: none; }
+  /* クリアで色がつく（演算ごと） */
+  .lvcard.cleared.add { background: #e7ecff; border-color: #6f86ff; }
+  .lvcard.cleared.sub { background: #e0f7ea; border-color: #4fc684; }
+  .lvcard.cleared.mul { background: #ffeed9; border-color: #ffa552; }
+  /* ★3 は金色に光る */
+  .lvcard.s3 { background: linear-gradient(160deg,#fff7da,#ffe9a6) !important; border-color: #f4c33f !important; box-shadow: 0 4px 18px rgba(244,195,63,.5); }
+  .lvcard .lvno { font-size: .95rem; color: #9aa0c4; font-weight: bold; }
+  .lvcard.locked .lvno { color: #c4c7d8; }
+  .lvcard .lvop { font-size: 2rem; font-weight: bold; margin: 2px 0; }
+  .lvcard .lvsize { font-size: 1.05rem; font-weight: bold; }
+  .lvcard .lvstars { font-size: 1.3rem; letter-spacing: 2px; margin-top: 6px; height: 1.4em; }
+  .lvcard .lock { font-size: 2rem; margin: 4px 0; }
+  .op-add { color: #5b6ef5; } .op-sub { color: #23a35b; } .op-mul { color: #ff8a3d; }
+  .star-on { color: #ffb648; } .star-off { color: #dfe2f0; }
+  .clearmark { position: absolute; top: 6px; right: 8px; font-size: 1.1rem; }
+
+  /* ===== プレイ画面 ===== */
+  .playwrap { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start; }
+  .gridbox { flex: 0 1 auto; }
+  .lvtag { text-align: center; font-weight: bold; color: #5b6ef5; font-size: 1.15rem; margin-bottom: 10px; }
+  table.masu { border-collapse: collapse; margin: 0 auto; }
+  table.masu td {
+    border: 2px solid #b9c3f5; width: var(--cs, 58px); height: var(--cs, 58px);
+    text-align: center; font-size: calc(var(--cs, 58px) * 0.46); font-weight: bold;
+  }
+  table.masu td.head { background: #e6eaff; color: #4553c9; }
+  table.masu td.corner { background: #5b6ef5; color: #fff; font-size: calc(var(--cs, 58px) * 0.5); }
+  table.masu td.cell { cursor: pointer; background: #fff; color: #3a3f5c; }
+  table.masu td.cell.sel { background: #fff3c4; outline: 4px solid #ffb648; outline-offset: -4px; }
+  table.masu td.cell.wrong { background: #ffd7dd; color: #e5486a; font-size: calc(var(--cs, 58px) * 0.34); }
+  table.masu td.cell.right { background: #dcf7e3; color: #23a35b; }
+
+  .sidebox { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .timer {
+    font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: bold; color: #5b6ef5;
+    background: #eef0ff; border-radius: 16px; padding: 8px 26px; min-width: 190px;
+    text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .startarget { font-size: .95rem; color: #9aa0c4; text-align: center; }
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pad button {
+    font-family: inherit; font-size: clamp(1.4rem, 4vmin, 2rem); font-weight: bold;
+    width: clamp(62px, 11vmin, 86px); height: clamp(56px, 9.5vmin, 76px);
+    border-radius: 18px; border: none; background: #eef0ff; color: #3a3f5c;
+    cursor: pointer; box-shadow: 0 3px 0 #ccd3f8;
+  }
+  .pad button:active { transform: translateY(2px); box-shadow: none; }
+  .pad button.fn { background: #ffe3ec; color: #e5486a; box-shadow: 0 3px 0 #f6c1d2; font-size: 1.1rem; }
+  .pad button.next { background: #dcf7e3; color: #23a35b; box-shadow: 0 3px 0 #b5e6c5; font-size: 1.1rem; }
+
+  /* ===== 結果オーバーレイ ===== */
+  .overlay { position: fixed; inset: 0; background: rgba(60,66,120,.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .result { background: #fff; border-radius: 22px; box-shadow: 0 8px 30px rgba(0,0,0,.3); padding: 34px 40px; text-align: center; max-width: 520px; width: 100%; animation: pop .35s ease; }
+  @keyframes pop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .result h2 { font-size: 2rem; color: #5b6ef5; margin-bottom: 12px; }
+  .result .bigstars { font-size: 3rem; letter-spacing: 6px; margin: 6px 0 4px; }
+  .result .score { font-size: 2.4rem; font-weight: bold; color: #ff8a3d; margin: 6px 0; }
+  .result .rtime { font-size: 1.5rem; color: #3a3f5c; margin-bottom: 8px; }
+  .result .unlockmsg { font-size: 1.2rem; color: #23a35b; font-weight: bold; margin: 6px 0; }
+
+  /* ===== 印刷 ===== */
+  #scr-print { display: none; }
+  .printsheet { background: #fff; }
+  .printsheet h2 { text-align: center; font-size: 1.7rem; margin-bottom: 10px; color: #3a3f5c; }
+  .nameline { display: flex; justify-content: space-between; font-size: 1.1rem; margin: 0 auto 14px; max-width: 640px; }
+  .nameline span { border-bottom: 2px solid #3a3f5c; min-width: 220px; display: inline-block; }
+  table.pmasu { border-collapse: collapse; margin: 0 auto; }
+  table.pmasu td { border: 1.5px solid #333; width: clamp(28px, 5.6vmin, 52px); height: clamp(28px, 5.6vmin, 52px); text-align: center; font-size: clamp(0.9rem, 2.4vmin, 1.3rem); font-weight: bold; color: #222; }
+  table.pmasu td.head { background: #eee; }
+  table.pmasu td.corner { background: #ddd; font-size: 1.3rem; }
+  @media print {
+    body { background: #fff !important; padding: 0; }
+    .no-print { display: none !important; }
+    #scr-print { display: block !important; }
+    .card { box-shadow: none; border-radius: 0; max-width: none; }
+    table.pmasu td { width: 15mm; height: 15mm; font-size: 13pt; }
+  }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <h1>🧮 100ますけいさん</h1>
+  <div class="sub" id="subtitle">すきな けいさんを えらんで レベルアップ！</div>
+</header>
+
+<!-- ===== ホーム（演算えらび） ===== -->
+<div id="scr-home" class="card no-print">
+  <div class="label">① どの けいさんに する？</div>
+  <div class="opgrid" id="opgrid"></div>
+  <div class="row" style="margin-top:22px;">
+    <button class="btn ghost" onclick="openPrint()">🖨 いんさつようを つくる</button>
+  </div>
+</div>
+
+<!-- ===== レベルマップ ===== -->
+<div id="scr-map" class="card no-print hide">
+  <div class="maptop">
+    <button class="btn ghost" onclick="toHome()">← けいさんを かえる</button>
+    <div class="starcount" id="starcount">⭐ 0 / 60</div>
+  </div>
+  <div id="mapbody"></div>
+</div>
+
+<!-- ===== プレイ ===== -->
+<div id="scr-play" class="card no-print hide">
+  <div class="lvtag" id="lvtag"></div>
+  <div class="playwrap">
+    <div class="gridbox"><table class="masu" id="grid"></table></div>
+    <div class="sidebox">
+      <div class="timer" id="timer">0:00.0</div>
+      <div class="startarget" id="startarget"></div>
+      <div class="pad">
+        <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button><button onclick="padKey('9')">9</button>
+        <button onclick="padKey('4')">4</button><button onclick="padKey('5')">5</button><button onclick="padKey('6')">6</button>
+        <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button><button onclick="padKey('3')">3</button>
+        <button class="fn" onclick="padClear()">けす</button><button onclick="padKey('0')">0</button><button class="next" onclick="moveSel(1)">つぎ→</button>
+      </div>
+      <button class="btn" onclick="grade()">✅ こたえあわせ</button>
+      <button class="btn ghost" onclick="quitPlay()">← やめる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 結果 ===== -->
+<div id="scr-result" class="overlay no-print hide">
+  <div class="result">
+    <h2 id="r-title">けっか</h2>
+    <div class="bigstars hide" id="r-stars"></div>
+    <div class="score" id="r-score"></div>
+    <div class="rtime" id="r-time"></div>
+    <div class="unlockmsg hide" id="r-unlock"></div>
+    <div class="row" id="r-buttons"></div>
+  </div>
+</div>
+
+<!-- ===== 印刷 ===== -->
+<div id="scr-print">
+  <div class="row no-print" style="margin-bottom:10px;">
+    <button class="btn op sel" id="pop-add" onclick="setPrintOp('add')">＋</button>
+    <button class="btn op" id="pop-sub" onclick="setPrintOp('sub')">－</button>
+    <button class="btn op" id="pop-mul" onclick="setPrintOp('mul')">×</button>
+    <button class="btn" onclick="window.print()">🖨 いんさつする</button>
+    <button class="btn ghost" onclick="regenPrint()">🔀 もんだいを かえる</button>
+    <button class="btn ghost" onclick="closePrint()">← もどる</button>
+  </div>
+  <div class="card printsheet">
+    <h2 id="p-title">100ますけいさん</h2>
+    <div class="nameline"><span>なまえ：</span><span>タイム：　　ふん　　びょう</span></div>
+    <table class="pmasu" id="pgrid"></table>
+  </div>
+</div>
+
+<script>
+"use strict";
+const PKEY = "sensei25_hyakumasu_prog2";   // レベル進捗 { levelId(string): stars }
+const OPS = {
+  add: { sym: "＋", name: "たしざん", cls: "op-add", fn: (a, b) => a + b },
+  sub: { sym: "－", name: "ひきざん", cls: "op-sub", fn: (a, b) => a - b },
+  mul: { sym: "×", name: "かけざん", cls: "op-mul", fn: (a, b) => a * b }
+};
+const OP_ORDER = ["add", "sub", "mul"];
+
+function range(s, n) { return Array.from({ length: n }, (_, i) => s + i); }
+
+/* ===== 各演算の ワールド定義（クリアで次が解放） =====
+   pool=両方でつかう数 / colPool・rowPool=別々（ひきざん用）
+   sizes=マスの大きさ(=レベル) / star=[★3,★2]の1マス秒 */
+const CONFIG = {
+  add: { label: "＋ たしざん", worlds: [
+    { w: 1, title: "ワールド1　ちいさいかず（0〜4）",  pool: range(0, 5),  sizes: [2, 3, 4, 5],  star: [1.6, 3.0] },
+    { w: 2, title: "ワールド2　0〜9のたしざん",        pool: range(0, 10), sizes: [3, 4, 5, 6],  star: [1.8, 3.3] },
+    { w: 3, title: "ワールド3　100ますに ちょうせん",  pool: range(0, 10), sizes: [6, 7, 8, 10], star: [2.0, 3.6] },
+    { w: 4, title: "ワールド4　くりあがり（2〜9）",    pool: range(2, 8),  sizes: [4, 5, 6, 8],  star: [2.4, 4.2] },
+    { w: 5, title: "ワールド5　大きいかず（6〜15）",   pool: range(6, 10), sizes: [7, 8, 9, 10], star: [2.8, 4.8] }
+  ]},
+  sub: { label: "－ ひきざん", worlds: [
+    { w: 1, title: "ワールド1　10までのひきざん",      colPool: range(0, 5),  rowPool: range(5, 5),  sizes: [2, 3, 4, 5],  star: [1.8, 3.3] },
+    { w: 2, title: "ワールド2　ひろく ひく",           colPool: range(0, 6),  rowPool: range(6, 6),  sizes: [3, 4, 5, 6],  star: [2.0, 3.6] },
+    { w: 3, title: "ワールド3　くりさがり",            colPool: range(2, 8),  rowPool: range(9, 8),  sizes: [4, 5, 6, 8],  star: [2.4, 4.2] },
+    { w: 4, title: "ワールド4　大きいかず（10〜19）",  colPool: range(0, 10), rowPool: range(10, 10), sizes: [6, 7, 8, 10], star: [2.6, 4.4] },
+    { w: 5, title: "ワールド5　マスター（11〜20）",    colPool: range(0, 10), rowPool: range(11, 10), sizes: [7, 8, 9, 10], star: [3.0, 5.0] }
+  ]},
+  mul: { label: "× かけざん", worlds: [
+    { w: 1, title: "ワールド1　やさしい九九（1〜5）",  pool: range(1, 5),  sizes: [2, 3, 4, 5],  star: [2.0, 3.6] },
+    { w: 2, title: "ワールド2　九九（1〜6）",          pool: range(1, 6),  sizes: [3, 4, 5, 6],  star: [2.2, 3.9] },
+    { w: 3, title: "ワールド3　九九100ます（0〜9）",   pool: range(0, 10), sizes: [6, 7, 8, 10], star: [2.5, 4.2] },
+    { w: 4, title: "ワールド4　大きいかず（3〜12）",   pool: range(3, 10), sizes: [6, 7, 8, 10], star: [2.8, 4.6] },
+    { w: 5, title: "ワールド5　マスター（6〜15）",     pool: range(6, 10), sizes: [7, 8, 9, 10], star: [3.2, 5.2] }
+  ]}
+};
+
+// 全レベルを展開（idは "add-1-2" のような文字列）
+const LEVELS = [];
+OP_ORDER.forEach(op => CONFIG[op].worlds.forEach(wd => wd.sizes.forEach((n, i) => {
+  LEVELS.push({
+    id: op + "-" + wd.w + "-" + (i + 1),
+    op: op, n: n, w: wd.w,
+    colPool: wd.colPool || wd.pool,
+    rowPool: wd.rowPool || wd.pool,
+    star: wd.star
+  });
+})));
+const OP_STARS = 60;   // 5ワールド×4レベル×3★
+
+let prog = loadProg();
+let cur = null;      // 現在プレイ中のレベル
+let curOp = "add";   // 表示中のマップの演算
+let printOp = "add";
+let N = 10;
+let rows = [], cols = [], ans = [], user = [];
+let sel = 0, startT = 0, timerId = null, playing = false, graded = false;
+
+function loadProg() { try { return JSON.parse(localStorage.getItem(PKEY)) || {}; } catch (e) { return {}; } }
+function saveProg() { localStorage.setItem(PKEY, JSON.stringify(prog)); }
+function opLevels(op) { return LEVELS.filter(l => l.op === op); }
+function opStars(op) { return opLevels(op).reduce((s, l) => s + (prog[l.id] || 0), 0); }
+function opCleared(op) { return opLevels(op).filter(l => prog[l.id]).length; }
+function isUnlocked(op, idx) { const ls = opLevels(op); return idx === 0 || !!prog[ls[idx - 1].id]; }
+function firstUncleared(op) { const ls = opLevels(op); for (let i = 0; i < ls.length; i++) if (isUnlocked(op, i) && !prog[ls[i].id]) return i; return -1; }
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function genFromPools(colPool, rowPool, n) {
+  return { c: shuffle(colPool).slice(0, n), r: shuffle(rowPool).slice(0, n) };
+}
+function genPrint(op, n) {
+  const c = shuffle(range(0, 10)).slice(0, n);
+  const r = (op === "sub" ? shuffle(range(10, 10)) : shuffle(range(0, 10))).slice(0, n);
+  return { c, r };
+}
+function starStr(k) { let s = ""; for (let i = 0; i < 3; i++) s += "<span class='" + (i < k ? "star-on" : "star-off") + "'>★</span>"; return s; }
+function cellSize(n) { return n <= 3 ? "clamp(52px,15vmin,88px)" : n <= 5 ? "clamp(46px,11vmin,74px)" : n <= 8 ? "clamp(36px,7.6vmin,60px)" : "clamp(30px,6.2vmin,58px)"; }
+function starTargets(lv) { const cells = lv.n * lv.n; return { t3: lv.star[0] * cells * 1000, t2: lv.star[1] * cells * 1000 }; }
+function computeStars(lv, ms) { const { t3, t2 } = starTargets(lv); return ms <= t3 ? 3 : ms <= t2 ? 2 : 1; }
+function fmtTime(ms) { const m = Math.floor(ms / 60000); const s = Math.floor((ms % 60000) / 1000); const d = Math.floor((ms % 1000) / 100); return m + ":" + String(s).padStart(2, "0") + "." + d; }
+
+/* ------- サウンド ------- */
+let actx = null;
+function audio() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); return actx; }
+function beep(freq, dur, delay, type, vol) {
+  try {
+    const ctx = audio(); const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    const t = ctx.currentTime + (delay || 0);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol || 0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + dur + 0.05);
+  } catch (e) {}
+}
+function sndTap() { beep(880, 0.08, 0, "square", 0.08); }
+function sndFanfare() { beep(523, 0.18, 0); beep(659, 0.18, 0.15); beep(784, 0.18, 0.3); beep(1047, 0.5, 0.45); }
+function sndDone() { beep(659, 0.15, 0); beep(880, 0.3, 0.13); }
+function sndLock() { beep(300, 0.12, 0, "sawtooth", 0.12); }
+
+/* ------- 画面切り替え ------- */
+function show(id) { document.getElementById(id).classList.remove("hide"); }
+function hideAll() {
+  ["scr-home", "scr-map", "scr-play"].forEach(id => document.getElementById(id).classList.add("hide"));
+  document.getElementById("scr-print").style.display = "none";
+  closeResult();
+}
+function toHome() { hideAll(); renderHome(); show("scr-home"); }
+function toMap(op) { curOp = op; hideAll(); renderMap(op); show("scr-map"); }
+
+/* ------- ホーム ------- */
+function renderHome() {
+  let html = "";
+  OP_ORDER.forEach(op => {
+    const st = opStars(op), cl = opCleared(op), tot = opLevels(op).length;
+    const pct = Math.round(st / OP_STARS * 100);
+    html += "<div class='opbig " + op + "' onclick='toMap(\"" + op + "\")'>"
+      + "<div class='sym'>" + OPS[op].sym + "</div>"
+      + "<div class='nm'>" + OPS[op].name + "</div>"
+      + "<div class='pg'>⭐ " + st + " / " + OP_STARS + "　（" + cl + "/" + tot + "ステージ）</div>"
+      + "<div class='bar'><i style='width:" + pct + "%'></i></div>"
+      + "</div>";
+  });
+  document.getElementById("opgrid").innerHTML = html;
+}
+
+/* ------- レベルマップ ------- */
+function renderMap(op) {
+  document.getElementById("starcount").textContent = OPS[op].name + "　⭐ " + opStars(op) + " / " + OP_STARS;
+  const ls = opLevels(op);
+  const nextIdx = firstUncleared(op);
+  let html = "";
+  CONFIG[op].worlds.forEach(wd => {
+    html += "<div class='world'>" + wd.title + "</div><div class='lvgrid'>";
+    ls.forEach((lv, idx) => {
+      if (lv.w !== wd.w) return;
+      const stars = prog[lv.id] || 0;
+      const unlocked = isUnlocked(op, idx);
+      let cls = "lvcard " + op;
+      if (!unlocked) cls += " locked";
+      else if (stars > 0) { cls += " cleared"; if (stars === 3) cls += " s3"; }
+      if (idx === nextIdx) cls += " current";
+      const inner = unlocked
+        ? (stars > 0 ? "<div class='clearmark'>" + (stars === 3 ? "👑" : "✓") + "</div>" : "")
+          + "<div class='lvno'>Lv." + (idx + 1) + "</div>"
+          + "<div class='lvop " + OPS[op].cls + "'>" + OPS[op].sym + "</div>"
+          + "<div class='lvsize'>" + lv.n + " ます</div>"
+          + "<div class='lvstars'>" + (stars > 0 ? starStr(stars) : "<span class='star-off'>☆☆☆</span>") + "</div>"
+        : "<div class='lvno'>Lv." + (idx + 1) + "</div>"
+          + "<div class='lock'>🔒</div>"
+          + "<div class='lvsize'>" + lv.n + " ます</div>"
+          + "<div class='lvstars'>&nbsp;</div>";
+      html += "<div class='" + cls + "' onclick='tapLevel(\"" + op + "\"," + idx + ")'>" + inner + "</div>";
+    });
+    html += "</div>";
+  });
+  document.getElementById("mapbody").innerHTML = html;
+}
+function tapLevel(op, idx) {
+  if (!isUnlocked(op, idx)) { sndLock(); return; }
+  startLevel(opLevels(op)[idx]);
+}
+
+/* ------- プレイ ------- */
+function startLevel(lv) { cur = lv; beginPlay(); }
+function beginPlay() {
+  closeResult();
+  N = cur.n;
+  const g = genFromPools(cur.colPool, cur.rowPool, N);
+  cols = g.c; rows = g.r;
+  ans = []; user = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { ans.push(OPS[cur.op].fn(rows[r], cols[c])); user.push(""); }
+  sel = 0; graded = false; playing = true;
+  buildGrid();
+
+  const ls = opLevels(cur.op);
+  const idx = ls.findIndex(l => l.id === cur.id);
+  document.getElementById("lvtag").textContent =
+    OPS[cur.op].name + "　Lv." + (idx + 1) + "　" + OPS[cur.op].sym + "（" + N + "ます）";
+  const t = starTargets(cur);
+  document.getElementById("startarget").innerHTML =
+    "★★★ " + fmtTime(t.t3) + " いない　/　★★ " + fmtTime(t.t2) + " いない";
+
+  hideAll();
+  show("scr-play");
+  startT = performance.now();
+  if (timerId) clearInterval(timerId);
+  timerId = setInterval(() => { document.getElementById("timer").textContent = fmtTime(performance.now() - startT); }, 100);
+}
+function buildGrid() {
+  const t = document.getElementById("grid");
+  t.style.setProperty("--cs", cellSize(N));
+  let h = "<tr><td class='corner'>" + OPS[cur.op].sym + "</td>";
+  cols.forEach(c => h += "<td class='head'>" + c + "</td>");
+  h += "</tr>";
+  for (let r = 0; r < N; r++) {
+    h += "<tr><td class='head'>" + rows[r] + "</td>";
+    for (let c = 0; c < N; c++) { const i = r * N + c; h += "<td class='cell' id='cell" + i + "' onclick='selCell(" + i + ")'></td>"; }
+    h += "</tr>";
+  }
+  t.innerHTML = h;
+  paintSel();
+}
+function selCell(i) { if (!playing && !graded) return; sel = i; paintSel(); }
+function paintSel() { const total = N * N; for (let i = 0; i < total; i++) document.getElementById("cell" + i).classList.toggle("sel", i === sel); }
+function padKey(d) { if (!playing) return; sndTap(); if (user[sel].length < 3) { user[sel] += d; document.getElementById("cell" + sel).textContent = user[sel]; } }
+function padClear() { if (!playing) return; user[sel] = ""; document.getElementById("cell" + sel).textContent = ""; }
+function moveSel(dir) { const total = N * N; sel = (sel + dir + total) % total; paintSel(); }
+document.addEventListener("keydown", (e) => {
+  if (document.getElementById("scr-play").classList.contains("hide")) return;
+  if (e.key >= "0" && e.key <= "9") { padKey(e.key); e.preventDefault(); }
+  else if (e.key === "Backspace") { if (playing) { user[sel] = user[sel].slice(0, -1); document.getElementById("cell" + sel).textContent = user[sel]; } e.preventDefault(); }
+  else if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight") { moveSel(1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { moveSel(-1); e.preventDefault(); }
+  else if (e.key === "ArrowDown") { moveSel(N); e.preventDefault(); }
+  else if (e.key === "ArrowUp") { moveSel(-N); e.preventDefault(); }
+});
+
+function grade() {
+  if (!playing) return;
+  playing = false; graded = true;
+  clearInterval(timerId);
+  const elapsed = performance.now() - startT;
+  const total = N * N;
+  let correct = 0;
+  for (let i = 0; i < total; i++) {
+    const cell = document.getElementById("cell" + i);
+    cell.classList.remove("sel");
+    if (user[i] !== "" && +user[i] === ans[i]) { correct++; cell.classList.add("right"); }
+    else { cell.classList.add("wrong"); cell.textContent = (user[i] === "" ? "" : user[i] + "→") + ans[i]; }
+  }
+  const perfect = (correct === total);
+  const rStars = document.getElementById("r-stars");
+  const rUnlock = document.getElementById("r-unlock");
+  rStars.classList.add("hide"); rUnlock.classList.add("hide");
+
+  document.getElementById("r-score").textContent = correct + " / " + total + " てん";
+  document.getElementById("r-time").textContent = "⏱ タイム " + fmtTime(elapsed);
+
+  let isLevelPerfect = false;
+  if (perfect) {
+    isLevelPerfect = true;
+    const stars = computeStars(cur, elapsed);
+    const prev = prog[cur.id] || 0;
+    const wasCleared = prev > 0;
+    prog[cur.id] = Math.max(prev, stars);
+    saveProg();
+
+    const ls = opLevels(cur.op);
+    const idx = ls.findIndex(l => l.id === cur.id);
+    const opStr = OPS[cur.op].name;
+
+    document.getElementById("r-title").textContent = "🎉 クリア！";
+    rStars.innerHTML = starStr(stars); rStars.classList.remove("hide");
+    if (!wasCleared && idx + 1 < ls.length) {
+      rUnlock.textContent = "🔓 " + opStr + " Lv." + (idx + 2) + " が ひらいたよ！";
+      rUnlock.classList.remove("hide");
+    } else if (idx + 1 >= ls.length && opCleared(cur.op) === ls.length) {
+      rUnlock.textContent = "👑 " + opStr + " ぜんステージ クリア！";
+      rUnlock.classList.remove("hide");
+    }
+    sndFanfare();
+  } else {
+    document.getElementById("r-title").textContent = "もうすこし！";
+    document.getElementById("r-score").textContent += "（ぜんもん せいかいで クリア）";
+    sndDone();
+  }
+  renderResultButtons(isLevelPerfect);
+  show("scr-result");
+}
+
+function renderResultButtons(perfect) {
+  const ls = opLevels(cur.op);
+  const idx = ls.findIndex(l => l.id === cur.id);
+  let html = "";
+  if (perfect && idx + 1 < ls.length && isUnlocked(cur.op, idx + 1)) {
+    html += "<button class='btn' onclick='goNextLevel()'>つぎのレベルへ →</button>";
+  }
+  html += "<button class='btn ghost' onclick='retry()'>もういちど</button>";
+  html += "<button class='btn ghost' onclick='closeResult()'>まちがいを みる</button>";
+  html += "<button class='btn ghost' onclick='toMap(cur.op)'>マップへ</button>";
+  document.getElementById("r-buttons").innerHTML = html;
+}
+function goNextLevel() { const ls = opLevels(cur.op); const idx = ls.findIndex(l => l.id === cur.id); if (idx + 1 < ls.length) startLevel(ls[idx + 1]); }
+function retry() { beginPlay(); }
+function closeResult() { document.getElementById("scr-result").classList.add("hide"); }
+function quitPlay() { playing = false; if (timerId) clearInterval(timerId); toMap(cur.op); }
+
+/* ------- 印刷 ------- */
+function openPrint() { hideAll(); document.getElementById("scr-print").style.display = "block"; regenPrint(); }
+function setPrintOp(o) { printOp = o; ["add", "sub", "mul"].forEach(k => document.getElementById("pop-" + k).classList.toggle("sel", k === o)); regenPrint(); }
+function regenPrint() {
+  const g = genPrint(printOp, 10);
+  document.getElementById("p-title").textContent = "100ますけいさん（" + OPS[printOp].name + "）";
+  let h = "<tr><td class='corner'>" + OPS[printOp].sym + "</td>";
+  g.c.forEach(c => h += "<td class='head'>" + c + "</td>"); h += "</tr>";
+  for (let r = 0; r < 10; r++) { h += "<tr><td class='head'>" + g.r[r] + "</td>"; for (let c = 0; c < 10; c++) h += "<td></td>"; h += "</tr>"; }
+  document.getElementById("pgrid").innerHTML = h;
+}
+function closePrint() { toHome(); }
+
+/* ------- 起動 ------- */
+renderHome();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

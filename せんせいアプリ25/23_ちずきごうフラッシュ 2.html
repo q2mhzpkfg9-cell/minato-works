@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ちずきごうフラッシュ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;min-height:100vh;color:#333;
+  font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+  background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+  background-attachment:fixed;
+}
+header{text-align:center;padding:18px 10px 6px}
+h1{margin:0;font-size:clamp(1.6rem,4vw,2.6rem);color:#5b6ef5;letter-spacing:.06em}
+.sub{color:#7a86a8;font-size:1.05rem;margin-top:4px}
+main{max-width:940px;margin:0 auto;padding:12px 16px 40px}
+.card{background:#fff;border-radius:22px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:24px;margin-bottom:20px}
+.btn{
+  border:none;border-radius:999px;background:#5b6ef5;color:#fff;cursor:pointer;
+  font-family:inherit;font-size:1.3rem;padding:15px 30px;margin:7px;
+  box-shadow:0 4px 12px rgba(91,110,245,.35);transition:transform .1s;
+}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:#eef1ff;color:#5b6ef5;box-shadow:none}
+.btn.big{font-size:1.6rem;padding:20px 42px}
+.btn.sel{outline:5px solid #ffd83d}
+.center{text-align:center}
+.screen{display:none}
+.screen.show{display:block}
+h2{color:#5b6ef5;font-size:1.35rem;margin:4px 0 10px}
+.symbol-stage{width:min(46vmin,300px);margin:0 auto;background:#f7f8ff;border-radius:20px;padding:16px}
+.symbol-stage svg{width:100%;height:auto;display:block}
+.answer-name{font-size:clamp(2rem,7vw,3rem);text-align:center;font-weight:bold;color:#e8618c;min-height:1.4em}
+.progress{font-size:1.25rem;color:#7a86a8;text-align:center;margin-bottom:8px}
+.tap-hint{color:#a5aecb;font-size:1.1rem;text-align:center}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:16px}
+.choice{
+  border:none;border-radius:22px;background:#eef1ff;color:#2f3a68;cursor:pointer;
+  font-family:inherit;font-size:1.45rem;padding:18px 10px;transition:transform .1s;
+}
+.choice:active{transform:scale(.96)}
+.choice.correct{background:#2ec27e;color:#fff}
+.choice.wrong{background:#f56b8d;color:#fff}
+.choice svg{width:90px;height:90px;display:block;margin:0 auto}
+.scorebar{display:flex;justify-content:center;gap:24px;font-size:1.25rem;color:#5b6ef5;font-weight:bold;flex-wrap:wrap;margin-bottom:8px}
+.list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.list-item{background:#f7f8ff;border-radius:16px;padding:12px;text-align:center}
+.list-item svg{width:80px;height:80px}
+.list-item .nm{font-size:1.15rem;font-weight:bold;color:#2f3a68;margin-top:4px}
+.question{font-size:clamp(1.5rem,5vw,2.2rem);text-align:center;font-weight:bold;color:#2f3a68;margin:8px 0}
+.feedback{text-align:center;font-size:1.8rem;font-weight:bold;min-height:1.3em}
+.feedback.good{color:#2ec27e}
+.feedback.bad{color:#f56b8d}
+footer{text-align:center;color:#9aa4c4;font-size:.95rem;padding-bottom:24px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺 ちずきごうフラッシュ</h1>
+  <div class="sub">ちずきごう 23こを おぼえよう！</div>
+</header>
+<main>
+
+<section id="scr-home" class="screen show">
+  <div class="card center">
+    <h2>あそびかたを えらぼう</h2>
+    <button class="btn big" onclick="startFlash()">⚡ フラッシュカード</button>
+    <br>
+    <button class="btn big" onclick="startQuiz('s2n')">❓ クイズ：きごう → なまえ</button>
+    <button class="btn big" onclick="startQuiz('n2s')">❓ クイズ：なまえ → きごう</button>
+    <br>
+    <button class="btn big ghost" onclick="startList()">📖 いちらん表</button>
+    <div class="tap-hint" style="margin-top:10px">🏆 クイズさいこうてん：<span id="best-score">0</span> / 10</div>
+  </div>
+</section>
+
+<!-- フラッシュ -->
+<section id="scr-flash" class="screen">
+  <div class="progress" id="flash-prog"></div>
+  <div class="card center" style="cursor:pointer" onclick="flashTap()">
+    <div class="symbol-stage" id="flash-symbol"></div>
+    <div class="answer-name" id="flash-name"></div>
+    <div class="tap-hint" id="flash-hint">タップすると なまえが でるよ</div>
+  </div>
+  <div class="center">
+    <button class="btn ghost" onclick="flashMove(-1)">◀ まえ</button>
+    <button class="btn ghost" onclick="flashMove(1)">つぎ ▶</button>
+    <br>
+    <button class="btn ghost" onclick="show('scr-home')">🏠 もどる</button>
+  </div>
+</section>
+
+<!-- クイズ -->
+<section id="scr-quiz" class="screen">
+  <div class="card">
+    <div class="scorebar">
+      <span>📝 <span id="q-no">1</span> / 10</span>
+      <span>✅ せいかい <span id="q-score">0</span></span>
+    </div>
+    <div class="question" id="q-text"></div>
+    <div class="symbol-stage" id="q-symbol" style="display:none"></div>
+    <div class="feedback" id="q-feedback"></div>
+    <div class="choices" id="q-choices"></div>
+    <div class="center" style="margin-top:12px">
+      <button class="btn" id="q-next" style="display:none" onclick="quizNext()">つぎ ▶</button>
+      <button class="btn ghost" onclick="show('scr-home')">🏠 おわる</button>
+    </div>
+  </div>
+</section>
+
+<!-- けっか -->
+<section id="scr-result" class="screen">
+  <div class="card center">
+    <h2>🎉 けっかはっぴょう</h2>
+    <div style="font-size:3.4rem;font-weight:bold;color:#5b6ef5"><span id="res-score">0</span> / 10</div>
+    <p class="tap-hint" id="res-msg"></p>
+    <button class="btn big" onclick="startQuiz(quizDir)">🔁 もういちど</button>
+    <button class="btn big ghost" onclick="show('scr-home')">🏠 ホームへ</button>
+  </div>
+</section>
+
+<!-- いちらん -->
+<section id="scr-list" class="screen">
+  <div class="card">
+    <h2 class="center">📖 ちずきごう いちらん表</h2>
+    <div class="list-grid" id="list-grid"></div>
+    <div class="center" style="margin-top:14px">
+      <button class="btn ghost" onclick="show('scr-home')">🏠 もどる</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>せんせいアプリ25 ／ ちずきごうフラッシュ</footer>
+
+<script>
+"use strict";
+/* ===== 地図記号SVG（viewBox 0 0 100 100, stroke #2f3a68） ===== */
+const ST = 'fill="none" stroke="#2f3a68" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"';
+function wrap(inner){ return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>'; }
+const SYMBOLS = [
+{n:"小・中学校", y:"しょう・ちゅうがっこう", s:wrap('<text x="50" y="72" text-anchor="middle" font-size="70" font-weight="bold" fill="#2f3a68" font-family="serif">文</text>')},
+{n:"市役所", y:"しやくしょ", s:wrap('<circle cx="50" cy="50" r="34" '+ST+'/><circle cx="50" cy="50" r="16" '+ST+'/>')},
+{n:"郵便局", y:"ゆうびんきょく", s:wrap('<circle cx="50" cy="50" r="38" '+ST+'/><text x="50" y="68" text-anchor="middle" font-size="50" font-weight="bold" fill="#2f3a68">〒</text>')},
+{n:"神社", y:"じんじゃ", s:wrap('<path d="M14 26 Q50 16 86 26" '+ST+'/><line x1="22" y1="40" x2="78" y2="40" '+ST+'/><line x1="30" y1="30" x2="30" y2="84" '+ST+'/><line x1="70" y1="30" x2="70" y2="84" '+ST+'/>')},
+{n:"寺院", y:"じいん", s:wrap('<text x="50" y="76" text-anchor="middle" font-size="78" fill="#2f3a68">卍</text>')},
+{n:"病院", y:"びょういん", s:wrap('<line x1="50" y1="14" x2="50" y2="56" '+ST+'/><line x1="26" y1="34" x2="74" y2="34" '+ST+'/><line x1="50" y1="56" x2="28" y2="86" '+ST+'/><line x1="50" y1="56" x2="72" y2="86" '+ST+'/>')},
+{n:"警察署", y:"けいさつしょ", s:wrap('<circle cx="50" cy="50" r="36" '+ST+'/><line x1="30" y1="30" x2="70" y2="70" '+ST+'/><line x1="70" y1="30" x2="30" y2="70" '+ST+'/>')},
+{n:"交番", y:"こうばん", s:wrap('<line x1="26" y1="26" x2="74" y2="74" '+ST+'/><line x1="74" y1="26" x2="26" y2="74" '+ST+'/>')},
+{n:"消防署", y:"しょうぼうしょ", s:wrap('<line x1="50" y1="88" x2="50" y2="46" '+ST+'/><path d="M50 46 C46 40 32 36 28 16" '+ST+'/><path d="M50 46 C54 40 68 36 72 16" '+ST+'/><line x1="36" y1="60" x2="64" y2="60" '+ST+'/>')},
+{n:"図書館", y:"としょかん", s:wrap('<path d="M50 26 C40 18 24 18 16 22 L16 78 C24 74 40 74 50 82 C60 74 76 74 84 78 L84 22 C76 18 60 18 50 26 Z" '+ST+'/><line x1="50" y1="26" x2="50" y2="82" '+ST+'/>')},
+{n:"博物館", y:"はくぶつかん", s:wrap('<path d="M14 34 L50 14 L86 34" '+ST+'/><line x1="18" y1="42" x2="82" y2="42" '+ST+'/><line x1="28" y1="42" x2="28" y2="72" '+ST+'/><line x1="50" y1="42" x2="50" y2="72" '+ST+'/><line x1="72" y1="42" x2="72" y2="72" '+ST+'/><line x1="14" y1="80" x2="86" y2="80" '+ST+'/>')},
+{n:"田", y:"た", s:wrap('<line x1="38" y1="30" x2="38" y2="70" '+ST+'/><line x1="62" y1="30" x2="62" y2="70" '+ST+'/>')},
+{n:"畑", y:"はたけ", s:wrap('<path d="M28 34 L50 72 L72 34" '+ST+'/>')},
+{n:"果樹園", y:"かじゅえん", s:wrap('<circle cx="50" cy="54" r="26" '+ST+'/><line x1="50" y1="28" x2="50" y2="16" '+ST+'/>')},
+{n:"針葉樹林", y:"しんようじゅりん", s:wrap('<path d="M28 52 L50 16 L72 52" '+ST+'/><line x1="50" y1="52" x2="50" y2="84" '+ST+'/>')},
+{n:"広葉樹林", y:"こうようじゅりん", s:wrap('<circle cx="50" cy="40" r="22" '+ST+'/><line x1="50" y1="62" x2="50" y2="86" '+ST+'/>')},
+{n:"温泉", y:"おんせん", s:wrap('<path d="M20 62 A30 18 0 1 0 80 62" '+ST+'/><path d="M20 62 Q26 76 50 78 Q74 76 80 62" '+ST+'/><path d="M34 48 Q30 38 34 30 Q38 22 34 14" '+ST+'/><path d="M50 48 Q46 38 50 30 Q54 22 50 14" '+ST+'/><path d="M66 48 Q62 38 66 30 Q70 22 66 14" '+ST+'/>')},
+{n:"港", y:"みなと", s:wrap('<circle cx="50" cy="20" r="8" '+ST+'/><line x1="50" y1="28" x2="50" y2="78" '+ST+'/><line x1="32" y1="42" x2="68" y2="42" '+ST+'/><path d="M22 60 Q26 82 50 84 Q74 82 78 60" '+ST+'/>')},
+{n:"灯台", y:"とうだい", s:wrap('<circle cx="50" cy="50" r="9" fill="#2f3a68"/><line x1="50" y1="12" x2="50" y2="30" '+ST+'/><line x1="50" y1="70" x2="50" y2="88" '+ST+'/><line x1="12" y1="50" x2="30" y2="50" '+ST+'/><line x1="70" y1="50" x2="88" y2="50" '+ST+'/><line x1="24" y1="24" x2="37" y2="37" '+ST+'/><line x1="76" y1="24" x2="63" y2="37" '+ST+'/><line x1="24" y1="76" x2="37" y2="63" '+ST+'/><line x1="76" y1="76" x2="63" y2="63" '+ST+'/>')},
+{n:"工場", y:"こうじょう", s:wrap('<circle cx="50" cy="50" r="20" '+ST+'/><line x1="50" y1="14" x2="50" y2="30" '+ST+'/><line x1="50" y1="70" x2="50" y2="86" '+ST+'/><line x1="14" y1="50" x2="30" y2="50" '+ST+'/><line x1="70" y1="50" x2="86" y2="50" '+ST+'/><line x1="25" y1="25" x2="36" y2="36" '+ST+'/><line x1="75" y1="25" x2="64" y2="36" '+ST+'/><line x1="25" y1="75" x2="36" y2="64" '+ST+'/><line x1="75" y1="75" x2="64" y2="64" '+ST+'/>')},
+{n:"老人ホーム", y:"ろうじんホーム", s:wrap('<path d="M14 48 L50 16 L86 48 L86 86 L14 86 Z" '+ST+'/><path d="M44 40 Q52 34 58 42" '+ST+'/><line x1="57" y1="42" x2="57" y2="76" '+ST+'/>')},
+{n:"裁判所", y:"さいばんしょ", s:wrap('<line x1="50" y1="30" x2="50" y2="86" '+ST+'/><path d="M28 16 L72 16 L72 30 L28 30 Z" '+ST+'/>')},
+{n:"消防団・火の見やぐら", y:"ひのみやぐら", s:wrap('<line x1="34" y1="86" x2="46" y2="20" '+ST+'/><line x1="66" y1="86" x2="54" y2="20" '+ST+'/><line x1="40" y1="56" x2="60" y2="56" '+ST+'/><line x1="44" y1="20" x2="56" y2="20" '+ST+'/>')}
+];
+
+const LS_BEST = "sensei25_chizukigo_best";
+
+/* ===== 効果音 ===== */
+let actx=null;
+function ac(){ if(!actx){ actx=new (window.AudioContext||window.webkitAudioContext)(); } if(actx.state==="suspended") actx.resume(); return actx; }
+function tone(f,d,t,v,w){ const c=ac(),o=c.createOscillator(),g=c.createGain();
+o.type=t||"sine"; o.frequency.value=f;
+g.gain.setValueAtTime(v||0.2,c.currentTime+(w||0));
+g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+(w||0)+d);
+o.connect(g); g.connect(c.destination); o.start(c.currentTime+(w||0)); o.stop(c.currentTime+(w||0)+d+0.05); }
+function seTick(){ tone(880,0.06,"square",0.08); }
+function sePinpon(){ tone(784,0.15,"sine",0.25); tone(1046,0.3,"sine",0.25,0.13); }
+function seBoo(){ tone(220,0.35,"sawtooth",0.15); tone(180,0.35,"sawtooth",0.15,0.08); }
+function seFanfare(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.25,"sine",0.22,i*0.15)); }
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show"));
+  document.getElementById(id).classList.add("show");
+}
+function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+function renderBest(){ document.getElementById("best-score").textContent = localStorage.getItem(LS_BEST)||"0"; }
+
+/* ===== フラッシュ ===== */
+let fDeck=[], fIdx=0, fRevealed=false;
+function startFlash(){
+  fDeck = shuffle(SYMBOLS); fIdx=0; fRevealed=false;
+  show("scr-flash"); renderFlashCard();
+}
+function renderFlashCard(){
+  const c = fDeck[fIdx];
+  document.getElementById("flash-symbol").innerHTML = c.s;
+  document.getElementById("flash-name").textContent = fRevealed ? c.n+"（"+c.y+"）" : "";
+  document.getElementById("flash-hint").textContent = fRevealed ? "もういちど タップで つぎへ" : "タップすると なまえが でるよ";
+  document.getElementById("flash-prog").textContent = (fIdx+1)+" / "+fDeck.length;
+}
+function flashTap(){
+  seTick();
+  if(fRevealed){ fRevealed=false; fIdx=(fIdx+1)%fDeck.length; }
+  else{ fRevealed=true; }
+  renderFlashCard();
+}
+function flashMove(dir){
+  seTick(); fRevealed=false;
+  fIdx=(fIdx+dir+fDeck.length)%fDeck.length;
+  renderFlashCard();
+}
+
+/* ===== クイズ ===== */
+let quizDir="s2n", qDeck=[], qIdx=0, qScore=0, qAnswered=false;
+function startQuiz(dir){
+  quizDir = dir;
+  qDeck = shuffle(SYMBOLS).slice(0,10);
+  qIdx=0; qScore=0;
+  show("scr-quiz"); renderQuestion();
+}
+function renderQuestion(){
+  qAnswered=false;
+  const c = qDeck[qIdx];
+  document.getElementById("q-no").textContent = qIdx+1;
+  document.getElementById("q-score").textContent = qScore;
+  document.getElementById("q-feedback").textContent = "";
+  document.getElementById("q-feedback").className = "feedback";
+  document.getElementById("q-next").style.display = "none";
+  const others = shuffle(SYMBOLS.filter(s=>s.n!==c.n)).slice(0,3);
+  const opts = shuffle([c].concat(others));
+  const box = document.getElementById("q-choices");
+  box.innerHTML = "";
+  if(quizDir==="s2n"){
+    document.getElementById("q-text").textContent = "この きごうの なまえは？";
+    document.getElementById("q-symbol").style.display = "";
+    document.getElementById("q-symbol").innerHTML = c.s;
+    opts.forEach(o=>{
+      const b=document.createElement("button");
+      b.className="choice"; b.textContent=o.n;
+      b.onclick=()=>quizAnswer(b, o.n===c.n, c);
+      box.appendChild(b);
+    });
+  }else{
+    document.getElementById("q-text").textContent = "「"+c.n+"」の きごうは どれ？";
+    document.getElementById("q-symbol").style.display = "none";
+    opts.forEach(o=>{
+      const b=document.createElement("button");
+      b.className="choice"; b.innerHTML=o.s;
+      b.onclick=()=>quizAnswer(b, o.n===c.n, c);
+      b.dataset.name=o.n;
+      box.appendChild(b);
+    });
+  }
+}
+function quizAnswer(btn, ok, c){
+  if(qAnswered) return;
+  qAnswered=true;
+  const fb = document.getElementById("q-feedback");
+  if(ok){
+    qScore++;
+    btn.classList.add("correct");
+    fb.textContent="⭕ せいかい！"; fb.classList.add("good");
+    sePinpon();
+  }else{
+    btn.classList.add("wrong");
+    fb.textContent="❌ こたえは「"+c.n+"」"; fb.classList.add("bad");
+    seBoo();
+    document.querySelectorAll("#q-choices .choice").forEach(b=>{
+      if(b.textContent===c.n || b.dataset.name===c.n) b.classList.add("correct");
+    });
+  }
+  document.getElementById("q-score").textContent = qScore;
+  document.getElementById("q-next").style.display = "";
+}
+function quizNext(){
+  qIdx++;
+  if(qIdx>=qDeck.length){
+    document.getElementById("res-score").textContent = qScore;
+    const best = parseInt(localStorage.getItem(LS_BEST)||"0",10);
+    let msg;
+    if(qScore===10){ msg="パーフェクト！ ちずきごうはかせ だ！🌟"; seFanfare(); }
+    else if(qScore>=7){ msg="あとすこしで パーフェクト！"; }
+    else{ msg="いちらん表で ふくしゅうしてみよう！"; }
+    if(qScore>best){ localStorage.setItem(LS_BEST,String(qScore)); msg += "（さいこうきろく こうしん！）"; }
+    document.getElementById("res-msg").textContent = msg;
+    renderBest();
+    show("scr-result");
+  }else{
+    renderQuestion();
+  }
+}
+
+/* ===== いちらん ===== */
+function startList(){
+  const grid = document.getElementById("list-grid");
+  grid.innerHTML = "";
+  SYMBOLS.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="list-item";
+    d.innerHTML = c.s + '<div class="nm">'+c.n+'</div><div style="color:#e8618c;font-size:.95rem">'+c.y+'</div>';
+    grid.appendChild(d);
+  });
+  show("scr-list");
+}
+
+renderBest();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

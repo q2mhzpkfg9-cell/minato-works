@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイマーアプリ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+  .container {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 48px 56px;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    min-width: 360px;
+  }
+  h1 { font-size: 24px; margin-bottom: 24px; font-weight: 500; letter-spacing: 2px; }
+  .display {
+    font-size: 72px;
+    font-weight: 200;
+    font-variant-numeric: tabular-nums;
+    margin: 24px 0;
+    letter-spacing: 2px;
+  }
+  .inputs { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+  .inputs input {
+    width: 70px;
+    padding: 10px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+  }
+  .inputs label { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+  .input-group { display: flex; flex-direction: column; align-items: center; }
+  .buttons { display: flex; gap: 12px; justify-content: center; }
+  button {
+    padding: 12px 28px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.1s, opacity 0.2s;
+    color: #fff;
+  }
+  button:hover { transform: translateY(-2px); }
+  button:active { transform: translateY(0); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .start { background: #4caf50; }
+  .pause { background: #ff9800; }
+  .reset { background: #f44336; }
+  .finished { animation: flash 0.5s infinite alternate; }
+  @keyframes flash {
+    from { color: #fff; }
+    to { color: #ff5252; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>TIMER</h1>
+    <div class="inputs">
+      <div class="input-group">
+        <input type="number" id="hours" min="0" max="23" value="0">
+        <label>時間</label>
+      </div>
+      <div class="input-group">
+        <input type="number" id="minutes" min="0" max="59" value="5">
+        <label>分</label>
+      </div>
+      <div class="input-group">
+        <input type="number" id="seconds" min="0" max="59" value="0">
+        <label>秒</label>
+      </div>
+    </div>
+    <div class="display" id="display">00:05:00</div>
+    <div class="buttons">
+      <button class="start" id="startBtn">スタート</button>
+      <button class="pause" id="pauseBtn" disabled>一時停止</button>
+      <button class="reset" id="resetBtn">リセット</button>
+    </div>
+  </div>
+
+<script>
+  const display = document.getElementById('display');
+  const hoursInput = document.getElementById('hours');
+  const minutesInput = document.getElementById('minutes');
+  const secondsInput = document.getElementById('seconds');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let totalSeconds = 0;
+  let intervalId = null;
+  let isRunning = false;
+
+  function format(s) {
+    const h = String(Math.floor(s / 3600)).padStart(2, '0');
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    return `${h}:${m}:${sec}`;
+  }
+
+  function updateDisplay() {
+    display.textContent = format(totalSeconds);
+  }
+
+  function readInputs() {
+    const h = parseInt(hoursInput.value) || 0;
+    const m = parseInt(minutesInput.value) || 0;
+    const s = parseInt(secondsInput.value) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  function setInputsDisabled(disabled) {
+    hoursInput.disabled = disabled;
+    minutesInput.disabled = disabled;
+    secondsInput.disabled = disabled;
+  }
+
+  [hoursInput, minutesInput, secondsInput].forEach(input => {
+    input.addEventListener('input', () => {
+      if (!isRunning) {
+        totalSeconds = readInputs();
+        updateDisplay();
+      }
+    });
+  });
+
+  startBtn.addEventListener('click', () => {
+    if (totalSeconds <= 0) totalSeconds = readInputs();
+    if (totalSeconds <= 0) return;
+    isRunning = true;
+    setInputsDisabled(true);
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    display.classList.remove('finished');
+    intervalId = setInterval(() => {
+      totalSeconds--;
+      updateDisplay();
+      if (totalSeconds <= 0) {
+        clearInterval(intervalId);
+        isRunning = false;
+        display.classList.add('finished');
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        setInputsDisabled(false);
+        playBeep();
+        setTimeout(() => alert('時間です!'), 100);
+      }
+    }, 1000);
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    clearInterval(intervalId);
+    isRunning = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    setInputsDisabled(false);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    clearInterval(intervalId);
+    isRunning = false;
+    totalSeconds = readInputs();
+    updateDisplay();
+    display.classList.remove('finished');
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    setInputsDisabled(false);
+  });
+
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.8);
+    } catch (e) {}
+  }
+
+  totalSeconds = readInputs();
+  updateDisplay();
+</script>
+<!-- note-link:start -->
+<a class="note-link" href="https://note.com/minato_smile2525" target="_blank" rel="noopener"
+   style="position:fixed;right:14px;bottom:12px;z-index:2147483000;display:inline-block;
+   padding:7px 13px;border-radius:999px;background:rgba(47,143,141,.92);color:#fff;
+   font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;
+   font-size:12px;font-weight:600;line-height:1;text-decoration:none;
+   box-shadow:0 2px 8px rgba(0,0,0,.18)">📓 教室ノオト</a>
+<style>@media print{.note-link{display:none !important}}</style>
+<!-- note-link:end -->
+</body>
+</html>

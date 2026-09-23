@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>けいご へんかん どうじょう</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b665c;--line:#e3dccd;--r:14px;--ok:#2e8b57;--ng:#c0392b;--son:#c2410c;--ken:#2563a8;--tei:#2e8b57}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;line-height:1.7}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:bold;font-size:.95rem;padding:6px 12px;border:1px solid rgba(255,255,255,.5);border-radius:10px}
+header h1{font-size:1.25rem;margin:0}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+h2{font-size:1.1rem;color:var(--navy);margin:0 0 10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button,.btn{font-family:inherit;font-size:1.05rem;font-weight:bold;min-height:52px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.tabs button{flex:1;min-width:120px}
+.tabs button.on,.btn.main{background:var(--navy);color:#fff}
+.btn:disabled{opacity:.4}
+.bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-weight:bold;color:var(--sub)}
+.lead{text-align:center;color:var(--sub);margin-top:8px}
+.q{font-size:clamp(1.3rem,4vw,2.1rem);text-align:center;margin:10px 0 16px;line-height:1.8}
+.q u{text-decoration:none;border-bottom:4px solid var(--navy);color:var(--navy);font-weight:bold}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.choices button{font-family:inherit;font-size:clamp(1.1rem,3.2vw,1.5rem);min-height:70px;padding:6px 10px;border-radius:var(--r);border:3px solid var(--line);background:#fffdf8;cursor:pointer;color:var(--ink)}
+.choices button.ok{border-color:var(--ok);background:#e5f5ec}
+.choices button.ng{border-color:var(--ng);background:#fbe9e7}
+.msg{min-height:3em;text-align:center;font-size:1.05rem;margin-top:12px}
+.msg.ok{color:var(--ok)}.msg.ng{color:var(--ng)}
+.msg b{font-size:1.1rem}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.kinds{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:12px}
+.kind{border-radius:var(--r);padding:12px;border:3px solid}
+.kind.son{border-color:var(--son)}.kind.ken{border-color:var(--ken)}.kind.tei{border-color:var(--tei)}
+.kind b{font-size:1.15rem}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:1.02rem}
+th,td{border:1px solid var(--line);padding:8px}
+th{background:#f1ece0}
+td:nth-child(2){color:var(--son)}td:nth-child(3){color:var(--ken)}td:nth-child(4){color:var(--tei)}
+.result{font-size:1.8rem;text-align:center;font-weight:bold;color:var(--navy)}
+footer{text-align:center;font-size:.85rem;color:var(--sub);padding:20px 12px 30px}
+footer a{color:var(--navy)}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>けいご へんかん どうじょう</h1></header>
+<main>
+  <div class="card">
+    <div class="tabs" id="modes">
+      <button data-m="kind" class="on">① なかまわけ<br><small>尊敬・謙譲・丁寧</small></button>
+      <button data-m="conv">② へんかん<br><small>ふさわしい敬語は？</small></button>
+      <button data-m="judge">③ ○×チェック<br><small>まちがい敬語</small></button>
+      <button data-m="table">ひょう</button>
+    </div>
+  </div>
+  <div class="card" id="quiz">
+    <div class="bar"><span id="count"></span><span id="score"></span></div>
+    <div class="lead" id="lead"></div>
+    <div class="q" id="q"></div>
+    <div class="choices" id="choices"></div>
+    <div class="msg" id="msg"></div>
+    <div class="row"><button class="btn main" id="next" disabled>つぎへ ▶</button></div>
+  </div>
+  <div class="card" id="tableCard" hidden>
+    <h2>敬語の三つの種類（5年生）</h2>
+    <div class="kinds">
+      <div class="kind son"><b>尊敬語</b><br>相手や話題の人の<b>動作</b>を高めて、敬意を表す。<br><small>例：先生が<b>いらっしゃる</b>／<b>お</b>話し<b>になる</b>／読ま<b>れる</b></small></div>
+      <div class="kind ken"><b>謙譲語</b><br>自分や身内の<b>動作</b>をへりくだって、相手を高める。<br><small>例：わたしが<b>うかがう</b>／<b>お</b>持ち<b>する</b>／<b>ご</b>案内<b>する</b></small></div>
+      <div class="kind tei"><b>丁寧語</b><br>「です」「ます」「ございます」で、聞き手にていねいに言う。<br><small>例：これは本<b>です</b>／行き<b>ます</b></small></div>
+    </div>
+    <div class="tbl"><table id="tbl"></table></div>
+    <p style="font-size:.9rem;color:var(--sub)">ポイント：だれの動作かを考える。<b>相手の動作→尊敬語</b>、<b>自分の動作→謙譲語</b>。自分の家族のことを外の人に話すときは「お父さん」ではなく「父」と言う。</p>
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_07_';
+function load(k,d){try{const v=localStorage.getItem(KEY+k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v))}catch(e){}}
+const TABLE=[
+ ["行く","いらっしゃる・おいでになる","参る・うかがう","行きます"],
+ ["来る","いらっしゃる・お見えになる・お越しになる","参る","来ます"],
+ ["いる","いらっしゃる・おいでになる","おる","います"],
+ ["言う","おっしゃる","申す・申し上げる","言います"],
+ ["見る","ご覧になる","拝見する","見ます"],
+ ["食べる","召し上がる","いただく","食べます"],
+ ["する","なさる","いたす","します"],
+ ["聞く","お聞きになる","うかがう・承る","聞きます"],
+ ["知っている","ご存じだ","存じている・存じ上げている","知っています"],
+ ["会う","お会いになる","お目にかかる","会います"],
+ ["もらう","お受け取りになる","いただく・ちょうだいする","もらいます"],
+ ["あげる","―","差し上げる","あげます"],
+ ["くれる","くださる","―","くれます"],
+ ["思う","お思いになる","存じる","思います"]
+];
+// [文(<u>で下線), 答え son/ken/tei, 解説]
+const KIND=[
+ ["先生が教室に<u>いらっしゃる</u>。","son","先生（相手）の動作「いる・来る」を高めている。"],
+ ["わたしが先生のお宅に<u>うかがう</u>。","ken","自分の動作「行く」をへりくだっている。"],
+ ["これはわたしの本<u>です</u>。","tei","「です」で聞き手にていねいに言っている。"],
+ ["校長先生が<u>お話しになる</u>。","son","「お〜になる」は尊敬語の形。"],
+ ["わたしが荷物を<u>お持ちする</u>。","ken","「お〜する」は謙譲語の形。"],
+ ["お客様がケーキを<u>召し上がる</u>。","son","お客様の動作「食べる」を高めている。"],
+ ["母がよろしくと<u>申して</u>おりました。","ken","身内（母）の動作「言う」をへりくだっている。"],
+ ["明日は雨が<u>ふります</u>。","tei","「ます」で聞き手にていねいに言っている。"],
+ ["先生の作品を<u>拝見する</u>。","ken","自分の動作「見る」をへりくだっている。"],
+ ["市長が式に<u>出席される</u>。","son","「〜れる・られる」も尊敬語になる。"],
+ ["わたしが会場を<u>ご案内します</u>。","ken","「ご〜する」は謙譲語の形。"],
+ ["先生は、その話を<u>ご存じです</u>か。","son","先生の「知っている」を高めている。"],
+ ["お茶はこちらに<u>ございます</u>。","tei","「ございます」は「あります」のていねいな言い方。"],
+ ["明日、父が学校へ<u>参ります</u>。","ken","身内（父）の動作「行く」をへりくだっている。"],
+ ["社長が<u>おっしゃった</u>とおりです。","son","社長の動作「言う」を高めている。"]
+];
+// [場面, もとの動詞, 答え, ちがう選択肢, 解説]
+const CONV=[
+ ["先生が給食を","食べる","召し上がる",["いただく","お食べする","食べさせる"],"先生（相手）の動作なので尊敬語。"],
+ ["わたしが先生の絵を","見る","拝見する",["ご覧になる","お見えになる","見られる"],"自分の動作なので謙譲語。"],
+ ["お客様が会議室に","来る","いらっしゃる",["参る","うかがう","来させる"],"お客様の動作なので尊敬語。"],
+ ["わたしが明日そちらに","行く","うかがう",["いらっしゃる","おいでになる","行かれる"],"自分の動作なので謙譲語。"],
+ ["校長先生が朝会で","言う","おっしゃる",["申す","申し上げる","お言いする"],"校長先生の動作なので尊敬語。"],
+ ["わたしが校長先生に","言う","申し上げる",["おっしゃる","お言いになる","言われる"],"自分の動作なので謙譲語。"],
+ ["お客様からおみやげを","もらう","いただく",["くださる","お受け取りになる","もらわれる"],"自分の動作なので謙譲語。"],
+ ["先生がわたしに本を","くれる","くださる",["いただく","差し上げる","くれられる"],"先生の動作なので尊敬語。"],
+ ["わたしが先生にお茶を","あげる","差し上げる",["くださる","いただく","おあげになる"],"自分の動作なので謙譲語。"],
+ ["先生が会議室に","いる","いらっしゃる",["おる","おります","参る"],"先生の動作なので尊敬語。"],
+ ["わたしが先生のお話を","聞く","うかがう",["お聞きになる","聞かれる","おっしゃる"],"自分の動作なので謙譲語。"],
+ ["地域の方が教室の様子を","見る","ご覧になる",["拝見する","お見えする","見させる"],"地域の方の動作なので尊敬語。"],
+ ["わたしが明日、町長さんに","会う","お目にかかる",["お会いになる","会われる","お見えになる"],"自分の動作なので謙譲語。"],
+ ["先生が週末に何を","する","なさる",["いたす","させる","おする"],"先生の動作なので尊敬語。"]
+];
+// [文, 正しいか, 解説]
+const JUDGE=[
+ ["（先生に）先生が申されたとおりにやりました。",false,"「申す」は謙譲語。先生の動作には尊敬語「おっしゃった」を使う。"],
+ ["（お客様に）どうぞ、いただいてください。",false,"「いただく」は謙譲語。お客様には「召し上がってください」。"],
+ ["（受付で）わからないことは受付でうかがってください。",false,"相手の動作に謙譲語「うかがう」はおかしい。「おたずねください」「お聞きください」。"],
+ ["（電話で）母は今、出かけております。",true,"身内の「母」の動作を「おる」でへりくだっているので正しい。"],
+ ["（先生に）ぼくのお父さんが、よろしくと言っていました。",false,"外の人に身内のことを話すときは「父が、よろしくと申しておりました」。"],
+ ["（先生に）先生、この本をご覧になりましたか。",true,"先生の動作「見る」を尊敬語「ご覧になる」で高めている。"],
+ ["（お客様に）こちらでお待ちください。",true,"「お〜ください」は相手にていねいにたのむ言い方。"],
+ ["（先生に）先生が参られるのを待っています。",false,"「参る」は謙譲語。「いらっしゃるのを待っています」が正しい。"],
+ ["（校長先生に）明日、わたしが校長室にうかがいます。",true,"自分の動作「行く」を謙譲語「うかがう」で表している。"],
+ ["（お客様に）ご注文はお決まりになりましたか。",true,"相手の動作を「お〜になる」の尊敬語で表している。"],
+ ["（先生に）先生、わたしの作品を拝見してください。",false,"「拝見する」は自分の動作に使う謙譲語。先生には「ご覧ください」。"],
+ ["（来客に）校長はただいま席を外しております。",true,"外の人に対して、自分の学校の校長を身内として「校長は〜おります」と言うのは正しい。"],
+ ["（先生に）先生もこのお菓子をいただきますか。",false,"先生の動作には尊敬語。「召し上がりますか」が正しい。"],
+ ["（司会で）それでは、校長先生からお話しいただきます。",true,"「お〜いただく」で、話してもらう自分たちの側をへりくだっている。"]
+];
+const KL={son:"尊敬語",ken:"謙譲語",tei:"丁寧語"};
+let mode='kind',qs=[],qi=0,score=0,answered=false,miss=false;
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function start(){
+  qi=0;score=0;$('quiz').hidden=mode==='table';$('tableCard').hidden=mode!=='table';
+  if(mode==='table'){$('tbl').innerHTML='<tr><th>ふつうの言い方</th><th>尊敬語</th><th>謙譲語</th><th>丁寧語</th></tr>'+TABLE.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('');return}
+  qs=shuffle(mode==='kind'?KIND:mode==='conv'?CONV:JUDGE).slice(0,10);show();
+}
+function btn(label,ok,after){const b=document.createElement('button');b.textContent=label;b.onclick=()=>judge(b,ok,after);$('choices').appendChild(b)}
+function show(){
+  answered=false;miss=false;$('next').disabled=true;$('msg').textContent='';$('msg').className='msg';$('choices').innerHTML='';
+  $('count').textContent=(qi+1)+' / '+qs.length+'もん';$('score').textContent='せいかい '+score;
+  const it=qs[qi];
+  if(mode==='kind'){$('lead').textContent='線の言葉は どの敬語？';$('q').innerHTML=it[0];
+    ['son','ken','tei'].forEach(k=>btn(KL[k],k===it[1],it[2]));}
+  else if(mode==='conv'){$('lead').textContent='（　）に入る ふさわしい敬語は？';$('q').innerHTML=it[0]+'（<u>'+it[1]+'</u>）<br>→ '+it[0]+'（　？　）';
+    shuffle([it[2],...it[3]]).forEach(w=>btn(w,w===it[2],it[4]));}
+  else{$('lead').textContent='この敬語の使い方は 正しい？';$('q').innerHTML=it[0];
+    btn('⭕ 正しい',it[1],it[2]);btn('❌ まちがい',!it[1],it[2]);}
+}
+function judge(b,ok,expl){
+  if(answered)return;
+  if(ok){answered=true;b.classList.add('ok');if(!miss)score++;$('score').textContent='せいかい '+score;
+    $('msg').className='msg ok';$('msg').innerHTML='<b>せいかい！</b><br>'+expl;$('next').disabled=false;}
+  else{miss=true;b.classList.add('ng');$('msg').className='msg ng';$('msg').innerHTML='ざんねん。<br><small>ヒント：だれの動作かな？ 相手→尊敬語、自分→謙譲語</small>'}
+}
+$('next').onclick=()=>{qi++;if(qi<qs.length)show();else{
+  const rec=load('rec',{});if(!rec[mode]||score>rec[mode]){rec[mode]=score;save('rec',rec)}
+  $('lead').textContent='';$('q').innerHTML='<div class="result">'+qs.length+'もんちゅう '+score+'もん いっぱつ せいかい！</div><small>さいこう記録：'+rec[mode]+'もん（この端末に保存）</small>';
+  $('choices').innerHTML='';btnRestart();$('msg').textContent='';$('next').disabled=true}};
+function btnRestart(){const b=document.createElement('button');b.textContent='もういちど';b.onclick=start;$('choices').appendChild(b)}
+document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#modes button').forEach(x=>x.classList.remove('on'));b.classList.add('on');mode=b.dataset.m;start()});
+start();
+</script>
+</body>
+</html>

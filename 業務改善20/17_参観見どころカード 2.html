@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>参観見どころカード</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b;--theme:#1f3a5f;--soft:#eef3f9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.14)}
+header h1{font-size:1.2rem;margin:0}
+main{max-width:1300px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(300px,1fr) minmax(320px,1.1fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.del{color:var(--danger)}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%;width:100%}
+textarea{min-height:60px}
+label{display:block;font-size:.85rem;color:var(--sub);margin:6px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.note{font-size:.85rem;color:var(--sub)}
+.colors{display:flex;gap:6px}
+.colors button{width:44px;height:44px;padding:0;border-radius:50%;flex:none}
+.colors button.on{outline:3px solid var(--accent);outline-offset:2px}
+.drafts button{margin:3px}
+.sticky{position:sticky;top:12px}
+/* カード本体 */
+.paper{background:#fff;border:1px solid #ccc;aspect-ratio:210/297;width:100%;padding:5.5%;display:flex;flex-direction:column;gap:2.2%;font-size:clamp(10px,1.35vw,15px);overflow:hidden}
+.paper.half{aspect-ratio:297/210}
+.pv-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--theme);padding-bottom:1%}
+.pv-top .cls{font-weight:700;color:var(--theme)}
+.pv-title{font-size:2.1em;font-weight:800;color:var(--theme);line-height:1.2}
+.pv-unit{font-size:1.1em}
+.pv-aim{background:var(--soft);border-radius:10px;padding:2.5% 3.5%;font-size:1.15em}
+.pv-aim b{color:var(--theme)}
+.pv-h{font-weight:800;color:var(--theme);font-size:1.15em;margin-top:1%}
+.pts{display:flex;flex-direction:column;gap:1.8%;flex:1}
+.pt{display:flex;gap:3%;align-items:flex-start;border:2px dashed var(--theme);border-radius:12px;padding:2.2% 3%}
+.pt .n{flex:none;width:2em;height:2em;border-radius:50%;background:var(--theme);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.pt .when{font-size:.85em;color:#555}
+.pv-talk{border-left:6px solid var(--theme);padding:1.5% 3%;background:#fcfaf5}
+.pv-foot{font-size:.9em;color:#555;border-top:1px solid #ccc;padding-top:1%}
+.half .pts{flex-direction:row;flex-wrap:wrap}
+.half .pt{flex:1 1 30%}
+.half .pv-title{font-size:1.7em}
+#printArea{display:none}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{
+  @page{size:A4 portrait;margin:0}
+  body{background:#fff}
+  header,footer,main{display:none!important}
+  #printArea{display:block!important}
+  .sheet{width:210mm;height:297mm;padding:8mm;display:flex;flex-direction:column;gap:6mm;page-break-after:always}
+  .sheet .paper{border:none;font-size:12.5pt;aspect-ratio:auto;flex:1;padding:6mm}
+  .sheet.two .paper{font-size:9.5pt;border-bottom:1px dashed #999}
+  .sheet.two .paper.half{aspect-ratio:auto}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>参観見どころカード</h1></header>
+<main>
+<div>
+  <div class="card">
+    <h2>ひな形から始める</h2>
+    <div class="drafts" id="samples"></div>
+    <p class="note">例文を入れてから、自分の授業にあわせて書きかえてください。</p>
+  </div>
+  <div class="card">
+    <h2>授業の情報</h2>
+    <div class="row"><div><label>学年・組<input data-k="cls" placeholder="3年2組"></label></div><div><label>日時<input data-k="when" placeholder="10月17日（金）2校時"></label></div></div>
+    <div class="row"><div><label>教科<input data-k="subj" placeholder="算数"></label></div><div><label>単元名<input data-k="unit" placeholder="あまりのあるわり算"></label></div></div>
+    <label>今日のめあて<input data-k="aim"></label>
+  </div>
+  <div class="card">
+    <h2>ここを見てください（3つ）</h2>
+    <div id="pts"></div>
+  </div>
+  <div class="card">
+    <h2>おうちでの声かけ</h2>
+    <label>例<textarea data-k="talk"></textarea></label>
+    <label>ひとこと（担任より）<textarea data-k="msg"></textarea></label>
+    <label>担任名<input data-k="teacher" placeholder="担任　湊"></label>
+  </div>
+</div>
+<div class="sticky">
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <select id="layout" style="flex:1"><option value="one">A4 1枚に1面</option><option value="two">A4 1枚に2面（半分に切る）</option></select>
+      <div class="colors" id="colors" style="flex:none"></div>
+    </div>
+    <div class="row"><button class="pri" onclick="window.print()">印刷する</button><button id="clearBtn" class="del">白紙にもどす</button></div>
+    <p class="note">印刷設定で「余白：なし」「背景のグラフィック：オン」にすると見本どおりに出ます。</p>
+  </div>
+  <div id="preview"></div>
+</div>
+</main>
+<div id="printArea"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const K='mw_gyomu_17_';
+const load=(k,d)=>{try{const v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const COLORS=[['#1f3a5f','#eef3f9'],['#2e7d5b','#e8f3ed'],['#c2703d','#fbeee3'],['#8a4f9e','#f3eaf6'],['#b83b2e','#fbe8e5']];
+const SAMPLES={
+ '算数':{subj:'算数',unit:'あまりのあるわり算',aim:'あまりがあるときの答えの書き方を考えよう',pts:[
+   {w:'はじめの10分',t:'ブロックや図を使って、自分の考えをノートにかいています。まちがいをこわがらず手を動かす姿を見てください。'},
+   {w:'まんなか',t:'ペアで説明し合います。「だって」「たとえば」をつかって話せているかに注目です。'},
+   {w:'さいご',t:'今日わかったことを自分のことばでふり返ります。'}],
+   talk:'「今日の問題、おうちの人にも教えて」と聞いてみてください。説明することで理解が深まります。'},
+ '国語':{subj:'国語',unit:'ちいちゃんのかげおくり',aim:'場面のようすとちいちゃんの気持ちを読みとろう',pts:[
+   {w:'音読',t:'場面のようすが伝わるように、声の大きさや間を工夫して読みます。'},
+   {w:'話し合い',t:'教科書のどの言葉からそう思ったのか、根拠を示して発言しています。'},
+   {w:'書く',t:'ちいちゃんへの手紙を書きます。友だちの考えを聞いて変わったところにも注目してください。'}],
+   talk:'音読カードを聞いたとき「どこが上手になった？」と、よくなったところを1つ伝えてあげてください。'},
+ '道徳':{subj:'道徳',unit:'友だちのよさ',aim:'友だちと気持ちよくすごすために大切なことを考えよう',pts:[
+   {w:'お話を読んだあと',t:'登場人物の気持ちを、自分に重ねて考えています。'},
+   {w:'話し合い',t:'正解のない問いに、自分の考えを伝え、友だちの考えも聞いています。'},
+   {w:'ふり返り',t:'これまでの自分をふり返り、これからどうしたいかを書きます。'}],
+   talk:'「今日の道徳でどんなことを考えた？」と聞き、お子さんの考えをそのまま受けとめてあげてください。'},
+ '体育':{subj:'体育',unit:'マット運動',aim:'できるようになりたい技に、コツを意識して取り組もう',pts:[
+   {w:'準備運動',t:'けがをしないための感覚づくりの運動をしています。'},
+   {w:'グループ練習',t:'友だちの技を見て、よかったところやコツを伝え合っています。'},
+   {w:'発表',t:'練習の成果を見せ合います。できばえだけでなく挑戦する姿を見てください。'}],
+   talk:'できた・できないより「どんなコツを見つけた？」と聞いてあげてください。'},
+ '学級活動':{subj:'学級活動',unit:'クラスのお楽しみ会をしよう',aim:'みんなが楽しめる会にするために、話し合って決めよう',pts:[
+   {w:'司会グループ',t:'子どもたちが司会・記録を分担して、話し合いを進めます。'},
+   {w:'意見を出す',t:'賛成・反対だけでなく、「こうしたらどう？」と折り合いをつける意見に注目です。'},
+   {w:'決まったこと',t:'決まったことをみんなで確かめ、役割を分担します。'}],
+   talk:'決まったことを聞いて、「あなたはどんな役をするの？」と話題にしてみてください。'}
+};
+const blank={cls:'',when:'',subj:'',unit:'',aim:'',pts:[{w:'',t:''},{w:'',t:''},{w:'',t:''}],talk:'',msg:'本日はお忙しい中、ご参観ありがとうございます。子どもたちのがんばりを、どうぞあたたかく見守ってください。',teacher:'',color:0,layout:'one'};
+let d=Object.assign(JSON.parse(JSON.stringify(blank)),load('d',{}));
+
+function card(half){
+  const c=COLORS[d.color]||COLORS[0];
+  return `<div class="paper ${half?'half':''}" style="--theme:${c[0]};--soft:${c[1]}">
+   <div class="pv-top"><span class="cls">${esc(d.cls)}　${esc(d.subj)}</span><span>${esc(d.when)}</span></div>
+   <div><div class="pv-title">授業参観 見どころカード</div><div class="pv-unit">単元「${esc(d.unit)}」</div></div>
+   <div class="pv-aim"><b>今日のめあて</b>　${esc(d.aim)}</div>
+   <div class="pv-h">ここを見てください</div>
+   <div class="pts">${d.pts.map((p,i)=>`<div class="pt"><div class="n">${i+1}</div><div>${p.w?`<div class="when">${esc(p.w)}</div>`:''}${esc(p.t)}</div></div>`).join('')}</div>
+   ${d.talk?`<div class="pv-h">おうちでの声かけ</div><div class="pv-talk">${esc(d.talk).replace(/\n/g,'<br>')}</div>`:''}
+   <div class="pv-foot">${esc(d.msg).replace(/\n/g,'<br>')}<div style="text-align:right">${esc(d.teacher)}</div></div>
+  </div>`;
+}
+function render(){
+  save('d',d);
+  $('preview').innerHTML=card(false);
+  $('printArea').innerHTML=d.layout==='two'?`<div class="sheet two">${card(true)}${card(true)}</div>`:`<div class="sheet">${card(false)}</div>`;
+  $('colors').innerHTML=COLORS.map((c,i)=>`<button style="background:${c[0]}" class="${i===d.color?'on':''}" data-c="${i}" aria-label="色${i+1}"></button>`).join('');
+}
+function fill(){
+  document.querySelectorAll('[data-k]').forEach(el=>el.value=d[el.dataset.k]||'');
+  $('pts').innerHTML=d.pts.map((p,i)=>`<div style="border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px"><b>${i+1}</b><label>場面（例：はじめの10分）<input data-p="${i}" data-f="w" value="${esc(p.w)}"></label><label>見てほしい姿<textarea data-p="${i}" data-f="t">${esc(p.t)}</textarea></label></div>`).join('');
+  $('layout').value=d.layout;
+}
+document.addEventListener('input',e=>{const el=e.target;
+  if(el.dataset.k){d[el.dataset.k]=el.value;render()}
+  else if(el.dataset.p!=null){d.pts[el.dataset.p][el.dataset.f]=el.value;render()}});
+$('colors').addEventListener('click',e=>{if(e.target.dataset.c!=null){d.color=+e.target.dataset.c;render()}});
+$('layout').onchange=()=>{d.layout=$('layout').value;render()};
+$('samples').innerHTML=Object.keys(SAMPLES).map(k=>`<button data-s="${k}">${k}</button>`).join('');
+$('samples').addEventListener('click',e=>{const k=e.target.dataset.s;if(!k)return;
+  if((d.aim||d.pts.some(p=>p.t))&&!confirm(`「${k}」の例文で上書きしますか？（学年・日時・担任名は残ります）`))return;
+  const s=SAMPLES[k];d.subj=s.subj;d.unit=s.unit;d.aim=s.aim;d.pts=JSON.parse(JSON.stringify(s.pts));d.talk=s.talk;fill();render()});
+$('clearBtn').onclick=()=>{if(confirm('入力を白紙にもどしますか？')){d=JSON.parse(JSON.stringify(blank));fill();render()}};
+fill();render();
+</script>
+</body>
+</html>

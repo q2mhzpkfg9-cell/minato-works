@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>しょうすうの かずのせん</title>
+<style>
+:root{--bg:#f6f1e7;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6358;--line:#e3dccd;--acc:#e07a3f;--ok:#2e8b57;--ng:#c0392b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header a.back{color:var(--navy);text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 12px;border-radius:var(--r);background:#eef2f7}
+header h1{font-size:1.35rem;color:var(--navy)}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+button{font-family:inherit;font-size:1.05rem;min-height:48px;padding:8px 14px;border-radius:var(--r);border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;cursor:pointer}
+button.pri{background:var(--navy);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs button.on{background:var(--navy);color:#fff}
+.lbl{font-size:.9rem;color:var(--sub);font-weight:700;margin-right:4px}
+footer{text-align:center;color:var(--sub);font-size:.8rem;padding:24px 16px}
+footer a{color:var(--navy)}
+#q{font-size:clamp(1.3rem,3.5vw,2rem);font-weight:800;color:var(--navy);text-align:center;min-height:1.6em;margin-bottom:6px}
+#lineWrap{touch-action:manipulation;cursor:pointer}
+svg{width:100%;height:auto;display:block}
+.choices{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+@media(max-width:600px){.choices{grid-template-columns:repeat(2,1fr)}}
+.choices button{font-size:1.8rem;min-height:70px}
+.choices button.good{background:var(--ok);border-color:var(--ok);color:#fff}
+.choices button.bad{background:#f7dede;border-color:var(--ng);color:var(--ng)}
+#info{font-size:clamp(1.1rem,3vw,1.5rem);text-align:center;min-height:3.2em;font-weight:700}
+#info .big{font-size:2.2em;color:var(--acc);display:block;line-height:1.2}
+#fb{text-align:center;font-size:1.3rem;font-weight:800;min-height:1.8em}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.dots span{width:18px;height:18px;border-radius:50%;background:#e3dccd}
+.dots span.o{background:var(--ok)}.dots span.x{background:var(--ng)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>しょうすうの かずのせん</h1></header>
+<main>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px"><span class="lbl">めもり</span>
+      <span class="tabs row" id="lvTabs"><button data-l="1" class="on">0.1 まで（3年）</button><button data-l="2">0.01 まで（4年）</button><button data-l="3">0.001 まで（4年）</button></span></div>
+    <div class="row"><span class="lbl">あそびかた</span>
+      <span class="tabs row" id="modeTabs"><button data-m="ex" class="on">たんけん</button><button data-m="read">よみとり クイズ</button><button data-m="put">どこかな クイズ</button></span></div>
+  </div>
+  <div class="card">
+    <div id="q"></div>
+    <div id="lineWrap"><svg id="svg" viewBox="0 0 1000 230"></svg></div>
+    <div id="info"></div>
+    <div class="choices hide" id="choices"></div>
+    <div id="fb"></div>
+    <div class="dots hide" id="dots"></div>
+    <div class="row" style="justify-content:center;margin-top:10px"><button class="pri hide" id="nextBtn">つぎへ</button><button id="zoomBtn" class="hide">🔍 ここを 10ばいに</button></div>
+    <div id="best" style="text-align:center;color:var(--sub);font-size:.9rem;margin-top:6px"></div>
+  </div>
+  <div class="card" style="font-size:.95rem;color:var(--sub)">
+    <b style="color:var(--navy)">つかいかた</b>　「たんけん」は せんを タップすると その かずと「0.1が いくつ」が でるよ。「よみとり」は ↓の かずを えらぶ、「どこかな」は かずの ばしょを タップ。10もんで ひとまとまり。
+  </div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const KEY='mw_教科_12_best';
+let best={};try{best=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+const $=id=>document.getElementById(id);
+const S={lv:1,mode:'ex'};
+// line: p=decimal places, L=start in units(10^-p), n=number of ticks
+let Ln={p:1,L:0,n:30};
+let target=null,marker=null,qn=0,res=[],locked=false;
+const X0=50,X1=950,Y=120;
+function fmt(v,p){let s=(v/Math.pow(10,p)).toFixed(p);if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function setLine(){
+  if(S.lv===1)Ln={p:1,L:0,n:30};
+  else if(S.lv===2)Ln={p:2,L:rnd(0,39)*10,n:20};
+  else Ln={p:3,L:rnd(0,49)*10,n:20};
+}
+function xOf(v){return X0+(v-Ln.L)/Ln.n*(X1-X0);}
+function draw(extra){
+  let h=`<line x1="${X0-20}" y1="${Y}" x2="${X1+25}" y2="${Y}" stroke="#2b2b2b" stroke-width="4"/>`;
+  h+=`<polygon points="${X1+35},${Y} ${X1+18},${Y-9} ${X1+18},${Y+9}" fill="#2b2b2b"/>`;
+  for(let k=0;k<=Ln.n;k++){
+    const v=Ln.L+k,x=X0+k/Ln.n*(X1-X0);
+    const big=v%10===0,mid=v%5===0;
+    const len=big?34:mid?24:15;
+    h+=`<line x1="${x}" y1="${Y-len}" x2="${x}" y2="${Y+len}" stroke="${big?'#1f3a5f':'#555'}" stroke-width="${big?4:2}"/>`;
+    if(big)h+=`<text x="${x}" y="${Y+72}" text-anchor="middle" font-size="34" font-weight="800" fill="#1f3a5f">${fmt(v,Ln.p)}</text>`;
+  }
+  if(extra)h+=extra;
+  $('svg').innerHTML=h;
+}
+function arrow(v,color,label){
+  const x=xOf(v);
+  let h=`<polygon points="${x},${Y-40} ${x-14},${Y-70} ${x+14},${Y-70}" fill="${color}"/><rect x="${x-5}" y="${Y-100}" width="10" height="32" fill="${color}"/>`;
+  if(label)h+=`<text x="${x}" y="${Y-110}" text-anchor="middle" font-size="34" font-weight="800" fill="${color}">${label}</text>`;
+  return h;
+}
+function breakdown(v,p){
+  // v in units 10^-p
+  const names=['1','0.1','0.01','0.001'];
+  const parts=[];
+  const s=String(v).padStart(p+1,'0');
+  const intPart=parseInt(s.slice(0,s.length-p),10);
+  const decs=s.slice(s.length-p).split('').map(Number);
+  if(intPart)parts.push(`1が ${intPart}こ`);
+  decs.forEach((d,i)=>{if(d)parts.push(`${names[i+1]}が ${d}こ`);});
+  return {parts:parts.join('、')||'0',unit:`${names[p]}が ${v}こ`};
+}
+function explore(v){
+  draw(arrow(v,'#e07a3f'));
+  const b=breakdown(v,Ln.p);
+  $('info').innerHTML=`<span class="big">${fmt(v,Ln.p)}</span>${b.parts}　／　${b.unit}`;
+  marker=v;$('zoomBtn').classList.toggle('hide',Ln.p>=3);
+}
+function tapToValue(ev){
+  const r=$('svg').getBoundingClientRect();
+  const x=(ev.clientX-r.left)/r.width*1000;
+  let k=Math.round((x-X0)/(X1-X0)*Ln.n);
+  k=Math.max(0,Math.min(Ln.n,k));
+  return {v:Ln.L+k,x};
+}
+$('lineWrap').addEventListener('click',ev=>{
+  const t=tapToValue(ev);
+  if(S.mode==='ex')explore(t.v);
+  else if(S.mode==='put'&&!locked)judgePut(t.v);
+});
+$('zoomBtn').onclick=()=>{
+  if(marker===null||Ln.p>=3)return;
+  const p=Ln.p+1,nv=marker*10;
+  Ln={p,L:Math.max(0,nv-10),n:20};
+  S.lv=p;syncTabs();
+  draw();$('info').innerHTML='10ばいに ひろげたよ。1めもりは '+['','0.1','0.01','0.001'][p]+'。タップしてみよう。';$('zoomBtn').classList.add('hide');marker=null;
+};
+function syncTabs(){document.querySelectorAll('#lvTabs button').forEach(b=>b.classList.toggle('on',+b.dataset.l===S.lv));}
+function pickTarget(){
+  let k;do{k=rnd(1,Ln.n-1);}while((Ln.L+k)%10===0&&Math.random()<.85);
+  return Ln.L+k;
+}
+function newQ(){
+  locked=false;setLine();target=pickTarget();$('fb').textContent='';$('nextBtn').classList.add('hide');
+  if(S.mode==='read'){
+    $('q').textContent='↓の ところの かずは いくつ？';
+    draw(arrow(target,'#e07a3f','?'));
+    const opts=new Set([target]);
+    const cand=[target+1,target-1,target+10,target-10,target+2,target-2,target+5,target-5,target+11,target-11];
+    for(const c of cand.sort(()=>Math.random()-.5)){if(opts.size>=4)break;if(c>=0)opts.add(c);}
+    const arr=[...opts].sort(()=>Math.random()-.5);
+    $('choices').innerHTML=arr.map(v=>`<button data-v="${v}">${fmt(v,Ln.p)}</button>`).join('');
+    $('choices').querySelectorAll('button').forEach(b=>b.onclick=()=>judgeRead(+b.dataset.v,b));
+    $('info').innerHTML='';
+  }else{
+    $('q').innerHTML=`<span style="color:#e07a3f">${fmt(target,Ln.p)}</span> は どこかな？ せんを タップ！`;
+    draw();$('info').innerHTML='';
+  }
+}
+function judgeRead(v,btn){
+  if(locked)return;locked=true;
+  const ok=v===target;
+  btn.classList.add(ok?'good':'bad');
+  if(!ok)$('choices').querySelectorAll('button').forEach(b=>{if(+b.dataset.v===target)b.classList.add('good');});
+  afterJudge(ok);
+}
+function judgePut(v){
+  locked=true;const ok=v===target;
+  let ex=arrow(target,'#2e8b57',fmt(target,Ln.p));
+  if(!ok)ex+=`<circle cx="${xOf(v)}" cy="${Y}" r="12" fill="#c0392b"/><text x="${xOf(v)}" y="${Y+105}" text-anchor="middle" font-size="26" fill="#c0392b" font-weight="700">${fmt(v,Ln.p)}</text>`;
+  draw(ex);afterJudge(ok);
+}
+function afterJudge(ok){
+  res.push(ok);qn++;
+  const b=breakdown(target,Ln.p);
+  $('fb').innerHTML=(ok?'<span style="color:#2e8b57">⭕ せいかい！</span>':'<span style="color:#c0392b">❌ ざんねん</span>')+`　${fmt(target,Ln.p)} は ${b.unit}`;
+  renderDots();
+  if(qn>=10){
+    const sc=res.filter(x=>x).length,k=S.mode+S.lv;
+    if(!best[k]||sc>best[k]){best[k]=sc;try{localStorage.setItem(KEY,JSON.stringify(best));}catch(e){}}
+    $('fb').innerHTML+=`<br>🎉 10もん おわり！ ${sc}もん せいかい`;
+    $('nextBtn').textContent='もういちど';
+  }else $('nextBtn').textContent='つぎへ';
+  $('nextBtn').classList.remove('hide');showBest();
+}
+function renderDots(){$('dots').innerHTML=Array.from({length:10},(_,i)=>`<span class="${i<res.length?(res[i]?'o':'x'):''}"></span>`).join('');}
+function showBest(){const k=S.mode+S.lv;$('best').textContent=(S.mode!=='ex'&&best[k]!=null)?`このモードの さいこう：${best[k]} / 10`:'';}
+$('nextBtn').onclick=()=>{if(qn>=10){qn=0;res=[];renderDots();}newQ();};
+function setMode(){
+  const quiz=S.mode!=='ex';
+  $('choices').classList.toggle('hide',S.mode!=='read');$('dots').classList.toggle('hide',!quiz);
+  $('zoomBtn').classList.add('hide');$('nextBtn').classList.add('hide');$('fb').textContent='';
+  qn=0;res=[];renderDots();showBest();
+  if(quiz)newQ();else{setLine();draw();$('q').textContent='せんの すきな ところを タップしてみよう';$('info').innerHTML='';marker=null;}
+}
+function tabs(id,attr,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset[attr]);});}
+tabs('lvTabs','l',v=>{S.lv=+v;setMode();});
+tabs('modeTabs','m',v=>{S.mode=v;setMode();});
+setMode();
+</script>
+</body>
+</html>

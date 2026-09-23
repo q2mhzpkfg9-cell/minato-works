@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授業時数カウンター</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.14)}
+header h1{font-size:1.2rem;margin:0}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.del{color:var(--danger)}
+input,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.hidden{display:none}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--line);padding:4px;text-align:center;font-size:.92rem}
+th{background:#f3eee3;white-space:nowrap}
+.wk td{padding:2px}
+.wk select{width:100%;min-width:74px;min-height:42px;padding:4px;font-size:.9rem;text-align:center}
+.wk select.filled{background:#eef3f9;border-color:#b9c9dc;font-weight:600}
+.wk th.day{min-width:80px}
+.sumtab td.l{text-align:left;font-weight:600}
+.barwrap{position:relative;height:18px;background:#efe9dc;border-radius:9px;min-width:120px;overflow:hidden}
+.barfill{position:absolute;left:0;top:0;bottom:0;background:var(--navy);border-radius:9px}
+.pace{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--accent)}
+.neg{color:var(--danger);font-weight:700}.pos{color:var(--ok);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.chip{border:1px solid var(--line);border-radius:10px;padding:2px 10px;background:#fcfaf5;font-size:.88rem}
+.legend{display:inline-block;width:14px;height:4px;background:var(--accent);vertical-align:middle}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,.noprint,.tabs{display:none!important}body{background:#fff}main{padding:0;max-width:none}.card{box-shadow:none;padding:0;margin-bottom:10px}.wk select{border:none;appearance:none;-webkit-appearance:none;background:none}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>授業時数カウンター</h1></header>
+<main>
+<div class="tabs">
+  <button data-tab="week" class="on">週の時間割</button>
+  <button data-tab="sum">累計と標準時数</button>
+  <button data-tab="set">学年・計画時数</button>
+</div>
+
+<section id="tab-week">
+  <div class="card">
+    <div class="row noprint">
+      <button id="prevW">◀ 前の週</button>
+      <input type="date" id="wDate">
+      <button id="nextW">次の週 ▶</button>
+      <button id="thisW">今週</button>
+    </div>
+    <h2 id="wTitle" style="margin-top:10px"></h2>
+    <div class="scroll"><table class="wk" id="wkTable"></table></div>
+    <div class="chips" id="wkCount"></div>
+    <div class="row noprint">
+      <button id="copyPrev">前の週をコピー</button>
+      <button id="copyBase">基本時間割を入れる</button>
+      <button id="saveBase">この週を基本時間割にする</button>
+      <button class="del" id="clearW">この週を空にする</button>
+      <button onclick="window.print()">印刷</button>
+    </div>
+    <p class="note">「行事」「—」は時数に数えません。振替や短縮で変わったコマだけ直せばOK。</p>
+  </div>
+</section>
+
+<section id="tab-sum" class="hidden">
+  <div class="card">
+    <div class="row noprint"><label>基準日 <input type="date" id="asOf"></label><button onclick="window.print()">印刷</button></div>
+    <h2 id="sumTitle" style="margin-top:8px"></h2>
+    <p class="note">年間の授業週数 <span id="wkN"></span> 週のうち、基準日までの経過週 <b id="elapsed"></b>。<span class="legend"></span> は「このペースなら今ここまで」の目安線。</p>
+    <div class="scroll"><table class="sumtab" id="sumTable"></table></div>
+    <div id="alerts" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="tab-set" class="hidden noprint">
+  <div class="card">
+    <h2>学年と年度</h2>
+    <div class="row">
+      <select id="grade"></select>
+      <label>年度はじめ <input type="date" id="fyStart"></label>
+      <label>授業週数 <input type="number" id="weeks" style="width:80px"></label>
+      <label>1日のコマ数 <input type="number" id="periods" min="4" max="8" style="width:70px"></label>
+      <label><input type="checkbox" id="sat">土曜も表示</label>
+    </div>
+    <p class="note">標準時数は学校教育法施行規則 別表第一（年間35週、1年生は34週）の値です。</p>
+  </div>
+  <div class="card">
+    <h2>教科ごとの計画時数（学校の教育課程にあわせて変更できます）</h2>
+    <div class="scroll"><table id="planTable"></table></div>
+    <div class="row" style="margin-top:8px"><button class="pri" id="savePlan">保存</button><button id="resetPlan">標準時数にもどす</button><span id="planMsg" class="note"></span></div>
+  </div>
+</section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const K='mw_gyomu_13_';
+const load=(k,d)=>{try{const v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){alert('保存できませんでした')}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const monday=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);return x};
+
+// 学校教育法施行規則 別表第一
+const STD={
+ 1:{国語:306,算数:136,生活:102,音楽:68,図工:68,体育:102,道徳:34,特活:34},
+ 2:{国語:315,算数:175,生活:105,音楽:70,図工:70,体育:105,道徳:35,特活:35},
+ 3:{国語:245,社会:70,算数:175,理科:90,音楽:60,図工:60,体育:105,道徳:35,外国語活動:35,総合:70,特活:35},
+ 4:{国語:245,社会:90,算数:175,理科:105,音楽:60,図工:60,体育:105,道徳:35,外国語活動:35,総合:70,特活:35},
+ 5:{国語:175,社会:100,算数:175,理科:105,音楽:50,図工:50,家庭:60,体育:90,道徳:35,外国語:70,総合:70,特活:35},
+ 6:{国語:175,社会:105,算数:175,理科:105,音楽:50,図工:50,家庭:55,体育:90,道徳:35,外国語:70,総合:70,特活:35}
+};
+const DAYS=['月','火','水','木','金','土'];
+const now=new Date();
+const defFY=(now.getMonth()<3?now.getFullYear()-1:now.getFullYear())+'-04-06';
+let cfg=load('cfg',{grade:3,fyStart:defFY,weeks:35,periods:6,sat:false});
+let plan=load('plan',null)||{...STD[cfg.grade]};
+let weeks=load('weeks',{});
+let base=load('base',null);
+let cur=monday(now);
+
+const subjects=()=>Object.keys(plan);
+const nDays=()=>cfg.sat?6:5;
+function emptyWeek(){return Array.from({length:nDays()},()=>Array(cfg.periods).fill(''))}
+function getWeek(key){const w=weeks[key];if(!w)return emptyWeek();
+  // サイズ調整
+  const out=emptyWeek();for(let d=0;d<out.length;d++)for(let p=0;p<cfg.periods;p++)out[d][p]=(w[d]&&w[d][p])||'';return out}
+function countWeek(w){const c={};w.flat().forEach(s=>{if(s&&plan[s]!=null)c[s]=(c[s]||0)+1});return c}
+
+function renderWeek(){
+  const key=ymd(cur);$('wDate').value=key;
+  const end=new Date(cur);end.setDate(end.getDate()+nDays()-1);
+  $('wTitle').textContent=`${cur.getMonth()+1}月${cur.getDate()}日 〜 ${end.getMonth()+1}月${end.getDate()}日 の時間割（${cfg.grade}年）`;
+  const w=getWeek(key);
+  const opts=['','行事','—',...subjects()];
+  let h='<tr><th></th>'+Array.from({length:nDays()},(_,d)=>{const x=new Date(cur);x.setDate(x.getDate()+d);return `<th class="day">${DAYS[d]}<br><span class="note">${x.getMonth()+1}/${x.getDate()}</span></th>`}).join('')+'</tr>';
+  for(let p=0;p<cfg.periods;p++){
+    h+=`<tr><th>${p+1}</th>`;
+    for(let d=0;d<nDays();d++){const v=w[d][p];h+=`<td><select data-d="${d}" data-p="${p}" class="${v&&plan[v]!=null?'filled':''}">${opts.map(o=>`<option ${o===v?'selected':''} value="${esc(o)}">${o===''?'　':esc(o)}</option>`).join('')}</select></td>`}
+    h+='</tr>';
+  }
+  $('wkTable').innerHTML=h;
+  const c=countWeek(w);const tot=Object.values(c).reduce((a,b)=>a+b,0);
+  $('wkCount').innerHTML=`<span class="chip"><b>今週 ${tot}時間</b></span>`+subjects().map(s=>c[s]?`<span class="chip">${esc(s)} ${c[s]}</span>`:'').join('');
+}
+$('wkTable').addEventListener('change',e=>{
+  const s=e.target;const key=ymd(cur);const w=getWeek(key);w[+s.dataset.d][+s.dataset.p]=s.value;weeks[key]=w;save('weeks',weeks);renderWeek();
+});
+const shift=n=>{cur.setDate(cur.getDate()+7*n);cur=monday(cur);renderWeek()};
+$('prevW').onclick=()=>shift(-1);$('nextW').onclick=()=>shift(1);$('thisW').onclick=()=>{cur=monday(new Date());renderWeek()};
+$('wDate').onchange=()=>{if($('wDate').value){cur=monday(parse($('wDate').value));renderWeek()}};
+$('copyPrev').onclick=()=>{const p=new Date(cur);p.setDate(p.getDate()-7);const pw=weeks[ymd(p)];if(!pw){alert('前の週が空です');return}weeks[ymd(cur)]=JSON.parse(JSON.stringify(getWeek(ymd(p))));save('weeks',weeks);renderWeek()};
+$('saveBase').onclick=()=>{base=getWeek(ymd(cur));save('base',base);alert('基本時間割として保存しました')};
+$('copyBase').onclick=()=>{if(!base){alert('先に「この週を基本時間割にする」で登録してください');return}weeks[ymd(cur)]=JSON.parse(JSON.stringify(base));save('weeks',weeks);renderWeek()};
+$('clearW').onclick=()=>{if(confirm('この週の時間割を空にしますか？')){delete weeks[ymd(cur)];save('weeks',weeks);renderWeek()}};
+
+function renderSum(){
+  const asOf=$('asOf').value?parse($('asOf').value):new Date();
+  const start=parse(cfg.fyStart);
+  const fyEnd=new Date(start.getFullYear()+1,2,31);
+  const tot={};let weeksWithData=0;
+  Object.entries(weeks).forEach(([k,w])=>{
+    const m=parse(k);if(m<monday(start)||m>fyEnd)return;
+    let any=false;
+    w.forEach((day,d)=>{const dt=new Date(m);dt.setDate(dt.getDate()+d);if(dt>asOf||dt<start)return;day.forEach(s=>{if(s&&plan[s]!=null){tot[s]=(tot[s]||0)+1;any=true}})});
+    if(any)weeksWithData++;
+  });
+  // 経過週：夏休み等を除いた実入力週を使う（入力のある週）
+  const el=weeksWithData;const ratio=Math.min(1,el/cfg.weeks);
+  $('wkN').textContent=cfg.weeks;$('elapsed').textContent=el+'週（時間割を入力した週）';
+  $('sumTitle').textContent=`${cfg.grade}年 授業時数の累計（${asOf.getMonth()+1}/${asOf.getDate()}まで）`;
+  let h='<tr><th>教科</th><th>計画</th><th>実施</th><th>進み具合</th><th>残り</th><th>目安との差</th><th>残り週で<br>週あたり</th></tr>';
+  let sp=0,sa=0;const alerts=[];
+  subjects().forEach(s=>{
+    const p=+plan[s]||0,a=tot[s]||0;sp+=p;sa+=a;
+    const pace=p*ratio,diff=a-pace;const rest=Math.max(0,p-a);const remW=Math.max(1,cfg.weeks-el);
+    const perW=(rest/remW);
+    h+=`<tr><td class="l">${esc(s)}</td><td>${p}</td><td><b>${a}</b></td><td><div class="barwrap"><div class="barfill" style="width:${p?Math.min(100,a/p*100):0}%"></div><div class="pace" style="left:${ratio*100}%"></div></div><span class="note">${p?Math.round(a/p*100):0}%</span></td><td>${rest}</td><td class="${diff<-1?'neg':(diff>1?'pos':'')}">${diff>=0?'+':''}${diff.toFixed(1)}</td><td>${perW.toFixed(1)}</td></tr>`;
+    if(p&&diff<-Math.max(3,p*0.05))alerts.push(`${s}：目安より約${Math.round(-diff)}時間おくれ（残り週あたり${perW.toFixed(1)}時間必要）`);
+    if(p&&a>p)alerts.push(`${s}：計画時数を${a-p}時間こえています`);
+  });
+  const pace=sp*ratio;
+  h+=`<tr><th>合計</th><th>${sp}</th><th>${sa}</th><th><span class="note">${sp?Math.round(sa/sp*100):0}%</span></th><th>${Math.max(0,sp-sa)}</th><th class="${sa-pace<-1?'neg':''}">${sa-pace>=0?'+':''}${(sa-pace).toFixed(1)}</th><th></th></tr>`;
+  const extra=Object.keys(tot).filter(s=>plan[s]==null);
+  $('sumTable').innerHTML=h;
+  $('alerts').innerHTML=(alerts.length?'<div class="card" style="background:#fbe3df;box-shadow:none"><b>気をつけたい教科</b><br>'+alerts.map(esc).join('<br>')+'</div>':'<p class="note">大きなおくれ・こえすぎはありません。</p>');
+}
+$('asOf').onchange=renderSum;
+
+function renderSet(){
+  $('grade').innerHTML=[1,2,3,4,5,6].map(g=>`<option value="${g}" ${g==cfg.grade?'selected':''}>${g}年</option>`).join('');
+  $('fyStart').value=cfg.fyStart;$('weeks').value=cfg.weeks;$('periods').value=cfg.periods;$('sat').checked=cfg.sat;
+  $('planTable').innerHTML='<tr><th>教科</th><th>標準時数</th><th>計画時数</th></tr>'+subjects().map(s=>`<tr><td>${esc(s)}</td><td>${STD[cfg.grade][s]??'－'}</td><td><input type="number" data-s="${esc(s)}" value="${plan[s]}" style="width:90px"></td></tr>`).join('')
+   +`<tr><th>合計</th><th>${Object.values(STD[cfg.grade]).reduce((a,b)=>a+b,0)}</th><th>${Object.values(plan).reduce((a,b)=>a+(+b||0),0)}</th></tr>`;
+}
+function saveCfg(){cfg={grade:+$('grade').value,fyStart:$('fyStart').value||defFY,weeks:+$('weeks').value||35,periods:Math.min(8,Math.max(4,+$('periods').value||6)),sat:$('sat').checked};save('cfg',cfg)}
+$('grade').onchange=()=>{const g=+$('grade').value;if(g!==cfg.grade&&confirm(`${g}年の標準時数に切りかえますか？（計画時数も標準にもどります）`)){saveCfg();cfg.weeks=g===1?34:35;save('cfg',cfg);plan={...STD[g]};save('plan',plan);renderSet()}else{$('grade').value=cfg.grade}};
+['fyStart','weeks','periods','sat'].forEach(id=>$(id).addEventListener('change',()=>{saveCfg();renderSet()}));
+$('savePlan').onclick=()=>{document.querySelectorAll('#planTable input').forEach(i=>plan[i.dataset.s]=+i.value||0);save('plan',plan);renderSet();$('planMsg').textContent='保存しました';setTimeout(()=>$('planMsg').textContent='',2000)};
+$('resetPlan').onclick=()=>{if(confirm('標準時数にもどしますか？')){plan={...STD[cfg.grade]};save('plan',plan);renderSet()}};
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['week','sum','set'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  ({week:renderWeek,sum:renderSum,set:renderSet})[b.dataset.tab]();
+});
+$('asOf').value=ymd(new Date());
+renderWeek();
+</script>
+</body>
+</html>

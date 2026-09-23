@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏃 走順くみわけメーカー</title>
+<style>
+  :root{
+    --bg:#F7F5F0;
+    --card:#FFFFFF;
+    --accent:#E63946;
+    --accent-soft:#FDECEE;
+    --ink:#333333;
+    --ink-sub:#777777;
+    --line:#E8E4DC;
+    --ok:#2A9D8F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{font-size:16px;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  /* ===== header ===== */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(247,245,240,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:12px 16px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  header h1{font-size:1.15rem;letter-spacing:.02em;}
+  header a.back{
+    text-decoration:none;color:var(--ink-sub);font-size:.9rem;
+    padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  header a.back:active{background:var(--accent-soft);}
+  main{max-width:960px;margin:0 auto;padding:16px 14px 80px;}
+  /* ===== card ===== */
+  .card{
+    background:var(--card);
+    border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:18px 16px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:1rem;margin-bottom:10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .step{
+    background:var(--accent);color:#fff;border-radius:999px;
+    width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:.85rem;flex:none;
+  }
+  .hint{font-size:.8rem;color:var(--ink-sub);margin-bottom:8px;}
+  textarea#inputArea{
+    width:100%;min-height:170px;resize:vertical;
+    border:1.5px solid var(--line);border-radius:12px;
+    padding:12px;font-size:1rem;font-family:inherit;line-height:1.7;
+    background:#FCFBF8;
+  }
+  textarea#inputArea:focus{outline:none;border-color:var(--accent);}
+  /* ===== buttons ===== */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:none;cursor:pointer;font-family:inherit;
+    font-size:1rem;font-weight:600;
+    padding:12px 20px;border-radius:12px;
+    background:#fff;border:1.5px solid var(--line);color:var(--ink);
+    min-height:48px;
+    transition:transform .05s;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(230,57,70,.3);}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--ink-sub);font-weight:500;}
+  .btn.small{padding:8px 14px;min-height:40px;font-size:.9rem;}
+  .btn.big{width:100%;font-size:1.15rem;padding:16px;}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+  /* ===== settings ===== */
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:560px){.settings-grid{grid-template-columns:1fr;}}
+  .field label.fname{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--ink-sub);}
+  select,input[type="text"]{
+    width:100%;font-family:inherit;font-size:1rem;
+    padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;
+    min-height:48px;
+  }
+  select:focus,input[type="text"]:focus{outline:none;border-color:var(--accent);}
+  /* segmented */
+  .seg{display:flex;background:#F0EDE6;border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap;}
+  .seg button{
+    flex:1;border:none;background:transparent;font-family:inherit;
+    padding:10px 8px;border-radius:9px;font-size:.92rem;font-weight:600;
+    color:var(--ink-sub);cursor:pointer;min-height:44px;white-space:nowrap;
+  }
+  .seg button.on{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+  /* toggle */
+  .toggle{
+    display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
+    padding:6px 0;min-height:44px;
+  }
+  .toggle .tk{
+    width:52px;height:30px;border-radius:999px;background:#DDD8CE;position:relative;flex:none;
+    transition:background .15s;
+  }
+  .toggle .tk::after{
+    content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s;
+  }
+  .toggle input{display:none;}
+  .toggle input:checked + .tk{background:var(--accent);}
+  .toggle input:checked + .tk::after{left:25px;}
+  .toggle .tl{font-size:.95rem;font-weight:600;}
+  /* ===== messages ===== */
+  .msg{
+    border-radius:12px;padding:10px 14px;font-size:.9rem;margin-top:10px;display:none;
+  }
+  .msg.show{display:block;}
+  .msg.ok{background:#E7F5F2;color:#1F7A6F;}
+  .msg.err{background:var(--accent-soft);color:#B22633;}
+  /* ===== result groups ===== */
+  #resultSec{display:none;}
+  #resultSec.show{display:block;}
+  .groups-wrap{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;
+  }
+  .gcard{
+    background:var(--card);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:14px;border-top:5px solid var(--accent);
+  }
+  .gcard.girl{border-top-color:#457B9D;}
+  .gcard h3{
+    font-size:1.05rem;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .gcard h3 .gsub{font-size:.75rem;color:var(--ink-sub);font-weight:500;}
+  .lane{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 10px;border-radius:10px;margin-bottom:6px;
+    background:#FAF8F4;border:1.5px solid transparent;
+    cursor:pointer;user-select:none;min-height:50px;
+  }
+  .lane .laneno{
+    flex:none;width:34px;height:34px;border-radius:8px;
+    background:#fff;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.95rem;color:var(--ink-sub);
+  }
+  .lane .lname{flex:1;font-weight:600;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lane .ltime{flex:none;font-size:.82rem;color:var(--ink-sub);font-variant-numeric:tabular-nums;}
+  .lane .lg{flex:none;font-size:.72rem;padding:2px 7px;border-radius:999px;background:#EEF3F7;color:#457B9D;}
+  .lane .lg.boy{background:var(--accent-soft);color:var(--accent);}
+  .lane.empty{opacity:.45;cursor:default;}
+  .lane.selected{
+    border-color:var(--accent);background:var(--accent-soft);
+    box-shadow:0 0 0 2px rgba(230,57,70,.15);
+  }
+  .lane.dragover{border-color:var(--ok);background:#E7F5F2;}
+  .swapbar{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 20px;border-radius:999px;
+    font-size:.9rem;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:60;display:none;
+    max-width:92vw;text-align:center;
+  }
+  .swapbar.show{display:block;}
+  /* ===== read list ===== */
+  table.readlist{width:100%;border-collapse:collapse;font-size:.95rem;}
+  table.readlist th,table.readlist td{
+    border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;
+  }
+  table.readlist th{font-size:.8rem;color:var(--ink-sub);font-weight:600;}
+  table.readlist td.gcell{font-weight:700;color:var(--accent);white-space:nowrap;}
+  table.readlist tr.grouphead td{background:#FAF8F4;}
+  /* ===== patterns ===== */
+  .plist{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .pitem{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#FAF8F4;border-radius:12px;padding:10px 12px;
+  }
+  .pitem .pname{font-weight:700;flex:1;min-width:120px;}
+  .pitem .pmeta{font-size:.75rem;color:var(--ink-sub);width:100%;order:3;}
+  .saverow{display:flex;gap:10px;margin-top:6px;}
+  .saverow input{flex:1;}
+  /* ===== muster mode ===== */
+  #muster{
+    position:fixed;inset:0;z-index:100;background:var(--bg);
+    display:none;flex-direction:column;padding:16px;overflow:auto;
+  }
+  #muster.show{display:flex;}
+  .m-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .m-title{font-size:1rem;font-weight:700;color:var(--ink-sub);}
+  .m-now{
+    background:#fff;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:22px 18px;text-align:center;margin-bottom:14px;
+    border-top:8px solid var(--accent);
+  }
+  .m-now .m-gname{font-size:clamp(2.2rem,9vw,4rem);font-weight:800;color:var(--accent);line-height:1.2;}
+  .m-now .m-label{font-size:.9rem;color:var(--ink-sub);font-weight:700;letter-spacing:.2em;}
+  .m-runners{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px;
+  }
+  .m-runner{
+    background:#FAF8F4;border-radius:14px;padding:12px 16px;min-width:130px;
+  }
+  .m-runner .mr-lane{font-size:.78rem;color:var(--ink-sub);font-weight:700;}
+  .m-runner .mr-name{font-size:clamp(1.3rem,5vw,2rem);font-weight:800;}
+  .m-next{
+    background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:14px 16px;margin-bottom:14px;
+  }
+  .m-next .mn-label{font-size:.85rem;font-weight:700;color:var(--ok);margin-bottom:6px;}
+  .m-next .mn-names{font-size:1.1rem;font-weight:600;line-height:1.9;}
+  .m-nav{display:flex;gap:10px;margin-top:auto;padding-top:10px;}
+  .m-nav .btn{flex:1;font-size:1.1rem;}
+  /* ===== print ===== */
+  #printArea{display:none;}
+  @media print{
+    body{background:#fff;}
+    header,main,.swapbar,#muster{display:none !important;}
+    #printArea{display:block;padding:0;font-size:11pt;}
+    #printArea h1{font-size:15pt;margin-bottom:2mm;}
+    #printArea .pdate{font-size:9pt;color:#555;margin-bottom:4mm;}
+    #printArea table{width:100%;border-collapse:collapse;margin-bottom:5mm;page-break-inside:avoid;}
+    #printArea caption{text-align:left;font-weight:700;font-size:12pt;padding:1.5mm 0;}
+    #printArea th,#printArea td{border:1px solid #999;padding:1.8mm 2.5mm;text-align:left;}
+    #printArea th{background:#F0EDE6;font-size:9pt;}
+    #printArea td.num{width:14mm;text-align:center;font-weight:700;}
+    #printArea td.tm{width:22mm;color:#555;}
+  }
+  @media(max-width:560px){
+    header h1{font-size:1.02rem;}
+    .card{padding:15px 13px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏃 走順くみわけメーカー</h1>
+  <a class="back" href="index.html">← いちらん</a>
+</header>
+
+<main>
+  <!-- STEP1 入力 -->
+  <section class="card">
+    <h2><span class="step">1</span>名前とタイムを貼り付け</h2>
+    <p class="hint">1行に「名前 タイム(秒)」。区切りはスペース・タブ・カンマOK。「男/女」を付けると男女別に対応。タイム未入力の子は末尾の組に入ります。<br>例：やまだ 9.8 男　／　さとう,10.2,女　／　たなか（タイムなし）</p>
+    <textarea id="inputArea" placeholder="やまだ 9.8 男&#10;さとう 10.2 女&#10;すずき 9.5 男&#10;たなか"></textarea>
+    <div class="btnrow">
+      <button class="btn small" id="btnSample" type="button">サンプルを入れる</button>
+      <button class="btn small ghost" id="btnClear" type="button">クリア</button>
+    </div>
+    <div class="msg" id="parseMsg"></div>
+  </section>
+
+  <!-- STEP2 設定 -->
+  <section class="card">
+    <h2><span class="step">2</span>くみわけ設定</h2>
+    <div class="settings-grid">
+      <div class="field">
+        <label class="fname">1組あたりの人数（レーン数）</label>
+        <select id="laneCount">
+          <option value="3">3人</option>
+          <option value="4">4人</option>
+          <option value="5" selected>5人</option>
+          <option value="6">6人</option>
+          <option value="7">7人</option>
+          <option value="8">8人</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fname">組分け方式</label>
+        <div class="seg" id="segMethod">
+          <button type="button" data-v="even" class="on">実力均等（接戦）</button>
+          <button type="button" data-v="shuffle">シャッフル</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fname">レーンの決め方</label>
+        <div class="seg" id="segLane">
+          <button type="button" data-v="center" class="on">速い子が中央</button>
+          <button type="button" data-v="inside">速い順に内側から</button>
+          <button type="button" data-v="random">ランダム</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fname">男女</label>
+        <label class="toggle">
+          <input type="checkbox" id="chkGender">
+          <span class="tk"></span>
+          <span class="tl">男女別に分ける</span>
+        </label>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary big" id="btnGenerate" type="button">🏁 くみわけ実行！</button>
+    </div>
+    <div class="msg" id="genMsg"></div>
+  </section>
+
+  <!-- STEP3 結果 -->
+  <section id="resultSec">
+    <section class="card">
+      <h2><span class="step">3</span>結果（タップ2回で入れかえ・ドラッグでも移動OK）</h2>
+      <div class="btnrow" style="margin-top:0;margin-bottom:14px;">
+        <button class="btn primary" id="btnMuster" type="button">📣 招集モード</button>
+        <button class="btn" id="btnPrint" type="button">🖨 印刷する</button>
+        <button class="btn small ghost" id="btnReshuffle" type="button">↻ もう一度くみわけ</button>
+      </div>
+      <div class="groups-wrap" id="groupsWrap"></div>
+    </section>
+
+    <section class="card">
+      <h2>📋 出走順よみあげ一覧</h2>
+      <p class="hint">アナウンス・招集係用。上から順に読み上げできます。</p>
+      <div style="overflow-x:auto;">
+        <table class="readlist" id="readList"></table>
+      </div>
+    </section>
+  </section>
+
+  <!-- 保存 -->
+  <section class="card">
+    <h2>💾 パターン保存（学年別など）</h2>
+    <p class="hint">いまの名簿・設定・くみわけ結果に名前を付けて保存できます。入力内容は自動でも保存されています。</p>
+    <div class="saverow">
+      <input type="text" id="patName" placeholder="例：3年1組・低学年女子">
+      <button class="btn small" id="btnSavePat" type="button">保存</button>
+    </div>
+    <div class="msg" id="patMsg"></div>
+    <div class="plist" id="patList"></div>
+  </section>
+</main>
+
+<div class="swapbar" id="swapBar">入れかえたい相手をタップしてください（もう一度タップで解除）</div>
+
+<!-- 招集モード -->
+<div id="muster" role="dialog" aria-label="招集モード">
+  <div class="m-top">
+    <span class="m-title">📣 招集モード</span>
+    <button class="btn small" id="btnMusterClose" type="button">✕ とじる</button>
+  </div>
+  <div class="m-now">
+    <div class="m-label">いまはしる くみ</div>
+    <div class="m-gname" id="mGname">第1組</div>
+    <div class="m-runners" id="mRunners"></div>
+  </div>
+  <div class="m-next">
+    <div class="mn-label">▶ つぎのくみ（じゅんびしてね）</div>
+    <div class="mn-names" id="mNext"></div>
+  </div>
+  <div class="m-nav">
+    <button class="btn" id="btnMPrev" type="button">← まえの組</button>
+    <button class="btn primary" id="btnMNext" type="button">つぎの組 →</button>
+  </div>
+</div>
+
+<!-- 印刷用 -->
+<div id="printArea"></div>
+
+<script>
+(function(){
+  "use strict";
+  var LS_LAST = "bo10_sojun_last";
+  var LS_PATS = "bo10_sojun_patterns";
+
+  // ---------- state ----------
+  var state = {
+    method: "even",      // even | shuffle
+    laneMode: "center",  // center | inside | random
+    byGender: false,
+    laneCount: 5,
+    groups: [],          // [{label, girl:bool, runners:[runner|null,...]}]
+    musterIdx: 0
+  };
+  var selected = null;   // {g, l} 選択中レーン
+
+  // ---------- dom ----------
+  function $(id){ return document.getElementById(id); }
+  var inputArea = $("inputArea"), parseMsg = $("parseMsg"), genMsg = $("genMsg");
+  var groupsWrap = $("groupsWrap"), readList = $("readList"), resultSec = $("resultSec");
+  var swapBar = $("swapBar"), patMsg = $("patMsg");
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function showMsg(el, text, type){
+    el.textContent = text;
+    el.className = "msg show " + (type || "ok");
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.className = "msg"; }, 4000);
+  }
+
+  // ---------- parse ----------
+  function parseInput(text){
+    var runners = [], errors = 0;
+    text.split(/\r?\n/).forEach(function(line){
+      var t = line.trim();
+      if(!t) return;
+      var parts = t.split(/[\s,、，\t]+/).filter(function(p){ return p !== ""; });
+      if(parts.length === 0) return;
+      var name = null, time = null, gender = null;
+      parts.forEach(function(p){
+        var g = normGender(p);
+        var n = parseTime(p);
+        if(g && gender === null){ gender = g; }
+        else if(n !== null && time === null){ time = n; }
+        else if(name === null){ name = p; }
+        else { name += " " + p; }
+      });
+      if(name === null){ errors++; return; }
+      runners.push({ name: name, time: time, gender: gender });
+    });
+    return { runners: runners, errors: errors };
+  }
+  function normGender(p){
+    if(/^(男|男子|M|m|♂|おとこ)$/.test(p)) return "男";
+    if(/^(女|女子|F|f|W|w|♀|おんな)$/.test(p)) return "女";
+    return null;
+  }
+  function parseTime(p){
+    var m = p.replace(/秒$/, "").replace(/[０-９．]/g, function(c){
+      return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
+    });
+    if(/^\d+(\.\d+)?$/.test(m)){
+      var v = parseFloat(m);
+      if(v > 0 && v < 999) return v;
+    }
+    return null;
+  }
+
+  // ---------- grouping ----------
+  function shuffleArr(a){
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  // 中央レーンから速い順： N=5 → [3,4,2,5,1] のように中央→外へ
+  function laneOrderCenter(n){
+    var center = Math.ceil(n / 2), order = [center], d = 1;
+    while(order.length < n){
+      if(center + d <= n) order.push(center + d);
+      if(order.length < n && center - d >= 1) order.push(center - d);
+      d++;
+    }
+    return order;
+  }
+  function assignLanes(chunk, n){
+    // chunk: 速い順（タイムなしは末尾）
+    var lanes = new Array(n).fill(null);
+    var order;
+    if(state.laneMode === "center"){ order = laneOrderCenter(n); }
+    else if(state.laneMode === "inside"){ order = []; for(var i = 1; i <= n; i++) order.push(i); }
+    else { order = shuffleArr(laneOrderCenter(n).slice()); }
+    chunk.forEach(function(r, idx){ lanes[order[idx] - 1] = r; });
+    return lanes;
+  }
+  function buildGroups(runners, labelPrefix, girl){
+    var arr = runners.slice();
+    if(state.method === "shuffle"){
+      shuffleArr(arr);
+    } else {
+      arr.sort(function(a, b){
+        if(a.time === null && b.time === null) return 0;
+        if(a.time === null) return 1;
+        if(b.time === null) return -1;
+        return a.time - b.time;
+      });
+    }
+    var n = state.laneCount, groups = [];
+    // 端数が1人だけの組にならないよう最後の2組でならす
+    var total = arr.length;
+    var gcount = Math.ceil(total / n);
+    var sizes = [];
+    for(var i = 0; i < gcount; i++) sizes.push(n);
+    var rest = gcount * n - total;
+    // 後ろの組から1人ずつ減らす
+    var gi = gcount - 1;
+    while(rest > 0 && gcount > 0){
+      if(sizes[gi] > 2 || gcount === 1){ sizes[gi]--; rest--; }
+      gi--; if(gi < 0) gi = gcount - 1;
+    }
+    var pos = 0;
+    sizes.forEach(function(size, idx){
+      var chunk = arr.slice(pos, pos + size);
+      pos += size;
+      if(chunk.length === 0) return;
+      // 組内も速い順にしてからレーン割り当て（シャッフル時はその順のまま）
+      if(state.method !== "shuffle"){
+        chunk.sort(function(a, b){
+          if(a.time === null && b.time === null) return 0;
+          if(a.time === null) return 1;
+          if(b.time === null) return -1;
+          return a.time - b.time;
+        });
+      }
+      groups.push({
+        label: labelPrefix + "第" + (idx + 1) + "組",
+        girl: !!girl,
+        runners: assignLanes(chunk, n)
+      });
+    });
+    return groups;
+  }
+  function generate(){
+    var parsed = parseInput(inputArea.value);
+    if(parsed.runners.length === 0){
+      showMsg(genMsg, "名簿が読み取れませんでした。1行に1人ずつ入力してください。", "err");
+      return;
+    }
+    state.laneCount = parseInt($("laneCount").value, 10) || 5;
+    state.byGender = $("chkGender").checked;
+    var groups = [];
+    if(state.byGender){
+      var boys = parsed.runners.filter(function(r){ return r.gender !== "女"; });
+      var girls = parsed.runners.filter(function(r){ return r.gender === "女"; });
+      if(girls.length === 0){
+        showMsg(genMsg, "「女」の指定が1人もいないため、男女別にできません（全員まとめて分けました）。", "err");
+        groups = buildGroups(parsed.runners, "", false);
+      } else {
+        groups = buildGroups(boys, "男子", false).concat(buildGroups(girls, "女子", true));
+      }
+    } else {
+      groups = buildGroups(parsed.runners, "", false);
+    }
+    state.groups = groups;
+    state.musterIdx = 0;
+    selected = null;
+    renderAll();
+    var noTime = parsed.runners.filter(function(r){ return r.time === null; }).length;
+    var m = parsed.runners.length + "人を" + groups.length + "組に分けました";
+    if(noTime > 0) m += "（タイムなし" + noTime + "人は末尾の組）";
+    showMsg(genMsg, m + "。", "ok");
+    saveLast();
+    resultSec.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ---------- render ----------
+  function timeLabel(r){
+    return r.time === null ? "未計測" : r.time.toFixed(String(r.time).indexOf(".") >= 0 ? Math.min(2, String(r.time).split(".")[1].length) : 1) + "秒";
+  }
+  function renderAll(){
+    renderGroups();
+    renderReadList();
+    renderPrint();
+    resultSec.className = state.groups.length ? "show" : "";
+    if(!state.groups.length) resultSec.className = "";
+  }
+  function renderGroups(){
+    groupsWrap.innerHTML = "";
+    state.groups.forEach(function(g, gi){
+      var card = document.createElement("div");
+      card.className = "gcard" + (g.girl ? " girl" : "");
+      var cnt = g.runners.filter(Boolean).length;
+      var h = document.createElement("h3");
+      h.innerHTML = esc(g.label) + ' <span class="gsub">' + cnt + "人</span>";
+      card.appendChild(h);
+      g.runners.forEach(function(r, li){
+        var lane = document.createElement("div");
+        lane.className = "lane" + (r ? "" : " empty");
+        lane.dataset.g = gi; lane.dataset.l = li;
+        var inner = '<span class="laneno">' + (li + 1) + "</span>";
+        if(r){
+          inner += '<span class="lname">' + esc(r.name) + "</span>";
+          if(r.gender) inner += '<span class="lg' + (r.gender === "男" ? " boy" : "") + '">' + r.gender + "</span>";
+          inner += '<span class="ltime">' + esc(timeLabel(r)) + "</span>";
+          lane.draggable = true;
+        } else {
+          inner += '<span class="lname" style="color:#BBB;font-weight:500;">（空き）</span>';
+        }
+        lane.innerHTML = inner;
+        if(selected && selected.g === gi && selected.l === li) lane.classList.add("selected");
+        // tap swap
+        lane.addEventListener("click", function(){ onLaneTap(gi, li); });
+        // drag & drop
+        lane.addEventListener("dragstart", function(e){
+          if(!state.groups[gi].runners[li]){ e.preventDefault(); return; }
+          e.dataTransfer.setData("text/plain", gi + "," + li);
+          e.dataTransfer.effectAllowed = "move";
+        });
+        lane.addEventListener("dragover", function(e){ e.preventDefault(); lane.classList.add("dragover"); });
+        lane.addEventListener("dragleave", function(){ lane.classList.remove("dragover"); });
+        lane.addEventListener("drop", function(e){
+          e.preventDefault(); lane.classList.remove("dragover");
+          var d = e.dataTransfer.getData("text/plain").split(",");
+          var sg = parseInt(d[0], 10), sl = parseInt(d[1], 10);
+          if(isNaN(sg) || isNaN(sl)) return;
+          doSwap(sg, sl, gi, li);
+        });
+        card.appendChild(lane);
+      });
+      groupsWrap.appendChild(card);
+    });
+  }
+  function onLaneTap(g, l){
+    if(!selected){
+      if(!state.groups[g].runners[l]) return; // 空きは最初に選べない
+      selected = { g: g, l: l };
+      swapBar.classList.add("show");
+      renderGroups();
+      return;
+    }
+    if(selected.g === g && selected.l === l){
+      selected = null;
+      swapBar.classList.remove("show");
+      renderGroups();
+      return;
+    }
+    doSwap(selected.g, selected.l, g, l);
+  }
+  function doSwap(g1, l1, g2, l2){
+    if(g1 === g2 && l1 === l2) return;
+    var A = state.groups[g1].runners, B = state.groups[g2].runners;
+    var t = A[l1]; A[l1] = B[l2]; B[l2] = t;
+    selected = null;
+    swapBar.classList.remove("show");
+    renderAll();
+    saveLast();
+  }
+  function renderReadList(){
+    var html = "<thead><tr><th>組</th><th>レーン</th><th>なまえ</th><th>タイム</th></tr></thead><tbody>";
+    state.groups.forEach(function(g){
+      var first = true;
+      g.runners.forEach(function(r, li){
+        if(!r) return;
+        html += "<tr" + (first ? ' class="grouphead"' : "") + ">";
+        html += '<td class="gcell">' + (first ? esc(g.label) : "") + "</td>";
+        html += "<td>" + (li + 1) + "</td><td>" + esc(r.name) + (r.gender ? "（" + r.gender + "）" : "") + "</td><td>" + esc(timeLabel(r)) + "</td></tr>";
+        first = false;
+      });
+    });
+    html += "</tbody>";
+    readList.innerHTML = html;
+  }
+  function renderPrint(){
+    var d = new Date();
+    var html = "<h1>🏃 走順・組分け表</h1><p class='pdate'>" +
+      d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日作成　1組" +
+      state.laneCount + "レーン</p>";
+    state.groups.forEach(function(g){
+      html += "<table><caption>" + esc(g.label) + "</caption><tr><th style='width:14mm;'>レーン</th><th>なまえ</th><th style='width:22mm;'>タイム</th></tr>";
+      g.runners.forEach(function(r, li){
+        html += "<tr><td class='num'>" + (li + 1) + "</td><td>" +
+          (r ? esc(r.name) + (r.gender ? "（" + r.gender + "）" : "") : "") +
+          "</td><td class='tm'>" + (r ? esc(timeLabel(r)) : "") + "</td></tr>";
+      });
+      html += "</table>";
+    });
+    $("printArea").innerHTML = html;
+  }
+
+  // ---------- muster mode ----------
+  function renderMuster(){
+    if(!state.groups.length) return;
+    if(state.musterIdx < 0) state.musterIdx = 0;
+    if(state.musterIdx >= state.groups.length) state.musterIdx = state.groups.length - 1;
+    var g = state.groups[state.musterIdx];
+    $("mGname").textContent = g.label;
+    var wrap = $("mRunners");
+    wrap.innerHTML = "";
+    g.runners.forEach(function(r, li){
+      if(!r) return;
+      var div = document.createElement("div");
+      div.className = "m-runner";
+      div.innerHTML = '<div class="mr-lane">' + (li + 1) + "レーン</div><div class='mr-name'>" + esc(r.name) + "</div>";
+      wrap.appendChild(div);
+    });
+    var next = state.groups[state.musterIdx + 1];
+    if(next){
+      var names = next.runners.filter(Boolean).map(function(r){ return esc(r.name); }).join("　");
+      $("mNext").innerHTML = "<strong>" + esc(next.label) + "</strong>：" + names;
+    } else {
+      $("mNext").textContent = "これが最後の組です 🎉";
+    }
+    $("btnMPrev").disabled = state.musterIdx === 0;
+    $("btnMNext").disabled = state.musterIdx >= state.groups.length - 1;
+  }
+
+  // ---------- storage ----------
+  function currentData(){
+    return {
+      input: inputArea.value,
+      method: state.method,
+      laneMode: state.laneMode,
+      byGender: $("chkGender").checked,
+      laneCount: parseInt($("laneCount").value, 10) || 5,
+      groups: state.groups
+    };
+  }
+  function applyData(d){
+    if(!d) return;
+    inputArea.value = d.input || "";
+    state.method = d.method || "even";
+    state.laneMode = d.laneMode || "center";
+    state.laneCount = d.laneCount || 5;
+    state.groups = Array.isArray(d.groups) ? d.groups : [];
+    state.musterIdx = 0;
+    $("laneCount").value = String(state.laneCount);
+    $("chkGender").checked = !!d.byGender;
+    syncSeg($("segMethod"), state.method);
+    syncSeg($("segLane"), state.laneMode);
+    renderAll();
+  }
+  function saveLast(){
+    try{ localStorage.setItem(LS_LAST, JSON.stringify(currentData())); }catch(e){}
+  }
+  function loadPats(){
+    try{
+      var p = JSON.parse(localStorage.getItem(LS_PATS));
+      return (p && typeof p === "object") ? p : {};
+    }catch(e){ return {}; }
+  }
+  function savePats(p){
+    try{ localStorage.setItem(LS_PATS, JSON.stringify(p)); }catch(e){}
+  }
+  function renderPatList(){
+    var pats = loadPats();
+    var keys = Object.keys(pats).sort(function(a, b){
+      return (pats[b].savedAt || 0) - (pats[a].savedAt || 0);
+    });
+    var wrap = $("patList");
+    wrap.innerHTML = "";
+    if(keys.length === 0){
+      wrap.innerHTML = '<p class="hint">保存されたパターンはまだありません。</p>';
+      return;
+    }
+    keys.forEach(function(k){
+      var p = pats[k];
+      var item = document.createElement("div");
+      item.className = "pitem";
+      var d = new Date(p.savedAt || 0);
+      var cnt = 0;
+      (p.data.groups || []).forEach(function(g){ cnt += g.runners.filter(Boolean).length; });
+      item.innerHTML =
+        '<span class="pname">' + esc(k) + "</span>" +
+        '<button class="btn small" data-act="load" type="button">よびだす</button>' +
+        '<button class="btn small ghost" data-act="del" type="button">削除</button>' +
+        '<span class="pmeta">' + (d.getMonth() + 1) + "/" + d.getDate() + " 保存" +
+        (cnt ? "・" + cnt + "人・" + (p.data.groups || []).length + "組" : "") + "</span>";
+      item.querySelector('[data-act="load"]').addEventListener("click", function(){
+        applyData(p.data);
+        saveLast();
+        showMsg(patMsg, "「" + k + "」をよびだしました。", "ok");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      item.querySelector('[data-act="del"]').addEventListener("click", function(){
+        var btn = item.querySelector('[data-act="del"]');
+        if(btn.dataset.arm === "1"){
+          var q = loadPats(); delete q[k]; savePats(q); renderPatList();
+          showMsg(patMsg, "「" + k + "」を削除しました。", "ok");
+        } else {
+          btn.dataset.arm = "1";
+          btn.textContent = "ほんとうに削除？";
+          btn.style.color = "var(--accent)";
+          setTimeout(function(){
+            btn.dataset.arm = ""; btn.textContent = "削除"; btn.style.color = "";
+          }, 3000);
+        }
+      });
+      wrap.appendChild(item);
+    });
+  }
+
+  // ---------- segmented controls ----------
+  function syncSeg(seg, val){
+    Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+      b.className = b.dataset.v === val ? "on" : "";
+    });
+  }
+  function bindSeg(seg, key){
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button");
+      if(!b) return;
+      state[key] = b.dataset.v;
+      syncSeg(seg, b.dataset.v);
+    });
+  }
+
+  // ---------- events ----------
+  bindSeg($("segMethod"), "method");
+  bindSeg($("segLane"), "laneMode");
+  $("btnGenerate").addEventListener("click", generate);
+  $("btnReshuffle").addEventListener("click", generate);
+  $("btnPrint").addEventListener("click", function(){
+    renderPrint();
+    window.print();
+  });
+  $("btnClear").addEventListener("click", function(){
+    inputArea.value = "";
+    inputArea.focus();
+  });
+  $("btnSample").addEventListener("click", function(){
+    inputArea.value = [
+      "やまだ 9.8 男", "さとう 10.2 女", "すずき 9.5 男", "たなか 11.0 女",
+      "いとう 10.5 男", "わたなべ 9.9 女", "こばやし 10.8 男", "かとう 9.3 女",
+      "よしだ 10.1 男", "やまもと 11.4 女", "なかむら 9.6 男", "おがわ 10.4 女",
+      "ささき 11.8 男", "まつもと 10.0 女", "いのうえ 9.2 男", "きむら 10.9 女",
+      "はやし 10.6 男", "しみず 9.7 女", "もり 11.2 男", "あべ 10.3 女",
+      "ふじた 男", "おかだ 女"
+    ].join("\n");
+    showMsg(parseMsg, "サンプル22人を入れました（最後の2人はタイムなし）。", "ok");
+  });
+  inputArea.addEventListener("input", function(){
+    clearTimeout(inputArea._t);
+    inputArea._t = setTimeout(function(){
+      var p = parseInput(inputArea.value);
+      if(p.runners.length > 0){
+        var noTime = p.runners.filter(function(r){ return r.time === null; }).length;
+        var gCnt = p.runners.filter(function(r){ return r.gender; }).length;
+        var m = p.runners.length + "人を読み取り中";
+        if(noTime) m += "（タイムなし" + noTime + "人）";
+        if(gCnt) m += "・男女指定" + gCnt + "人";
+        showMsg(parseMsg, m, "ok");
+      }
+      saveLast();
+    }, 400);
+  });
+  $("laneCount").addEventListener("change", saveLast);
+  $("chkGender").addEventListener("change", saveLast);
+  $("btnSavePat").addEventListener("click", function(){
+    var name = $("patName").value.trim();
+    if(!name){
+      showMsg(patMsg, "パターン名を入力してください。", "err");
+      $("patName").focus();
+      return;
+    }
+    var pats = loadPats();
+    pats[name] = { savedAt: Date.now(), data: currentData() };
+    savePats(pats);
+    $("patName").value = "";
+    renderPatList();
+    showMsg(patMsg, "「" + name + "」として保存しました。", "ok");
+  });
+  // muster
+  $("btnMuster").addEventListener("click", function(){
+    if(!state.groups.length) return;
+    state.musterIdx = 0;
+    renderMuster();
+    $("muster").classList.add("show");
+  });
+  $("btnMusterClose").addEventListener("click", function(){
+    $("muster").classList.remove("show");
+  });
+  $("btnMPrev").addEventListener("click", function(){
+    state.musterIdx--; renderMuster();
+  });
+  $("btnMNext").addEventListener("click", function(){
+    state.musterIdx++; renderMuster();
+  });
+
+  // ---------- init ----------
+  try{
+    var last = JSON.parse(localStorage.getItem(LS_LAST));
+    if(last) applyData(last);
+  }catch(e){}
+  renderPatList();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

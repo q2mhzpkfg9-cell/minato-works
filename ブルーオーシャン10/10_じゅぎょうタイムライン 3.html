@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏱️ じゅぎょうタイムライン</title>
+<style>
+  :root{
+    --bg:#F7F5F0;
+    --card:#FFFFFF;
+    --accent:#F4A261;
+    --accent-dark:#E08C3F;
+    --ink:#333333;
+    --sub:#8A8578;
+    --line:#EDE9E0;
+    --danger:#E76F51;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    line-height:1.6;
+  }
+  /* ---------- header ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;max-width:960px;margin:0 auto;
+  }
+  header h1{font-size:1.25rem;letter-spacing:.02em;}
+  header a.back{
+    text-decoration:none;color:var(--sub);font-size:.9rem;font-weight:600;
+    padding:8px 14px;border-radius:999px;background:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  header a.back:active{transform:scale(.97);}
+  main{max-width:960px;margin:0 auto;padding:0 16px 80px;}
+
+  .card{
+    background:var(--card);border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    padding:18px;margin-bottom:18px;
+  }
+  .card h2{font-size:1rem;color:var(--sub);margin-bottom:12px;letter-spacing:.05em;}
+
+  /* ---------- form parts ---------- */
+  input[type="text"],input[type="number"],textarea{
+    font:inherit;border:2px solid var(--line);border-radius:10px;
+    padding:10px 12px;background:#FDFCFA;color:var(--ink);width:100%;
+  }
+  input:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  label.fld{display:block;font-size:.8rem;color:var(--sub);font-weight:600;margin-bottom:4px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .row>div{flex:1;min-width:130px;}
+
+  button{
+    font:inherit;font-weight:700;border:none;border-radius:12px;cursor:pointer;
+    padding:12px 18px;background:#EFEBE2;color:var(--ink);
+    transition:transform .06s ease, background .15s ease;
+    min-height:44px;
+  }
+  button:active{transform:scale(.97);}
+  button.primary{background:var(--accent);color:#fff;}
+  button.primary:hover{background:var(--accent-dark);}
+  button.ghost{background:transparent;box-shadow:inset 0 0 0 2px var(--line);}
+  button.danger{background:#FBE9E3;color:var(--danger);}
+  button.small{padding:8px 12px;min-height:38px;font-size:.85rem;border-radius:10px;}
+  button.icon{padding:8px 10px;min-height:38px;font-size:.9rem;line-height:1;}
+  button:disabled{opacity:.4;cursor:default;transform:none;}
+
+  /* ---------- color picker ---------- */
+  .colors{display:flex;gap:10px;flex-wrap:wrap;}
+  .cbtn{
+    width:40px;height:40px;border-radius:50%;border:3px solid transparent;
+    cursor:pointer;padding:0;min-height:40px;
+  }
+  .cbtn.sel{border-color:var(--ink);box-shadow:0 0 0 3px #fff inset;}
+
+  /* ---------- timeline bar ---------- */
+  .tlwrap{margin:8px 0 6px;}
+  .tlbar{
+    display:flex;height:44px;border-radius:12px;overflow:hidden;
+    background:repeating-linear-gradient(45deg,#F1EDE4,#F1EDE4 8px,#E9E4D8 8px,#E9E4D8 16px);
+  }
+  .tlseg{
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:.75rem;font-weight:700;overflow:hidden;white-space:nowrap;
+    text-shadow:0 1px 2px rgba(0,0,0,.25);min-width:0;
+  }
+  .tlover{
+    background:repeating-linear-gradient(45deg,var(--danger),var(--danger) 8px,#D45B3E 8px,#D45B3E 16px)!important;
+  }
+  .tlinfo{font-size:.9rem;font-weight:700;margin-top:8px;}
+  .tlinfo.ok{color:#2A9D8F;}
+  .tlinfo.warn{color:var(--danger);}
+  .tlinfo.rest{color:var(--sub);}
+
+  /* ---------- block list ---------- */
+  ul.blocks{list-style:none;}
+  ul.blocks li{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 6px;border-bottom:1px solid var(--line);
+  }
+  ul.blocks li:last-child{border-bottom:none;}
+  .bdot{width:16px;height:16px;border-radius:50%;flex:none;}
+  .binfo{flex:1;min-width:0;}
+  .blabel{font-weight:700;font-size:1rem;}
+  .bmin{color:var(--sub);font-size:.85rem;font-weight:700;margin-left:6px;}
+  .bmemo{color:var(--sub);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bbtns{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
+  li.editing{background:#FFF7EE;border-radius:12px;}
+  .empty{color:var(--sub);text-align:center;padding:18px 0;font-size:.9rem;}
+
+  /* ---------- saved plans ---------- */
+  ul.plans{list-style:none;}
+  ul.plans li{
+    display:flex;align-items:center;gap:10px;padding:10px 6px;
+    border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  ul.plans li:last-child{border-bottom:none;}
+  .pname{font-weight:700;flex:1;min-width:120px;}
+  .pmeta{color:var(--sub);font-size:.8rem;width:100%;order:3;}
+  @media(min-width:560px){.pmeta{width:auto;order:0;}}
+
+  .tplbtns{display:flex;gap:10px;flex-wrap:wrap;}
+  .actionbar{display:flex;gap:12px;flex-wrap:wrap;}
+  .actionbar .grow{flex:1;min-width:160px;}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#333;color:#fff;padding:12px 22px;border-radius:999px;
+    font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;
+    transition:opacity .25s, transform .25s;z-index:300;max-width:90vw;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ================= RUN MODE ================= */
+  #runview{
+    position:fixed;inset:0;background:#191A21;color:#fff;z-index:100;
+    display:none;flex-direction:column;padding:2vmin 3vmin;
+    user-select:none;
+  }
+  #runview.on{display:flex;}
+  .run-top{display:flex;align-items:center;gap:10px;flex:none;}
+  .run-plan{font-size:clamp(.9rem,2.5vmin,1.4rem);font-weight:700;color:#B8B5AC;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .run-top button{
+    background:rgba(255,255,255,.12);color:#fff;font-size:clamp(.85rem,2.2vmin,1.1rem);
+    padding:10px 16px;border-radius:999px;
+  }
+  .run-top button.off{opacity:.45;}
+  .run-center{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;min-height:0;gap:1vmin;
+  }
+  #runBlockName{
+    font-size:clamp(2.2rem,9vmin,7rem);font-weight:900;letter-spacing:.03em;
+    line-height:1.15;max-width:95vw;overflow-wrap:anywhere;
+  }
+  #runTimer{
+    font-size:clamp(5rem,26vmin,22rem);font-weight:900;line-height:1;
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+  #runTimer.urgent{color:#FFB4A0;}
+  #runMemo{font-size:clamp(1rem,3vmin,1.8rem);color:#C9C6BD;max-width:90vw;overflow-wrap:anywhere;}
+  #runNext{
+    font-size:clamp(1rem,3.2vmin,2rem);font-weight:700;color:#9C9990;
+  }
+  #runNext b{color:#E8E5DC;}
+  .run-ctrl{
+    display:flex;gap:2vmin;justify-content:center;flex:none;margin:1.5vmin 0;
+    flex-wrap:wrap;
+  }
+  .run-ctrl button{
+    background:rgba(255,255,255,.14);color:#fff;
+    font-size:clamp(1rem,3vmin,1.6rem);font-weight:800;
+    padding:clamp(10px,2vmin,18px) clamp(18px,4vmin,40px);border-radius:16px;
+    min-height:52px;
+  }
+  .run-ctrl button.primary{background:var(--accent);color:#1E1508;}
+  .run-bottom{flex:none;}
+  #runBarWrap{position:relative;height:clamp(30px,6vmin,54px);border-radius:12px;overflow:hidden;background:#2A2B33;}
+  #runBar{display:flex;height:100%;}
+  #runBar .tlseg{font-size:clamp(.6rem,2vmin,1rem);}
+  #runBar .tlseg.done{filter:brightness(.55) saturate(.7);}
+  #runMarker{
+    position:absolute;top:-2px;bottom:-2px;width:4px;background:#fff;
+    box-shadow:0 0 8px rgba(255,255,255,.9);border-radius:2px;left:0;
+    transition:left .3s linear;
+  }
+  #runDone{
+    position:absolute;inset:0;background:#191A21;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:4vmin;z-index:5;
+  }
+  #runDone.on{display:flex;}
+  #runDone .big{font-size:clamp(2.4rem,10vmin,8rem);font-weight:900;color:var(--accent);}
+  #runDone button{
+    background:rgba(255,255,255,.14);color:#fff;font-size:clamp(1rem,3vmin,1.5rem);
+    padding:14px 34px;border-radius:16px;font-weight:800;
+  }
+  .pausedTag{
+    display:none;font-size:clamp(1rem,3vmin,1.6rem);font-weight:800;color:var(--accent);
+    letter-spacing:.2em;
+  }
+  #runview.paused .pausedTag{display:block;}
+  #runview.paused #runTimer{opacity:.5;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⏱️ じゅぎょうタイムライン</h1>
+  <a class="back" href="index.html">← いちらん</a>
+</header>
+
+<main>
+  <!-- プラン設定 -->
+  <section class="card">
+    <h2>プラン</h2>
+    <div class="row">
+      <div style="flex:2;">
+        <label class="fld" for="planName">プラン名</label>
+        <input type="text" id="planName" placeholder="例：3時間目 算数" maxlength="30">
+      </div>
+      <div>
+        <label class="fld" for="planTotal">授業時間（分）</label>
+        <input type="number" id="planTotal" min="5" max="180" step="1" value="45">
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <label class="fld">テンプレートから作る</label>
+      <div class="tplbtns">
+        <button class="small" data-tpl="0">📖 一斉授業型</button>
+        <button class="small" data-tpl="1">💬 話し合い型</button>
+        <button class="small" data-tpl="2">✏️ テスト型</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- タイムラインバー -->
+  <section class="card">
+    <h2>タイムライン</h2>
+    <div class="tlwrap">
+      <div class="tlbar" id="editBar"></div>
+      <div class="tlinfo" id="editInfo"></div>
+    </div>
+  </section>
+
+  <!-- ブロック一覧 -->
+  <section class="card">
+    <h2>活動ブロック</h2>
+    <ul class="blocks" id="blockList"></ul>
+
+    <!-- 追加・編集フォーム -->
+    <div id="blockForm" style="margin-top:14px;padding-top:14px;border-top:2px dashed var(--line);">
+      <div class="row">
+        <div style="flex:2;">
+          <label class="fld" for="bfLabel">ラベル</label>
+          <input type="text" id="bfLabel" placeholder="例：導入・めあて確認" maxlength="24">
+        </div>
+        <div>
+          <label class="fld" for="bfMin">分数</label>
+          <input type="number" id="bfMin" min="1" max="120" step="1" value="5">
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="fld">色</label>
+        <div class="colors" id="bfColors"></div>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="fld" for="bfMemo">メモ（任意）</label>
+        <input type="text" id="bfMemo" placeholder="例：前時のふり返りから" maxlength="60">
+      </div>
+      <div class="actionbar" style="margin-top:12px;">
+        <button class="primary grow" id="bfAdd">＋ ブロックを追加</button>
+        <button class="ghost" id="bfCancel" style="display:none;">キャンセル</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 実行・保存 -->
+  <section class="card">
+    <div class="actionbar">
+      <button class="primary grow" id="startBtn" style="font-size:1.1rem;">▶ 進行モードをはじめる</button>
+      <button class="grow" id="saveBtn">💾 このプランを保存</button>
+    </div>
+  </section>
+
+  <!-- 保存済みプラン -->
+  <section class="card">
+    <h2>保存したプラン</h2>
+    <ul class="plans" id="planList"></ul>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<!-- ================= 進行モード ================= -->
+<div id="runview">
+  <div class="run-top">
+    <div class="run-plan" id="runPlanName"></div>
+    <button id="soundBtn">🔔 チャイム ON</button>
+    <button id="exitBtn">✕ 終了</button>
+  </div>
+  <div class="run-center">
+    <div id="runBlockName"></div>
+    <div id="runTimer">00:00</div>
+    <div class="pausedTag">⏸ いちじていし中</div>
+    <div id="runMemo"></div>
+    <div id="runNext"></div>
+  </div>
+  <div class="run-ctrl">
+    <button id="pauseBtn" class="primary">⏸ 一時停止</button>
+    <button id="extBtn">＋30秒 延長</button>
+    <button id="skipBtn">⏭ 次へスキップ</button>
+  </div>
+  <div class="run-bottom">
+    <div id="runBarWrap">
+      <div id="runBar"></div>
+      <div id="runMarker"></div>
+    </div>
+  </div>
+  <div id="runDone">
+    <div class="big">🎉 おつかれさまでした</div>
+    <button id="doneExitBtn">プラン画面にもどる</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+  /* ========== 定数 ========== */
+  var COLORS = ["#F4A261","#E76F51","#2A9D8F","#457B9D","#8AB17D","#9B72CF"];
+  var KEY_PLANS = "bo10_timeline_plans";
+  var KEY_DRAFT = "bo10_timeline_draft";
+  var KEY_SOUND = "bo10_timeline_sound";
+  var TEMPLATES = [
+    {name:"一斉授業型", total:45, blocks:[
+      {label:"導入・めあて確認", min:5,  color:COLORS[0], memo:""},
+      {label:"説明",             min:15, color:COLORS[3], memo:""},
+      {label:"練習・演習",       min:20, color:COLORS[2], memo:""},
+      {label:"まとめ・ふり返り", min:5,  color:COLORS[4], memo:""}
+    ]},
+    {name:"話し合い型", total:45, blocks:[
+      {label:"導入・めあて確認", min:5,  color:COLORS[0], memo:""},
+      {label:"課題の提示",       min:5,  color:COLORS[3], memo:""},
+      {label:"ひとりで考える",   min:5,  color:COLORS[4], memo:""},
+      {label:"グループで話し合い",min:15, color:COLORS[2], memo:""},
+      {label:"全体で共有",       min:10, color:COLORS[5], memo:""},
+      {label:"まとめ・ふり返り", min:5,  color:COLORS[1], memo:""}
+    ]},
+    {name:"テスト型", total:45, blocks:[
+      {label:"説明・準備",       min:5,  color:COLORS[0], memo:"机の上を片づける"},
+      {label:"テスト",           min:35, color:COLORS[3], memo:""},
+      {label:"見直し・回収",     min:5,  color:COLORS[2], memo:""}
+    ]}
+  ];
+
+  /* ========== 状態 ========== */
+  var plan = { id:null, name:"", total:45, blocks:[] };
+  var editIndex = -1;          // 編集中ブロックのindex（-1=新規追加）
+  var selColor = COLORS[0];
+  var confirmTimers = {};      // 二段階削除用
+
+  /* ========== ユーティリティ ========== */
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._tm);
+    toast._tm = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+  function loadPlans(){
+    try{
+      var raw = localStorage.getItem(KEY_PLANS);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function savePlans(arr){
+    try{ localStorage.setItem(KEY_PLANS, JSON.stringify(arr)); }catch(e){}
+  }
+  function saveDraft(){
+    try{ localStorage.setItem(KEY_DRAFT, JSON.stringify(plan)); }catch(e){}
+  }
+  function uid(){ return "p" + Date.now() + Math.floor(Math.random()*1000); }
+  function sumMin(){
+    var s = 0;
+    for(var i=0;i<plan.blocks.length;i++) s += plan.blocks[i].min;
+    return s;
+  }
+  function fmt(sec){
+    sec = Math.max(0, Math.ceil(sec));
+    var m = Math.floor(sec/60), s = sec%60;
+    return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+  }
+
+  /* ========== 編集画面：描画 ========== */
+  function renderEditBar(){
+    var bar = $("editBar");
+    bar.innerHTML = "";
+    var total = plan.total || 45;
+    var sum = sumMin();
+    var base = Math.max(total, sum);
+    for(var i=0;i<plan.blocks.length;i++){
+      var b = plan.blocks[i];
+      var seg = document.createElement("div");
+      seg.className = "tlseg";
+      seg.style.width = (b.min/base*100) + "%";
+      seg.style.background = b.color;
+      seg.textContent = b.min + "分";
+      seg.title = b.label + "（" + b.min + "分）";
+      bar.appendChild(seg);
+    }
+    var info = $("editInfo");
+    if(plan.blocks.length === 0){
+      info.className = "tlinfo rest";
+      info.textContent = "ブロックを追加すると、ここに帯グラフが出ます";
+    }else if(sum === total){
+      info.className = "tlinfo ok";
+      info.textContent = "✅ ぴったり " + total + "分です";
+    }else if(sum < total){
+      info.className = "tlinfo rest";
+      info.textContent = "合計 " + sum + "分 ／ あと " + (total-sum) + "分 あまっています";
+    }else{
+      info.className = "tlinfo warn";
+      info.textContent = "⚠ 合計 " + sum + "分 ／ " + (sum-total) + "分 オーバーしています";
+    }
+  }
+
+  function renderBlocks(){
+    var ul = $("blockList");
+    ul.innerHTML = "";
+    if(plan.blocks.length === 0){
+      var li = document.createElement("li");
+      li.innerHTML = '<div class="empty" style="width:100%;">まだブロックがありません。下のフォームから追加してください。</div>';
+      ul.appendChild(li);
+    }
+    plan.blocks.forEach(function(b, i){
+      var li = document.createElement("li");
+      if(i === editIndex) li.className = "editing";
+      li.innerHTML =
+        '<span class="bdot" style="background:'+esc(b.color)+'"></span>' +
+        '<div class="binfo">' +
+          '<span class="blabel">'+esc(b.label)+'</span>' +
+          '<span class="bmin">'+b.min+'分</span>' +
+          (b.memo ? '<div class="bmemo">📝 '+esc(b.memo)+'</div>' : '') +
+        '</div>' +
+        '<div class="bbtns">' +
+          '<button class="icon" data-act="up" data-i="'+i+'" '+(i===0?"disabled":"")+' aria-label="上へ">▲</button>' +
+          '<button class="icon" data-act="down" data-i="'+i+'" '+(i===plan.blocks.length-1?"disabled":"")+' aria-label="下へ">▼</button>' +
+          '<button class="small" data-act="edit" data-i="'+i+'">編集</button>' +
+          '<button class="small danger" data-act="del" data-i="'+i+'" id="delbtn'+i+'">削除</button>' +
+        '</div>';
+      ul.appendChild(li);
+    });
+    renderEditBar();
+    saveDraft();
+  }
+
+  function renderPlanList(){
+    var ul = $("planList");
+    var plans = loadPlans();
+    ul.innerHTML = "";
+    if(plans.length === 0){
+      ul.innerHTML = '<li><div class="empty" style="width:100%;">保存したプランはまだありません</div></li>';
+      return;
+    }
+    plans.forEach(function(p, i){
+      var mins = 0;
+      (p.blocks||[]).forEach(function(b){ mins += b.min; });
+      var li = document.createElement("li");
+      li.innerHTML =
+        '<span class="pname">'+esc(p.name || "（名前なし）")+'</span>' +
+        '<span class="pmeta">'+ (p.blocks?p.blocks.length:0) +'ブロック／合計'+mins+'分</span>' +
+        '<div class="bbtns">' +
+          '<button class="small primary" data-pact="load" data-i="'+i+'">ひらく</button>' +
+          '<button class="small" data-pact="dup" data-i="'+i+'">複製</button>' +
+          '<button class="small danger" data-pact="del" data-i="'+i+'" id="pdelbtn'+i+'">削除</button>' +
+        '</div>';
+      ul.appendChild(li);
+    });
+  }
+
+  /* ========== ブロックフォーム ========== */
+  function renderColorBtns(){
+    var box = $("bfColors");
+    box.innerHTML = "";
+    COLORS.forEach(function(c){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cbtn" + (c===selColor ? " sel" : "");
+      btn.style.background = c;
+      btn.setAttribute("aria-label","色 "+c);
+      btn.addEventListener("click", function(){
+        selColor = c;
+        renderColorBtns();
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  function resetForm(){
+    editIndex = -1;
+    $("bfLabel").value = "";
+    $("bfMin").value = "5";
+    $("bfMemo").value = "";
+    selColor = COLORS[0];
+    $("bfAdd").textContent = "＋ ブロックを追加";
+    $("bfCancel").style.display = "none";
+    renderColorBtns();
+    renderBlocks();
+  }
+
+  function submitForm(){
+    var label = $("bfLabel").value.trim();
+    var min = parseInt($("bfMin").value, 10);
+    var memo = $("bfMemo").value.trim();
+    if(!label){ toast("ラベルを入力してください"); $("bfLabel").focus(); return; }
+    if(!(min >= 1)){ toast("分数は1以上にしてください"); $("bfMin").focus(); return; }
+    if(min > 120) min = 120;
+    var block = {label:label, min:min, color:selColor, memo:memo};
+    if(editIndex >= 0 && editIndex < plan.blocks.length){
+      plan.blocks[editIndex] = block;
+      toast("ブロックを更新しました");
+    }else{
+      plan.blocks.push(block);
+      toast("ブロックを追加しました");
+    }
+    resetForm();
+  }
+
+  function startEdit(i){
+    var b = plan.blocks[i];
+    if(!b) return;
+    editIndex = i;
+    $("bfLabel").value = b.label;
+    $("bfMin").value = String(b.min);
+    $("bfMemo").value = b.memo || "";
+    selColor = b.color;
+    $("bfAdd").textContent = "✓ 更新する";
+    $("bfCancel").style.display = "";
+    renderColorBtns();
+    renderBlocks();
+    $("bfLabel").focus();
+  }
+
+  /* 二段階削除（confirm不使用） */
+  function twoStepDelete(btnId, fn){
+    var btn = $(btnId);
+    if(!btn) return;
+    if(btn.dataset.armed === "1"){
+      clearTimeout(confirmTimers[btnId]);
+      delete confirmTimers[btnId];
+      fn();
+    }else{
+      btn.dataset.armed = "1";
+      btn.textContent = "ほんとに？";
+      confirmTimers[btnId] = setTimeout(function(){
+        var b2 = $(btnId);
+        if(b2){ b2.dataset.armed = ""; b2.textContent = "削除"; }
+      }, 2500);
+    }
+  }
+
+  /* ========== 編集画面：イベント ========== */
+  $("blockList").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if(!btn) return;
+    var act = btn.dataset.act, i = parseInt(btn.dataset.i, 10);
+    if(isNaN(i)) return;
+    if(act === "up" && i > 0){
+      var t = plan.blocks[i-1]; plan.blocks[i-1] = plan.blocks[i]; plan.blocks[i] = t;
+      if(editIndex === i) editIndex = i-1; else if(editIndex === i-1) editIndex = i;
+      renderBlocks();
+    }else if(act === "down" && i < plan.blocks.length-1){
+      var t2 = plan.blocks[i+1]; plan.blocks[i+1] = plan.blocks[i]; plan.blocks[i] = t2;
+      if(editIndex === i) editIndex = i+1; else if(editIndex === i+1) editIndex = i;
+      renderBlocks();
+    }else if(act === "edit"){
+      startEdit(i);
+    }else if(act === "del"){
+      twoStepDelete("delbtn"+i, function(){
+        plan.blocks.splice(i, 1);
+        if(editIndex === i) resetForm();
+        else { if(editIndex > i) editIndex--; renderBlocks(); }
+        toast("削除しました");
+      });
+    }
+  });
+
+  $("bfAdd").addEventListener("click", submitForm);
+  $("bfCancel").addEventListener("click", resetForm);
+  $("bfLabel").addEventListener("keydown", function(e){ if(e.key==="Enter") submitForm(); });
+  $("bfMin").addEventListener("keydown", function(e){ if(e.key==="Enter") submitForm(); });
+
+  $("planName").addEventListener("input", function(){
+    plan.name = this.value;
+    saveDraft();
+  });
+  $("planTotal").addEventListener("input", function(){
+    var v = parseInt(this.value, 10);
+    if(v >= 5 && v <= 180){ plan.total = v; renderEditBar(); saveDraft(); }
+  });
+  $("planTotal").addEventListener("change", function(){
+    var v = parseInt(this.value, 10);
+    if(!(v >= 5)) v = 45;
+    if(v > 180) v = 180;
+    this.value = v;
+    plan.total = v;
+    renderEditBar(); saveDraft();
+  });
+
+  /* テンプレート */
+  document.querySelectorAll("[data-tpl]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var t = TEMPLATES[parseInt(btn.dataset.tpl, 10)];
+      if(!t) return;
+      plan = {
+        id: null,
+        name: t.name,
+        total: t.total,
+        blocks: t.blocks.map(function(b){ return {label:b.label,min:b.min,color:b.color,memo:b.memo}; })
+      };
+      $("planName").value = plan.name;
+      $("planTotal").value = String(plan.total);
+      resetForm();
+      toast("テンプレート「"+t.name+"」を読み込みました");
+    });
+  });
+
+  /* 保存 */
+  $("saveBtn").addEventListener("click", function(){
+    if(plan.blocks.length === 0){ toast("ブロックがありません"); return; }
+    var name = $("planName").value.trim();
+    if(!name){
+      name = "じゅぎょうプラン " + new Date().toLocaleDateString("ja-JP");
+      $("planName").value = name;
+    }
+    plan.name = name;
+    var plans = loadPlans();
+    if(plan.id){
+      var found = false;
+      for(var i=0;i<plans.length;i++){
+        if(plans[i].id === plan.id){
+          plans[i] = JSON.parse(JSON.stringify(plan));
+          found = true; break;
+        }
+      }
+      if(!found){ plan.id = uid(); plans.unshift(JSON.parse(JSON.stringify(plan))); }
+      toast("上書き保存しました");
+    }else{
+      plan.id = uid();
+      plans.unshift(JSON.parse(JSON.stringify(plan)));
+      toast("保存しました：" + name);
+    }
+    savePlans(plans);
+    saveDraft();
+    renderPlanList();
+  });
+
+  /* 保存済みプラン一覧の操作 */
+  $("planList").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if(!btn) return;
+    var act = btn.dataset.pact, i = parseInt(btn.dataset.i, 10);
+    var plans = loadPlans();
+    if(isNaN(i) || !plans[i]) return;
+    if(act === "load"){
+      plan = JSON.parse(JSON.stringify(plans[i]));
+      if(!plan.blocks) plan.blocks = [];
+      if(!(plan.total >= 5)) plan.total = 45;
+      $("planName").value = plan.name || "";
+      $("planTotal").value = String(plan.total);
+      resetForm();
+      toast("「"+(plan.name||"プラン")+"」をひらきました");
+      window.scrollTo({top:0, behavior:"smooth"});
+    }else if(act === "dup"){
+      var copy = JSON.parse(JSON.stringify(plans[i]));
+      copy.id = uid();
+      copy.name = (copy.name || "プラン") + " のコピー";
+      plans.splice(i+1, 0, copy);
+      savePlans(plans);
+      renderPlanList();
+      toast("複製しました");
+    }else if(act === "del"){
+      twoStepDelete("pdelbtn"+i, function(){
+        plans.splice(i, 1);
+        savePlans(plans);
+        renderPlanList();
+        toast("削除しました");
+      });
+    }
+  });
+
+  /* ================= 進行モード ================= */
+  var run = {
+    active:false, paused:false,
+    idx:0,
+    remain:0,          // 現在ブロック残り秒
+    durs:[],           // 各ブロックの実効秒数（延長込み）
+    lastTick:0,
+    timer:null,
+    finished:false
+  };
+  var soundOn = true;
+  try{ soundOn = localStorage.getItem(KEY_SOUND) !== "off"; }catch(e){}
+  var audioCtx = null;
+  var wakeLock = null;
+
+  function updateSoundBtn(){
+    var b = $("soundBtn");
+    b.textContent = soundOn ? "🔔 チャイム ON" : "🔕 チャイム OFF";
+    b.classList.toggle("off", !soundOn);
+  }
+  $("soundBtn").addEventListener("click", function(){
+    soundOn = !soundOn;
+    try{ localStorage.setItem(KEY_SOUND, soundOn ? "on" : "off"); }catch(e){}
+    updateSoundBtn();
+    if(soundOn) chime(false); // 確認用に軽く鳴らす
+  });
+
+  function ensureAudio(){
+    try{
+      if(!audioCtx){
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if(AC) audioCtx = new AC();
+      }
+      if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    }catch(e){ audioCtx = null; }
+  }
+
+  function playNote(freq, when, dur, vol){
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(vol, when + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(when); osc.stop(when + dur + 0.05);
+  }
+
+  /* チャイム音（final=trueで終了ファンファーレ） */
+  function chime(final){
+    if(!soundOn) return;
+    try{
+      ensureAudio();
+      if(!audioCtx) return;
+      var t = audioCtx.currentTime + 0.03;
+      if(final){
+        playNote(523.25, t,       0.5, 0.25); // ド
+        playNote(659.25, t + 0.2, 0.5, 0.25); // ミ
+        playNote(783.99, t + 0.4, 0.7, 0.25); // ソ
+        playNote(1046.5, t + 0.6, 1.0, 0.3);  // 高いド
+      }else{
+        playNote(880, t,        0.6, 0.3);  // キーン
+        playNote(659.25, t+0.25, 0.9, 0.3); // コーン
+      }
+    }catch(e){ /* 音は失敗しても進行は続ける */ }
+  }
+
+  /* Wake Lock（対応ブラウザのみ） */
+  function acquireWakeLock(){
+    try{
+      if("wakeLock" in navigator && navigator.wakeLock && navigator.wakeLock.request){
+        navigator.wakeLock.request("screen").then(function(lock){
+          wakeLock = lock;
+          lock.addEventListener("release", function(){ wakeLock = null; });
+        }).catch(function(){ wakeLock = null; });
+      }
+    }catch(e){ wakeLock = null; }
+  }
+  function releaseWakeLock(){
+    try{
+      if(wakeLock){ wakeLock.release(); wakeLock = null; }
+    }catch(e){ wakeLock = null; }
+  }
+  document.addEventListener("visibilitychange", function(){
+    if(run.active && document.visibilityState === "visible") acquireWakeLock();
+  });
+
+  function totalDur(){
+    var s = 0;
+    for(var i=0;i<run.durs.length;i++) s += run.durs[i];
+    return s;
+  }
+  function elapsed(){
+    var e = 0;
+    for(var i=0;i<run.idx;i++) e += run.durs[i];
+    if(run.idx < run.durs.length) e += (run.durs[run.idx] - run.remain);
+    return e;
+  }
+
+  function renderRunBar(){
+    var bar = $("runBar");
+    bar.innerHTML = "";
+    var tot = totalDur() || 1;
+    plan.blocks.forEach(function(b, i){
+      var seg = document.createElement("div");
+      seg.className = "tlseg" + (i < run.idx ? " done" : "");
+      seg.style.width = (run.durs[i]/tot*100) + "%";
+      seg.style.background = b.color;
+      seg.textContent = b.label;
+      bar.appendChild(seg);
+    });
+    updateMarker();
+  }
+  function updateMarker(){
+    var tot = totalDur() || 1;
+    var pct = Math.min(100, elapsed()/tot*100);
+    $("runMarker").style.left = "calc(" + pct + "% - 2px)";
+  }
+
+  function showBlock(){
+    var b = plan.blocks[run.idx];
+    if(!b) return;
+    var nameEl = $("runBlockName");
+    nameEl.textContent = b.label;
+    nameEl.style.color = b.color;
+    $("runMemo").textContent = b.memo ? "📝 " + b.memo : "";
+    var next = plan.blocks[run.idx + 1];
+    $("runNext").innerHTML = next
+      ? 'つぎ ▶ <b>' + esc(next.label) + '</b>（' + next.min + '分）'
+      : 'これが さいごの かつどうです';
+    renderRunBar();
+    updateTimerDisplay();
+  }
+
+  function updateTimerDisplay(){
+    var el = $("runTimer");
+    el.textContent = fmt(run.remain);
+    el.classList.toggle("urgent", run.remain <= 60 && !run.finished);
+    updateMarker();
+  }
+
+  function tick(){
+    if(!run.active || run.paused || run.finished) { run.lastTick = Date.now(); return; }
+    var now = Date.now();
+    var dt = (now - run.lastTick) / 1000;
+    run.lastTick = now;
+    if(dt < 0 || dt > 60) dt = 0.25; // タブ復帰などの異常値ガード
+    run.remain -= dt;
+    if(run.remain <= 0){
+      advance(true);
+    }else{
+      updateTimerDisplay();
+    }
+  }
+
+  function advance(withChime){
+    if(run.idx >= plan.blocks.length - 1){
+      // すべて終了
+      run.finished = true;
+      run.remain = 0;
+      run.idx = plan.blocks.length;
+      updateMarker();
+      $("runDone").classList.add("on");
+      if(withChime) chime(true); else chime(true);
+      return;
+    }
+    if(withChime) chime(false);
+    run.idx++;
+    run.remain = run.durs[run.idx];
+    showBlock();
+  }
+
+  function startRun(){
+    if(plan.blocks.length === 0){
+      toast("ブロックを追加してから進行モードをはじめてください");
+      return;
+    }
+    ensureAudio(); // ユーザー操作中にAudioContextを起こす
+    run.active = true;
+    run.paused = false;
+    run.finished = false;
+    run.idx = 0;
+    run.durs = plan.blocks.map(function(b){ return b.min * 60; });
+    run.remain = run.durs[0];
+    run.lastTick = Date.now();
+    $("runPlanName").textContent = (plan.name || "じゅぎょうプラン") + "（全" + Math.round(totalDur()/60) + "分）";
+    $("runDone").classList.remove("on");
+    $("runview").classList.add("on");
+    $("runview").classList.remove("paused");
+    $("pauseBtn").textContent = "⏸ 一時停止";
+    document.body.style.overflow = "hidden";
+    showBlock();
+    if(run.timer) clearInterval(run.timer);
+    run.timer = setInterval(tick, 200);
+    acquireWakeLock();
+    /* フルスクリーンも試みる（失敗しても続行） */
+    try{
+      var el = document.documentElement;
+      if(el.requestFullscreen) el.requestFullscreen().catch(function(){});
+    }catch(e){}
+  }
+
+  function endRun(){
+    run.active = false;
+    if(run.timer){ clearInterval(run.timer); run.timer = null; }
+    $("runview").classList.remove("on");
+    $("runDone").classList.remove("on");
+    document.body.style.overflow = "";
+    releaseWakeLock();
+    try{
+      if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
+    }catch(e){}
+  }
+
+  $("startBtn").addEventListener("click", startRun);
+  $("exitBtn").addEventListener("click", endRun);
+  $("doneExitBtn").addEventListener("click", endRun);
+
+  $("pauseBtn").addEventListener("click", function(){
+    if(!run.active || run.finished) return;
+    run.paused = !run.paused;
+    run.lastTick = Date.now();
+    $("runview").classList.toggle("paused", run.paused);
+    this.textContent = run.paused ? "▶ 再開" : "⏸ 一時停止";
+  });
+
+  $("extBtn").addEventListener("click", function(){
+    if(!run.active || run.finished) return;
+    run.remain += 30;
+    run.durs[run.idx] += 30;
+    renderRunBar();
+    updateTimerDisplay();
+    toast("30秒 延長しました");
+  });
+
+  $("skipBtn").addEventListener("click", function(){
+    if(!run.active || run.finished) return;
+    // 残り時間ぶんを短縮して次へ
+    run.durs[run.idx] -= Math.max(0, Math.ceil(run.remain));
+    if(run.durs[run.idx] < 1) run.durs[run.idx] = 1;
+    run.remain = 0;
+    advance(false);
+  });
+
+  /* ========== 初期化 ========== */
+  (function init(){
+    try{
+      var raw = localStorage.getItem(KEY_DRAFT);
+      if(raw){
+        var d = JSON.parse(raw);
+        if(d && Array.isArray(d.blocks)){
+          plan = d;
+          if(!(plan.total >= 5)) plan.total = 45;
+        }
+      }
+    }catch(e){}
+    $("planName").value = plan.name || "";
+    $("planTotal").value = String(plan.total);
+    updateSoundBtn();
+    renderColorBtns();
+    renderBlocks();
+    renderPlanList();
+  })();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

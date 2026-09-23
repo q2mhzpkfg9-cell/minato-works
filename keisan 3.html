@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>計算フラッシュ - 四則演算ドリル</title>
+<style>
+  :root{
+    --bg:#fffaf0; --card:#fff; --primary:#ff8c42; --ok:#2ecc71; --ng:#e74c3c; --text:#333;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+  h1{color:var(--primary);margin:8px 0 16px}
+  .panel{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:520px;box-shadow:0 4px 16px rgba(0,0,0,.08);margin-bottom:16px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:center}
+  label{font-weight:bold}
+  .chk{display:inline-flex;align-items:center;gap:4px;background:#fff3e6;padding:6px 10px;border-radius:8px;cursor:pointer;user-select:none}
+  .chk input{transform:scale(1.2)}
+  select,input[type=number]{font-size:16px;padding:6px 8px;border:2px solid #ddd;border-radius:8px}
+  button{font-size:18px;padding:10px 20px;border:none;border-radius:10px;background:var(--primary);color:#fff;cursor:pointer;font-weight:bold}
+  button:hover{opacity:.9}
+  button.sub{background:#888}
+  #quiz{font-size:48px;text-align:center;margin:20px 0;letter-spacing:4px}
+  #answer{font-size:36px;width:160px;text-align:center;border:3px solid var(--primary);border-radius:12px}
+  #feedback{font-size:24px;text-align:center;height:32px;font-weight:bold}
+  .ok{color:var(--ok)}.ng{color:var(--ng)}
+  #score{text-align:center;font-size:18px;color:#666}
+  .center{text-align:center}
+  .hint{font-size:12px;color:#888}
+  #pointBar{position:sticky;top:0;background:linear-gradient(90deg,#ffd54f,#ff8c42);color:#fff;padding:10px 16px;border-radius:12px;font-weight:bold;font-size:18px;display:flex;justify-content:space-between;align-items:center;width:100%;max-width:520px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  #pointBar .pts{font-size:24px}
+  #rank{font-size:14px;background:#fff;color:#ff6b00;padding:4px 10px;border-radius:20px}
+  .pop{position:fixed;font-size:32px;font-weight:bold;color:#ff6b00;pointer-events:none;animation:pop 1s ease-out forwards;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff;z-index:100}
+  @keyframes pop{0%{transform:translateY(0) scale(.5);opacity:0}30%{transform:translateY(-20px) scale(1.3);opacity:1}100%{transform:translateY(-80px) scale(1);opacity:0}}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+  .badge{background:#fff3e6;border:2px solid #ffb380;border-radius:20px;padding:4px 10px;font-size:14px;animation:bin .5s ease-out}
+  @keyframes bin{from{transform:scale(0)}to{transform:scale(1)}}
+  .combo{color:#ff3300;font-size:14px;margin-left:8px}
+</style>
+</head>
+<body>
+
+<h1>🔢 計算フラッシュ</h1>
+
+<div id="pointBar">
+  <span>⭐ ポイント <span class="pts" id="totalPts">0</span> pt</span>
+  <span id="rank">🥚 たまご</span>
+</div>
+
+<div class="panel" id="settings">
+  <div class="row">
+    <label>演算：</label>
+    <label class="chk"><input type="checkbox" class="op" value="+" checked> ＋ たし算</label>
+    <label class="chk"><input type="checkbox" class="op" value="-" checked> － ひき算</label>
+    <label class="chk"><input type="checkbox" class="op" value="×"> × かけ算</label>
+    <label class="chk"><input type="checkbox" class="op" value="÷"> ÷ わり算</label>
+  </div>
+
+  <div class="row">
+    <label>たし算の繰り上がり：</label>
+    <select id="carry">
+      <option value="any">指定なし</option>
+      <option value="yes">あり</option>
+      <option value="no">なし</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>ひき算の繰り下がり：</label>
+    <select id="borrow">
+      <option value="any">指定なし</option>
+      <option value="yes">あり</option>
+      <option value="no">なし</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>桁数：</label>
+    <select id="digits">
+      <option value="1">1桁</option>
+      <option value="2" selected>2桁</option>
+      <option value="3">3桁</option>
+    </select>
+    <label>出題数：</label>
+    <input type="number" id="total" value="10" min="1" max="100" style="width:80px">
+  </div>
+
+  <div class="row center" style="justify-content:center;width:100%">
+    <button id="start">スタート</button>
+  </div>
+  <div class="hint center">※かけ算は九九（1〜9）、わり算は割り切れる問題のみ出題されます。</div>
+</div>
+
+<div class="panel" id="game" style="display:none">
+  <div id="score">問題 <span id="cur">0</span> / <span id="max">0</span>　正解 <span id="correct">0</span><span class="combo" id="comboText"></span></div>
+  <div id="quiz">－</div>
+  <div class="center">
+    <input type="number" id="answer" autocomplete="off">
+  </div>
+  <div id="feedback"></div>
+  <div class="row center" style="justify-content:center;width:100%;gap:12px">
+    <button id="submit">こたえる</button>
+    <button id="skip" class="sub">スキップ</button>
+    <button id="quit" class="sub">やめる</button>
+  </div>
+</div>
+
+<div class="panel" id="result" style="display:none">
+  <h2 class="center">けっか</h2>
+  <div id="resultText" class="center" style="font-size:24px"></div>
+  <div class="badges" id="badges"></div>
+  <div class="row center" style="justify-content:center;width:100%">
+    <button id="again">もういちど</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+function hasCarryAdd(a,b){
+  while(a>0||b>0){
+    if((a%10)+(b%10) >= 10) return true;
+    a=Math.floor(a/10); b=Math.floor(b/10);
+  }
+  return false;
+}
+function hasBorrowSub(a,b){ // a>=b前提
+  while(b>0){
+    if((a%10) < (b%10)) return true;
+    a=Math.floor(a/10); b=Math.floor(b/10);
+  }
+  return false;
+}
+
+function genProblem(){
+  const ops = [...document.querySelectorAll('.op:checked')].map(e=>e.value);
+  if(ops.length===0) return null;
+  const op = ops[rand(0,ops.length-1)];
+  const digits = +$('digits').value;
+  const max = Math.pow(10,digits)-1;
+  const min = digits===1?1:Math.pow(10,digits-1);
+
+  let a,b,ans,tries=0;
+  while(tries++<500){
+    if(op==='+'){
+      a=rand(min,max); b=rand(min,max);
+      const want=$('carry').value;
+      const has=hasCarryAdd(a,b);
+      if(want==='yes'&&!has) continue;
+      if(want==='no'&&has) continue;
+      ans=a+b;
+    } else if(op==='-'){
+      a=rand(min,max); b=rand(min,max);
+      if(a<b)[a,b]=[b,a];
+      const want=$('borrow').value;
+      const has=hasBorrowSub(a,b);
+      if(want==='yes'&&!has) continue;
+      if(want==='no'&&has) continue;
+      ans=a-b;
+    } else if(op==='×'){
+      a=rand(1,9); b=rand(1,9);
+      ans=a*b;
+    } else { // ÷
+      b=rand(1,9);
+      const q=rand(1,9);
+      a=b*q;
+      ans=q;
+    }
+    return {a,b,op,ans};
+  }
+  return null;
+}
+
+let state={};
+let totalPts=0;
+let earnedBadges=new Set();
+
+const RANKS=[
+  {min:0,name:'🥚 たまご'},
+  {min:30,name:'🐣 ひよこ'},
+  {min:80,name:'🐥 こどり'},
+  {min:150,name:'🐔 にわとり'},
+  {min:250,name:'🦅 たかはかせ'},
+  {min:400,name:'🚀 けいさんマスター'},
+  {min:600,name:'👑 でんせつ'}
+];
+
+function updateRank(){
+  let r=RANKS[0];
+  for(const x of RANKS) if(totalPts>=x.min) r=x;
+  $('rank').textContent=r.name;
+  $('totalPts').textContent=totalPts;
+}
+
+function popPoints(pts){
+  const el=document.createElement('div');
+  el.className='pop';
+  el.textContent='+'+pts+'pt';
+  const rect=$('answer').getBoundingClientRect();
+  el.style.left=(rect.left+rect.width/2-30)+'px';
+  el.style.top=rect.top+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1000);
+}
+
+function checkBadges(){
+  const newBadges=[];
+  const tryAdd=(id,label)=>{ if(!earnedBadges.has(id)){ earnedBadges.add(id); newBadges.push(label); }};
+  if(state.combo>=3) tryAdd('c3','🔥3れんぞく');
+  if(state.combo>=5) tryAdd('c5','🔥🔥5れんぞく');
+  if(state.combo>=10) tryAdd('c10','⚡10れんぞく');
+  if(state.correct===state.total && state.total>=5) tryAdd('perfect','💯ぜんもん正解');
+  if(totalPts>=100) tryAdd('p100','🏅100pt');
+  if(totalPts>=300) tryAdd('p300','🏆300pt');
+  return newBadges;
+}
+
+function nextQ(){
+  if(state.cur >= state.total){ finish(); return; }
+  state.cur++;
+  $('cur').textContent=state.cur;
+  const p=genProblem();
+  if(!p){ alert('条件に合う問題が作れません。設定を見直してください。'); back(); return; }
+  state.p=p;
+  $('quiz').textContent = `${p.a} ${p.op} ${p.b} = ?`;
+  $('answer').value='';
+  $('feedback').textContent='';
+  $('answer').focus();
+}
+
+function check(){
+  const v=$('answer').value;
+  if(v==='') return;
+  const ok = (+v)===state.p.ans;
+  if(ok){
+    state.correct++;
+    state.combo=(state.combo||0)+1;
+    const opBonus={'+':1,'-':1,'×':2,'÷':3}[state.p.op]||1;
+    const digitBonus=+$('digits').value;
+    const comboBonus=Math.min(state.combo,5);
+    const gained = (opBonus*digitBonus) + comboBonus;
+    totalPts += gained;
+    state.sessionPts=(state.sessionPts||0)+gained;
+    popPoints(gained);
+    updateRank();
+    $('feedback').textContent=`⭕ せいかい！ +${gained}pt`;
+    $('feedback').className='ok';
+    $('correct').textContent=state.correct;
+    $('comboText').textContent = state.combo>=2 ? `🔥${state.combo}れんぞく！` : '';
+    setTimeout(nextQ, 700);
+  } else {
+    state.combo=0;
+    $('comboText').textContent='';
+    $('feedback').textContent=`❌ こたえは ${state.p.ans}`;
+    $('feedback').className='ng';
+    setTimeout(nextQ, 1400);
+  }
+}
+
+function start(){
+  const total=+$('total').value||10;
+  state={cur:0,total,correct:0,combo:0,sessionPts:0};
+  $('max').textContent=total;
+  $('correct').textContent=0;
+  $('settings').style.display='none';
+  $('result').style.display='none';
+  $('game').style.display='block';
+  nextQ();
+}
+
+function finish(){
+  $('game').style.display='none';
+  $('result').style.display='block';
+  const newBadges=checkBadges();
+  $('resultText').innerHTML=`${state.total}問中 <b>${state.correct}</b>問せいかい！<br>正答率 ${Math.round(state.correct/state.total*100)}%<br>このラウンドで <b style="color:#ff6b00">+${state.sessionPts}pt</b> ゲット！<br>合計 ⭐ <b>${totalPts}</b>pt`;
+  const bd=$('badges'); bd.innerHTML='';
+  if(newBadges.length){
+    const t=document.createElement('div');t.style.width='100%';t.style.textAlign='center';t.style.fontSize='14px';t.textContent='🎖️ あたらしいバッジ！';
+    bd.appendChild(t);
+  }
+  newBadges.forEach(n=>{ const b=document.createElement('span');b.className='badge';b.textContent=n;bd.appendChild(b); });
+}
+
+function back(){
+  $('game').style.display='none';
+  $('result').style.display='none';
+  $('settings').style.display='block';
+}
+
+$('start').onclick=start;
+$('again').onclick=back;
+$('submit').onclick=check;
+$('skip').onclick=()=>{ $('feedback').textContent=`こたえは ${state.p.ans}`; $('feedback').className='ng'; setTimeout(nextQ,1200); };
+$('quit').onclick=back;
+$('answer').addEventListener('keydown',e=>{ if(e.key==='Enter') check(); });
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

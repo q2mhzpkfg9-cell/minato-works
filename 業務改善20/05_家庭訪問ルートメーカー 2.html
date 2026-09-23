@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家庭訪問ルートメーカー</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ok:#2f855a;--okbg:#e6f4ea;--warn:#b7791f;--warnbg:#fdf3dc;--ng:#b83232;--ngbg:#fbe9e7;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1300px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.2rem;letter-spacing:.03em}
+main{max-width:1300px;margin:0 auto;padding:16px}
+.lead{margin:0 0 12px;color:var(--sub);font-size:.9rem}
+.priv{display:inline-block;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:4px 10px;font-size:.8rem;color:var(--sub);margin-bottom:12px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:90px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+#toast.show{opacity:1}
+#printArea{display:none}
+/* app */
+.days{display:flex;flex-direction:column;gap:6px}
+.days .d{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) 44px;gap:6px;max-width:560px}
+.days input{width:100%;min-width:0}
+.tblwrap{overflow:auto}
+table.h{border-collapse:collapse;width:100%;font-size:.88rem}
+table.h th,table.h td{border-bottom:1px solid var(--line);padding:4px;text-align:left;vertical-align:middle}
+table.h th{background:#f1ede4;font-size:.78rem;white-space:nowrap}
+table.h input,table.h select{min-height:38px;padding:4px 6px;width:100%}
+.dchk{display:flex;gap:4px;flex-wrap:wrap}
+.dchk label{display:flex;align-items:center;gap:2px;font-size:.78rem;background:#f8f5ee;border-radius:8px;padding:2px 6px;white-space:nowrap}
+.dchk input{min-height:auto;width:auto}
+.plan{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.day{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.day .hd{background:var(--navy);color:#fff;padding:6px 10px;font-weight:700;display:flex;justify-content:space-between}
+.day .hd.over{background:var(--ng)}
+.stop{display:grid;grid-template-columns:54px 1fr auto;gap:6px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+.stop .tm{font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.stop .nm b{display:block}
+.stop .nm span{font-size:.76rem;color:var(--sub)}
+.stop .ops{display:flex;gap:3px}
+.stop .ops button{min-height:34px;min-width:34px;padding:2px 6px}
+.stop select{min-height:34px;padding:2px 4px;font-size:.78rem}
+.stop.late .tm{color:var(--ng)}
+.area{display:inline-block;border-radius:6px;padding:0 6px;font-size:.72rem;font-weight:700;margin-left:4px}
+.warnbox{background:var(--ngbg);color:var(--ng);border-radius:10px;padding:8px 12px;font-size:.88rem;margin-bottom:10px}
+.move{padding:2px 10px 2px 62px;font-size:.72rem;color:var(--sub);border-bottom:1px solid var(--line);background:#fcfbf8}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block;color:#000;font-size:10.5pt}
+  #printArea h1{font-size:14pt;margin:0 0 6pt}
+  #printArea h2{font-size:12pt;margin:8pt 0 4pt}
+  #printArea table{border-collapse:collapse;width:100%;margin-bottom:6pt}
+  #printArea th,#printArea td{border:1px solid #555;padding:3pt 5pt;text-align:left}
+  .slips{display:grid;grid-template-columns:1fr 1fr}
+  .slip{border:1px dashed #888;padding:7mm 6mm;height:67mm;page-break-inside:avoid;font-size:10.5pt;line-height:1.7}
+  .slip .t{font-size:12pt;font-weight:700;margin-bottom:2mm}
+  .slip .w{font-size:14pt;font-weight:800;margin:2mm 0}
+  @page{size:A4;margin:10mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><a class="back" href="../index.html">← MINATO WORKS</a><h1>家庭訪問ルートメーカー</h1></div></header>
+<main>
+<p class="lead">家庭訪問（家庭確認）の日程を、訪問できる日・地区・移動時間から自動で組みます。地区ごとにまとめて回る順番にし、到着予定時刻を計算。保護者向けのお知らせ（切り取り式）と、管理職提出用の一覧を印刷できます。</p>
+<div class="priv">🔒 名前・地区などはこの端末（ブラウザ）の中だけに保存されます。住所は書かず、地区名や目印程度にしておくと安心です。</div>
+
+<section class="card">
+  <h2>① 訪問日と時間の設定</h2>
+  <div class="days" id="days"></div>
+  <button class="btn s" id="addDay" style="margin-top:8px">＋ 訪問日を追加</button>
+  <div class="row" style="margin-top:12px">
+    <label class="f">1軒あたりの時間（分）<input type="number" id="stay" min="5" style="width:110px"></label>
+    <label class="f">同じ地区内の移動（分）<input type="number" id="mvIn" min="0" style="width:110px"></label>
+    <label class="f">地区をまたぐ移動（分）<input type="number" id="mvOut" min="0" style="width:110px"></label>
+    <label class="f">学校から最初の家まで（分）<input type="number" id="mvFirst" min="0" style="width:110px"></label>
+  </div>
+  <label class="f" style="margin-top:10px">地区を回る順番（1行に1地区。学校に近い順などで）<textarea id="areas" style="min-height:70px" placeholder="本町&#10;東町&#10;みなと台"></textarea></label>
+</section>
+
+<section class="card">
+  <h2>② 家庭のリスト</h2>
+  <div class="row" style="margin-bottom:8px">
+    <button class="btn s" id="fromRoster">名簿を貼り付けて一括追加</button>
+    <button class="btn s" id="fromCommon">共通名簿から追加</button>
+    <button class="btn s" id="addHome">＋ 1件追加</button>
+    <span class="note">訪問できる日にチェック（アンケートの希望日）。きょうだいがいる家庭はメモへ。</span>
+  </div>
+  <div class="tblwrap"><table class="h" id="homes"></table></div>
+</section>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">③ ルートと時刻</h2>
+    <div class="row">
+      <button class="btn p" id="auto">🔄 自動で組む</button>
+      <button class="btn" id="prList">🖨 一覧を印刷</button>
+      <button class="btn" id="prSlip">🖨 保護者向けお知らせ（切り取り）</button>
+    </div>
+  </div>
+  <p class="note">自動で組んだあと、▲▼で順番を入れかえたり、日付を変えたりできます（時刻は自動で再計算）。</p>
+  <div id="warn"></div>
+  <div class="plan" id="plan"></div>
+</section>
+
+<section class="card">
+  <details>
+    <summary>お知らせ文の設定・データの管理</summary>
+    <label class="f" style="margin-top:8px">お知らせの差出人<input id="sender" placeholder="2年1組 担任 ○○"></label>
+    <label class="f" style="margin-top:8px">お知らせの文<textarea id="slipMsg"></textarea></label>
+    <div class="row" style="margin-top:10px">
+      <button class="btn s" id="bk">バックアップ（JSON）</button>
+      <label class="btn s" style="display:inline-flex;align-items:center">復元<input type="file" id="rs" accept=".json" style="display:none"></label>
+      <button class="btn s d" id="reset">すべて消去</button>
+    </div>
+  </details>
+</section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+var KEY="mw_gyomu_05_data";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},2000)}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
+function pad(n){return String(n).padStart(2,"0")}
+function toMin(t){if(!t)return 0;var a=t.split(":");return (+a[0])*60+(+a[1]||0)}
+function toHM(m){return Math.floor(m/60)+":"+pad(m%60)}
+function fmtDate(s){if(!s)return"(日付未設定)";var d=new Date(s+"T00:00:00");return (d.getMonth()+1)+"月"+d.getDate()+"日（"+"日月火水木金土"[d.getDay()]+"）"}
+function download(name,text,type){var b=new Blob([text],{type:type||"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+var COLORS=["#dbe7f5","#e6f4ea","#fdf3dc","#fbe9e7","#ede7f6","#e0f2f1","#fff3e0","#f3e5f5"];
+var MSG="家庭訪問の日時が決まりましたので、お知らせいたします。前の家庭の状況により、前後することがあります。ご都合が悪い場合は、お早めに担任までご連絡ください。";
+var D=null;try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!D||!D.days){D={days:[{id:uid(),date:"",start:"13:30",end:"16:30"},{id:uid(),date:"",start:"13:30",end:"16:30"},{id:uid(),date:"",start:"13:30",end:"16:30"}],stay:15,mvIn:5,mvOut:10,mvFirst:10,areas:[],homes:[],plan:{},sender:"",slipMsg:MSG}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("保存できませんでした")}}
+
+/* ---- 設定 ---- */
+function renderDays(){
+  var b=$("#days");b.innerHTML="<div class='d note' style='font-weight:700'><span>日付</span><span>開始</span><span>終了</span><span></span></div>";
+  D.days.forEach(function(d,i){
+    var r=document.createElement("div");r.className="d";
+    r.innerHTML="<input type='date' value='"+d.date+"'><input type='time' value='"+d.start+"'><input type='time' value='"+d.end+"'><button class='btn s d'>×</button>";
+    var ins=r.querySelectorAll("input");
+    ins[0].onchange=function(){d.date=this.value;save();renderHomes();renderPlan()};
+    ins[1].onchange=function(){d.start=this.value;save();renderPlan()};
+    ins[2].onchange=function(){d.end=this.value;save();renderPlan()};
+    r.querySelector("button").onclick=function(){if(!confirm("この訪問日を削除しますか？"))return;D.days.splice(i,1);D.homes.forEach(function(h){h.days=h.days.filter(function(x){return x!==d.id})});delete D.plan[d.id];save();renderAll()};
+    b.appendChild(r);
+  });
+}
+$("#addDay").onclick=function(){var last=D.days[D.days.length-1];D.days.push({id:uid(),date:"",start:last?last.start:"13:30",end:last?last.end:"16:30"});save();renderAll()};
+["stay","mvIn","mvOut","mvFirst"].forEach(function(k){$("#"+k).value=D[k];$("#"+k).oninput=function(){D[k]=Math.max(0,parseInt(this.value,10)||0);save();renderPlan()}});
+$("#areas").value=D.areas.join("\n");
+$("#areas").onchange=function(){D.areas=this.value.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean);save();renderHomes();renderPlan()};
+function areaList(){var a=D.areas.slice();D.homes.forEach(function(h){if(h.area&&a.indexOf(h.area)<0)a.push(h.area)});return a}
+function areaColor(a){var i=areaList().indexOf(a);return i<0?"#eee":COLORS[i%COLORS.length]}
+
+/* ---- 家庭 ---- */
+function newHome(name){return{id:uid(),name:name||"",area:"",days:D.days.map(function(d){return d.id}),pref:"",memo:""}}
+function renderHomes(){
+  var t=$("#homes");var al=areaList();
+  var h="<thead><tr><th>#</th><th>児童名</th><th>地区</th><th>訪問できる日</th><th>時間の希望</th><th>メモ（目印・きょうだい等）</th><th></th></tr></thead><tbody>";
+  D.homes.forEach(function(x,i){
+    h+="<tr data-id='"+x.id+"'><td>"+(i+1)+"</td><td><input data-f='name' value='"+esc(x.name)+"' style='min-width:110px'></td><td><input data-f='area' list='areaDL' value='"+esc(x.area)+"' style='min-width:90px;background:"+areaColor(x.area)+"'></td><td><div class='dchk'>";
+    D.days.forEach(function(d,k){h+="<label><input type='checkbox' data-day='"+d.id+"' "+(x.days.indexOf(d.id)>=0?"checked":"")+">"+(d.date?fmtDate(d.date).replace(/月/,"/").replace(/日（/,"(").replace("）",")"):(k+1)+"日目")+"</label>"});
+    h+="</div></td><td><select data-f='pref'><option value=''>なし</option><option value='early' "+(x.pref==="early"?"selected":"")+">早め</option><option value='late' "+(x.pref==="late"?"selected":"")+">遅め</option></select></td><td><input data-f='memo' value='"+esc(x.memo)+"' style='min-width:140px'></td><td><button class='btn s d' data-del='1'>×</button></td></tr>";
+  });
+  h+="</tbody>";
+  if(!D.homes.length)h="<tbody><tr><td class='note' style='padding:16px'>まだ家庭がありません。上のボタンから追加してください。</td></tr></tbody>";
+  t.innerHTML=h+"<datalist id='areaDL'>"+al.map(function(a){return"<option value='"+esc(a)+"'>"}).join("")+"</datalist>";
+}
+$("#homes").addEventListener("change",function(e){
+  var tr=e.target.closest("tr[data-id]");if(!tr)return;var x=D.homes.filter(function(h){return h.id===tr.dataset.id})[0];if(!x)return;
+  var el=e.target;
+  if(el.dataset.f){x[el.dataset.f]=el.value.trim();if(el.dataset.f==="area"){renderHomes()}}
+  else if(el.dataset.day){var id=el.dataset.day;if(el.checked){if(x.days.indexOf(id)<0)x.days.push(id)}else x.days=x.days.filter(function(d){return d!==id})}
+  save();renderPlan();
+});
+$("#homes").addEventListener("click",function(e){
+  if(!e.target.dataset.del)return;var tr=e.target.closest("tr[data-id]");var x=D.homes.filter(function(h){return h.id===tr.dataset.id})[0];
+  if(!confirm((x.name||"この家庭")+"を削除しますか？"))return;
+  D.homes=D.homes.filter(function(h){return h!==x});Object.keys(D.plan).forEach(function(k){D.plan[k]=D.plan[k].filter(function(id){return id!==x.id})});save();renderHomes();renderPlan();
+});
+$("#addHome").onclick=function(){D.homes.push(newHome(""));save();renderHomes();renderPlan()};
+function addNames(t){var ex={};D.homes.forEach(function(h){ex[h.name]=1});var n=0;t.split(/\r?\n/).forEach(function(s){s=s.trim();if(s&&!ex[s]){D.homes.push(newHome(s));ex[s]=1;n++}});save();renderHomes();renderPlan();toast(n+"件追加しました")}
+$("#fromRoster").onclick=function(){var t=prompt("名前を改行区切りで貼り付けてください（Excelの列をそのままコピーでOK）");if(t)addNames(t)};
+$("#fromCommon").onclick=function(){var t="";try{t=localStorage.getItem("sensei25_names")||""}catch(e){}if(!t.trim()){toast("共通名簿が見つかりません");return}addNames(t)};
+
+/* ---- 自動割り当て ---- */
+function capacity(d){return Math.max(0,toMin(d.end)-toMin(d.start))}
+function orderStops(ids){
+  var al=areaList();var byId={};D.homes.forEach(function(h){byId[h.id]=h});
+  return ids.slice().sort(function(a,b){var A=byId[a],B=byId[b];var ia=al.indexOf(A.area),ib=al.indexOf(B.area);if(ia<0)ia=999;if(ib<0)ib=999;if(ia!==ib)return ia-ib;var pa=A.pref==="early"?0:A.pref==="late"?2:1,pb=B.pref==="early"?0:B.pref==="late"?2:1;return pa-pb});
+}
+function dayCost(ids){
+  var byId={};D.homes.forEach(function(h){byId[h.id]=h});var t=0,prev=null;
+  ids.forEach(function(id,i){var h=byId[id];if(!h)return;t+=i===0?D.mvFirst:(prev&&prev.area===h.area&&h.area?D.mvIn:D.mvOut);t+=D.stay;prev=h});return t;
+}
+$("#auto").onclick=function(){
+  if(!D.homes.length){toast("家庭を入れてください");return}
+  if(Object.keys(D.plan).some(function(k){return D.plan[k].length})&&!confirm("今のルートを作り直しますか？（手で動かした分はリセットされます）"))return;
+  D.plan={};D.days.forEach(function(d){D.plan[d.id]=[]});
+  var al=areaList();
+  // 選択肢の少ない家庭から
+  var hs=D.homes.slice().sort(function(a,b){return a.days.length-b.days.length});
+  hs.forEach(function(h){
+    var cands=D.days.filter(function(d){return h.days.indexOf(d.id)>=0});
+    if(!cands.length)return;
+    var best=null,bestScore=-1e9;
+    cands.forEach(function(d){
+      var cur=D.plan[d.id];var trial=orderStops(cur.concat([h.id]));var cost=dayCost(trial);var cap=capacity(d);
+      var sameArea=cur.filter(function(id){var x=D.homes.filter(function(y){return y.id===id})[0];return x&&x.area===h.area&&h.area}).length;
+      var score=(cost<=cap?1000:0)+sameArea*50-(cost/Math.max(cap,1))*100;
+      if(score>bestScore){bestScore=score;best=d}
+    });
+    D.plan[best.id].push(h.id);D.plan[best.id]=orderStops(D.plan[best.id]);
+  });
+  save();renderPlan();toast("ルートを組みました");
+};
+function schedule(d){
+  var byId={};D.homes.forEach(function(h){byId[h.id]=h});
+  var ids=(D.plan[d.id]||[]).filter(function(id){return byId[id]});var t=toMin(d.start),prev=null,out=[];
+  ids.forEach(function(id,i){var h=byId[id];var mv=i===0?D.mvFirst:(prev&&prev.area===h.area&&h.area?D.mvIn:D.mvOut);t+=mv;out.push({h:h,at:t,mv:mv,late:t+D.stay>toMin(d.end)});t+=D.stay;prev=h});
+  return{stops:out,finish:t};
+}
+function renderPlan(){
+  var box=$("#plan");box.innerHTML="";
+  var planned={};Object.keys(D.plan).forEach(function(k){(D.plan[k]||[]).forEach(function(id){planned[id]=k})});
+  var W=[];
+  var un=D.homes.filter(function(h){return !planned[h.id]||!D.days.some(function(d){return d.id===planned[h.id]})});
+  if(un.length&&Object.keys(D.plan).length)W.push("未割り当て："+un.map(function(h){return h.name||"（名前なし）"}).join("、")+(un.some(function(h){return !h.days.length})?"（訪問できる日が1日もない家庭があります）":""));
+  D.days.forEach(function(d,di){
+    var sc=schedule(d);var over=sc.finish>toMin(d.end);var dl=d.date?fmtDate(d.date):(di+1)+"日目";
+    if(over&&sc.stops.length)W.push(dl+"は終了予定 "+toHM(sc.finish)+" で、"+d.end+" をこえています。");
+    sc.stops.forEach(function(s){if(s.h.days.indexOf(d.id)<0)W.push(s.h.name+" さんは "+dl+" が希望日に入っていません。")});
+    var el=document.createElement("div");el.className="day";
+    var h="<div class='hd"+(over?" over":"")+"'><span>"+(d.date?fmtDate(d.date):(di+1)+"日目")+" "+d.start+"〜</span><span>"+sc.stops.length+"軒・"+(sc.stops.length?"終了 "+toHM(sc.finish):"")+"</span></div>";
+    sc.stops.forEach(function(s,i){
+      h+="<div class='move'>🚶 移動 "+s.mv+"分</div><div class='stop"+(s.late?" late":"")+"'><div class='tm'>"+toHM(s.at)+"</div><div class='nm'><b>"+esc(s.h.name||"（名前なし）")+(s.h.area?"<span class='area' style='background:"+areaColor(s.h.area)+"'>"+esc(s.h.area)+"</span>":"")+"</b><span>"+esc(s.h.memo)+(s.h.pref?(s.h.memo?" ／ ":"")+(s.h.pref==="early"?"早め希望":"遅め希望"):"")+"</span></div><div class='ops'><button class='btn s' data-mv='-1' data-d='"+d.id+"' data-i='"+i+"'>▲</button><button class='btn s' data-mv='1' data-d='"+d.id+"' data-i='"+i+"'>▼</button><select data-to='"+s.h.id+"' data-d='"+d.id+"'>"+D.days.map(function(x,k){return"<option value='"+x.id+"' "+(x.id===d.id?"selected":"")+">"+(x.date?fmtDate(x.date).replace(/（.）/,""):(k+1)+"日目")+"</option>"}).join("")+"<option value=''>外す</option></select></div></div>";
+    });
+    if(!sc.stops.length)h+="<div class='note' style='padding:10px'>訪問なし</div>";
+    el.innerHTML=h;box.appendChild(el);
+  });
+  $("#warn").innerHTML=W.map(function(w){return"<div class='warnbox'>⚠ "+esc(w)+"</div>"}).join("");
+}
+$("#plan").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-mv]");if(!b)return;var arr=D.plan[b.dataset.d];var i=+b.dataset.i,j=i+(+b.dataset.mv);
+  if(j<0||j>=arr.length)return;var t=arr[i];arr[i]=arr[j];arr[j]=t;save();renderPlan();
+});
+$("#plan").addEventListener("change",function(e){
+  var s=e.target;if(!s.dataset.to)return;var id=s.dataset.to;
+  D.plan[s.dataset.d]=D.plan[s.dataset.d].filter(function(x){return x!==id});
+  if(s.value){if(!D.plan[s.value])D.plan[s.value]=[];D.plan[s.value].push(id);D.plan[s.value]=orderStops(D.plan[s.value])}
+  save();renderPlan();
+});
+
+/* ---- 印刷 ---- */
+function doPrint(h){$("#printArea").innerHTML=h;window.print()}
+$("#prList").onclick=function(){
+  var h="<h1>家庭訪問 日程一覧</h1>";var any=false;
+  D.days.forEach(function(d,di){var sc=schedule(d);if(!sc.stops.length)return;any=true;
+    h+="<h2>"+(d.date?fmtDate(d.date):(di+1)+"日目")+"　"+d.start+"〜（終了予定 "+toHM(sc.finish)+"）</h2><table><tr><th style='width:12%'>時刻</th><th style='width:26%'>児童名</th><th style='width:16%'>地区</th><th>メモ</th><th style='width:12%'>確認</th></tr>";
+    sc.stops.forEach(function(s){h+="<tr><td>"+toHM(s.at)+"</td><td>"+esc(s.h.name)+"</td><td>"+esc(s.h.area)+"</td><td>"+esc(s.h.memo)+"</td><td></td></tr>"});h+="</table>";
+  });
+  if(!any){toast("先に「自動で組む」を押してください");return}doPrint(h);
+};
+$("#prSlip").onclick=function(){
+  D.sender=$("#sender").value;D.slipMsg=$("#slipMsg").value;save();
+  var h="<div class='slips'>";var n=0;
+  D.days.forEach(function(d){schedule(d).stops.forEach(function(s){n++;
+    h+="<div class='slip'><div class='t'>家庭訪問のお知らせ</div><div>"+esc(s.h.name)+" さんの保護者様</div><div class='w'>"+(d.date?fmtDate(d.date):"")+"　"+toHM(s.at)+" ごろ</div><div style='font-size:9.5pt'>"+esc(D.slipMsg)+"</div><div style='text-align:right;margin-top:2mm'>"+esc(D.sender)+"</div></div>";
+  })});
+  h+="</div>";if(!n){toast("先に「自動で組む」を押してください");return}doPrint(h);
+};
+$("#sender").value=D.sender||"";$("#slipMsg").value=D.slipMsg||MSG;
+$("#sender").onchange=function(){D.sender=this.value;save()};$("#slipMsg").onchange=function(){D.slipMsg=this.value;save()};
+$("#bk").onclick=function(){download("家庭訪問_backup.json",JSON.stringify(D),"application/json")};
+$("#rs").onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var o=JSON.parse(rd.result);if(!o.days||!o.homes)throw 0;if(!confirm("今のデータを置きかえますか？"))return;D=o;save();location.reload()}catch(e){toast("読み込めませんでした")}};rd.readAsText(f);this.value=""};
+$("#reset").onclick=function(){if(!confirm("すべて消去しますか？"))return;try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+
+function renderAll(){renderDays();renderHomes();renderPlan()}
+renderAll();
+})();
+</script>
+</body>
+</html>

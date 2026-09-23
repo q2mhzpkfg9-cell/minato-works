@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>しゅくだいチェッカー</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height:100vh; color:#333; padding:16px;
+  }
+  header { text-align:center; margin-bottom:14px; }
+  h1 { font-size:clamp(28px,4.5vw,44px); color:#5b6ef5; letter-spacing:.05em; }
+  .tabs { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .tab-btn {
+    border:none; cursor:pointer; font-family:inherit;
+    font-size:clamp(17px,2.4vw,24px); font-weight:bold;
+    padding:14px 28px; border-radius:999px;
+    background:#fff; color:#5b6ef5; box-shadow:0 4px 14px rgba(0,0,0,.12);
+    transition:transform .15s;
+  }
+  .tab-btn:active { transform:scale(.95); }
+  .tab-btn.active { background:#5b6ef5; color:#fff; }
+  .card {
+    background:#fff; border-radius:22px; box-shadow:0 8px 30px rgba(0,0,0,.18);
+    padding:22px; max-width:1100px; margin:0 auto 18px;
+  }
+  .card h2 { font-size:clamp(20px,2.8vw,28px); color:#5b6ef5; margin-bottom:14px; }
+  .hidden { display:none !important; }
+  .btn {
+    border:none; cursor:pointer; font-family:inherit; font-weight:bold;
+    font-size:clamp(17px,2.2vw,22px); padding:14px 30px; border-radius:999px;
+    background:#5b6ef5; color:#fff; box-shadow:0 4px 14px rgba(91,110,245,.35);
+    transition:transform .12s;
+  }
+  .btn:active { transform:scale(.95); }
+  .btn.gray { background:#9aa0b5; box-shadow:0 4px 14px rgba(0,0,0,.15); }
+  .btn.red { background:#f56b7f; box-shadow:0 4px 14px rgba(245,107,127,.35); }
+  .btn.green { background:#4caf7d; box-shadow:0 4px 14px rgba(76,175,125,.35); }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+
+  /* かだいえらび */
+  .task-select-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  select, input[type="text"], input[type="date"] {
+    font-family:inherit; font-size:clamp(17px,2.2vw,22px);
+    padding:12px 16px; border:3px solid #dfe3ff; border-radius:16px; outline:none; background:#fff;
+  }
+  select:focus, input:focus { border-color:#5b6ef5; }
+  #taskSelect { flex:1; min-width:220px; font-weight:bold; }
+
+  /* プログレスバー */
+  .progress-wrap { margin:14px 0; }
+  .progress-label { font-size:clamp(18px,2.6vw,26px); font-weight:bold; margin-bottom:6px; }
+  .progress-label .pct { color:#5b6ef5; font-size:clamp(24px,3.4vw,36px); }
+  .progress-bar { height:30px; background:#eef0ff; border-radius:999px; overflow:hidden; }
+  .progress-fill {
+    height:100%; width:0%; border-radius:999px;
+    background:linear-gradient(90deg,#7c8cff,#5b6ef5);
+    transition:width .4s ease;
+  }
+  .progress-fill.full { background:linear-gradient(90deg,#63d69a,#4caf7d); }
+
+  /* 児童グリッド */
+  .check-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .check-btn {
+    border:3px solid #e8c9c9; background:#fff5f5; cursor:pointer; font-family:inherit;
+    border-radius:18px; padding:14px 8px; font-size:clamp(17px,2.4vw,24px); font-weight:bold;
+    transition:transform .12s; color:#333;
+  }
+  .check-btn:active { transform:scale(.94); }
+  .check-btn .st { display:block; font-size:clamp(26px,3.6vw,38px); margin-top:4px; }
+  .check-btn.on { border-color:#8fd18f; background:#f0fbf0; }
+  .note { font-size:clamp(15px,2vw,20px); color:#888; margin-top:10px; line-height:1.6; }
+
+  /* まだのひとモード */
+  .mada-list { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; padding:10px 0; }
+  .mada-chip {
+    background:#fff4f4; border:4px solid #ffb8c0; border-radius:22px;
+    padding:20px 34px; font-size:clamp(30px,5vw,56px); font-weight:bold;
+  }
+  .all-done { text-align:center; font-size:clamp(30px,5vw,56px); font-weight:bold; color:#4caf7d; padding:20px 0; }
+
+  /* なまえとうろく */
+  .add-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .add-row input { flex:1; min-width:200px; }
+  .reg-list { display:flex; flex-wrap:wrap; gap:10px; }
+  .reg-chip {
+    background:#f2f4ff; border-radius:999px; padding:10px 16px;
+    font-size:clamp(16px,2.2vw,22px); font-weight:bold; display:flex; align-items:center; gap:8px;
+  }
+  .reg-chip button {
+    border:none; background:#ffd7dd; color:#c33; cursor:pointer; font-family:inherit;
+    border-radius:50%; width:34px; height:34px; font-size:18px; font-weight:bold;
+  }
+  .copy-done { color:#4caf7d; font-weight:bold; font-size:clamp(16px,2.2vw,22px); margin-left:8px; }
+  @media (max-width:600px){
+    .check-grid { grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>📮 しゅくだいチェッカー</h1>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="check" onclick="showTab('check')">✅ チェックする</button>
+  <button class="tab-btn" data-tab="mada" onclick="showTab('mada')">🔔 まだのひとモード</button>
+  <button class="tab-btn" data-tab="setting" onclick="showTab('setting')">⚙️ なまえとうろく</button>
+</nav>
+
+<!-- チェック -->
+<section id="tab-check" class="card">
+  <h2>かだいを えらぶ</h2>
+  <div class="task-select-row">
+    <select id="taskSelect" onchange="onTaskChange()"></select>
+    <button class="btn red" onclick="deleteTask()">🗑️ このかだいをけす</button>
+  </div>
+  <div class="task-select-row">
+    <input type="text" id="newTaskName" placeholder="あたらしいかだい（例：しゅくだい・音読カード・集金）" style="flex:1; min-width:240px;">
+    <input type="date" id="newTaskDate">
+    <button class="btn" onclick="addTask()">＋ かだいをつくる</button>
+  </div>
+
+  <div id="checkArea">
+    <div class="progress-wrap">
+      <div class="progress-label">ていしゅつりつ <span class="pct" id="pctText">0%</span>（<span id="cntText">0 / 0</span>）</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div class="check-grid" id="checkGrid"></div>
+    <p class="note" id="checkNote"></p>
+    <div class="toolbar">
+      <button class="btn green" onclick="markAll(true)">ぜんいん ✅ にする</button>
+      <button class="btn gray" onclick="markAll(false)">ぜんいん ⬜ にもどす</button>
+      <button class="btn" onclick="copyCsv()">📋 CSVをコピー</button>
+      <span class="copy-done hidden" id="copyDone">コピーしました！</span>
+    </div>
+  </div>
+</section>
+
+<!-- まだのひとモード -->
+<section id="tab-mada" class="card">
+  <h2 id="madaTitle">🔔 まだのひと</h2>
+  <div id="madaArea"></div>
+</section>
+
+<!-- なまえとうろく -->
+<section id="tab-setting" class="card">
+  <h2>なまえの とうろく</h2>
+  <div class="add-row">
+    <input type="text" id="nameInput" placeholder="なまえを いれてね（1人ずつ）" maxlength="12">
+    <button class="btn" onclick="addName()">＋ ついか</button>
+  </div>
+  <div class="reg-list" id="regList"></div>
+  <div class="toolbar">
+    <button class="btn gray" onclick="clearAllNames()">🗑️ ぜんいんのなまえをけす</button>
+  </div>
+</section>
+
+<script>
+"use strict";
+var KEY_NAMES = "sensei25_shukudai_names";
+var KEY_TASKS = "sensei25_shukudai_tasks";
+
+var names = [];
+var tasks = []; // { id, title, date, checks:{name:true} }
+var currentTaskId = null;
+var audioCtx = null;
+
+function load(){
+  try { names = JSON.parse(localStorage.getItem(KEY_NAMES)) || []; } catch(e){ names = []; }
+  try { tasks = JSON.parse(localStorage.getItem(KEY_TASKS)) || []; } catch(e){ tasks = []; }
+  if (!Array.isArray(names)) names = [];
+  if (!names.length){
+    // 共通のなまえちょう（せってい/ルーレット等で登録済み）から引き継ぐ
+    try {
+      var shared = localStorage.getItem("sensei25_names") || "";
+      names = shared.split("\n").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+    } catch(e){}
+  }
+  if (!Array.isArray(tasks)) tasks = [];
+  if (tasks.length) currentTaskId = tasks[tasks.length-1].id;
+}
+function saveNames(){ localStorage.setItem(KEY_NAMES, JSON.stringify(names)); }
+function saveTasks(){ localStorage.setItem(KEY_TASKS, JSON.stringify(tasks)); }
+function currentTask(){
+  for (var i=0;i<tasks.length;i++) if (tasks[i].id === currentTaskId) return tasks[i];
+  return null;
+}
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function playPop(up){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var t = audioCtx.currentTime;
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = "sine";
+    if (up){
+      o.frequency.setValueAtTime(600, t);
+      o.frequency.exponentialRampToValueAtTime(900, t + 0.1);
+    } else {
+      o.frequency.setValueAtTime(500, t);
+      o.frequency.exponentialRampToValueAtTime(350, t + 0.1);
+    }
+    g.gain.setValueAtTime(0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t + 0.25);
+  } catch(e){}
+}
+
+function showTab(tab){
+  var tabsArr = ["check","mada","setting"];
+  for (var i=0;i<tabsArr.length;i++){
+    document.getElementById("tab-" + tabsArr[i]).classList.toggle("hidden", tabsArr[i] !== tab);
+  }
+  var btns = document.querySelectorAll(".tab-btn");
+  for (var j=0;j<btns.length;j++){
+    btns[j].classList.toggle("active", btns[j].getAttribute("data-tab") === tab);
+  }
+  renderAll();
+}
+
+function addTask(){
+  var nameInp = document.getElementById("newTaskName");
+  var dateInp = document.getElementById("newTaskDate");
+  var title = nameInp.value.trim();
+  var date = dateInp.value || todayStr();
+  if (!title){ alert("かだいの なまえを いれてください"); return; }
+  var t = { id: Date.now() + "_" + Math.floor(Math.random()*1000), title:title, date:date, checks:{} };
+  tasks.push(t);
+  currentTaskId = t.id;
+  saveTasks();
+  nameInp.value = "";
+  renderAll();
+}
+function deleteTask(){
+  var t = currentTask();
+  if (!t){ alert("かだいが ありません"); return; }
+  if (!confirm("「" + t.title + "（" + t.date + "）」を けしますか？")) return;
+  tasks = tasks.filter(function(x){ return x.id !== t.id; });
+  currentTaskId = tasks.length ? tasks[tasks.length-1].id : null;
+  saveTasks();
+  renderAll();
+}
+function onTaskChange(){
+  currentTaskId = document.getElementById("taskSelect").value || null;
+  renderAll();
+}
+
+function toggleCheck(nm){
+  var t = currentTask();
+  if (!t) return;
+  var nowOn = !t.checks[nm];
+  if (nowOn) t.checks[nm] = true; else delete t.checks[nm];
+  saveTasks();
+  playPop(nowOn);
+  renderAll();
+}
+function markAll(on){
+  var t = currentTask();
+  if (!t) return;
+  t.checks = {};
+  if (on) for (var i=0;i<names.length;i++) t.checks[names[i]] = true;
+  saveTasks();
+  renderAll();
+}
+
+function renderTaskSelect(){
+  var sel = document.getElementById("taskSelect");
+  sel.innerHTML = "";
+  if (tasks.length === 0){
+    var op = document.createElement("option");
+    op.textContent = "（まだ かだいが ありません）";
+    op.value = "";
+    sel.appendChild(op);
+    return;
+  }
+  var sorted = tasks.slice().sort(function(a,b){
+    return a.date === b.date ? 0 : (a.date < b.date ? 1 : -1);
+  });
+  for (var i=0;i<sorted.length;i++){
+    var o = document.createElement("option");
+    o.value = sorted[i].id;
+    o.textContent = sorted[i].date + "　" + sorted[i].title;
+    sel.appendChild(o);
+  }
+  if (!currentTask()) currentTaskId = sorted[0].id;
+  sel.value = currentTaskId;
+}
+
+function renderCheck(){
+  var grid = document.getElementById("checkGrid");
+  var note = document.getElementById("checkNote");
+  var t = currentTask();
+  grid.innerHTML = "";
+  if (!t){
+    note.textContent = "うえの らんから かだいを つくってね。";
+    updateProgress(0, 0);
+    return;
+  }
+  if (names.length === 0){
+    note.textContent = "「⚙️ なまえとうろく」から なまえを とうろくしてね。";
+    updateProgress(0, 0);
+    return;
+  }
+  note.textContent = "なまえを タップすると ✅ / ⬜ が きりかわるよ。";
+  var done = 0;
+  for (var i=0;i<names.length;i++){
+    (function(nm){
+      var on = !!t.checks[nm];
+      if (on) done++;
+      var b = document.createElement("button");
+      b.className = "check-btn" + (on ? " on" : "");
+      b.innerHTML = escapeHtml(nm) + '<span class="st">' + (on ? "✅ だした" : "⬜ まだ") + "</span>";
+      b.onclick = function(){ toggleCheck(nm); };
+      grid.appendChild(b);
+    })(names[i]);
+  }
+  updateProgress(done, names.length);
+}
+
+function updateProgress(done, total){
+  var pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById("pctText").textContent = pct + "%";
+  document.getElementById("cntText").textContent = done + " / " + total;
+  var fill = document.getElementById("progressFill");
+  fill.style.width = pct + "%";
+  fill.classList.toggle("full", pct === 100 && total > 0);
+}
+
+function renderMada(){
+  var area = document.getElementById("madaArea");
+  var title = document.getElementById("madaTitle");
+  var t = currentTask();
+  area.innerHTML = "";
+  if (!t){
+    title.textContent = "🔔 まだのひと";
+    area.innerHTML = '<p class="note">かだいが ありません。「✅ チェックする」から つくってね。</p>';
+    return;
+  }
+  title.textContent = "🔔 「" + t.title + "」が まだのひと（" + t.date + "）";
+  var mada = [];
+  for (var i=0;i<names.length;i++){
+    if (!t.checks[names[i]]) mada.push(names[i]);
+  }
+  if (names.length === 0){
+    area.innerHTML = '<p class="note">なまえが とうろくされていません。</p>';
+  } else if (mada.length === 0){
+    area.innerHTML = '<div class="all-done">🎉 ぜんいん だしました！ 🎉</div>';
+  } else {
+    var wrap = document.createElement("div");
+    wrap.className = "mada-list";
+    for (var j=0;j<mada.length;j++){
+      var chip = document.createElement("div");
+      chip.className = "mada-chip";
+      chip.textContent = mada[j];
+      wrap.appendChild(chip);
+    }
+    area.appendChild(wrap);
+    var p = document.createElement("p");
+    p.className = "note";
+    p.style.textAlign = "center";
+    p.textContent = "あと " + mada.length + " 人";
+    area.appendChild(p);
+  }
+}
+
+function buildCsv(){
+  var t = currentTask();
+  if (!t) return "";
+  var lines = ["かだい," + csvEscape(t.title), "ひづけ," + csvEscape(t.date), "なまえ,ていしゅつ"];
+  for (var i=0;i<names.length;i++){
+    lines.push(csvEscape(names[i]) + "," + (t.checks[names[i]] ? "出した" : "まだ"));
+  }
+  return lines.join("\n");
+}
+function csvEscape(s){
+  s = String(s);
+  if (/[",\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+function copyCsv(){
+  var csv = buildCsv();
+  if (!csv){ alert("かだいが ありません"); return; }
+  function done(){
+    var el = document.getElementById("copyDone");
+    el.classList.remove("hidden");
+    setTimeout(function(){ el.classList.add("hidden"); }, 2000);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csv).then(done, function(){ fallbackCopy(csv); done(); });
+  } else {
+    fallbackCopy(csv); done();
+  }
+}
+function fallbackCopy(text){
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+function renderSetting(){
+  var list = document.getElementById("regList");
+  list.innerHTML = "";
+  for (var i=0;i<names.length;i++){
+    (function(idx){
+      var chip = document.createElement("div");
+      chip.className = "reg-chip";
+      var span = document.createElement("span");
+      span.textContent = (idx+1) + ". " + names[idx];
+      var del = document.createElement("button");
+      del.textContent = "✕";
+      del.onclick = function(){
+        if (confirm("「" + names[idx] + "」を けしますか？")){
+          names.splice(idx,1); saveNames(); renderAll();
+        }
+      };
+      chip.appendChild(span); chip.appendChild(del);
+      list.appendChild(chip);
+    })(i);
+  }
+}
+function addName(){
+  var inp = document.getElementById("nameInput");
+  var v = inp.value.trim();
+  if (!v) return;
+  if (names.indexOf(v) !== -1){ alert("おなじ なまえが すでにあります"); return; }
+  names.push(v);
+  saveNames();
+  inp.value = "";
+  inp.focus();
+  renderAll();
+}
+function clearAllNames(){
+  if (names.length === 0) return;
+  if (confirm("とうろくした なまえを ぜんぶ けしますか？")){
+    names = []; saveNames(); renderAll();
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function renderAll(){
+  renderTaskSelect();
+  renderCheck();
+  renderMada();
+  renderSetting();
+}
+
+document.getElementById("nameInput").addEventListener("keydown", function(e){
+  if (e.key === "Enter") addName();
+});
+document.getElementById("newTaskName").addEventListener("keydown", function(e){
+  if (e.key === "Enter") addTask();
+});
+
+(function init(){
+  load();
+  document.getElementById("newTaskDate").value = todayStr();
+  renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>備品貸出ノート</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.14)}
+header h1{font-size:1.2rem;margin:0}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+button.del{color:var(--danger)}
+button.sm{min-height:36px;padding:4px 10px;font-size:.88rem}
+input,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.tabs .badge{background:var(--danger);color:#fff;border-radius:10px;padding:0 7px;font-size:.8rem;margin-left:4px}
+.hidden{display:none}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fcfaf5;cursor:pointer;text-align:left;min-height:84px}
+.item.none{opacity:.55}
+.item.on{outline:3px solid var(--accent);background:#fff6ee}
+.item b{display:block}
+.stock{font-size:.85rem}
+.stock .z{color:var(--danger);font-weight:700}
+.loan{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;flex-wrap:wrap}
+.loan .main{flex:1;min-width:200px}
+.late{color:var(--danger);font-weight:700}
+.today{color:var(--accent);font-weight:700}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left;font-size:.9rem}
+th{background:#f3eee3}
+td input{min-height:38px;width:100%}
+#printArea{display:none}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,main{display:none!important}body{background:#fff}#printArea{display:block!important;padding:8mm}#printArea table th,#printArea table td{border:1px solid #888}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>備品貸出ノート</h1></header>
+<main>
+<div class="tabs">
+  <button data-tab="lend" class="on">借りる</button>
+  <button data-tab="out">貸出中<span id="lateBadge"></span></button>
+  <button data-tab="items">備品の登録</button>
+  <button data-tab="hist">履歴</button>
+</div>
+
+<section id="tab-lend">
+  <div class="card">
+    <h2>① 備品をえらぶ</h2>
+    <div class="row"><input id="q" placeholder="さがす（例：カメラ、体育倉庫）" style="flex:1"><select id="catF"></select></div>
+    <div class="items" id="itemGrid" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h2>② だれが・いつまで</h2>
+    <div class="row">
+      <input id="lWho" placeholder="借りる人（例：3-2 湊）" list="whoList" style="flex:2;min-width:180px">
+      <datalist id="whoList"></datalist>
+      <label>数<input type="number" id="lQty" value="1" min="1" style="width:80px"></label>
+      <label>返す日<input type="date" id="lDue"></label>
+      <button class="sm" data-due="0">今日中</button><button class="sm" data-due="1">明日</button><button class="sm" data-due="7">1週間</button>
+    </div>
+    <input id="lMemo" placeholder="使いみち・メモ（任意）" style="width:100%;margin-top:8px">
+    <div class="row" style="margin-top:8px"><button class="pri" id="lendBtn">貸し出す</button><span id="lMsg" class="note"></span></div>
+  </div>
+</section>
+
+<section id="tab-out" class="hidden">
+  <div class="card">
+    <div class="row"><h2 style="margin:0;flex:1">貸出中</h2><button onclick="window.print()">一覧を印刷</button></div>
+    <div id="outList"></div>
+  </div>
+</section>
+
+<section id="tab-items" class="hidden">
+  <div class="card">
+    <h2>備品を追加</h2>
+    <div class="row">
+      <input id="iName" placeholder="名前（例：デジタルカメラ）" style="flex:2;min-width:180px">
+      <input id="iCat" placeholder="分類（例：ICT）" list="catList" style="flex:1;min-width:110px"><datalist id="catList"></datalist>
+      <input type="number" id="iQty" value="1" min="1" style="width:80px">
+      <input id="iPlace" placeholder="保管場所" style="flex:1;min-width:120px">
+      <button class="pri" id="addItem">追加</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>登録している備品</h2>
+    <div class="scroll"><table id="itemTable"></table></div>
+    <p class="note">表の中で直接書きかえられます。データはこの端末の中だけに保存されます（共有PCで使うと職員みんなで使えます）。</p>
+    <div class="row"><button id="expBtn">書き出す</button><label class="row note">読み込む<input type="file" id="impFile" accept=".json"></label></div>
+  </div>
+</section>
+
+<section id="tab-hist" class="hidden">
+  <div class="card">
+    <div class="row"><input id="hq" placeholder="備品名・人でしぼる" style="flex:1"><button id="csvBtn">CSV</button></div>
+    <div class="scroll"><table id="histTable" style="margin-top:8px"></table></div>
+  </div>
+</section>
+</main>
+<div id="printArea"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const K='mw_gyomu_19_';
+const load=(k,d)=>{try{const v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){alert('保存できませんでした')}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const md=s=>s?(+s.slice(5,7))+'/'+(+s.slice(8,10)):'';
+const SAMPLE=[['デジタルカメラ','ICT',4,'職員室 棚A'],['書画カメラ','ICT',3,'パソコン室'],['プロジェクター','ICT',2,'視聴覚室'],['ワイヤレスマイク','ICT',2,'放送室'],['ストップウォッチ','体育',20,'体育倉庫'],['巻き尺（50m）','体育',2,'体育倉庫'],['ラインカー','体育',2,'体育倉庫'],['大型定規・三角定規セット','算数',3,'算数教具室'],['地球儀','社会',2,'社会科準備室'],['虫めがね','理科',40,'理科室'],['ホットプレート','家庭',4,'家庭科室'],['ラミネーター','事務',1,'印刷室']];
+let items=load('items',null);
+if(!items){items=SAMPLE.map((s,i)=>({id:i+1,name:s[0],cat:s[1],qty:s[2],place:s[3]}));save('items',items)}
+let loans=load('loans',[]);
+let pick=null;
+
+const outQty=id=>loans.filter(l=>l.item===id&&!l.back).reduce((a,l)=>a+l.qty,0);
+const itemOf=id=>items.find(i=>i.id===id)||{name:'（削除された備品）',place:''};
+function status(l){const t=ymd(new Date());if(l.back)return '';if(l.due<t)return 'late';if(l.due===t)return 'today';return ''}
+
+function renderGrid(){
+  const q=$('q').value.trim(),c=$('catF').value;
+  const cats=[...new Set(items.map(i=>i.cat).filter(Boolean))];
+  const cv=$('catF').value;$('catF').innerHTML='<option value="">すべての分類</option>'+cats.map(x=>`<option>${esc(x)}</option>`).join('');$('catF').value=cv;
+  $('catList').innerHTML=cats.map(x=>`<option value="${esc(x)}">`).join('');
+  const l=items.filter(i=>(!c||i.cat===c)&&(!q||(i.name+i.cat+i.place).includes(q)));
+  $('itemGrid').innerHTML=l.map(i=>{const left=i.qty-outQty(i.id);return `<button class="item ${left<=0?'none':''} ${pick===i.id?'on':''}" data-id="${i.id}"><b>${esc(i.name)}</b><span class="note">${esc(i.place)}</span><div class="stock">のこり <span class="${left<=0?'z':''}">${left}</span> / ${i.qty}</div></button>`}).join('')||'<p class="note">見つかりません。「備品の登録」で追加できます。</p>';
+  $('whoList').innerHTML=[...new Set(loans.map(l=>l.who))].slice(-30).map(w=>`<option value="${esc(w)}">`).join('');
+}
+$('itemGrid').addEventListener('click',e=>{const b=e.target.closest('.item');if(!b)return;pick=+b.dataset.id;renderGrid()});
+$('q').oninput=renderGrid;$('catF').onchange=renderGrid;
+document.querySelectorAll('[data-due]').forEach(b=>b.onclick=()=>{const d=new Date();d.setDate(d.getDate()+ +b.dataset.due);$('lDue').value=ymd(d)});
+$('lendBtn').onclick=()=>{
+  if(!pick){$('lMsg').textContent='備品をえらんでください';return}
+  const who=$('lWho').value.trim();if(!who){$('lMsg').textContent='借りる人を入れてください';return}
+  const qty=Math.max(1,+$('lQty').value||1);const it=itemOf(pick);const left=it.qty-outQty(pick);
+  if(qty>left&&!confirm(`のこりは${left}個です。それでも貸し出しますか？`))return;
+  loans.push({id:Date.now(),item:pick,qty,who,out:ymd(new Date()),due:$('lDue').value||ymd(new Date()),memo:$('lMemo').value.trim(),back:''});
+  save('loans',loans);$('lMsg').textContent=`${it.name}×${qty} を ${who} さんに貸し出しました`;pick=null;$('lMemo').value='';$('lQty').value=1;renderAll();
+  setTimeout(()=>$('lMsg').textContent='',3000);
+};
+
+function renderOut(){
+  const l=loans.filter(x=>!x.back).sort((a,b)=>a.due<b.due?-1:1);
+  $('outList').innerHTML=l.map(x=>{const s=status(x);const it=itemOf(x.item);return `<div class="loan"><div class="main"><b>${esc(it.name)}</b> ×${x.qty}　${esc(x.who)}<br><span class="note">${md(x.out)} 貸出　返却場所：${esc(it.place)}${x.memo?'　'+esc(x.memo):''}</span></div>
+  <div class="${s}">${md(x.due)}まで${s==='late'?'（期限切れ）':s==='today'?'（今日）':''}</div><button class="ok" data-back="${x.id}">返した</button></div>`}).join('')||'<p class="note">貸出中のものはありません。</p>';
+  const late=l.filter(x=>status(x)==='late').length;
+  $('lateBadge').innerHTML=late?`<span class="badge">${late}</span>`:'';
+  $('printArea').innerHTML=`<h2>備品 貸出中一覧（${md(ymd(new Date()))}現在）</h2><table><tr><th>備品</th><th>数</th><th>借りた人</th><th>貸出</th><th>返却予定</th><th>確認</th></tr>${l.map(x=>`<tr><td>${esc(itemOf(x.item).name)}</td><td>${x.qty}</td><td>${esc(x.who)}</td><td>${md(x.out)}</td><td>${md(x.due)}${status(x)==='late'?' ※期限切れ':''}</td><td></td></tr>`).join('')}</table>`;
+}
+$('outList').addEventListener('click',e=>{const id=e.target.dataset.back;if(!id)return;const l=loans.find(x=>x.id==id);l.back=ymd(new Date());save('loans',loans);renderAll()});
+
+function renderItems(){
+  $('itemTable').innerHTML='<tr><th>名前</th><th>分類</th><th>数</th><th>保管場所</th><th>貸出中</th><th></th></tr>'+items.map(i=>`<tr data-id="${i.id}"><td><input data-f="name" value="${esc(i.name)}"></td><td><input data-f="cat" value="${esc(i.cat)}" style="width:90px"></td><td><input type="number" data-f="qty" value="${i.qty}" style="width:70px"></td><td><input data-f="place" value="${esc(i.place)}"></td><td>${outQty(i.id)}</td><td><button class="sm del" data-rm="${i.id}">削除</button></td></tr>`).join('');
+}
+$('itemTable').addEventListener('change',e=>{const f=e.target.dataset.f;if(!f)return;const it=items.find(i=>i.id==e.target.closest('tr').dataset.id);it[f]=f==='qty'?Math.max(0,+e.target.value||0):e.target.value.trim();save('items',items);renderGrid()});
+$('itemTable').addEventListener('click',e=>{const id=e.target.dataset.rm;if(!id)return;if(outQty(+id)>0){alert('貸出中のものがあるので削除できません');return}if(confirm('この備品を削除しますか？')){items=items.filter(i=>i.id!=id);save('items',items);renderAll()}});
+$('addItem').onclick=()=>{const name=$('iName').value.trim();if(!name)return;items.push({id:Date.now(),name,cat:$('iCat').value.trim(),qty:Math.max(1,+$('iQty').value||1),place:$('iPlace').value.trim()});save('items',items);$('iName').value='';renderAll()};
+
+function histRows(){const q=$('hq').value.trim();return loans.filter(l=>!q||(itemOf(l.item).name+l.who).includes(q)).sort((a,b)=>b.id-a.id)}
+function renderHist(){
+  $('histTable').innerHTML='<tr><th>備品</th><th>数</th><th>人</th><th>貸出</th><th>予定</th><th>返却</th><th>メモ</th></tr>'+histRows().map(l=>`<tr><td>${esc(itemOf(l.item).name)}</td><td>${l.qty}</td><td>${esc(l.who)}</td><td>${md(l.out)}</td><td>${md(l.due)}</td><td>${l.back?md(l.back):'<span class="'+status(l)+'">貸出中</span>'}</td><td>${esc(l.memo)}</td></tr>`).join('');
+}
+$('hq').oninput=renderHist;
+$('csvBtn').onclick=()=>{const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';let c='備品,数,人,貸出日,返却予定,返却日,メモ\n';histRows().forEach(l=>c+=[itemOf(l.item).name,l.qty,l.who,l.out,l.due,l.back,l.memo].map(q).join(',')+'\n');const b=new Blob(['﻿'+c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='備品貸出履歴.csv';a.click()};
+$('expBtn').onclick=()=>{const b=new Blob([JSON.stringify({items,loans})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='備品貸出_'+ymd(new Date())+'.json';a.click()};
+$('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!Array.isArray(o.items))throw 0;if(!confirm('いまのデータを置きかえますか？'))return;items=o.items;loans=o.loans||[];save('items',items);save('loans',loans);renderAll()}catch(err){alert('読み込めませんでした')}};r.readAsText(f)};
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['lend','out','items','hist'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));renderAll()});
+function renderAll(){renderGrid();renderOut();renderItems();renderHist()}
+$('lDue').value=ymd(new Date());
+renderAll();
+</script>
+</body>
+</html>

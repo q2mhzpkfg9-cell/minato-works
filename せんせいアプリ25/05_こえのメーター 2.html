@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>こえのメーター 🔊</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    background-attachment: fixed;
+    color: #333;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 { font-size: clamp(28px, 4.5vw, 46px); color: #3d4370; }
+  .card {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: 24px;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 18px;
+  }
+
+  /* スタート画面 */
+  #startScreen { text-align: center; padding: 30px 10px; }
+  #startScreen .mic-emoji { font-size: clamp(64px, 12vw, 120px); margin-bottom: 16px; }
+  #startScreen p { font-size: clamp(18px, 2.4vw, 24px); color: #3d4370; line-height: 1.8; margin-bottom: 22px; }
+  #startBtn {
+    font-family: inherit;
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: bold;
+    padding: 20px 54px;
+    border-radius: 999px;
+    border: none;
+    background: #5b6ef5;
+    color: #fff;
+    box-shadow: 0 6px 0 #3f51c9;
+    cursor: pointer;
+    transition: transform .1s;
+  }
+  #startBtn:active { transform: scale(.94); }
+  #errMsg { color: #d4526b; font-size: clamp(16px, 2vw, 20px); font-weight: bold; margin-top: 16px; min-height: 1.5em; }
+
+  /* メーター画面 */
+  #meterScreen { display: none; }
+  .meter-layout {
+    display: flex;
+    gap: 26px;
+    align-items: stretch;
+    justify-content: center;
+  }
+  .meter-col {
+    position: relative;
+    width: clamp(90px, 16vw, 150px);
+    height: clamp(320px, 52vh, 480px);
+    background: #eef1ff;
+    border-radius: 999px;
+    border: 4px solid #cdd5f7;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #meterFill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 0%;
+    background: linear-gradient(to top, #3fbf7f 0%, #a8d96e 40%, #f5b73f 65%, #f2545b 90%);
+    background-size: 100% clamp(312px, 51vh, 472px);
+    background-position: bottom;
+    background-attachment: local;
+    transition: height .08s linear;
+    border-radius: 0 0 999px 999px;
+  }
+  #limitLine {
+    position: absolute;
+    left: -4px; right: -4px;
+    height: 0;
+    border-top: 5px dashed #d4526b;
+    z-index: 2;
+  }
+  #limitLine::after {
+    content: "せいげん";
+    position: absolute;
+    right: 4px;
+    top: -30px;
+    font-size: clamp(12px, 1.6vw, 15px);
+    color: #d4526b;
+    font-weight: bold;
+    background: rgba(255,255,255,.85);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .face-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  #faceEmoji { font-size: clamp(90px, 18vw, 180px); line-height: 1; transition: transform .15s; }
+  #faceLabel { font-size: clamp(26px, 4vw, 44px); font-weight: bold; color: #3d4370; }
+  #levelNum { font-size: clamp(20px, 2.6vw, 28px); color: #888; font-variant-numeric: tabular-nums; }
+
+  #warnBanner {
+    display: none;
+    margin-top: 18px;
+    background: #ffdfe3;
+    border: 4px solid #f2545b;
+    color: #a3232d;
+    border-radius: 18px;
+    text-align: center;
+    font-size: clamp(24px, 3.6vw, 40px);
+    font-weight: bold;
+    padding: 16px;
+    animation: shake .4s infinite;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  body.over { animation: bgWarn 1s steps(2, jump-none) infinite; }
+  @keyframes bgWarn {
+    0% { background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%); }
+    50% { background: #ffe2e2; }
+    100% { background: linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%); }
+  }
+
+  .slider-block { margin-top: 22px; }
+  .slider-block label { font-size: clamp(18px, 2.4vw, 24px); font-weight: bold; color: #3d4370; display: block; margin-bottom: 10px; text-align: center; }
+  #limitSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 18px;
+    border-radius: 999px;
+    background: linear-gradient(to right, #3fbf7f, #f5b73f, #f2545b);
+    outline: none;
+  }
+  #limitSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 5px solid #5b6ef5;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,.25);
+  }
+  #limitSlider::-moz-range-thumb {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 5px solid #5b6ef5;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,.25);
+  }
+  #limitVal { color: #5b6ef5; }
+
+  .legend { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 20px; }
+  .legend span {
+    font-size: clamp(15px, 1.9vw, 19px);
+    background: #f4f6ff;
+    border-radius: 999px;
+    padding: 8px 16px;
+    color: #3d4370;
+    font-weight: bold;
+  }
+  #stopBtn {
+    display: block;
+    margin: 20px auto 0;
+    font-family: inherit;
+    font-size: clamp(16px, 2.2vw, 21px);
+    font-weight: bold;
+    padding: 12px 30px;
+    border-radius: 999px;
+    border: none;
+    background: #ffb3c1;
+    color: #7a2338;
+    box-shadow: 0 4px 0 #e58fa1;
+    cursor: pointer;
+  }
+  #stopBtn:active { transform: scale(.95); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔊 こえのメーター</h1>
+</header>
+
+<div class="card" id="startScreen">
+  <div class="mic-emoji">🎤</div>
+  <p>
+    きょうしつの こえの大きさを はかるよ。<br>
+    はじめるには <strong>マイクの きょか</strong> が ひつようです。<br>
+    ボタンをおして「許可」をえらんでね。
+  </p>
+  <button type="button" id="startBtn">🎤 マイクをつかってはじめる</button>
+  <div id="errMsg"></div>
+</div>
+
+<div class="card" id="meterScreen">
+  <div class="meter-layout">
+    <div class="meter-col">
+      <div id="meterFill"></div>
+      <div id="limitLine"></div>
+    </div>
+    <div class="face-col">
+      <div id="faceEmoji">😴</div>
+      <div id="faceLabel">しずか</div>
+      <div id="levelNum">0</div>
+      <div id="warnBanner">🙉 うるさいよ！しずかにしよう！</div>
+    </div>
+  </div>
+
+  <div class="slider-block">
+    <label for="limitSlider">せいげんライン：<span id="limitVal">60</span></label>
+    <input type="range" id="limitSlider" min="10" max="95" value="60" step="1">
+  </div>
+
+  <div class="legend">
+    <span>😴 0〜24 しずか</span>
+    <span>🙂 25〜49 ちょうどいい</span>
+    <span>😲 50〜74 ざわざわ</span>
+    <span>🙉 75〜100 うるさい</span>
+  </div>
+
+  <button type="button" id="stopBtn">■ メーターをとめる</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var LS_LIMIT = "sensei25_koemeter_limit";
+
+  var startScreen = document.getElementById("startScreen");
+  var meterScreen = document.getElementById("meterScreen");
+  var startBtn = document.getElementById("startBtn");
+  var stopBtn = document.getElementById("stopBtn");
+  var errMsg = document.getElementById("errMsg");
+  var meterFill = document.getElementById("meterFill");
+  var limitLine = document.getElementById("limitLine");
+  var faceEmoji = document.getElementById("faceEmoji");
+  var faceLabel = document.getElementById("faceLabel");
+  var levelNum = document.getElementById("levelNum");
+  var warnBanner = document.getElementById("warnBanner");
+  var limitSlider = document.getElementById("limitSlider");
+  var limitVal = document.getElementById("limitVal");
+
+  var audioCtx = null;
+  var analyser = null;
+  var mediaStream = null;
+  var dataArr = null;
+  var rafId = null;
+  var smooth = 0;
+  var overSince = null;   // しきい値超過の開始時刻
+  var warning = false;
+  var lastBeep = 0;
+
+  var STAGES = [
+    { min: 0,  emoji: "😴", label: "しずか" },
+    { min: 25, emoji: "🙂", label: "ちょうどいい" },
+    { min: 50, emoji: "😲", label: "ざわざわ" },
+    { min: 75, emoji: "🙉", label: "うるさい" }
+  ];
+
+  function beep() {
+    if (!audioCtx) return;
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    osc.type = "square";
+    osc.frequency.value = 1100;
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  }
+
+  function updateLimitLine() {
+    var v = parseInt(limitSlider.value, 10);
+    limitVal.textContent = String(v);
+    limitLine.style.bottom = v + "%";
+    limitLine.style.top = "auto";
+    try { localStorage.setItem(LS_LIMIT, String(v)); } catch (e) {}
+  }
+
+  function stageFor(level) {
+    var s = STAGES[0];
+    for (var i = 0; i < STAGES.length; i++) {
+      if (level >= STAGES[i].min) s = STAGES[i];
+    }
+    return s;
+  }
+
+  function loop() {
+    analyser.getByteTimeDomainData(dataArr);
+    var sum = 0;
+    for (var i = 0; i < dataArr.length; i++) {
+      var d = (dataArr[i] - 128) / 128;
+      sum += d * d;
+    }
+    var rms = Math.sqrt(sum / dataArr.length);
+    // rms(0〜1) を 0〜100 に。教室の声が使いやすいようにルートカーブで持ち上げる
+    var level = Math.min(100, Math.round(Math.pow(rms, 0.6) * 160));
+    smooth = smooth * 0.82 + level * 0.18;
+    var disp = Math.round(smooth);
+
+    meterFill.style.height = disp + "%";
+    levelNum.textContent = String(disp);
+
+    var st = stageFor(disp);
+    if (faceEmoji.textContent !== st.emoji) {
+      faceEmoji.textContent = st.emoji;
+      faceLabel.textContent = st.label;
+      faceEmoji.style.transform = "scale(1.2)";
+      setTimeout(function () { faceEmoji.style.transform = "scale(1)"; }, 150);
+    }
+
+    // せいげんライン超過の監視（3秒つづいたら警告）
+    var limit = parseInt(limitSlider.value, 10);
+    var now = performance.now();
+    if (disp > limit) {
+      if (overSince === null) overSince = now;
+      if (now - overSince >= 3000) {
+        if (!warning) {
+          warning = true;
+          warnBanner.style.display = "block";
+          document.body.classList.add("over");
+        }
+        if (now - lastBeep > 1200) {
+          beep();
+          lastBeep = now;
+        }
+      }
+    } else {
+      overSince = null;
+      if (warning) {
+        warning = false;
+        warnBanner.style.display = "none";
+        document.body.classList.remove("over");
+      }
+    }
+
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    errMsg.textContent = "";
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errMsg.textContent = "このブラウザではマイクがつかえません…";
+      return;
+    }
+    startBtn.disabled = true;
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      .then(function (stream) {
+        mediaStream = stream;
+        var AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        var src = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.5;
+        src.connect(analyser);
+        dataArr = new Uint8Array(analyser.fftSize);
+        startScreen.style.display = "none";
+        meterScreen.style.display = "block";
+        smooth = 0;
+        overSince = null;
+        loop();
+      })
+      .catch(function (err) {
+        startBtn.disabled = false;
+        if (err && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
+          errMsg.textContent = "マイクが「きょか」されませんでした。ブラウザの設定から許可してね。";
+        } else if (err && err.name === "NotFoundError") {
+          errMsg.textContent = "マイクが見つかりませんでした…";
+        } else {
+          errMsg.textContent = "マイクをつかえませんでした（" + (err && err.name ? err.name : "エラー") + "）";
+        }
+      });
+  }
+
+  function stop() {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(function (t) { t.stop(); });
+      mediaStream = null;
+    }
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    analyser = null;
+    warning = false;
+    warnBanner.style.display = "none";
+    document.body.classList.remove("over");
+    meterScreen.style.display = "none";
+    startScreen.style.display = "block";
+    startBtn.disabled = false;
+  }
+
+  startBtn.addEventListener("click", start);
+  stopBtn.addEventListener("click", stop);
+  limitSlider.addEventListener("input", updateLimitLine);
+
+  // ---- 復元 ----
+  try {
+    var saved = parseInt(localStorage.getItem(LS_LIMIT), 10);
+    if (!isNaN(saved) && saved >= 10 && saved <= 95) limitSlider.value = String(saved);
+  } catch (e) {}
+  updateLimitLine();
+
+  window.addEventListener("pagehide", function () {
+    if (mediaStream) mediaStream.getTracks().forEach(function (t) { t.stop(); });
+  });
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

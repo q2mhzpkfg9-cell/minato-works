@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おだいガチャ</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+    background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+    min-height:100vh; color:#333; padding:16px;
+  }
+  header { text-align:center; margin-bottom:14px; }
+  h1 { font-size:clamp(28px,4.5vw,44px); color:#5b6ef5; letter-spacing:.05em; }
+  .card {
+    background:#fff; border-radius:22px; box-shadow:0 8px 30px rgba(0,0,0,.18);
+    padding:22px; max-width:1000px; margin:0 auto 18px;
+  }
+  .card h2 { font-size:clamp(19px,2.6vw,26px); color:#5b6ef5; margin-bottom:12px; }
+  .hidden { display:none !important; }
+  .btn {
+    border:none; cursor:pointer; font-family:inherit; font-weight:bold;
+    font-size:clamp(18px,2.4vw,24px); padding:15px 34px; border-radius:999px;
+    background:#5b6ef5; color:#fff; box-shadow:0 4px 14px rgba(91,110,245,.35);
+    transition:transform .12s; margin:4px;
+  }
+  .btn:active { transform:scale(.95); }
+  .btn.gray { background:#9aa0b5; box-shadow:0 4px 14px rgba(0,0,0,.15); }
+  .btn.orange { background:#ff9c55; box-shadow:0 4px 14px rgba(255,156,85,.4); }
+  .btn.big { font-size:clamp(24px,3.6vw,36px); padding:20px 56px; }
+
+  /* カテゴリ */
+  .cat-row { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .cat-btn {
+    border:3px solid #dfe3ff; background:#f7f8ff; color:#5b6ef5; cursor:pointer; font-family:inherit;
+    font-size:clamp(17px,2.4vw,24px); font-weight:bold; padding:14px 26px; border-radius:999px;
+    transition:transform .12s;
+  }
+  .cat-btn:active { transform:scale(.94); }
+  .cat-btn.active { background:#5b6ef5; color:#fff; border-color:#5b6ef5; }
+
+  /* ガチャマシン */
+  .gacha-stage { text-align:center; padding:8px 0 4px; }
+  .machine {
+    position:relative; width:min(60vw,280px); height:min(70vw,330px); margin:0 auto;
+    user-select:none;
+  }
+  .machine .dome {
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:100%; height:56%;
+    background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95) 0%, rgba(210,225,255,.55) 45%, rgba(150,170,255,.4) 100%);
+    border:6px solid #b9c4ff; border-radius:50% 50% 14% 14% / 60% 60% 10% 10%;
+    overflow:hidden;
+  }
+  .machine .balls { position:absolute; inset:0; }
+  .machine .balls span { position:absolute; font-size:clamp(26px,5vw,40px); }
+  .machine .base {
+    position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+    width:88%; height:46%;
+    background:linear-gradient(180deg,#7c8cff,#5b6ef5);
+    border-radius:18px 18px 22px 22px;
+    box-shadow:0 8px 20px rgba(91,110,245,.35);
+  }
+  .machine .handle {
+    position:absolute; bottom:26%; left:50%; transform:translateX(-50%);
+    width:64px; height:64px; border-radius:50%;
+    background:#fff; border:6px solid #ffd34d;
+    display:flex; align-items:center; justify-content:center;
+    font-size:30px; transition:transform .5s ease;
+  }
+  .machine.spinning .handle { transform:translateX(-50%) rotate(540deg); }
+  .machine.spinning { animation:shake .5s ease-in-out 2; }
+  @keyframes shake {
+    0%,100% { transform:translateX(0); }
+    20% { transform:translateX(-8px) rotate(-2deg); }
+    40% { transform:translateX(8px) rotate(2deg); }
+    60% { transform:translateX(-6px); }
+    80% { transform:translateX(6px); }
+  }
+  .machine .slot {
+    position:absolute; bottom:4%; left:50%; transform:translateX(-50%);
+    width:70px; height:34px; background:#39418f; border-radius:12px;
+  }
+  /* カプセル */
+  .capsule {
+    position:absolute; bottom:6%; left:50%;
+    width:86px; height:86px; transform:translateX(-50%) translateY(0) scale(0);
+    z-index:5;
+  }
+  .capsule.drop { animation:capsuleDrop 1s ease forwards; }
+  @keyframes capsuleDrop {
+    0%   { transform:translateX(-50%) translateY(-40px) scale(.4); opacity:0; }
+    35%  { transform:translateX(-50%) translateY(30px) scale(1); opacity:1; }
+    55%  { transform:translateX(-50%) translateY(14px) scale(1.05,.9); }
+    75%  { transform:translateX(-50%) translateY(26px) scale(.98,1.02); }
+    100% { transform:translateX(-50%) translateY(24px) scale(1); opacity:1; }
+  }
+  .capsule .top, .capsule .bottom {
+    position:absolute; left:0; width:86px; height:43px; transition:transform .45s ease;
+  }
+  .capsule .top { top:0; background:#ff7b8d; border-radius:86px 86px 0 0; transform-origin:12% 100%; }
+  .capsule .bottom { bottom:0; background:#fff; border:3px solid #eee; border-top:none; border-radius:0 0 86px 86px; }
+  .capsule.open .top { transform:rotate(-110deg) translateY(-6px); }
+  .capsule .shine {
+    position:absolute; top:8px; left:14px; width:20px; height:12px;
+    background:rgba(255,255,255,.75); border-radius:50%; transform:rotate(-20deg);
+  }
+
+  /* おだい表示 */
+  .odai-box {
+    margin:14px auto 4px; max-width:900px; min-height:120px;
+    background:#f7f8ff; border:4px dashed #b9c4ff; border-radius:22px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:24px 20px; opacity:0; transform:scale(.85); transition:all .4s ease;
+  }
+  .odai-box.show { opacity:1; transform:scale(1); }
+  .odai-text { font-size:clamp(28px,5vw,56px); font-weight:bold; color:#333; line-height:1.4; }
+  .odai-cat { font-size:clamp(15px,2vw,20px); color:#888; margin-top:8px; }
+
+  /* タイマー */
+  .timer-row { display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; }
+  .timer-display {
+    font-size:clamp(34px,6vw,64px); font-weight:bold; color:#5b6ef5;
+    font-variant-numeric:tabular-nums; min-width:2.6em; text-align:center;
+  }
+  .timer-display.warn { color:#f56b7f; }
+
+  /* 履歴・追加 */
+  .odaiHistory-list { display:flex; flex-direction:column; gap:8px; }
+  .odaiHistory-item {
+    background:#f7f8ff; border-radius:14px; padding:10px 16px;
+    font-size:clamp(16px,2.2vw,22px); display:flex; gap:10px; align-items:baseline;
+  }
+  .odaiHistory-item .c { color:#5b6ef5; font-weight:bold; flex-shrink:0; }
+  .add-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .add-row select, .add-row input {
+    font-family:inherit; font-size:clamp(16px,2.2vw,22px);
+    padding:12px 16px; border:3px solid #dfe3ff; border-radius:16px; outline:none; background:#fff;
+  }
+  .add-row input { flex:1; min-width:220px; }
+  .add-row select:focus, .add-row input:focus { border-color:#5b6ef5; }
+  .custom-list { margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; }
+  .custom-chip {
+    background:#fff4e8; border-radius:999px; padding:8px 14px;
+    font-size:clamp(14px,2vw,19px); font-weight:bold; display:flex; align-items:center; gap:8px;
+  }
+  .custom-chip button {
+    border:none; background:#ffd7dd; color:#c33; cursor:pointer; font-family:inherit;
+    border-radius:50%; width:30px; height:30px; font-size:16px; font-weight:bold;
+  }
+  .note { font-size:clamp(14px,1.8vw,18px); color:#888; margin-top:8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎰 おだいガチャ</h1>
+</header>
+
+<section class="card" style="text-align:center;">
+  <h2>① カテゴリを えらぶ</h2>
+  <div class="cat-row" id="catRow"></div>
+
+  <h2 style="margin-top:20px;">② ガチャを まわす！</h2>
+  <div class="gacha-stage">
+    <div class="machine" id="machine">
+      <div class="dome">
+        <div class="balls">
+          <span style="left:8%;  bottom:6%;">🔴</span>
+          <span style="left:30%; bottom:2%;">🟡</span>
+          <span style="left:52%; bottom:8%;">🔵</span>
+          <span style="left:72%; bottom:3%;">🟢</span>
+          <span style="left:18%; bottom:28%;">🟣</span>
+          <span style="left:44%; bottom:32%;">🟠</span>
+          <span style="left:66%; bottom:26%;">🔴</span>
+        </div>
+      </div>
+      <div class="base"></div>
+      <div class="handle">🔄</div>
+      <div class="slot"></div>
+      <div class="capsule" id="capsule">
+        <div class="bottom"></div>
+        <div class="top"><div class="shine"></div></div>
+      </div>
+    </div>
+    <button class="btn big orange" id="spinBtn" onclick="spin()">🎰 ガチャをまわす</button>
+    <button class="btn" id="againBtn" onclick="spin()" style="display:none;">🔁 べつのおだい</button>
+  </div>
+
+  <div class="odai-box" id="odaiBox">
+    <div>
+      <div class="odai-text" id="odaiText"></div>
+      <div class="odai-cat" id="odaiCat"></div>
+    </div>
+  </div>
+
+  <div class="timer-row">
+    <span style="font-size:clamp(17px,2.4vw,24px); font-weight:bold; color:#555;">かんがえるじかん：</span>
+    <button class="btn" onclick="startTimer(30)">⏱ 30びょう</button>
+    <button class="btn" onclick="startTimer(60)">⏱ 1ぷん</button>
+    <button class="btn gray" onclick="stopTimer()">とめる</button>
+    <div class="timer-display" id="timerDisplay">--</div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>✏️ じぶんの おだいを ついかする</h2>
+  <div class="add-row">
+    <select id="addCatSelect"></select>
+    <input type="text" id="addOdaiInput" placeholder="あたらしい おだいを かいてね" maxlength="60">
+    <button class="btn" onclick="addCustom()">＋ ついか</button>
+  </div>
+  <div class="custom-list" id="customList"></div>
+  <p class="note">ついかした おだいは このタブレットに ほぞんされます。</p>
+</section>
+
+<section class="card">
+  <h2>📜 でた おだいの りれき</h2>
+  <div class="odaiHistory-list" id="historyList"></div>
+  <div style="margin-top:12px;">
+    <button class="btn gray" onclick="clearHistory()">りれきをけす</button>
+  </div>
+</section>
+
+<script>
+"use strict";
+var KEY_CUSTOM = "sensei25_odai_custom";
+var KEY_HISTORY = "sensei25_odai_history";
+
+var TOPICS = {
+  "すきなもの": [
+    "すきな たべものは なに？ どうして すき？",
+    "すきな どうぶつは なに？ いいところを おしえて",
+    "すきな あそびは なに？ やりかたも おしえて",
+    "すきな きゅうしょくの メニューは？",
+    "すきな いろは なに？ その いろの ものを 3つ いってみよう",
+    "すきな ほんや おはなしは なに？",
+    "すきな きょうかは なに？ どんなところが すき？",
+    "すきな おかしは なに？ はじめて たべたのは いつ？",
+    "すきな テレビや どうがは なに？",
+    "すきな きせつは いつ？ りゆうも おしえて",
+    "すきな ばしょは どこ？ なにが できるところ？",
+    "すきな うたは なに？ どんなときに うたう？",
+    "すきな スポーツや うんどうは なに？",
+    "たからものは なに？ どうして たいせつ？",
+    "すきな ことばは なに？ だれかに いわれて うれしかったことば でもいいよ",
+    "すきな くだものは なに？ いちばん おいしかった おもいでは？"
+  ],
+  "もしも": [
+    "もしも どうぶつに なれるなら なにに なりたい？",
+    "もしも まほうが ひとつ つかえたら なにを する？",
+    "もしも そらを とべたら どこに いきたい？",
+    "もしも 100まんえん もらえたら なにに つかう？",
+    "もしも 1にちだけ せんせいに なれたら なにを する？",
+    "もしも むじんとうに ひとつだけ もっていけるなら なに？",
+    "もしも タイムマシンが あったら いつの じだいに いく？",
+    "もしも すきな きゅうしょくを きめられたら なにに する？",
+    "もしも とうめいにんげんに なれたら なにを する？",
+    "もしも どらえもんの どうぐを ひとつ もらえたら？",
+    "もしも きょう がっこうが おやすみに なったら なにを する？",
+    "もしも どうぶつと おはなしできたら なにを きいてみたい？",
+    "もしも あたらしい きょうかを つくれるなら どんな きょうか？",
+    "もしも じぶんの おみせを ひらけるなら なにやさん？",
+    "もしも うちゅうりょこうに いけたら どの ほしに いきたい？",
+    "もしも からだが ちいさく なれたら どこを たんけんする？"
+  ],
+  "がっこう": [
+    "がっこうで いちばん すきな ばしょは どこ？",
+    "きゅうしょくで いちばん すきな メニューは？",
+    "やすみじかんは いつも なにを している？",
+    "うんどうかいで いちばん すきな しゅもくは？",
+    "がっこうで がんばっていることは なに？",
+    "クラスの いいところを ひとつ おしえて",
+    "せんせいの すごいと おもうところは？",
+    "としょしつで よんでみたい ほんは？",
+    "そうじの じかんの コツを おしえて",
+    "えんそくで いきたい ばしょは どこ？",
+    "がっこうに あったら いいなと おもうものは？",
+    "1ねんせいに がっこうの いいところを しょうかいするなら？",
+    "いままでの じゅぎょうで たのしかったのは なに？",
+    "ともだちと やってみたい あそびは なに？",
+    "がっこうぎょうじで いちばん たのしみなのは なに？"
+  ],
+  "きせつ": [
+    "はるに なったら やりたいことは なに？",
+    "なつやすみに いちばん やりたいことは？",
+    "あきの おいしい たべものと いえば なに？",
+    "ふゆの あそびで すきなものは なに？",
+    "はなびたいかいの おもいでを おしえて",
+    "ゆきが ふったら なにを したい？",
+    "おしょうがつの たのしみは なに？",
+    "うみと プール どっちが すき？ どうして？",
+    "あつい ひの すずしく なる ほうほうは？",
+    "さむい ひの あったかく なる ほうほうは？",
+    "きせつの おまつりの おもいでを おしえて",
+    "おつきみや ほしぞらを みたことは ある？",
+    "はるの おはなで すきなものは なに？",
+    "あきに やりたい スポーツは なに？",
+    "クリスマスに ほしいものは なに？",
+    "いちねんで いちばん すきな ぎょうじは なに？"
+  ],
+  "かんがえよう": [
+    "ともだちって どんな ひとの ことだと おもう？",
+    "「やさしさ」って なんだろう？",
+    "どうして あいさつを するのかな？",
+    "けんかを したら どうやって なかなおりする？",
+    "どうして べんきょうを するのかな？",
+    "こまっている ひとが いたら どうする？",
+    "「ありがとう」を いうと どんな きもちに なる？",
+    "うそを ついては いけないのは どうして？",
+    "みんなで きめるとき たいせつなことは なに？",
+    "じぶんの いいところを ひとつ おしえて",
+    "おおきく なったら どんな ひとに なりたい？",
+    "ちきゅうに やさしいことって どんなこと？",
+    "ルールは どうして あるのかな？",
+    "がんばっても うまくいかないとき どうする？",
+    "「かぞく」って どんな そんざい だとおもう？",
+    "10ねんごの じぶんに ひとこと いうなら？"
+  ]
+};
+var CATS = Object.keys(TOPICS);
+
+var customTopics = {};
+var odaiHistory = [];
+var currentCat = CATS[0];
+var currentOdai = null;
+var spinning = false;
+var timerId = null;
+var timerRemain = 0;
+var audioCtx = null;
+
+function load(){
+  try { customTopics = JSON.parse(localStorage.getItem(KEY_CUSTOM)) || {}; } catch(e){ customTopics = {}; }
+  try { odaiHistory = JSON.parse(localStorage.getItem(KEY_HISTORY)) || []; } catch(e){ odaiHistory = []; }
+  if (typeof customTopics !== "object" || customTopics === null) customTopics = {};
+  if (!Array.isArray(odaiHistory)) odaiHistory = [];
+}
+function saveCustom(){ localStorage.setItem(KEY_CUSTOM, JSON.stringify(customTopics)); }
+function saveHistory(){ localStorage.setItem(KEY_HISTORY, JSON.stringify(odaiHistory)); }
+
+function pool(cat){
+  var base = TOPICS[cat] || [];
+  var extra = customTopics[cat] || [];
+  return base.concat(extra);
+}
+
+function ensureAudio(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+function beep(freq, dur, delay, vol, type){
+  try {
+    ensureAudio();
+    var t = audioCtx.currentTime + (delay || 0);
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type || "sine";
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol || 0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  } catch(e){}
+}
+function playGachaSound(){
+  beep(300, 0.1, 0,   0.15, "square");
+  beep(340, 0.1, 0.15, 0.15, "square");
+  beep(300, 0.1, 0.3, 0.15, "square");
+  beep(500, 0.15, 0.95, 0.2);
+  beep(750, 0.3, 1.1, 0.2);
+}
+function playFanfare(){
+  beep(523, 0.18, 0, 0.22);
+  beep(659, 0.18, 0.18, 0.22);
+  beep(784, 0.35, 0.36, 0.24);
+}
+
+function renderCats(){
+  var row = document.getElementById("catRow");
+  row.innerHTML = "";
+  for (var i=0;i<CATS.length;i++){
+    (function(cat){
+      var b = document.createElement("button");
+      b.className = "cat-btn" + (cat === currentCat ? " active" : "");
+      b.textContent = catEmoji(cat) + " " + cat;
+      b.onclick = function(){ currentCat = cat; renderCats(); renderCustomList(); };
+      row.appendChild(b);
+    })(CATS[i]);
+  }
+  var sel = document.getElementById("addCatSelect");
+  sel.innerHTML = "";
+  for (var j=0;j<CATS.length;j++){
+    var o = document.createElement("option");
+    o.value = CATS[j];
+    o.textContent = CATS[j];
+    sel.appendChild(o);
+  }
+  sel.value = currentCat;
+}
+function catEmoji(cat){
+  return { "すきなもの":"💖", "もしも":"🪄", "がっこう":"🏫", "きせつ":"🍀", "かんがえよう":"💭" }[cat] || "🎈";
+}
+
+function spin(){
+  if (spinning) return;
+  spinning = true;
+  stopTimer();
+  var machine = document.getElementById("machine");
+  var capsule = document.getElementById("capsule");
+  var odaiBox = document.getElementById("odaiBox");
+  document.getElementById("spinBtn").disabled = true;
+  odaiBox.classList.remove("show");
+  capsule.classList.remove("drop","open");
+  void capsule.offsetWidth; /* アニメリセット */
+  machine.classList.add("spinning");
+  playGachaSound();
+
+  setTimeout(function(){
+    machine.classList.remove("spinning");
+    capsule.classList.add("drop");
+  }, 900);
+
+  setTimeout(function(){
+    capsule.classList.add("open");
+    playFanfare();
+  }, 1950);
+
+  setTimeout(function(){
+    var list = pool(currentCat);
+    var pick;
+    if (list.length === 0){
+      pick = "（この カテゴリには おだいが ありません）";
+    } else if (list.length === 1){
+      pick = list[0];
+    } else {
+      do { pick = list[Math.floor(Math.random() * list.length)]; } while (pick === currentOdai);
+    }
+    currentOdai = pick;
+    document.getElementById("odaiText").textContent = pick;
+    document.getElementById("odaiCat").textContent = catEmoji(currentCat) + " " + currentCat;
+    odaiBox.classList.add("show");
+    if (list.length > 0){
+      odaiHistory.unshift({ cat: currentCat, text: pick });
+      if (odaiHistory.length > 30) odaiHistory.length = 30;
+      saveHistory();
+      renderHistory();
+    }
+    document.getElementById("spinBtn").disabled = false;
+    document.getElementById("againBtn").style.display = "inline-block";
+    spinning = false;
+  }, 2400);
+}
+
+function startTimer(sec){
+  ensureAudio();
+  stopTimer();
+  timerRemain = sec;
+  updateTimerDisplay();
+  timerId = setInterval(function(){
+    timerRemain--;
+    updateTimerDisplay();
+    if (timerRemain <= 3 && timerRemain > 0) beep(880, 0.12, 0, 0.18);
+    if (timerRemain <= 0){
+      stopTimer();
+      document.getElementById("timerDisplay").textContent = "おわり!";
+      beep(660, 0.2, 0, 0.22);
+      beep(880, 0.2, 0.2, 0.22);
+      beep(1100, 0.4, 0.4, 0.22);
+    }
+  }, 1000);
+}
+function updateTimerDisplay(){
+  var d = document.getElementById("timerDisplay");
+  d.textContent = timerRemain + "びょう";
+  d.classList.toggle("warn", timerRemain <= 5);
+}
+function stopTimer(){
+  if (timerId){ clearInterval(timerId); timerId = null; }
+  var d = document.getElementById("timerDisplay");
+  d.classList.remove("warn");
+  if (d.textContent !== "おわり!") d.textContent = "--";
+}
+
+function addCustom(){
+  var cat = document.getElementById("addCatSelect").value;
+  var inp = document.getElementById("addOdaiInput");
+  var v = inp.value.trim();
+  if (!v) return;
+  if (!customTopics[cat]) customTopics[cat] = [];
+  if (customTopics[cat].indexOf(v) !== -1 || TOPICS[cat].indexOf(v) !== -1){
+    alert("おなじ おだいが すでにあります"); return;
+  }
+  customTopics[cat].push(v);
+  saveCustom();
+  inp.value = "";
+  currentCat = cat;
+  renderCats();
+  renderCustomList();
+}
+function removeCustom(cat, idx){
+  if (!customTopics[cat]) return;
+  customTopics[cat].splice(idx, 1);
+  saveCustom();
+  renderCustomList();
+}
+function renderCustomList(){
+  var area = document.getElementById("customList");
+  area.innerHTML = "";
+  var list = customTopics[currentCat] || [];
+  if (list.length === 0){
+    area.innerHTML = '<span class="note">「' + currentCat + '」に ついかした おだいは まだ ありません。</span>';
+    return;
+  }
+  for (var i=0;i<list.length;i++){
+    (function(idx){
+      var chip = document.createElement("div");
+      chip.className = "custom-chip";
+      var span = document.createElement("span");
+      span.textContent = list[idx];
+      var del = document.createElement("button");
+      del.textContent = "✕";
+      del.onclick = function(){ removeCustom(currentCat, idx); };
+      chip.appendChild(span); chip.appendChild(del);
+      area.appendChild(chip);
+    })(i);
+  }
+}
+
+function renderHistory(){
+  var area = document.getElementById("historyList");
+  area.innerHTML = "";
+  if (odaiHistory.length === 0){
+    area.innerHTML = '<span class="note">まだ おだいは でていません。</span>';
+    return;
+  }
+  for (var i=0;i<odaiHistory.length;i++){
+    var div = document.createElement("div");
+    div.className = "odaiHistory-item";
+    var c = document.createElement("span");
+    c.className = "c";
+    c.textContent = catEmoji(odaiHistory[i].cat) + " " + odaiHistory[i].cat;
+    var t = document.createElement("span");
+    t.textContent = odaiHistory[i].text;
+    div.appendChild(c); div.appendChild(t);
+    area.appendChild(div);
+  }
+}
+function clearHistory(){
+  if (odaiHistory.length === 0) return;
+  if (confirm("りれきを ぜんぶ けしますか？")){
+    odaiHistory = []; saveHistory(); renderHistory();
+  }
+}
+
+document.getElementById("addOdaiInput").addEventListener("keydown", function(e){
+  if (e.key === "Enter") addCustom();
+});
+
+(function init(){
+  load();
+  renderCats();
+  renderCustomList();
+  renderHistory();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

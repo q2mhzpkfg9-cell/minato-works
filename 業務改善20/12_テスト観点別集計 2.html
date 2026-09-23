@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テスト観点別集計</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);color:#fff}
+header a{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.14)}
+header h1{font-size:1.2rem;margin:0}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.del{color:var(--danger)}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+textarea{width:100%;min-height:160px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.hidden{display:none}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{border:1px solid var(--line);padding:4px 6px;text-align:center;font-size:.92rem;white-space:nowrap}
+th{background:#f3eee3}
+td.name{text-align:left;font-weight:600;position:sticky;left:0;background:#fff}
+td input{width:64px;min-height:38px;text-align:center;padding:4px}
+.A{background:#e3f1ea;color:var(--ok);font-weight:700}
+.C{background:#fbe3df;color:var(--danger);font-weight:700}
+.B{color:var(--ink)}
+.testitem{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;flex-wrap:wrap}
+.testitem.on{border-color:var(--accent);background:#fff6ee}
+.viewrow{display:flex;gap:6px;margin:4px 0;flex-wrap:wrap}
+.bar{height:10px;background:var(--navy);border-radius:5px}
+.stat{display:inline-block;background:var(--bg);border-radius:10px;padding:6px 12px;margin:4px 6px 4px 0}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,.noprint,.tabs{display:none!important}body{background:#fff}main{padding:0;max-width:none}.card{box-shadow:none;padding:0}td input{border:none}table{min-width:0}th,td{font-size:10pt}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← MINATO WORKS</a><h1>テスト観点別集計</h1></header>
+<main>
+<div class="tabs">
+  <button data-tab="tests" class="on">テスト</button>
+  <button data-tab="input">点数入力</button>
+  <button data-tab="sum">観点別まとめ</button>
+  <button data-tab="set">名簿・設定</button>
+</div>
+
+<section id="tab-tests">
+  <div class="card noprint">
+    <h2>テストを追加</h2>
+    <div class="row">
+      <input id="tName" placeholder="例）かけ算の筆算" style="flex:1;min-width:180px">
+      <select id="tSubj"></select>
+      <input type="date" id="tDate">
+    </div>
+    <div id="viewEdit" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:6px">
+      <button id="addView">＋ 観点を足す</button>
+      <button id="preset2">知・思の2観点（70/30）</button>
+      <button id="preset3">3観点</button>
+      <button class="pri" id="addTest">テストを作る</button>
+    </div>
+    <p class="note">市販テストの「知識・技能／思考・判断・表現」の配点をそのまま入れてください。</p>
+  </div>
+  <div class="card">
+    <h2>テスト一覧</h2>
+    <div class="row noprint"><select id="listSubj"></select></div>
+    <div id="testList"></div>
+  </div>
+</section>
+
+<section id="tab-input" class="hidden">
+  <div class="card">
+    <div class="row noprint"><select id="inTest" style="min-width:240px"></select><button onclick="window.print()">印刷</button><button id="csvOne">CSV</button></div>
+    <p class="note noprint">数字を入れて Enter で下へ。欠席は「欠」または空欄のまま（平均に入りません）。</p>
+    <h2 id="inTitle"></h2>
+    <div class="scroll"><table id="inTable"></table></div>
+    <div id="inStats" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="tab-sum" class="hidden">
+  <div class="card">
+    <div class="row noprint"><select id="sumSubj"></select><select id="sumRange"><option value="all">期間：すべて</option><option value="1">1学期</option><option value="2">2学期</option><option value="3">3学期</option></select><button onclick="window.print()">印刷</button><button id="csvSum">CSV</button></div>
+    <p class="note">観点ごとに「とった点の合計 ÷ 満点の合計」で％を出し、設定の基準でA・B・Cを表示します。通知表の評定そのものではなく、判断の下資料としてお使いください。</p>
+    <h2 id="sumTitle"></h2>
+    <div class="scroll"><table id="sumTable"></table></div>
+  </div>
+</section>
+
+<section id="tab-set" class="hidden noprint">
+  <div class="card">
+    <h2>名簿（1行に1人）</h2>
+    <p class="note">名簿と点数はこの端末の中だけに保存され、外には送られません。出席番号だけでも使えます。</p>
+    <textarea id="roster" placeholder="1 あおき&#10;2 いとう"></textarea>
+    <div class="row" style="margin-top:8px"><button class="pri" id="saveRoster">名簿を保存</button><button id="numRoster">番号だけで作る</button><input type="number" id="numN" value="30" min="1" max="45" style="width:80px"><span id="rMsg" class="note"></span></div>
+  </div>
+  <div class="card">
+    <h2>A・B・Cの基準</h2>
+    <div class="row">A：<input type="number" id="thA" style="width:80px">％以上　C：<input type="number" id="thC" style="width:80px">％未満<button id="saveTh">保存</button></div>
+  </div>
+  <div class="card">
+    <h2>バックアップ</h2>
+    <div class="row"><button id="expBtn">ファイルに書き出す</button><label class="row">読み込む<input type="file" id="impFile" accept=".json"></label></div>
+  </div>
+</section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+const K='mw_gyomu_12_';
+const load=(k,d)=>{try{const v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){alert('保存できませんでした')}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const SUBJ=['国語','算数','社会','理科','生活','外国語','その他'];
+let roster=load('roster',[]);
+let tests=load('tests',[]);
+let th=load('th',{A:80,C:50});
+let curTest=load('cur',null);
+let draftViews=[{name:'知識・技能',max:70},{name:'思考・判断・表現',max:30}];
+
+function termOf(d){const m=+d.slice(5,7);return m>=4&&m<=7?'1':(m>=8&&m<=12?'2':'3')}
+function grade(p){if(p==null||isNaN(p))return '';return p>=th.A?'A':(p<th.C?'C':'B')}
+const fmt=p=>p==null||isNaN(p)?'－':Math.round(p)+'%';
+
+function renderViewEdit(){
+  $('viewEdit').innerHTML=draftViews.map((v,i)=>`<div class="viewrow"><input value="${esc(v.name)}" data-vi="${i}" data-f="name" style="flex:1;min-width:150px"><input type="number" value="${v.max}" data-vi="${i}" data-f="max" style="width:90px"><span class="note" style="align-self:center">点満点</span><button class="del" data-rmv="${i}">×</button></div>`).join('')
+  +`<p class="note">合計 <span id="vTot">${draftViews.reduce((a,v)=>a+(+v.max||0),0)}</span> 点</p>`;
+}
+$('viewEdit').addEventListener('input',e=>{const i=e.target.dataset.vi;if(i==null)return;draftViews[i][e.target.dataset.f]=e.target.dataset.f==='max'?+e.target.value:e.target.value;$('vTot').textContent=draftViews.reduce((a,v)=>a+(+v.max||0),0)});
+$('viewEdit').addEventListener('click',e=>{const i=e.target.dataset.rmv;if(i!=null&&draftViews.length>1){draftViews.splice(i,1);renderViewEdit()}});
+$('addView').onclick=()=>{draftViews.push({name:'観点',max:10});renderViewEdit()};
+$('preset2').onclick=()=>{draftViews=[{name:'知識・技能',max:70},{name:'思考・判断・表現',max:30}];renderViewEdit()};
+$('preset3').onclick=()=>{draftViews=[{name:'知識・技能',max:50},{name:'思考・判断・表現',max:40},{name:'主体的に学習に取り組む態度',max:10}];renderViewEdit()};
+$('addTest').onclick=()=>{
+  const name=$('tName').value.trim();if(!name){alert('テスト名を入れてください');return}
+  if(draftViews.some(v=>!(v.max>0))){alert('満点は1以上にしてください');return}
+  const t={id:Date.now(),name,subj:$('tSubj').value,date:$('tDate').value||today(),views:draftViews.map(v=>({name:v.name||'観点',max:+v.max})),scores:{}};
+  tests.push(t);save('tests',tests);curTest=t.id;save('cur',curTest);$('tName').value='';
+  switchTab('input');
+};
+
+function subjOptions(withAll){return (withAll?'<option value="">すべての教科</option>':'')+SUBJ.map(s=>`<option>${s}</option>`).join('')}
+function testAvg(t){ // overall class %
+  let got=0,max=0;const tot=t.views.reduce((a,v)=>a+v.max,0);
+  roster.forEach(n=>{const s=t.scores[n];if(!s||s.every(x=>x===''||x==null))return;got+=s.reduce((a,x)=>a+(+x||0),0);max+=tot});
+  return max?got/max*100:null;
+}
+function renderTestList(){
+  const f=$('listSubj').value;
+  const l=tests.filter(t=>!f||t.subj===f).sort((a,b)=>a.date<b.date?1:-1);
+  $('testList').innerHTML=l.map(t=>`<div class="testitem ${t.id===curTest?'on':''}"><div><b>${esc(t.name)}</b> <span class="note">${esc(t.subj)}／${esc(t.date)}／${t.views.map(v=>esc(v.name)+v.max).join('・')}</span><br><span class="note">クラス平均 ${fmt(testAvg(t))}</span></div>
+  <div class="row noprint"><button data-open="${t.id}">入力</button><button class="del" data-deltest="${t.id}">削除</button></div></div>`).join('')||'<p class="note">まだテストがありません。</p>';
+}
+$('testList').addEventListener('click',e=>{
+  const o=e.target.dataset.open,d=e.target.dataset.deltest;
+  if(o){curTest=+o;save('cur',curTest);switchTab('input')}
+  if(d&&confirm('このテストと点数を削除しますか？')){tests=tests.filter(t=>t.id!=d);save('tests',tests);renderTestList()}
+});
+
+function getTest(){return tests.find(t=>t.id===curTest)||tests[tests.length-1]}
+function renderInput(){
+  $('inTest').innerHTML=tests.slice().sort((a,b)=>a.date<b.date?1:-1).map(t=>`<option value="${t.id}">${esc(t.subj)}｜${esc(t.name)}（${esc(t.date)}）</option>`).join('');
+  const t=getTest();
+  if(!t){$('inTitle').textContent='テストを作ってください';$('inTable').innerHTML='';$('inStats').innerHTML='';return}
+  curTest=t.id;$('inTest').value=t.id;
+  if(!roster.length){$('inTitle').textContent='先に「名簿・設定」で名簿を入れてください';$('inTable').innerHTML='';return}
+  $('inTitle').textContent=`${t.subj}「${t.name}」 ${t.date}`;
+  const tot=t.views.reduce((a,v)=>a+v.max,0);
+  let h='<tr><th>名前</th>'+t.views.map(v=>`<th>${esc(v.name)}<br><span class="note">/${v.max}</span></th>`).join('')+`<th>合計<br><span class="note">/${tot}</span></th>`+t.views.map(v=>`<th>${esc(v.name.slice(0,4))}<br>判定</th>`).join('')+'</tr>';
+  roster.forEach((n,ri)=>{
+    const s=t.scores[n]||[];
+    h+=`<tr id="row${ri}"><td class="name">${esc(n)}</td>`+t.views.map((v,vi)=>`<td><input inputmode="numeric" data-r="${ri}" data-v="${vi}" value="${esc(s[vi]??'')}"></td>`).join('')+rowTail(t,n)+'</tr>';
+  });
+  $('inTable').innerHTML=h;
+  renderStats(t);
+}
+function rowTail(t,n){
+  const s=t.scores[n]||[];
+  const filled=s.some(x=>x!==''&&x!=null&&x!=='欠');
+  return `<td class="tot">${filled?s.reduce((a,x)=>a+(+x||0),0):'－'}</td>`+t.views.map((v,vi)=>{const x=s[vi];if(x===''||x==null||x==='欠')return '<td class="gr">－</td>';const g=grade(+x/v.max*100);return `<td class="gr ${g}">${g}</td>`}).join('');
+}
+function updateRow(t,ri){
+  const tr=$('row'+ri);if(!tr)return;
+  tr.querySelectorAll('td.tot,td.gr').forEach(td=>td.remove());
+  tr.insertAdjacentHTML('beforeend',rowTail(t,roster[ri]));
+  renderStats(t);
+}
+function renderStats(t){
+  let h='';
+  t.views.forEach((v,vi)=>{
+    const xs=roster.map(n=>(t.scores[n]||[])[vi]).filter(x=>x!==''&&x!=null&&x!=='欠').map(Number);
+    if(!xs.length){h+=`<span class="stat">${esc(v.name)}：未入力</span>`;return}
+    const avg=xs.reduce((a,b)=>a+b,0)/xs.length;
+    const cs=roster.filter(n=>{const x=(t.scores[n]||[])[vi];return x!==''&&x!=null&&x!=='欠'&&grade(+x/v.max*100)==='C'});
+    h+=`<div class="stat"><b>${esc(v.name)}</b> 平均 ${avg.toFixed(1)}/${v.max}（${Math.round(avg/v.max*100)}%）最高 ${Math.max(...xs)} 最低 ${Math.min(...xs)} ／ C：${cs.length}人${cs.length?'（'+cs.map(esc).join('、')+'）':''}</div>`;
+  });
+  const nInput=roster.filter(n=>(t.scores[n]||[]).some(x=>x!==''&&x!=null&&x!=='欠')).length;
+  h+=`<p class="note">入力済み ${nInput}/${roster.length}人</p>`;
+  $('inStats').innerHTML=h;
+}
+$('inTest').onchange=()=>{curTest=+$('inTest').value;save('cur',curTest);renderInput()};
+$('inTable').addEventListener('change',e=>{
+  const i=e.target;if(i.dataset.r==null)return;const t=getTest();const n=roster[i.dataset.r],vi=+i.dataset.v,max=t.views[vi].max;
+  let v=i.value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248));
+  if(v!==''&&v!=='欠'){if(isNaN(+v)){alert('数字か「欠」を入れてください');i.value='';return}if(+v>max||+v<0){alert(`0〜${max}の範囲で入れてください`);i.value='';return}}
+  if(!t.scores[n])t.scores[n]=t.views.map(()=> '');
+  i.value=v;t.scores[n][vi]=v;save('tests',tests);
+  updateRow(t,+i.dataset.r);
+});
+$('inTable').addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;e.preventDefault();const i=e.target;const r=+i.dataset.r,v=+i.dataset.v;
+  const nx=document.querySelector(`#inTable input[data-r="${r+1}"][data-v="${v}"]`)||document.querySelector(`#inTable input[data-r="0"][data-v="${v+1}"]`);
+  if(nx){nx.focus();nx.select()}
+});
+
+function summary(subj,range){
+  const ts=tests.filter(t=>t.subj===subj&&(range==='all'||termOf(t.date)===range));
+  const names=[...new Set(ts.flatMap(t=>t.views.map(v=>v.name)))];
+  const rows=roster.map(n=>{
+    const per=names.map(vn=>{let got=0,max=0;ts.forEach(t=>{const vi=t.views.findIndex(v=>v.name===vn);if(vi<0)return;const x=(t.scores[n]||[])[vi];if(x===''||x==null||x==='欠')return;got+=+x;max+=t.views[vi].max});return max?got/max*100:null});
+    return {n,per};
+  });
+  return {ts,names,rows};
+}
+function renderSum(){
+  const subj=$('sumSubj').value,range=$('sumRange').value;
+  const {ts,names,rows}=summary(subj,range);
+  $('sumTitle').textContent=`${subj} 観点別まとめ（テスト${ts.length}本${range==='all'?'':'・'+range+'学期'}）`;
+  if(!ts.length||!roster.length){$('sumTable').innerHTML='<tr><td>この教科・期間のテストがありません</td></tr>';return}
+  let h='<tr><th>名前</th>'+names.map(v=>`<th>${esc(v)}</th><th>判定</th>`).join('')+'</tr>';
+  rows.forEach(r=>{h+=`<tr><td class="name">${esc(r.n)}</td>`+r.per.map(p=>{const g=grade(p);return `<td>${fmt(p)}</td><td class="${g}">${g||'－'}</td>`}).join('')+'</tr>'});
+  const avgs=names.map((v,i)=>{const xs=rows.map(r=>r.per[i]).filter(p=>p!=null);return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null});
+  h+='<tr><th>クラス平均</th>'+avgs.map(p=>`<th>${fmt(p)}</th><th></th>`).join('')+'</tr>';
+  h+='<tr><th>A/B/C人数</th>'+names.map((v,i)=>{const g=rows.map(r=>grade(r.per[i]));return `<th colspan="2">${['A','B','C'].map(x=>x+' '+g.filter(y=>y===x).length).join('／')}</th>`}).join('')+'</tr>';
+  $('sumTable').innerHTML=h;
+}
+['sumSubj','sumRange'].forEach(id=>$(id).addEventListener('change',renderSum));
+
+function dl(name,text){const b=new Blob(['﻿'+text],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click()}
+const csvq=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+$('csvOne').onclick=()=>{const t=getTest();if(!t)return;let c=['名前',...t.views.map(v=>v.name+'('+v.max+')'),'合計'].map(csvq).join(',')+'\n';roster.forEach(n=>{const s=t.scores[n]||[];c+=[n,...t.views.map((v,i)=>s[i]??''),s.reduce((a,x)=>a+(+x||0),0)].map(csvq).join(',')+'\n'});dl(t.name+'.csv',c)};
+$('csvSum').onclick=()=>{const subj=$('sumSubj').value;const {names,rows}=summary(subj,$('sumRange').value);let c=['名前',...names.flatMap(v=>[v+'%',v+'判定'])].map(csvq).join(',')+'\n';rows.forEach(r=>c+=[r.n,...r.per.flatMap(p=>[p==null?'':Math.round(p),grade(p)])].map(csvq).join(',')+'\n');dl(subj+'_観点別.csv',c)};
+
+$('saveRoster').onclick=()=>{roster=[...new Set($('roster').value.split('\n').map(s=>s.trim()).filter(Boolean))];save('roster',roster);$('rMsg').textContent=roster.length+'人を保存しました'};
+$('numRoster').onclick=()=>{const n=+$('numN').value||30;$('roster').value=Array.from({length:n},(_,i)=>(i+1)+'番').join('\n')};
+$('saveTh').onclick=()=>{th={A:+$('thA').value||80,C:+$('thC').value||50};save('th',th);alert('保存しました')};
+$('expBtn').onclick=()=>{const b=new Blob([JSON.stringify({roster,tests,th})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='テスト集計_'+today()+'.json';a.click()};
+$('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!confirm('いまのデータを置きかえますか？'))return;roster=o.roster||[];tests=o.tests||[];th=o.th||th;save('roster',roster);save('tests',tests);save('th',th);init();alert('読み込みました')}catch(err){alert('読み込めませんでした')}};r.readAsText(f)};
+
+function switchTab(tab){
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab===tab));
+  ['tests','input','sum','set'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==tab));
+  if(tab==='tests')renderTestList();if(tab==='input')renderInput();if(tab==='sum')renderSum();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+function init(){
+  $('tSubj').innerHTML=subjOptions(false);$('listSubj').innerHTML=subjOptions(true);$('sumSubj').innerHTML=subjOptions(false);
+  $('sumSubj').value='算数';$('tSubj').value='算数';
+  $('tDate').value=today();$('roster').value=roster.join('\n');$('thA').value=th.A;$('thC').value=th.C;
+  renderViewEdit();renderTestList();
+}
+$('listSubj').onchange=renderTestList;
+init();
+</script>
+</body>
+</html>

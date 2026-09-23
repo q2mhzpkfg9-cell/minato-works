@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>えいごフラッシュ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;min-height:100vh;color:#333;
+  font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4",-apple-system,"Segoe UI",sans-serif;
+  background:linear-gradient(160deg,#dff1ff 0%,#f5f0ff 55%,#ffeef5 100%);
+  background-attachment:fixed;
+}
+header{text-align:center;padding:18px 10px 6px}
+h1{margin:0;font-size:clamp(1.6rem,4vw,2.6rem);color:#5b6ef5;letter-spacing:.06em}
+.sub{color:#7a86a8;font-size:1.05rem;margin-top:4px}
+main{max-width:960px;margin:0 auto;padding:12px 16px 40px}
+.card{background:#fff;border-radius:22px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:24px;margin-bottom:20px}
+.btn{
+  border:none;border-radius:999px;background:#5b6ef5;color:#fff;cursor:pointer;
+  font-family:inherit;font-size:1.3rem;padding:15px 30px;margin:7px;
+  box-shadow:0 4px 12px rgba(91,110,245,.35);transition:transform .1s;
+}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:#eef1ff;color:#5b6ef5;box-shadow:none}
+.btn.big{font-size:1.6rem;padding:20px 42px}
+.btn.sel{outline:5px solid #ffd83d}
+.btn.small{font-size:1.1rem;padding:11px 22px;margin:4px}
+.center{text-align:center}
+.screen{display:none}
+.screen.show{display:block}
+h2{color:#5b6ef5;font-size:1.35rem;margin:4px 0 10px}
+.progress{font-size:1.25rem;color:#7a86a8;text-align:center;margin-bottom:6px}
+.tap-hint{color:#a5aecb;font-size:1.1rem;text-align:center}
+.flash-emoji{font-size:clamp(6rem,22vmin,11rem);text-align:center;line-height:1.2;min-height:1.2em}
+.flash-word{font-size:clamp(3rem,11vmin,5.5rem);text-align:center;font-weight:bold;color:#2f3a68;min-height:1.2em;overflow-wrap:break-word}
+.flash-kana{font-size:clamp(1.5rem,5vmin,2.4rem);text-align:center;color:#e8618c;font-weight:bold;min-height:1.4em}
+.slider-row{display:flex;align-items:center;justify-content:center;gap:14px;font-size:1.2rem;flex-wrap:wrap;margin-top:8px}
+input[type=range]{width:min(320px,70%);height:36px;accent-color:#5b6ef5}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:14px}
+.choice{
+  border:none;border-radius:999px;background:#eef1ff;color:#2f3a68;cursor:pointer;
+  font-family:inherit;font-size:1.6rem;padding:20px 12px;transition:transform .1s;font-weight:bold;
+}
+.choice:active{transform:scale(.96)}
+.choice.correct{background:#2ec27e;color:#fff}
+.choice.wrong{background:#f56b8d;color:#fff}
+.scorebar{display:flex;justify-content:center;gap:24px;font-size:1.25rem;color:#5b6ef5;font-weight:bold;flex-wrap:wrap}
+.feedback{text-align:center;font-size:1.9rem;font-weight:bold;min-height:1.3em}
+.feedback.good{color:#2ec27e}
+.feedback.bad{color:#f56b8d}
+.abc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:10px;margin-top:14px}
+.abc-tile{
+  border:none;border-radius:16px;background:#eef1ff;color:#2f3a68;cursor:pointer;
+  font-family:inherit;font-size:2.2rem;font-weight:bold;padding:14px 0;transition:transform .1s;
+}
+.abc-tile:active{transform:scale(.94)}
+.abc-tile.done{background:#2ec27e;color:#fff;transform:scale(.92)}
+.abc-tile.miss{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.abc-target{font-size:2.4rem;text-align:center;color:#2f3a68}
+.abc-target b{color:#5b6ef5;font-size:3.2rem}
+footer{text-align:center;color:#9aa4c4;font-size:.95rem;padding-bottom:24px}
+.q-emoji{font-size:clamp(5rem,18vmin,9rem);text-align:center;line-height:1.2}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔤 えいごフラッシュ</h1>
+  <div class="sub">アルファベットと えいたんごで あそぼう！</div>
+</header>
+<main>
+
+<!-- ホーム -->
+<section id="scr-home" class="screen show">
+  <div class="card center">
+    <h2>① カードを えらぼう</h2>
+    <div id="cat-btns"></div>
+  </div>
+  <div class="card center">
+    <h2>② あそびかたを えらぼう</h2>
+    <button class="btn big" onclick="startFlash()">⚡ フラッシュ</button>
+    <button class="btn big" onclick="startQuiz()">❓ えいご 4たくクイズ</button>
+    <br>
+    <button class="btn big ghost" onclick="startAbc()">🔠 ABCじゅんならべ ゲーム</button>
+    <div class="tap-hint" style="margin-top:8px">🏆 ABCならべ さいそくタイム：<span id="abc-best">--</span></div>
+  </div>
+</section>
+
+<!-- フラッシュ -->
+<section id="scr-flash" class="screen">
+  <div class="progress" id="flash-prog"></div>
+  <div class="card" style="cursor:pointer" onclick="flashTap()">
+    <div class="flash-emoji" id="flash-emoji"></div>
+    <div class="flash-word" id="flash-word"></div>
+    <div class="flash-kana" id="flash-kana"></div>
+    <div class="center">
+      <button class="btn ghost" id="flash-speak" style="display:none" onclick="event.stopPropagation();speakCurrent()">🔊 はつおんを きく</button>
+    </div>
+    <div class="tap-hint" id="flash-hint"></div>
+  </div>
+  <div class="center">
+    <button class="btn ghost" onclick="flashMove(-1)">◀ まえ</button>
+    <button class="btn" id="flash-play" onclick="toggleFlashAuto()">▶ じどうめくり</button>
+    <button class="btn ghost" onclick="flashMove(1)">つぎ ▶</button>
+  </div>
+  <div class="slider-row">
+    🐢 <input type="range" id="flash-speed" min="1.5" max="6" step="0.5" value="3"> 🐇
+    <span id="flash-speed-label">3びょう</span>
+  </div>
+  <div class="center"><button class="btn ghost" onclick="goHome()">🏠 もどる</button></div>
+</section>
+
+<!-- クイズ -->
+<section id="scr-quiz" class="screen">
+  <div class="card">
+    <div class="scorebar">
+      <span>📝 <span id="q-no">1</span> / 10</span>
+      <span>✅ せいかい <span id="q-score">0</span></span>
+    </div>
+    <div class="q-emoji" id="q-emoji"></div>
+    <div class="tap-hint">えいごで なんて いうかな？</div>
+    <div class="feedback" id="q-feedback"></div>
+    <div class="choices" id="q-choices"></div>
+    <div class="center" style="margin-top:12px">
+      <button class="btn" id="q-next" style="display:none" onclick="quizNext()">つぎ ▶</button>
+      <button class="btn ghost" onclick="goHome()">🏠 おわる</button>
+    </div>
+  </div>
+</section>
+
+<!-- けっか -->
+<section id="scr-result" class="screen">
+  <div class="card center">
+    <h2>🎉 けっかはっぴょう</h2>
+    <div style="font-size:3.4rem;font-weight:bold;color:#5b6ef5"><span id="res-score">0</span> / 10</div>
+    <p class="tap-hint" id="res-msg"></p>
+    <button class="btn big" onclick="startQuiz()">🔁 もういちど</button>
+    <button class="btn big ghost" onclick="goHome()">🏠 ホームへ</button>
+  </div>
+</section>
+
+<!-- ABCならべ -->
+<section id="scr-abc" class="screen">
+  <div class="card center">
+    <h2>🔠 ABCじゅんならべ</h2>
+    <div class="center">
+      <button class="btn small abc-set-btn sel" data-set="upper" onclick="abcSet('upper',this)">おおもじ A-Z</button>
+      <button class="btn small abc-set-btn ghost" data-set="lower" onclick="abcSet('lower',this)">こもじ a-z</button>
+    </div>
+    <div class="abc-target">つぎは <b id="abc-next">A</b> を タップ！　⏱ <span id="abc-time">0.0</span>びょう</div>
+    <div class="abc-grid" id="abc-grid"></div>
+    <div style="margin-top:12px">
+      <button class="btn" onclick="abcStart()">🔁 シャッフルして さいしょから</button>
+      <button class="btn ghost" onclick="goHome()">🏠 もどる</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>せんせいアプリ25 ／ えいごフラッシュ</footer>
+
+<script>
+"use strict";
+/* ===== データ [emoji, english, カナ] ===== */
+const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const CATS = {
+"ABC-おおもじ": UPPER.map(ch=>["🔠", ch, ch.toLowerCase()==="a"?"エイ":kanaAlpha(ch)]),
+"abc-こもじ": UPPER.map(ch=>["🔡", ch.toLowerCase(), kanaAlpha(ch)]),
+"いろ":[
+["🔴","red","レッド"],["🔵","blue","ブルー"],["🟡","yellow","イエロー"],["🟢","green","グリーン"],
+["🟠","orange","オレンジ"],["🟣","purple","パープル"],["🌸","pink","ピンク"],["⚫","black","ブラック"],
+["⚪","white","ホワイト"],["🟤","brown","ブラウン"]],
+"かず":[
+["1️⃣","one","ワン"],["2️⃣","two","トゥー"],["3️⃣","three","スリー"],["4️⃣","four","フォー"],["5️⃣","five","ファイブ"],
+["6️⃣","six","シックス"],["7️⃣","seven","セブン"],["8️⃣","eight","エイト"],["9️⃣","nine","ナイン"],["🔟","ten","テン"],
+["⑪","eleven","イレブン"],["⑫","twelve","トゥエルブ"],["⑬","thirteen","サーティーン"],["⑭","fourteen","フォーティーン"],
+["⑮","fifteen","フィフティーン"],["⑯","sixteen","シックスティーン"],["⑰","seventeen","セブンティーン"],
+["⑱","eighteen","エイティーン"],["⑲","nineteen","ナインティーン"],["⑳","twenty","トゥエンティ"]],
+"くだもの":[
+["🍎","apple","アップル"],["🍌","banana","バナナ"],["🍇","grape","グレープ"],["🍊","orange","オレンジ"],
+["🍓","strawberry","ストロベリー"],["🍑","peach","ピーチ"],["🍈","melon","メロン"],["🍒","cherry","チェリー"],
+["🍍","pineapple","パイナップル"],["🍋","lemon","レモン"]],
+"どうぶつ":[
+["🐶","dog","ドッグ"],["🐱","cat","キャット"],["🐰","rabbit","ラビット"],["🐻","bear","ベア"],
+["🦁","lion","ライオン"],["🐘","elephant","エレファント"],["🐵","monkey","モンキー"],["🐼","panda","パンダ"],
+["🐴","horse","ホース"],["🐷","pig","ピッグ"]],
+"きもち":[
+["😊","happy","ハッピー"],["😢","sad","サッド"],["😠","angry","アングリー"],["😪","sleepy","スリーピー"],
+["😋","hungry","ハングリー"],["😫","tired","タイアード"],["🤩","excited","エキサイテッド"],["😱","scared","スケアード"],
+["😲","surprised","サプライズド"],["😌","fine","ファイン"]],
+"ようび":[
+["🌞","Sunday","サンデー"],["🌙","Monday","マンデー"],["🔥","Tuesday","チューズデー"],["💧","Wednesday","ウェンズデー"],
+["🌳","Thursday","サーズデー"],["💰","Friday","フライデー"],["🌏","Saturday","サタデー"]],
+"つき":[
+["⛄","January","ジャニュアリー"],["👹","February","フェブラリー"],["🌸","March","マーチ"],["🌷","April","エイプリル"],
+["🎏","May","メイ"],["☔","June","ジューン"],["🎋","July","ジュライ"],["🌻","August","オーガスト"],
+["🌕","September","セプテンバー"],["🎃","October","オクトーバー"],["🍁","November","ノベンバー"],["🎄","December","ディセンバー"]],
+"きょうか":[
+["📖","Japanese","ジャパニーズ（こくご）"],["🔢","math","マス（さんすう）"],["🔬","science","サイエンス（りか）"],
+["🗾","social studies","ソーシャルスタディーズ（しゃかい）"],["🎵","music","ミュージック（おんがく）"],
+["⚽","P.E.","ピーイー（たいいく）"],["🎨","arts and crafts","アーツアンドクラフツ（ずこう）"],
+["🗣️","English","イングリッシュ（えいご）"],["🍳","home economics","ホームエコノミクス（かていか）"]]
+};
+function kanaAlpha(ch){
+  const m={A:"エイ",B:"ビー",C:"シー",D:"ディー",E:"イー",F:"エフ",G:"ジー",H:"エイチ",I:"アイ",J:"ジェイ",
+  K:"ケイ",L:"エル",M:"エム",N:"エヌ",O:"オー",P:"ピー",Q:"キュー",R:"アール",S:"エス",T:"ティー",
+  U:"ユー",V:"ブイ",W:"ダブリュー",X:"エックス",Y:"ワイ",Z:"ズィー"};
+  return m[ch];
+}
+const WORD_CATS = Object.keys(CATS).filter(k=>k!=="ABC-おおもじ" && k!=="abc-こもじ");
+const CAT_ICONS = {"ABC-おおもじ":"🔠","abc-こもじ":"🔡","いろ":"🌈","かず":"🔢","くだもの":"🍎","どうぶつ":"🐶","きもち":"😊","ようび":"📅","つき":"🗓","きょうか":"🏫"};
+const LS_ABC = "sensei25_eigo_abcbest";
+
+/* ===== 効果音 ===== */
+let actx=null;
+function ac(){ if(!actx){ actx=new (window.AudioContext||window.webkitAudioContext)(); } if(actx.state==="suspended") actx.resume(); return actx; }
+function tone(f,d,t,v,w){ const c=ac(),o=c.createOscillator(),g=c.createGain();
+o.type=t||"sine"; o.frequency.value=f;
+g.gain.setValueAtTime(v||0.2,c.currentTime+(w||0));
+g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+(w||0)+d);
+o.connect(g); g.connect(c.destination); o.start(c.currentTime+(w||0)); o.stop(c.currentTime+(w||0)+d+0.05); }
+function seTick(){ tone(880,0.06,"square",0.08); }
+function sePinpon(){ tone(784,0.15,"sine",0.25); tone(1046,0.3,"sine",0.25,0.13); }
+function seBoo(){ tone(220,0.35,"sawtooth",0.15); tone(180,0.35,"sawtooth",0.15,0.08); }
+function seFanfare(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.25,"sine",0.22,i*0.15)); }
+
+/* ===== 発音 (Web Speech API) ===== */
+const canSpeak = ("speechSynthesis" in window) && ("SpeechSynthesisUtterance" in window);
+function speak(text){
+  if(!canSpeak) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-US"; u.rate=0.85;
+  speechSynthesis.speak(u);
+}
+
+/* ===== 共通 ===== */
+let cat = "いろ";
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show"));
+  document.getElementById(id).classList.add("show");
+}
+function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+function goHome(){ stopFlashAuto(); if(abcTimer){clearInterval(abcTimer);abcTimer=null;} show("scr-home"); renderAbcBest(); }
+function buildCatBtns(){
+  const box=document.getElementById("cat-btns");
+  box.innerHTML="";
+  Object.keys(CATS).forEach(k=>{
+    const b=document.createElement("button");
+    b.className="btn small "+(k===cat?"sel":"ghost");
+    b.textContent=CAT_ICONS[k]+" "+k+"（"+CATS[k].length+"）";
+    b.onclick=()=>{ cat=k; buildCatBtns(); };
+    box.appendChild(b);
+  });
+}
+
+/* ===== フラッシュ ===== */
+let deck=[], idx=0, revealed=false, autoTimer=null;
+function startFlash(){
+  deck=shuffle(CATS[cat]); idx=0; revealed=false;
+  show("scr-flash"); renderFlash();
+}
+function renderFlash(){
+  const c=deck[idx];
+  const isAlpha = cat==="ABC-おおもじ" || cat==="abc-こもじ";
+  document.getElementById("flash-emoji").textContent = isAlpha ? c[1] : c[0];
+  document.getElementById("flash-emoji").style.fontWeight = isAlpha ? "bold" : "normal";
+  document.getElementById("flash-word").textContent = (revealed && !isAlpha) ? c[1] : (isAlpha && revealed ? c[2] : "");
+  document.getElementById("flash-kana").textContent = (revealed && !isAlpha) ? c[2] : "";
+  document.getElementById("flash-hint").textContent = revealed ? "タップで つぎのカードへ" : "タップで こたえが でるよ";
+  document.getElementById("flash-prog").textContent = (idx+1)+" / "+deck.length+"　【"+cat+"】";
+  document.getElementById("flash-speak").style.display = canSpeak ? "" : "none";
+}
+function flashTap(){
+  seTick();
+  if(revealed){ revealed=false; idx=(idx+1)%deck.length; }
+  else revealed=true;
+  renderFlash();
+}
+function flashMove(dir){ seTick(); revealed=false; idx=(idx+dir+deck.length)%deck.length; renderFlash(); }
+function speakCurrent(){
+  const c=deck[idx];
+  speak(c[1]);
+}
+function flashSpeedMs(){ return parseFloat(document.getElementById("flash-speed").value)*1000; }
+function toggleFlashAuto(){
+  if(autoTimer) stopFlashAuto();
+  else{
+    ac();
+    autoTimer=setInterval(()=>{ flashTap(); }, flashSpeedMs());
+    document.getElementById("flash-play").textContent="⏸ ストップ";
+  }
+}
+function stopFlashAuto(){
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; }
+  const b=document.getElementById("flash-play");
+  if(b) b.textContent="▶ じどうめくり";
+}
+document.getElementById("flash-speed").addEventListener("input",function(){
+  document.getElementById("flash-speed-label").textContent=this.value+"びょう";
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=setInterval(()=>{ flashTap(); }, flashSpeedMs()); }
+});
+
+/* ===== クイズ（絵文字→英語4択） ===== */
+let qDeck=[], qIdx=0, qScore=0, qAnswered=false, qCat="";
+function startQuiz(){
+  qCat = WORD_CATS.includes(cat) ? cat : "いろ";
+  const pool = CATS[qCat];
+  qDeck = shuffle(pool).slice(0, Math.min(10, pool.length));
+  while(qDeck.length<10){ qDeck.push(pool[Math.floor(Math.random()*pool.length)]); }
+  qIdx=0; qScore=0;
+  show("scr-quiz"); renderQ();
+}
+function renderQ(){
+  qAnswered=false;
+  const c=qDeck[qIdx];
+  document.getElementById("q-no").textContent=qIdx+1;
+  document.getElementById("q-score").textContent=qScore;
+  document.getElementById("q-emoji").textContent=c[0];
+  document.getElementById("q-feedback").textContent="";
+  document.getElementById("q-feedback").className="feedback";
+  document.getElementById("q-next").style.display="none";
+  const others = shuffle(CATS[qCat].filter(x=>x[1]!==c[1])).slice(0,3);
+  const opts = shuffle([c].concat(others));
+  const box=document.getElementById("q-choices");
+  box.innerHTML="";
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="choice"; b.textContent=o[1];
+    b.onclick=()=>qAnswer(b, o[1]===c[1], c);
+    box.appendChild(b);
+  });
+}
+function qAnswer(btn, ok, c){
+  if(qAnswered) return;
+  qAnswered=true;
+  const fb=document.getElementById("q-feedback");
+  if(ok){
+    qScore++; btn.classList.add("correct");
+    fb.textContent="⭕ Great!"; fb.classList.add("good");
+    sePinpon(); speak(c[1]);
+  }else{
+    btn.classList.add("wrong");
+    fb.textContent="❌ こたえは「"+c[1]+"（"+c[2]+"）」"; fb.classList.add("bad");
+    seBoo();
+    document.querySelectorAll("#q-choices .choice").forEach(b=>{
+      if(b.textContent===c[1]) b.classList.add("correct");
+    });
+  }
+  document.getElementById("q-score").textContent=qScore;
+  document.getElementById("q-next").style.display="";
+}
+function quizNext(){
+  qIdx++;
+  if(qIdx>=qDeck.length){
+    document.getElementById("res-score").textContent=qScore;
+    let msg;
+    if(qScore===10){ msg="Perfect! すごい！🌟"; seFanfare(); }
+    else if(qScore>=7){ msg="Good job! あとすこし！"; }
+    else{ msg="フラッシュで れんしゅうして もういちど チャレンジ！"; }
+    document.getElementById("res-msg").textContent=msg+"　【"+qCat+"】";
+    show("scr-result");
+  }else renderQ();
+}
+
+/* ===== ABCじゅんならべ ===== */
+let abcMode="upper", abcOrder=[], abcPos=0, abcTimer=null, abcT0=0, abcRunning=false;
+function startAbc(){ show("scr-abc"); abcStart(); }
+function abcSet(mode, btn){
+  abcMode=mode;
+  document.querySelectorAll(".abc-set-btn").forEach(b=>b.className="btn small abc-set-btn ghost");
+  btn.className="btn small abc-set-btn sel";
+  abcStart();
+}
+function abcLetters(){
+  return abcMode==="upper" ? UPPER : UPPER.map(c=>c.toLowerCase());
+}
+function abcStart(){
+  const letters=abcLetters();
+  abcOrder=shuffle(letters);
+  abcPos=0; abcRunning=false;
+  if(abcTimer){ clearInterval(abcTimer); abcTimer=null; }
+  document.getElementById("abc-time").textContent="0.0";
+  document.getElementById("abc-next").textContent=letters[0];
+  const grid=document.getElementById("abc-grid");
+  grid.innerHTML="";
+  abcOrder.forEach(ch=>{
+    const b=document.createElement("button");
+    b.className="abc-tile"; b.textContent=ch;
+    b.onclick=()=>abcTap(b, ch);
+    grid.appendChild(b);
+  });
+}
+function abcTap(btn, ch){
+  const letters=abcLetters();
+  if(btn.classList.contains("done")) return;
+  if(!abcRunning){
+    abcRunning=true; abcT0=Date.now();
+    abcTimer=setInterval(()=>{
+      document.getElementById("abc-time").textContent=((Date.now()-abcT0)/1000).toFixed(1);
+    },100);
+  }
+  if(ch===letters[abcPos]){
+    btn.classList.add("done");
+    seTick();
+    if(canSpeak) speak(ch);
+    abcPos++;
+    if(abcPos>=letters.length){
+      clearInterval(abcTimer); abcTimer=null;
+      const t=(Date.now()-abcT0)/1000;
+      document.getElementById("abc-time").textContent=t.toFixed(1);
+      document.getElementById("abc-next").textContent="🎉";
+      seFanfare();
+      const best=parseFloat(localStorage.getItem(LS_ABC)||"0");
+      if(!best || t<best){
+        localStorage.setItem(LS_ABC, t.toFixed(1));
+        setTimeout(()=>alert("🏆 さいそくきろく こうしん！ "+t.toFixed(1)+"びょう！"),300);
+      }else{
+        setTimeout(()=>alert("🎉 ぜんぶ ならべられた！ "+t.toFixed(1)+"びょう"),300);
+      }
+      renderAbcBest();
+    }else{
+      document.getElementById("abc-next").textContent=letters[abcPos];
+    }
+  }else{
+    seBoo();
+    btn.classList.add("miss");
+    setTimeout(()=>btn.classList.remove("miss"),350);
+  }
+}
+function renderAbcBest(){
+  const best=localStorage.getItem(LS_ABC);
+  document.getElementById("abc-best").textContent = best ? best+"びょう" : "--";
+}
+
+buildCatBtns();
+renderAbcBest();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

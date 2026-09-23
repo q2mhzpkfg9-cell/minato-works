@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>つきの みちかけ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f6f1e7;color:#1f2a37;font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","BIZ UDPGothic","Meiryo",sans-serif;font-size:18px;line-height:1.6}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#1f3a5f;color:#fff}
+header a.back{color:#fff;text-decoration:none;font-size:15px;background:rgba(255,255,255,.15);padding:6px 12px;border-radius:14px}
+header h1{margin:0;font-size:clamp(20px,3.4vw,30px);letter-spacing:.05em}
+main{max-width:1180px;margin:0 auto;padding:14px 16px 30px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(31,58,95,.08);margin-bottom:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{border:2px solid #1f3a5f;background:#fff;color:#1f3a5f;border-radius:14px;padding:10px 18px;font-size:18px;font-family:inherit;cursor:pointer;min-height:48px}
+.tab.on{background:#1f3a5f;color:#fff}
+.btn{border:none;background:#1f3a5f;color:#fff;border-radius:14px;padding:10px 18px;font-size:18px;font-family:inherit;cursor:pointer;min-height:48px}
+.btn.sub{background:#e7edf5;color:#1f3a5f}
+.grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+canvas{width:100%;height:auto;display:block;border-radius:14px}
+.space{background:#0f1c33}
+.slider{width:100%;height:44px;accent-color:#e0a526}
+.name{font-size:clamp(26px,4.5vw,40px);font-weight:bold;color:#1f3a5f;text-align:center;margin:4px 0}
+.info{background:#fbf7ee;border-radius:14px;padding:10px 14px;margin-top:8px}
+.info b{color:#a4541a}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;background:#e7edf5;color:#1f3a5f;border-radius:999px;padding:2px 12px;font-size:15px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px}
+.choice{border:2px solid #1f3a5f;background:#fff;color:#1f3a5f;border-radius:14px;padding:14px 8px;font-size:20px;font-family:inherit;cursor:pointer;min-height:60px}
+.choice.ok{background:#2e8b57;color:#fff;border-color:#2e8b57}
+.choice.ng{background:#c8553d;color:#fff;border-color:#c8553d}
+.fb{font-size:22px;font-weight:bold;text-align:center;min-height:1.6em;margin-top:8px}
+.hide{display:none}
+footer{text-align:center;font-size:13px;color:#6b7280;padding:16px}
+footer a{color:#1f3a5f}
+.small{font-size:15px;color:#555}
+</style>
+</head>
+<body>
+<header><a class="back" href="../index.html">← MINATO WORKS</a><h1>🌙 つきの みちかけ</h1></header>
+<main>
+  <div class="tabs">
+    <button class="tab on" data-t="sim">しらべる</button>
+    <button class="tab" data-t="quiz">クイズ</button>
+  </div>
+
+  <section id="sim">
+    <div class="grid2">
+      <div class="card space">
+        <canvas id="orbit" width="600" height="600" aria-label="うちゅうから見た 太陽・地球・月"></canvas>
+        <div class="small" style="color:#cfd8e6;text-align:center;margin-top:6px">うちゅう（北がわの上）から見た ようす。太陽の光は 右から あたる。</div>
+      </div>
+      <div>
+        <div class="card" style="text-align:center">
+          <div class="small">日本から 見た 月の形</div>
+          <canvas id="look" width="360" height="360" class="space" style="max-width:300px;margin:6px auto"></canvas>
+          <div class="name" id="phaseName">しんげつ</div>
+          <div><span class="pill" id="ageTxt">月れい 0日</span> <span class="pill" id="litTxt">光って見える部分 0%</span></div>
+        </div>
+        <div class="card">
+          <label for="age"><b>新月から 何日目？</b>（スライダーを うごかしてね）</label>
+          <input id="age" class="slider" type="range" min="0" max="29.5" step="0.1" value="0">
+          <div class="row">
+            <button class="btn sub" data-go="0">新月</button>
+            <button class="btn sub" data-go="3">三日月</button>
+            <button class="btn sub" data-go="7.4">上弦の月</button>
+            <button class="btn sub" data-go="14.8">満月</button>
+            <button class="btn sub" data-go="22.1">下弦の月</button>
+            <button class="btn" id="play">▶ うごかす</button>
+          </div>
+          <div class="info" id="info"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card small">
+      <b>ポイント</b>：月は 自分では 光らず、太陽の光を はねかえして 光っています。月が 地球の まわりを 約1か月（約29.5日）で 回るので、太陽・地球・月の ならびかたが かわり、光って見える部分の 形が かわります。（6年「月と太陽」／4年「月と星」）
+    </div>
+  </section>
+
+  <section id="quiz" class="hide">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><b id="qno">だい1もん</b><span class="pill" id="qscore">せいかい 0</span></div>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <canvas id="qcv" width="240" height="240" class="space" style="width:160px"></canvas>
+        <div id="qtext" style="font-size:22px;flex:1;min-width:220px"></div>
+      </div>
+      <div class="choices" id="qch"></div>
+      <div class="fb" id="qfb"></div>
+      <div style="text-align:center"><button class="btn hide" id="qnext">つぎへ ▶</button></div>
+    </div>
+  </section>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+
+<script>
+(function(){
+const PERIOD=29.5;
+const KEY='mw_教科_21_age';
+const $=id=>document.getElementById(id);
+function load(){try{const v=parseFloat(localStorage.getItem(KEY));return isNaN(v)?0:v}catch(e){return 0}}
+function save(v){try{localStorage.setItem(KEY,String(v))}catch(e){}}
+
+// 月の形を描く（北半球から見た形。満ちていくときは右がわが光る）
+function drawMoon(ctx,cx,cy,r,age){
+  const th=2*Math.PI*age/PERIOD;
+  ctx.save();
+  ctx.fillStyle='#2b3448';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  const lit='#ffe27a';
+  const waxing=age<=PERIOD/2;
+  const k=Math.cos(th); // 1:新月 -1:満月
+  ctx.fillStyle=lit;
+  // 光っている半円（満ちるとき右、欠けるとき左）
+  ctx.beginPath();
+  if(waxing){ctx.arc(cx,cy,r,-Math.PI/2,Math.PI/2,false);}else{ctx.arc(cx,cy,r,Math.PI/2,-Math.PI/2+Math.PI*2,false);}
+  ctx.closePath();ctx.fill();
+  // だ円で けずる／たす
+  const rx=Math.abs(k)*r;
+  ctx.beginPath();ctx.ellipse(cx,cy,Math.max(rx,0.01),r,0,0,Math.PI*2);
+  ctx.fillStyle=k>0?'#2b3448':lit;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+
+function phaseOf(a){
+  if(a<1||a>=28.5)return{n:'新月（しんげつ）',s:'しんげつ',time:'太陽と 同じ方向に あるので、ほとんど 見えません。',dir:'見えない'};
+  if(a<5)return{n:'三日月（みかづき）',s:'みかづき',time:'<b>夕方</b>、<b>西</b>の空の ひくいところに 見えます。すぐに しずみます。',dir:'夕方・西'};
+  if(a<6.5)return{n:'ふくらんでいく月',s:'ふくらむ月',time:'夕方、<b>南西</b>の空に 見えます。',dir:'夕方・南西'};
+  if(a<9)return{n:'上弦の月（じょうげんのつき）',s:'じょうげん',time:'<b>夕方</b>に <b>南</b>の空に 見え、真夜中ごろ 西に しずみます。右半分が 光ります。',dir:'夕方・南'};
+  if(a<13.5)return{n:'ふくらんでいく月',s:'ふくらむ月',time:'夕方、<b>南東</b>の空に 見えます。',dir:'夕方・南東'};
+  if(a<16.3)return{n:'満月（まんげつ）',s:'まんげつ',time:'<b>夕方</b>に <b>東</b>から のぼり、<b>真夜中</b>に <b>南</b>、明け方に 西へ しずみます。一晩中 見えます。',dir:'夕方・東'};
+  if(a<20.5)return{n:'かけていく月',s:'かける月',time:'夜おそく 東から のぼります。',dir:'夜・東'};
+  if(a<23.5)return{n:'下弦の月（かげんのつき）',s:'かげん',time:'<b>真夜中</b>ごろ <b>東</b>から のぼり、<b>明け方</b>に <b>南</b>の空に 見えます。左半分が 光ります。',dir:'明け方・南'};
+  return{n:'かけていく月（二十六夜など）',s:'かける月',time:'<b>明け方</b>、<b>東</b>の空の ひくいところに 見えます。',dir:'明け方・東'};
+}
+
+const ocv=$('orbit'),octx=ocv.getContext('2d');
+const lcv=$('look'),lctx=lcv.getContext('2d');
+function drawOrbit(age){
+  const W=600,c=300,R=200;
+  octx.clearRect(0,0,W,W);
+  octx.fillStyle='#0f1c33';octx.fillRect(0,0,W,W);
+  // 太陽の光
+  octx.strokeStyle='rgba(255,210,90,.35)';octx.lineWidth=3;
+  for(let y=40;y<=560;y+=40){octx.beginPath();octx.moveTo(595,y);octx.lineTo(540,y);octx.stroke();
+    octx.beginPath();octx.moveTo(540,y);octx.lineTo(548,y-5);octx.moveTo(540,y);octx.lineTo(548,y+5);octx.stroke();}
+  octx.fillStyle='#ffd35a';octx.font='bold 22px sans-serif';octx.textAlign='center';
+  octx.fillText('太陽の光',555,28);
+  // 軌道
+  octx.strokeStyle='rgba(255,255,255,.3)';octx.setLineDash([6,8]);octx.lineWidth=2;
+  octx.beginPath();octx.arc(c,c,R,0,Math.PI*2);octx.stroke();octx.setLineDash([]);
+  // 回る向き
+  octx.fillStyle='rgba(255,255,255,.5)';octx.font='18px sans-serif';
+  octx.textAlign='left';octx.fillText('↺ 月が まわる向き',14,586);octx.textAlign='center';
+  // 地球（昼と夜）
+  const er=40;
+  octx.fillStyle='#1a3f7a';octx.beginPath();octx.arc(c,c,er,0,Math.PI*2);octx.fill();
+  octx.fillStyle='#4aa3ff';octx.beginPath();octx.arc(c,c,er,-Math.PI/2,Math.PI/2);octx.fill();
+  octx.fillStyle='#fff';octx.font='bold 18px sans-serif';octx.fillText('地球',c,c+er+24);
+  // 月の位置（新月＝太陽がわ＝右）
+  const th=2*Math.PI*age/PERIOD;
+  const mx=c+R*Math.cos(th),my=c-R*Math.sin(th);
+  // 見る線
+  octx.strokeStyle='rgba(255,226,122,.5)';octx.lineWidth=2;octx.beginPath();octx.moveTo(c,c);octx.lineTo(mx,my);octx.stroke();
+  const mr=24;
+  octx.fillStyle='#2b3448';octx.beginPath();octx.arc(mx,my,mr,0,Math.PI*2);octx.fill();
+  octx.fillStyle='#ffe27a';octx.beginPath();octx.arc(mx,my,mr,-Math.PI/2,Math.PI/2);octx.fill();
+  octx.strokeStyle='rgba(255,255,255,.4)';octx.beginPath();octx.arc(mx,my,mr,0,Math.PI*2);octx.stroke();
+  octx.fillStyle='#fff';octx.fillText('月',mx,my+mr+22);
+  // 目じるし
+  octx.fillStyle='rgba(255,255,255,.55)';octx.font='16px sans-serif';
+  const marks=[[0,'新月'],[7.4,'上弦'],[14.8,'満月'],[22.1,'下弦']];
+  marks.forEach(([a,t])=>{const t2=2*Math.PI*a/PERIOD;const x=c+(R+52)*Math.cos(t2),y=c-(R+52)*Math.sin(t2)+6;octx.fillText(t,x,y)});
+}
+function render(age){
+  drawOrbit(age);
+  lctx.fillStyle='#0f1c33';lctx.fillRect(0,0,360,360);
+  drawMoon(lctx,180,180,140,age);
+  const p=phaseOf(age);
+  $('phaseName').textContent=p.n;
+  $('ageTxt').textContent='月れい '+age.toFixed(1)+'日';
+  const f=(1-Math.cos(2*Math.PI*age/PERIOD))/2;
+  $('litTxt').textContent='光って見える部分 やく'+Math.round(f*100)+'%';
+  const waxing=age<PERIOD/2;
+  $('info').innerHTML='<b>見える時こく・方角</b>：'+p.time+'<br><b>これから</b>：'+(age<1||age>=28.5?'これから 右がわから 光りはじめます。':waxing?'毎日 少しずつ <b>ふくらんで</b> いきます（右がわが 光る）。':'毎日 少しずつ <b>かけて</b> いきます（左がわが 光る）。')+'<br><span class="small">月が のぼる時こくは、1日に やく50分ずつ おそくなります。</span>';
+}
+const slider=$('age');
+let age=load();slider.value=age;render(age);
+slider.addEventListener('input',()=>{age=parseFloat(slider.value);render(age);save(age)});
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{stop();age=parseFloat(b.dataset.go);slider.value=age;render(age);save(age)}));
+let timer=null;
+function stop(){if(timer){clearInterval(timer);timer=null;$('play').textContent='▶ うごかす'}}
+$('play').addEventListener('click',()=>{
+  if(timer){stop();return}
+  $('play').textContent='■ とめる';
+  timer=setInterval(()=>{age=(age+0.1)%PERIOD;slider.value=age;render(age);save(age)},60);
+});
+
+// ── クイズ
+const Q=[
+ {age:3,q:'この月の 名前は？',a:'三日月',c:['三日月','上弦の月','満月','下弦の月']},
+ {age:7.4,q:'この月の 名前は？',a:'上弦の月',c:['三日月','上弦の月','満月','下弦の月']},
+ {age:14.8,q:'この月の 名前は？',a:'満月',c:['三日月','上弦の月','満月','下弦の月']},
+ {age:22.1,q:'この月の 名前は？',a:'下弦の月',c:['三日月','上弦の月','満月','下弦の月']},
+ {age:3,q:'三日月が よく見えるのは いつ・どこ？',a:'夕方の 西の空',c:['夕方の 西の空','夕方の 東の空','明け方の 西の空','真夜中の 南の空']},
+ {age:14.8,q:'満月が 夕方に 見えるのは どの方角？',a:'東',c:['東','西','南','北']},
+ {age:7.4,q:'上弦の月が 夕方に 見えるのは どの方角？',a:'南',c:['東','西','南','北']},
+ {age:22.1,q:'下弦の月が 南の空に 見えるのは いつ？',a:'明け方',c:['夕方','真夜中','明け方','お昼']},
+ {age:14.8,q:'満月のとき、太陽・地球・月は どんな ならび？',a:'太陽－地球－月',c:['太陽－地球－月','太陽－月－地球','地球－太陽－月']},
+ {age:0.2,q:'新月のとき、太陽・地球・月は どんな ならび？',a:'太陽－月－地球',c:['太陽－地球－月','太陽－月－地球','地球－太陽－月']},
+ {age:10,q:'このあと 月の形は どうなる？',a:'ふくらんで 満月に近づく',c:['ふくらんで 満月に近づく','かけて 新月に近づく','ずっと かわらない']},
+ {age:19,q:'このあと 月の形は どうなる？',a:'かけて 新月に近づく',c:['ふくらんで 満月に近づく','かけて 新月に近づく','ずっと かわらない']},
+ {age:5,q:'月が 光って見えるのは なぜ？',a:'太陽の光を はねかえしているから',c:['太陽の光を はねかえしているから','月が 自分で 光っているから','地球の光が あたるから']},
+ {age:14.8,q:'満月から つぎの満月まで やく何日？',a:'やく30日',c:['やく7日','やく15日','やく30日','やく365日']},
+];
+let order=[],qi=0,score=0;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startQuiz(){order=shuffle(Q).slice(0,10);qi=0;score=0;showQ()}
+const qctx=$('qcv').getContext('2d');
+function showQ(){
+  if(qi>=order.length){
+    $('qno').textContent='おわり！';$('qtext').innerHTML='10もん中 <b>'+score+'もん</b> せいかい！<br>'+(score>=8?'すばらしい！月はかせだね。':score>=5?'いいね！「しらべる」で もう一度 たしかめよう。':'「しらべる」で 月の うごきを 見てみよう。');
+    $('qch').innerHTML='';$('qfb').textContent='';$('qnext').textContent='もう一度';$('qnext').classList.remove('hide');
+    qctx.fillStyle='#0f1c33';qctx.fillRect(0,0,240,240);drawMoon(qctx,120,120,90,14.8);return;
+  }
+  const q=order[qi];
+  $('qno').textContent='だい'+(qi+1)+'もん';$('qscore').textContent='せいかい '+score;
+  qctx.fillStyle='#0f1c33';qctx.fillRect(0,0,240,240);drawMoon(qctx,120,120,90,q.age);
+  $('qtext').textContent=q.q;$('qfb').textContent='';$('qnext').classList.add('hide');$('qnext').textContent='つぎへ ▶';
+  const box=$('qch');box.innerHTML='';
+  shuffle(q.c).forEach(t=>{const b=document.createElement('button');b.className='choice';b.textContent=t;
+    b.onclick=()=>{if(!$('qnext').classList.contains('hide'))return;
+      const ok=t===q.a;if(ok)score++;
+      b.classList.add(ok?'ok':'ng');
+      [...box.children].forEach(x=>{if(x.textContent===q.a)x.classList.add('ok')});
+      $('qfb').textContent=ok?'⭕ せいかい！':'❌ こたえは「'+q.a+'」';
+      $('qfb').style.color=ok?'#2e8b57':'#c8553d';
+      $('qscore').textContent='せいかい '+score;
+      $('qnext').classList.remove('hide');};
+    box.appendChild(b)});
+}
+$('qnext').addEventListener('click',()=>{if(qi>=order.length){startQuiz()}else{qi++;showQ()}});
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  $('sim').classList.toggle('hide',t.dataset.t!=='sim');$('quiz').classList.toggle('hide',t.dataset.t!=='quiz');
+  if(t.dataset.t==='quiz'){stop();startQuiz()}
+}));
+})();
+</script>
+</body>
+</html>

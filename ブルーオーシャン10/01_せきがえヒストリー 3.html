@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🪑 せきがえヒストリー</title>
+<style>
+  :root{
+    --accent:#E76F51;
+    --accent-dark:#c95a3f;
+    --bg:#F7F5F0;
+    --ink:#3a3532;
+    --sub:#8a827b;
+    --line:#e8e2da;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg);color:var(--ink);
+    font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;}
+  body{min-height:100vh;}
+  header.appbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 18px;background:#fff;border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:50;
+  }
+  header.appbar h1{font-size:1.15rem;letter-spacing:.02em;}
+  header.appbar a.back{
+    text-decoration:none;color:var(--accent);font-weight:700;font-size:.95rem;
+    padding:8px 14px;border-radius:12px;background:#fdf1ee;white-space:nowrap;
+  }
+  header.appbar a.back:active{background:#f9e0da;}
+  .wrap{max-width:1160px;margin:0 auto;padding:16px;display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start;}
+  @media (max-width:860px){ .wrap{grid-template-columns:1fr;} }
+  .card{background:#FFF;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:16px;margin-bottom:16px;}
+  .card h2{font-size:1rem;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .card h2 .badge{font-size:.72rem;background:#f1ece5;color:var(--sub);border-radius:999px;padding:2px 8px;font-weight:600;}
+  .hint{font-size:.78rem;color:var(--sub);line-height:1.6;margin-top:6px;}
+  textarea#rosterInput{
+    width:100%;min-height:150px;border:1.5px solid var(--line);border-radius:12px;
+    padding:10px;font-size:.95rem;font-family:inherit;resize:vertical;background:#fcfbf9;
+  }
+  textarea#rosterInput:focus{outline:2px solid var(--accent);border-color:transparent;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:none;border-radius:14px;cursor:pointer;font-family:inherit;font-weight:700;
+    padding:12px 18px;font-size:.95rem;background:#f1ece5;color:var(--ink);
+    transition:transform .06s, background .15s;user-select:none;
+  }
+  .btn:active{transform:scale(.96);}
+  .btn.primary{background:var(--accent);color:#fff;}
+  .btn.primary:active{background:var(--accent-dark);}
+  .btn.big{font-size:1.1rem;padding:16px 26px;border-radius:16px;}
+  .btn.small{padding:8px 12px;font-size:.82rem;border-radius:10px;}
+  .btn.danger{background:#fdeceb;color:#c0392b;}
+  .btn.ghost{background:transparent;border:1.5px solid var(--line);}
+  .btn:disabled{opacity:.4;cursor:default;transform:none;}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .row.mt{margin-top:10px;}
+  .num{
+    width:74px;padding:10px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:1rem;font-family:inherit;text-align:center;background:#fcfbf9;
+  }
+  .num:focus{outline:2px solid var(--accent);border-color:transparent;}
+  label.inline{font-size:.85rem;color:var(--sub);display:inline-flex;align-items:center;gap:6px;font-weight:600;}
+  .stat{font-size:.85rem;color:var(--sub);}
+  .stat b{color:var(--ink);}
+
+  /* ===== seat area ===== */
+  #seatCard{padding:16px;}
+  .board-label{
+    text-align:center;background:#4a4440;color:#fff;border-radius:10px;
+    padding:6px;font-size:.85rem;letter-spacing:.3em;margin:8px 0;font-weight:700;
+  }
+  #grid{
+    display:grid;gap:6px;margin:4px 0;
+    grid-template-columns:repeat(var(--cols,6),1fr);
+  }
+  .seat{
+    position:relative;border:1.5px solid var(--line);border-radius:12px;
+    min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fcfbf9;cursor:pointer;padding:4px 2px;overflow:hidden;
+    transition:box-shadow .15s;
+  }
+  .seat:active{box-shadow:0 0 0 3px #f4c8bd inset;}
+  .seat .nm{
+    font-weight:700;font-size:clamp(.62rem,2.4vw,.95rem);
+    text-align:center;line-height:1.25;word-break:break-all;
+  }
+  .seat .empty-mark{color:#c9c2ba;font-size:.75rem;font-weight:600;}
+  .seat.off{
+    background:repeating-linear-gradient(45deg,#f3f0ea,#f3f0ea 6px,#ece7df 6px,#ece7df 12px);
+    border-style:dashed;cursor:pointer;
+  }
+  .seat.off .empty-mark{color:#b5ada4;}
+  .seat .pin{
+    position:absolute;top:2px;right:4px;font-size:.7rem;line-height:1;
+  }
+  .seat.pinned{border-color:#e5b83c;background:#fffaf0;}
+  .seat.q .nm{color:var(--accent);}
+  .seat.pop .nm{animation:pop .5s cubic-bezier(.2,1.6,.4,1);}
+  @keyframes pop{0%{transform:scale(.2);opacity:0;}100%{transform:scale(1);opacity:1;}}
+  .seat.dance{animation:dance .6s ease infinite alternate;}
+  @keyframes dance{from{background:#fdf1ee;}to{background:#fcfbf9;}}
+
+  .result-info{
+    margin-top:10px;padding:10px 12px;border-radius:12px;background:#f6f2ec;
+    font-size:.88rem;line-height:1.7;
+  }
+  .result-info.good{background:#eaf6ec;}
+  .result-info.warn{background:#fdf3e7;}
+  .pairs{font-size:.78rem;color:var(--sub);word-break:break-all;}
+
+  /* ===== history ===== */
+  .hist-item{
+    border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;
+  }
+  .hist-item .date{font-weight:700;font-size:.9rem;}
+  .hist-item .meta{font-size:.78rem;color:var(--sub);margin:2px 0 8px;}
+  .hist-item .meta .rep0{color:#2e8b57;font-weight:700;}
+  .hist-item .meta .repN{color:var(--accent);font-weight:700;}
+  #histEmpty{font-size:.85rem;color:var(--sub);}
+
+  /* ===== toast ===== */
+  #toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:#3a3532;color:#fff;padding:12px 20px;border-radius:14px;font-size:.9rem;
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:300;
+    max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.25);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ===== modal ===== */
+  #modalBack{
+    position:fixed;inset:0;background:rgba(40,35,30,.45);z-index:200;
+    display:none;align-items:center;justify-content:center;padding:16px;
+  }
+  #modalBack.show{display:flex;}
+  #modal{
+    background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.2);
+    padding:18px;width:100%;max-width:360px;
+  }
+  #modal h3{font-size:1rem;margin-bottom:4px;}
+  #modal .sub{font-size:.8rem;color:var(--sub);margin-bottom:12px;}
+  #modal select{
+    width:100%;padding:12px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:1rem;font-family:inherit;background:#fcfbf9;margin-bottom:10px;
+  }
+  #modal .btn{width:100%;margin-bottom:8px;}
+
+  /* ===== reveal bar ===== */
+  #revealBar{
+    display:none;position:sticky;bottom:0;z-index:60;
+    background:#fff;border-radius:16px;box-shadow:0 -2px 12px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+    padding:12px;margin-top:12px;text-align:center;
+  }
+  #revealBar.show{display:block;}
+  #revealBar .count{font-size:.85rem;color:var(--sub);margin-bottom:8px;font-weight:600;}
+
+  /* ===== print ===== */
+  .print-title{display:none;}
+  @media print{
+    body{background:#fff;}
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{position:absolute;left:0;top:0;width:100%;}
+    #seatCard{box-shadow:none;border-radius:0;padding:0;}
+    .no-print{display:none !important;}
+    .print-title{display:block;text-align:center;font-size:1.3rem;margin:0 0 4px;}
+    .print-date{display:block;text-align:center;font-size:.85rem;color:#555;margin-bottom:10px;}
+    #grid{gap:4px;}
+    .seat{min-height:70px;border-color:#999;break-inside:avoid;}
+    .seat.off{background:repeating-linear-gradient(45deg,#f5f5f5,#f5f5f5 6px,#eee 6px,#eee 12px);}
+    .board-label{background:#eee;color:#333;border:1px solid #999;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+  .print-date{display:none;}
+</style>
+</head>
+<body>
+
+<header class="appbar no-print">
+  <h1>🪑 せきがえヒストリー</h1>
+  <a class="back" href="index.html">← いちらん</a>
+</header>
+
+<div class="wrap">
+
+  <!-- ========== sidebar ========== -->
+  <div class="side no-print">
+
+    <section class="card">
+      <h2>👦👧 名簿 <span class="badge" id="rosterCount">0人</span></h2>
+      <textarea id="rosterInput" placeholder="1行に1名ずつ入力&#10;例）&#10;さとう&#10;すずき&#10;たなか"></textarea>
+      <div class="row mt">
+        <button class="btn primary" id="btnRoster">名簿を登録する</button>
+      </div>
+      <p class="hint">貼り付けOK。登録すると自動で保存されます。</p>
+    </section>
+
+    <section class="card">
+      <h2>🧩 座席レイアウト</h2>
+      <div class="row">
+        <label class="inline">横（列）<input type="number" class="num" id="inpCols" min="1" max="10" value="6"></label>
+        <span>×</span>
+        <label class="inline">縦（行）<input type="number" class="num" id="inpRows" min="1" max="10" value="6"></label>
+      </div>
+      <p class="hint">座席をタップすると「使わない席（空席）」の切り替えや、子どものピン留め📌ができます。</p>
+      <div class="row mt">
+        <label class="inline">参照する過去の席替え
+          <input type="number" class="num" id="inpHistCount" min="1" max="10" value="3">回分
+        </label>
+      </div>
+      <p class="hint">直近この回数分の履歴で「隣どうしだったペア」をさけて配置します。</p>
+    </section>
+
+    <section class="card">
+      <h2>📚 席替えの履歴 <span class="badge" id="histCountBadge">0件</span></h2>
+      <div id="histList"></div>
+      <p id="histEmpty">まだ履歴はありません。席替えをして「この席にけってい！」を押すと記録されます。</p>
+    </section>
+
+  </div>
+
+  <!-- ========== main ========== -->
+  <div class="main">
+
+    <section class="card no-print" id="actionCard">
+      <div class="row">
+        <button class="btn primary big" id="btnShuffle">🎲 席替えする！</button>
+        <button class="btn big" id="btnReveal">🎉 ドキドキ発表</button>
+      </div>
+      <div class="row mt">
+        <button class="btn small" id="btnSaveHist" style="display:none;">✅ この席にけってい！（履歴に保存）</button>
+      </div>
+      <div class="result-info" id="resultInfo" style="display:none;"></div>
+    </section>
+
+    <div id="printArea">
+      <section class="card" id="seatCard">
+        <h2 class="print-title">座席表</h2>
+        <div class="print-date" id="printDate"></div>
+        <div class="row no-print" style="justify-content:space-between;margin-bottom:6px;">
+          <h2 style="margin:0;">🗺 座席表 <span class="badge" id="seatStat"></span></h2>
+          <div class="row">
+            <button class="btn small" id="btnView">👀 視点：黒板が上</button>
+            <button class="btn small" id="btnPrint">🖨 印刷</button>
+          </div>
+        </div>
+        <div class="board-label" id="boardTop">⬛ こくばん・きょうたく ⬛</div>
+        <div id="grid"></div>
+        <div class="board-label" id="boardBottom" style="display:none;">⬛ こくばん・きょうたく ⬛</div>
+      </section>
+    </div>
+
+    <div id="revealBar" class="no-print">
+      <div class="count" id="revealCount"></div>
+      <div class="row" style="justify-content:center;">
+        <button class="btn primary big" id="btnRevealNext">つぎをはっぴょう！</button>
+        <button class="btn" id="btnRevealAll">ぜんぶ見せる</button>
+        <button class="btn ghost" id="btnRevealExit">おわる</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- seat modal -->
+<div id="modalBack">
+  <div id="modal">
+    <h3 id="modalTitle">座席の設定</h3>
+    <p class="sub" id="modalSub"></p>
+    <div id="modalBody"></div>
+    <button class="btn ghost" id="modalClose">とじる</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- storage ---------- */
+var LS_KEY = "bo10_sekigae_data";
+var state = {
+  roster: [],
+  cols: 6,
+  rows: 6,
+  disabled: [],     // seat indices not used
+  pins: {},         // seatIndex -> name
+  current: null,    // {seats:[name|null], repeats:n, pairs:[], saved:bool}
+  history: [],      // newest first: {id,date,cols,rows,disabled,seats,repeats}
+  histCount: 3,
+  view: "board"     // "board" = 黒板が上 / "teacher" = 先生から見る(180°)
+};
+function load(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      var d = JSON.parse(raw);
+      if(d && typeof d === "object"){
+        for(var k in state){ if(Object.prototype.hasOwnProperty.call(d,k)) state[k]=d[k]; }
+      }
+    }
+  }catch(e){}
+  if(!Array.isArray(state.roster)) state.roster=[];
+  if(!Array.isArray(state.history)) state.history=[];
+  if(!Array.isArray(state.disabled)) state.disabled=[];
+  if(!state.pins || typeof state.pins!=="object") state.pins={};
+  state.cols = clampInt(state.cols,1,10,6);
+  state.rows = clampInt(state.rows,1,10,6);
+  state.histCount = clampInt(state.histCount,1,10,3);
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+}
+function clampInt(v,min,max,def){
+  v = parseInt(v,10);
+  if(isNaN(v)) return def;
+  return Math.min(max, Math.max(min, v));
+}
+
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+var toastTimer = null;
+function toast(msg){
+  var t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+}
+function shuffleArr(a){
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+  }
+  return a;
+}
+function pairKey(a,b){ return a<b ? a+"｜"+b : b+"｜"+a; }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+
+    " "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+}
+
+/* ---------- adjacency ---------- */
+function adjacentPairs(seats, cols, rows){
+  var out = [];
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var i = r*cols+c;
+      var a = seats[i];
+      if(!a) continue;
+      if(c+1<cols){
+        var b = seats[i+1];
+        if(b) out.push([a,b]);
+      }
+      if(r+1<rows){
+        var d = seats[i+cols];
+        if(d) out.push([a,d]);
+      }
+    }
+  }
+  return out;
+}
+function computeBadPairs(){
+  var bad = {};
+  var n = Math.min(state.histCount, state.history.length);
+  for(var h=0;h<n;h++){
+    var e = state.history[h];
+    if(!e || !Array.isArray(e.seats)) continue;
+    var ps = adjacentPairs(e.seats, e.cols, e.rows);
+    for(var i=0;i<ps.length;i++) bad[pairKey(ps[i][0], ps[i][1])] = true;
+  }
+  return bad;
+}
+function scoreOf(seats, bad){
+  var ps = adjacentPairs(seats, state.cols, state.rows);
+  var sc = 0;
+  for(var i=0;i<ps.length;i++){
+    if(bad[pairKey(ps[i][0], ps[i][1])]) sc++;
+  }
+  return sc;
+}
+function repeatPairsOf(seats, bad){
+  var ps = adjacentPairs(seats, state.cols, state.rows);
+  var seen = {}, out = [];
+  for(var i=0;i<ps.length;i++){
+    var k = pairKey(ps[i][0], ps[i][1]);
+    if(bad[k] && !seen[k]){ seen[k]=true; out.push(ps[i][0]+" × "+ps[i][1]); }
+  }
+  return out;
+}
+
+/* ---------- pins validation ---------- */
+function validPins(){
+  var total = state.rows*state.cols;
+  var dis = {}, out = [];
+  for(var i=0;i<state.disabled.length;i++) dis[state.disabled[i]]=true;
+  var usedNames = {};
+  for(var key in state.pins){
+    var idx = parseInt(key,10);
+    var name = state.pins[key];
+    if(isNaN(idx) || idx<0 || idx>=total) continue;
+    if(dis[idx]) continue;
+    if(state.roster.indexOf(name)===-1) continue;
+    if(usedNames[name]) continue;
+    usedNames[name]=true;
+    out.push([idx,name]);
+  }
+  return out;
+}
+
+/* ---------- generation ---------- */
+function generate(){
+  var total = state.rows*state.cols;
+  var dis = {};
+  for(var i=0;i<state.disabled.length;i++) dis[state.disabled[i]]=true;
+  var enabledSeats = [];
+  for(i=0;i<total;i++) if(!dis[i]) enabledSeats.push(i);
+
+  if(state.roster.length===0) return {error:"先に名簿を登録してください"};
+  if(enabledSeats.length < state.roster.length)
+    return {error:"席がたりません（席 "+enabledSeats.length+" ／ 人数 "+state.roster.length+"）。行や列をふやすか、空席をへらしてください"};
+
+  var pins = validPins();
+  var pinnedSeat = {}, pinnedName = {};
+  for(i=0;i<pins.length;i++){ pinnedSeat[pins[i][0]]=pins[i][1]; pinnedName[pins[i][1]]=true; }
+
+  var freeNames = [];
+  for(i=0;i<state.roster.length;i++) if(!pinnedName[state.roster[i]]) freeNames.push(state.roster[i]);
+  var freeSeats = [];
+  for(i=0;i<enabledSeats.length;i++) if(!(enabledSeats[i] in pinnedSeat)) freeSeats.push(enabledSeats[i]);
+
+  var baseSlots = freeNames.slice();
+  while(baseSlots.length < freeSeats.length) baseSlots.push(null);
+
+  var bad = computeBadPairs();
+
+  function build(slots){
+    var seats = new Array(total);
+    for(var t=0;t<total;t++) seats[t]=null;
+    for(var p=0;p<pins.length;p++) seats[pins[p][0]] = pins[p][1];
+    for(var s=0;s<freeSeats.length;s++) seats[freeSeats[s]] = slots[s];
+    return seats;
+  }
+
+  var best=null, bestScore=Infinity;
+  var restarts = 30;
+  var steps = Math.max(400, freeSeats.length*25);
+  for(var r=0;r<restarts && bestScore>0;r++){
+    var slots = shuffleArr(baseSlots.slice());
+    var seats = build(slots);
+    var sc = scoreOf(seats, bad);
+    for(var s=0;s<steps && sc>0;s++){
+      var a = Math.floor(Math.random()*slots.length);
+      var b = Math.floor(Math.random()*slots.length);
+      if(a===b || slots[a]===slots[b]) continue;
+      var tmp=slots[a]; slots[a]=slots[b]; slots[b]=tmp;
+      var seats2 = build(slots);
+      var sc2 = scoreOf(seats2, bad);
+      if(sc2<=sc){ sc=sc2; seats=seats2; }
+      else { tmp=slots[a]; slots[a]=slots[b]; slots[b]=tmp; }
+    }
+    if(sc<bestScore){ bestScore=sc; best=seats; }
+  }
+  return { seats:best, repeats:bestScore, pairs:repeatPairsOf(best,bad) };
+}
+
+/* ---------- reveal mode ---------- */
+var reveal = { active:false, order:[], shown:{} };
+function startReveal(){
+  if(!state.current || !state.current.seats){ toast("先に「席替えする！」を押してください"); return; }
+  reveal.active = true;
+  reveal.shown = {};
+  reveal.order = [];
+  var seats = state.current.seats;
+  for(var i=0;i<seats.length;i++) if(seats[i]) reveal.order.push(i);
+  shuffleArr(reveal.order);
+  $("revealBar").classList.add("show");
+  renderGrid();
+  updateRevealCount();
+}
+function revealNext(){
+  if(!reveal.active) return;
+  for(var i=0;i<reveal.order.length;i++){
+    var idx = reveal.order[i];
+    if(!reveal.shown[idx]){
+      reveal.shown[idx] = true;
+      renderGrid(idx);
+      updateRevealCount();
+      return;
+    }
+  }
+  toast("ぜんいん発表おわり！おつかれさま 🎉");
+}
+function revealAll(){
+  if(!reveal.active) return;
+  for(var i=0;i<reveal.order.length;i++) reveal.shown[reveal.order[i]] = true;
+  renderGrid();
+  updateRevealCount();
+}
+function exitReveal(){
+  reveal.active = false;
+  $("revealBar").classList.remove("show");
+  renderGrid();
+}
+function updateRevealCount(){
+  var done = 0;
+  for(var i=0;i<reveal.order.length;i++) if(reveal.shown[reveal.order[i]]) done++;
+  $("revealCount").textContent = "はっぴょう " + done + " ／ " + reveal.order.length + " 人";
+  if(done === reveal.order.length && reveal.order.length>0){
+    $("revealCount").textContent += "　🎉 ぜんいん発表おわり！";
+  }
+}
+
+/* ---------- render ---------- */
+function displayToSeat(dr,dc){
+  if(state.view==="teacher"){
+    return (state.rows-1-dr)*state.cols + (state.cols-1-dc);
+  }
+  return dr*state.cols + dc;
+}
+function renderRoster(){
+  $("rosterCount").textContent = state.roster.length + "人";
+  if(document.activeElement !== $("rosterInput")){
+    $("rosterInput").value = state.roster.join("\n");
+  }
+}
+function renderLayoutInputs(){
+  $("inpCols").value = state.cols;
+  $("inpRows").value = state.rows;
+  $("inpHistCount").value = state.histCount;
+}
+function renderGrid(popIdx){
+  var grid = $("grid");
+  grid.style.setProperty("--cols", state.cols);
+  grid.innerHTML = "";
+  var total = state.rows*state.cols;
+  var dis = {};
+  for(var i=0;i<state.disabled.length;i++) dis[state.disabled[i]]=true;
+  var pinsBySeat = {};
+  var vp = validPins();
+  for(i=0;i<vp.length;i++) pinsBySeat[vp[i][0]] = vp[i][1];
+  var seats = (state.current && state.current.seats && state.current.seats.length===total)
+              ? state.current.seats : null;
+
+  for(var dr=0;dr<state.rows;dr++){
+    for(var dc=0;dc<state.cols;dc++){
+      var idx = displayToSeat(dr,dc);
+      var cell = document.createElement("div");
+      cell.className = "seat";
+      cell.dataset.idx = idx;
+      var name = seats ? seats[idx] : (pinsBySeat[idx] || null);
+      if(dis[idx]){
+        cell.classList.add("off");
+        cell.innerHTML = '<span class="empty-mark">使わない</span>';
+      }else if(name){
+        var hidden = reveal.active && !reveal.shown[idx];
+        if(hidden){
+          cell.classList.add("q","dance");
+          cell.innerHTML = '<span class="nm">？</span>';
+        }else{
+          cell.innerHTML = '<span class="nm">'+esc(name)+'</span>';
+          if(pinsBySeat[idx]===name) { cell.classList.add("pinned"); cell.innerHTML += '<span class="pin">📌</span>'; }
+          if(reveal.active && popIdx===idx) cell.classList.add("pop");
+        }
+      }else{
+        cell.innerHTML = '<span class="empty-mark">あき</span>';
+      }
+      grid.appendChild(cell);
+    }
+  }
+  $("boardTop").style.display    = (state.view==="board")   ? "" : "none";
+  $("boardBottom").style.display = (state.view==="teacher") ? "" : "none";
+  $("btnView").textContent = (state.view==="board") ? "👀 視点：黒板が上" : "👀 視点：先生から見る";
+  var enabled = total - state.disabled.filter(function(d){return d>=0 && d<total;}).length;
+  $("seatStat").textContent = "席 "+enabled+" ／ 名簿 "+state.roster.length+"人";
+  $("printDate").textContent = todayStr() + "　（"+ (state.view==="board"?"黒板が上":"先生から見た図") +"）";
+}
+function renderResultInfo(){
+  var box = $("resultInfo");
+  var btn = $("btnSaveHist");
+  if(!state.current || !state.current.seats){
+    box.style.display="none"; btn.style.display="none"; return;
+  }
+  var c = state.current;
+  box.style.display="";
+  box.className = "result-info " + (c.repeats===0 ? "good" : "warn");
+  var html = c.repeats===0
+    ? "🌟 <b>隣接再発 0組！</b> 過去"+Math.min(state.histCount,state.history.length)+"回で隣どうしだったペアはいません。"
+    : "⚠️ <b>隣接再発 "+c.repeats+"組</b>（過去"+Math.min(state.histCount,state.history.length)+"回分と比較）";
+  if(c.pairs && c.pairs.length){
+    html += '<div class="pairs">再発ペア：'+esc(c.pairs.join("、"))+'</div>';
+  }
+  if(c.saved) html += '<div class="pairs">✅ 履歴に保存ずみ</div>';
+  box.innerHTML = html;
+  btn.style.display = c.saved ? "none" : "";
+}
+function renderHistory(){
+  var list = $("histList");
+  list.innerHTML = "";
+  $("histCountBadge").textContent = state.history.length + "件";
+  $("histEmpty").style.display = state.history.length ? "none" : "";
+  for(var i=0;i<state.history.length;i++){
+    (function(entry, idx){
+      var el = document.createElement("div");
+      el.className = "hist-item";
+      var count = 0;
+      for(var j=0;j<entry.seats.length;j++) if(entry.seats[j]) count++;
+      var repCls = entry.repeats===0 ? "rep0" : "repN";
+      el.innerHTML =
+        '<div class="date">📅 '+esc(entry.date)+'</div>'+
+        '<div class="meta">'+entry.cols+'×'+entry.rows+'・'+count+'人・'+
+        '<span class="'+repCls+'">隣接再発 '+entry.repeats+'組</span></div>';
+      var row = document.createElement("div");
+      row.className = "row";
+      var bShow = document.createElement("button");
+      bShow.className = "btn small";
+      bShow.textContent = "座席表に表示";
+      bShow.addEventListener("click", function(){ loadHistory(idx); });
+      var bDel = document.createElement("button");
+      bDel.className = "btn small danger";
+      bDel.textContent = "削除";
+      bDel.addEventListener("click", function(){
+        if(bDel.dataset.arm==="1"){
+          state.history.splice(idx,1);
+          save(); renderHistory(); renderResultInfo();
+          toast("履歴を削除しました");
+        }else{
+          bDel.dataset.arm="1";
+          bDel.textContent="ほんとうに削除？";
+          setTimeout(function(){ bDel.dataset.arm=""; bDel.textContent="削除"; }, 2500);
+        }
+      });
+      row.appendChild(bShow); row.appendChild(bDel);
+      el.appendChild(row);
+      list.appendChild(el);
+    })(state.history[i], i);
+  }
+}
+function loadHistory(idx){
+  var e = state.history[idx];
+  if(!e) return;
+  exitReveal();
+  state.cols = e.cols;
+  state.rows = e.rows;
+  state.disabled = (e.disabled||[]).slice();
+  state.current = { seats: e.seats.slice(), repeats: e.repeats, pairs: [], saved: true };
+  save();
+  renderLayoutInputs(); renderGrid(); renderResultInfo();
+  toast(e.date + " の座席を表示しました");
+}
+function renderAll(){
+  renderRoster(); renderLayoutInputs(); renderGrid(); renderResultInfo(); renderHistory();
+}
+
+/* ---------- seat modal ---------- */
+var modalIdx = -1;
+function openModal(idx){
+  modalIdx = idx;
+  var total = state.rows*state.cols;
+  if(idx<0 || idx>=total) return;
+  var r = Math.floor(idx/state.cols)+1, c = idx%state.cols+1;
+  var isOff = state.disabled.indexOf(idx)!==-1;
+  var pinName = null;
+  var vp = validPins();
+  for(var i=0;i<vp.length;i++) if(vp[i][0]===idx) pinName = vp[i][1];
+
+  $("modalTitle").textContent = "座席の設定（前から"+r+"番目・左から"+c+"番目）";
+  $("modalSub").textContent = isOff ? "この席はいま「使わない席」です"
+    : (pinName ? "📌 「"+pinName+"」さんをピン留め中" : "使う席です");
+
+  var body = $("modalBody");
+  body.innerHTML = "";
+
+  var bToggle = document.createElement("button");
+  bToggle.className = "btn" + (isOff ? " primary" : "");
+  bToggle.textContent = isOff ? "✅ この席を使う" : "🚫 この席を使わない（空席）";
+  bToggle.addEventListener("click", function(){
+    var p = state.disabled.indexOf(idx);
+    if(p===-1){
+      state.disabled.push(idx);
+      delete state.pins[idx];
+      if(state.current && state.current.seats && state.current.seats[idx]){
+        state.current = null; // 配置が変わるのでリセット
+        toast("空席にしたため、配置をリセットしました。もう一度席替えしてください");
+      }
+    }else{
+      state.disabled.splice(p,1);
+    }
+    save(); closeModal(); renderGrid(); renderResultInfo();
+  });
+  body.appendChild(bToggle);
+
+  if(!isOff){
+    if(state.roster.length){
+      var sel = document.createElement("select");
+      var op0 = document.createElement("option");
+      op0.value=""; op0.textContent="（ピン留めする子をえらぶ）";
+      sel.appendChild(op0);
+      for(var j=0;j<state.roster.length;j++){
+        var op = document.createElement("option");
+        op.value = state.roster[j]; op.textContent = state.roster[j];
+        if(pinName===state.roster[j]) op.selected = true;
+        sel.appendChild(op);
+      }
+      body.appendChild(sel);
+
+      var bPin = document.createElement("button");
+      bPin.className = "btn primary";
+      bPin.textContent = "📌 ピン留めする";
+      bPin.addEventListener("click", function(){
+        var name = sel.value;
+        if(!name){ toast("ピン留めする子をえらんでください"); return; }
+        // 同じ子のほかのピンをはずす
+        for(var k in state.pins){ if(state.pins[k]===name) delete state.pins[k]; }
+        state.pins[idx] = name;
+        // 現在の配置にも反映
+        if(state.current && state.current.seats){
+          var seats = state.current.seats;
+          for(var t=0;t<seats.length;t++) if(seats[t]===name) seats[t]=null;
+          seats[idx] = name;
+          state.current.saved = false;
+          state.current.repeats = scoreOf(seats, computeBadPairs());
+          state.current.pairs = repeatPairsOf(seats, computeBadPairs());
+        }
+        save(); closeModal(); renderGrid(); renderResultInfo();
+        toast("「"+name+"」さんをこの席にピン留めしました 📌");
+      });
+      body.appendChild(bPin);
+    }else{
+      var pHint = document.createElement("p");
+      pHint.className = "hint";
+      pHint.style.marginBottom = "10px";
+      pHint.textContent = "名簿を登録すると、この席に子どもをピン留めできます。";
+      body.appendChild(pHint);
+    }
+
+    if(pinName){
+      var bUnpin = document.createElement("button");
+      bUnpin.className = "btn danger";
+      bUnpin.textContent = "ピンをはずす";
+      bUnpin.addEventListener("click", function(){
+        delete state.pins[idx];
+        save(); closeModal(); renderGrid();
+        toast("ピンをはずしました");
+      });
+      body.appendChild(bUnpin);
+    }
+  }
+  $("modalBack").classList.add("show");
+}
+function closeModal(){ $("modalBack").classList.remove("show"); modalIdx=-1; }
+
+/* ---------- events ---------- */
+$("btnRoster").addEventListener("click", function(){
+  var lines = $("rosterInput").value.split("\n");
+  var names = [];
+  for(var i=0;i<lines.length;i++){
+    var n = lines[i].trim();
+    if(n) names.push(n);
+  }
+  state.roster = names;
+  // 名簿にない子のピンを掃除
+  for(var k in state.pins){ if(names.indexOf(state.pins[k])===-1) delete state.pins[k]; }
+  state.current = null;
+  exitReveal();
+  save(); renderAll();
+  toast(names.length ? names.length+"人の名簿を登録しました" : "名簿を空にしました");
+});
+
+function onDimChange(){
+  var c = clampInt($("inpCols").value,1,10,state.cols);
+  var r = clampInt($("inpRows").value,1,10,state.rows);
+  if(c===state.cols && r===state.rows){ renderLayoutInputs(); return; }
+  state.cols=c; state.rows=r;
+  var total = c*r;
+  state.disabled = state.disabled.filter(function(d){ return d>=0 && d<total; });
+  for(var k in state.pins){ if(parseInt(k,10)>=total) delete state.pins[k]; }
+  state.current = null;
+  exitReveal();
+  save(); renderLayoutInputs(); renderGrid(); renderResultInfo();
+}
+$("inpCols").addEventListener("change", onDimChange);
+$("inpRows").addEventListener("change", onDimChange);
+$("inpHistCount").addEventListener("change", function(){
+  state.histCount = clampInt($("inpHistCount").value,1,10,3);
+  $("inpHistCount").value = state.histCount;
+  save();
+  if(state.current && state.current.seats && !state.current.saved){
+    var bad = computeBadPairs();
+    state.current.repeats = scoreOf(state.current.seats, bad);
+    state.current.pairs = repeatPairsOf(state.current.seats, bad);
+    renderResultInfo();
+  }
+});
+
+$("btnShuffle").addEventListener("click", function(){
+  exitReveal();
+  var res = generate();
+  if(res.error){ toast(res.error); return; }
+  state.current = { seats: res.seats, repeats: res.repeats, pairs: res.pairs, saved: false };
+  save(); renderGrid(); renderResultInfo();
+  toast(res.repeats===0 ? "席替え完了！隣接再発なし 🌟" : "席替え完了（隣接再発 "+res.repeats+"組）");
+});
+
+$("btnSaveHist").addEventListener("click", function(){
+  if(!state.current || !state.current.seats || state.current.saved) return;
+  state.history.unshift({
+    id: Date.now(),
+    date: todayStr(),
+    cols: state.cols,
+    rows: state.rows,
+    disabled: state.disabled.slice(),
+    seats: state.current.seats.slice(),
+    repeats: state.current.repeats
+  });
+  if(state.history.length>30) state.history.length = 30;
+  state.current.saved = true;
+  save(); renderHistory(); renderResultInfo();
+  toast("履歴に保存しました 📚 次回の席替えで参照されます");
+});
+
+$("btnView").addEventListener("click", function(){
+  state.view = (state.view==="board") ? "teacher" : "board";
+  save(); renderGrid();
+});
+$("btnPrint").addEventListener("click", function(){ window.print(); });
+
+$("btnReveal").addEventListener("click", startReveal);
+$("btnRevealNext").addEventListener("click", revealNext);
+$("btnRevealAll").addEventListener("click", revealAll);
+$("btnRevealExit").addEventListener("click", exitReveal);
+
+$("grid").addEventListener("click", function(ev){
+  var cell = ev.target.closest ? ev.target.closest(".seat") : null;
+  if(!cell) return;
+  var idx = parseInt(cell.dataset.idx,10);
+  if(isNaN(idx)) return;
+  if(reveal.active){
+    if(state.current && state.current.seats && state.current.seats[idx] && !reveal.shown[idx]){
+      reveal.shown[idx]=true;
+      renderGrid(idx);
+      updateRevealCount();
+    }
+    return;
+  }
+  openModal(idx);
+});
+
+$("modalClose").addEventListener("click", closeModal);
+$("modalBack").addEventListener("click", function(ev){
+  if(ev.target === $("modalBack")) closeModal();
+});
+
+/* ---------- init ---------- */
+load();
+renderAll();
+
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+この席替えを「記録」にして次の年へ渡す考えかたは、noteに書いています。<br>
+<a href="https://note.com/minato_smile2525/n/nbd04e0487c70" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">→ 席替えのくじ引きは、何も解いていなかった</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>
