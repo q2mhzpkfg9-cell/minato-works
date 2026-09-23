@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>見取りメモ帳 Pro</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b;--warn:#a5771f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:40}
+header a.back{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.16);font-size:.85rem;white-space:nowrap}
+header h1{font-size:1.1rem;margin:0}
+.pro-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--navy);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.hsel{font:inherit;font-size:.9rem;font-weight:700;padding:6px 8px;border-radius:10px;border:none;background:#fff;color:var(--navy);min-height:0}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.del{color:var(--danger)}
+button.sm{min-height:34px;padding:4px 10px;font-size:.85rem}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+textarea{width:100%;min-height:90px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.kids{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px;margin:8px 0}
+.kid{min-height:54px;text-align:left;position:relative;font-weight:600;padding-right:34px}
+.kid.on{outline:3px solid var(--accent);background:#fff6ee}
+.kid .cnt{position:absolute;right:5px;top:4px;font-size:.72rem;background:var(--bg);border-radius:8px;padding:0 6px;color:var(--sub);font-weight:700}
+.kid.warn .cnt{background:#fdf0cf;color:var(--warn)}
+.kid.alert .cnt{background:#fbe3df;color:var(--danger)}
+.tagsel{display:flex;gap:6px;flex-wrap:wrap}
+.tagsel label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:44px}
+.memo{border-left:4px solid var(--line);padding:6px 10px;margin:8px 0;background:#fcfaf5;border-radius:0 10px 10px 0}
+.memo .meta{font-size:.8rem;color:var(--sub)}
+.pill{display:inline-block;font-size:.75rem;padding:0 8px;border-radius:8px;background:var(--bg);margin-right:4px}
+.lock{font-size:.72rem;color:#9a9a9a}
+.alert{background:#fbe3df;color:var(--danger);padding:8px 12px;border-radius:10px;margin:8px 0}
+.alert.y{background:#fdf0cf;color:var(--warn)}
+.caution{background:#fff8e8;border:1.5px solid #f0e2bf;border-radius:12px;padding:10px 14px;font-size:.85rem;line-height:1.7;margin-bottom:12px}
+.migrate-box{background:#eef4fa;border:1.5px solid #c8dcee;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:4px;border:none;background:none;font-size:1rem;color:var(--sub);cursor:pointer;min-height:0;padding:2px 6px}
+table{border-collapse:collapse;width:100%}
+td,th{border-bottom:1px solid var(--line);padding:6px;text-align:left;font-size:.92rem}
+.hidden{display:none}
+.print-kid{page-break-inside:avoid;border:1px solid #bbb;border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.print-kid h3{margin:0 0 4px;font-size:1rem}
+.print-kid ul{margin:0;padding-left:1.2em;font-size:.9rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.chips button{min-height:32px;padding:2px 10px;font-size:.85rem;border-radius:99px;font-weight:400}
+.pop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:90}
+.pop .inner{background:#fff;border-radius:14px;padding:16px;max-width:520px;width:100%;max-height:80vh;overflow:auto}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 18px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,.noprint,.migrate-box{display:none!important}body{background:#fff}main{padding:0}.card{box-shadow:none;padding:0}#printArea{display:block!important}.caution{border:1px solid #999}}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>見取りメモ帳<span class="pro-badge">PRO</span></h1>
+  <select id="fySel" class="hsel" aria-label="年度"></select>
+  <select id="clsSel" class="hsel" aria-label="クラス"></select>
+</header>
+<main>
+<div id="migrateBox" class="migrate-box" style="display:none"></div>
+<div class="caution">⚠ ここに出る件数・日数は「教師がどれだけ見取ったか」の記録で、子どもの頑張りの量ではありません。<b>評定の唯一の根拠にしないでください。</b>また、この画面を子ども本人・保護者に見せないでください（件数が並ぶと比較になります）。</div>
+
+<div class="tabs noprint">
+  <button data-tab="add" class="on">メモする</button>
+  <button data-tab="kid">子ども別に見る</button>
+  <button data-tab="list">学期末一覧・印刷</button>
+  <button data-tab="hand">引き継ぎ書き出し</button>
+  <button data-tab="set">名簿・クラス・設定</button>
+</div>
+
+<section id="tab-add" class="noprint">
+  <div class="card">
+    <h2>① 子どもをえらぶ（複数OK）</h2>
+    <div class="row">
+      <select id="termSel"></select>
+      <label class="row note"><input type="checkbox" id="badgeMode" style="min-height:0;width:18px;height:18px"> バッジを「件数」にする</label>
+      <span class="note" id="badgeHelp"></span>
+    </div>
+    <div id="zeroAlert"></div>
+    <div id="kidGrid" class="kids"></div>
+    <div id="orphanBox"></div>
+  </div>
+  <div class="card">
+    <h2>② 見取りを書く</h2>
+    <div class="row">
+      <input type="date" id="mDate">
+      <select id="mSubj"></select>
+    </div>
+    <div class="tagsel" id="tagSel" style="margin:8px 0"></div>
+    <div class="chips" id="quickChips"></div>
+    <textarea id="mText" placeholder="例）友だちの考えに「つけたしで」と手をあげ、自分の言葉で説明し直していた。"></textarea>
+    <p class="note">判断や評価ではなく、<b>見えた事実</b>を書くと、あとで自分の見方を疑えます。</p>
+    <div class="row" style="margin-top:8px"><button class="pri" id="addBtn">ためる</button><span id="addMsg" class="note"></span></div>
+  </div>
+  <div class="card"><h2>さいきんのメモ</h2><div id="recent"></div></div>
+</section>
+
+<section id="tab-kid" class="hidden noprint">
+  <div class="card">
+    <div class="row"><select id="kidSel"></select><select id="termSel2"></select><select id="subjFilter"></select></div>
+    <div id="kidSummary" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:6px">
+      <button class="pri" id="matBtn">所見の材料にする</button>
+      <button id="matAllBtn">クラス全員の材料</button>
+    </div>
+    <p class="note">材料の並べ替えだけをします。<b>文章は作りません。</b>意味づけと言葉は先生の仕事として残しています。</p>
+    <div id="matBox" class="hidden" style="margin-top:8px">
+      <textarea id="matOut" style="min-height:220px" readonly></textarea>
+      <div class="row" style="margin-top:6px"><button id="matCopy">コピーする</button><span class="note">下書きファイルに貼って、文につないでください。</span></div>
+    </div>
+    <div id="kidMemos" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="tab-list" class="hidden">
+  <div class="card noprint">
+    <div class="row">
+      <select id="termSel3"></select>
+      <label class="row"><input type="checkbox" id="onlyGood" style="width:18px;height:18px;min-height:0">「よさ・成長」だけ</label>
+      <button class="pri" onclick="window.print()">印刷する</button>
+      <button id="tsvList">一覧をTSVでコピー</button>
+    </div>
+    <p class="note">所見を書く前の下資料に。1人ずつ枠で区切って印刷されます。日数は<b>その期間の終わり</b>を基準にしています。</p>
+    <table id="countTable"></table>
+  </div>
+  <div id="printArea"></div>
+</section>
+
+<section id="tab-hand" class="hidden noprint">
+  <div class="card">
+    <h2>引き継ぎ用テキストの書き出し</h2>
+    <div class="row">
+      <select id="handTerm"></select>
+      <select id="handRange">
+        <option value="good">よさ・成長だけ</option>
+        <option value="issue">課題・手だてだけ</option>
+        <option value="both" selected>両方</option>
+      </select>
+      <button class="pri" id="handRun">つくる</button>
+    </div>
+    <div id="handWarn"></div>
+    <p class="note">共有しない設定（🔒）のタグは、ここには出ません。</p>
+    <textarea id="handOut" style="min-height:240px" readonly></textarea>
+    <div class="row" style="margin-top:6px"><button id="handCopyTxt">文章でコピー</button><button id="handCopyTsv">TSVでコピー（表計算に貼れます）</button></div>
+  </div>
+</section>
+
+<section id="tab-set" class="hidden noprint">
+  <div class="card">
+    <h2>名簿（1行に1人・3つのPro版で共通）</h2>
+    <p class="note">この名簿は <b>見取りメモ帳Pro／所見文チェッカーPro／テスト観点別集計Pro</b> で共有されます。名簿もメモもこの端末の中だけに保存され、外には送られません。</p>
+    <textarea id="roster" style="min-height:200px" placeholder="1 あおき&#10;2 いとう&#10;3 うえだ"></textarea>
+    <div class="row" style="margin-top:8px"><button class="pri" id="saveRoster">名簿を保存</button><span id="rosterMsg" class="note"></span></div>
+    <p class="note">※ 名前を書きかえても、記録は児童ID（sid）でつながっているので消えません。行を消すとその子は名簿から外れます（記録は残ります）。</p>
+  </div>
+  <div class="card">
+    <h2>クラス・年度</h2>
+    <div class="row">
+      <input id="clsName" placeholder="3年1組" style="min-width:160px">
+      <button id="clsRename">名前を変える</button>
+      <button id="clsAdd">クラスを追加</button>
+      <button id="clsDup">複製（名簿だけ引き継ぐ）</button>
+      <button class="del" id="clsDel">このクラスを消す</button>
+    </div>
+    <p class="note">1つの年度に12クラスまで。年度が替わっても過去のメモは残ります。</p>
+    <div id="clsList"></div>
+  </div>
+  <div class="card">
+    <h2>タグ（よさ／成長／課題…）</h2>
+    <div id="tagEdit"></div>
+    <div class="row" style="margin-top:8px"><input id="newTag" placeholder="例）友だち関係"><button id="addTag">タグを足す</button></div>
+    <p class="note">🔒（共有しない）にすると、印刷・材料テキスト・引き継ぎから外れます。画面の中には残ります。保護者からの申し出など、校内で共有しない記録に使ってください。</p>
+  </div>
+  <div class="card">
+    <h2>場面・教科のリスト</h2>
+    <p class="note">カンマ区切り。「学習面／生活面」の分け方も場面ごとに変えられます。</p>
+    <input id="subjList" style="width:100%">
+    <div class="row" style="margin-top:8px"><button id="saveSubj">保存</button></div>
+    <div id="kindMap" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h2>日数のしきい値・クイックフレーズ</h2>
+    <div class="row">
+      <label>黄色：<input type="number" id="warnDays" style="width:80px">日以上</label>
+      <label>赤：<input type="number" id="alertDays" style="width:80px">日以上</label>
+      <button id="saveSet">保存</button>
+    </div>
+    <p class="note" style="margin-top:8px">クイックフレーズ（1行に1つ。メモ欄の上にボタンで出ます）</p>
+    <textarea id="phrases" style="min-height:100px"></textarea>
+    <div class="row"><button id="savePhrases">保存</button></div>
+  </div>
+  <div class="card">
+    <h2>書き出し・読みこみ</h2>
+    <div class="row">
+      <button id="expBtn">JSONで書き出す（全クラス・全年度）</button>
+      <label class="row"><span>読みこむ</span><input type="file" id="impFile" accept=".json"></label>
+    </div>
+    <p class="note">読みこみのときに「置きかえ」か「追加（別クラスとして）」を選べます。無料版のデータは消しません。</p>
+  </div>
+</section>
+</main>
+<div id="toast"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+
+<script>
+"use strict";
+/* ===== 共通名簿 mwpro_roster_v1 ===== */
+/* 見取りメモ帳Pro／所見文チェッカーPro／テスト観点別集計Pro の3本で同じ実装を使うこと */
+var Roster=(function(){
+  var KEY='mwpro_roster_v1';
+  function uid(p){return (p||'s')+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+  function curFY(){var d=new Date();return d.getMonth()+1<4?d.getFullYear()-1:d.getFullYear()}
+  function read(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+  function write(d){try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){return false}}
+  function norm(d){
+    if(!d||typeof d!=='object')d={};
+    if(!Array.isArray(d.classes))d.classes=[];
+    var seen={};
+    d.classes=d.classes.filter(function(c){return c&&typeof c==='object'}).map(function(c){
+      var id=c.id||uid('c'); while(seen[id])id=uid('c'); seen[id]=1;
+      var sseen={};
+      return {id:id,fy:Number(c.fy)||curFY(),name:String(c.name||'1組'),
+        students:(Array.isArray(c.students)?c.students:[]).filter(function(s){return s&&s.name}).map(function(s,i){
+          var sid=s.id||uid('s'); while(sseen[sid])sid=uid('s'); sseen[sid]=1;
+          return {id:sid,no:(s.no===''||s.no==null?i+1:Number(s.no)||i+1),name:String(s.name)};
+        })};
+    });
+    d.version=1;
+    d.fy=Number(d.fy)||(d.classes.length?d.classes[0].fy:curFY());
+    return d;
+  }
+  var store=norm(read());
+  function persist(){write(store)}
+  function parseLines(text){
+    return String(text||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(l,i){
+      var m=l.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+      return m?{no:Number(m[1]),name:m[2].trim(),raw:l}:{no:i+1,name:l,raw:l};
+    }).filter(function(s){return s.name});
+  }
+  function get(id){for(var i=0;i<store.classes.length;i++)if(store.classes[i].id===id)return store.classes[i];return null}
+  function classesOf(fy){return store.classes.filter(function(c){return c.fy===fy})}
+  function addClass(fy,name,students){
+    var c={id:uid('c'),fy:fy,name:name||'1組',students:(students||[]).map(function(s,i){
+      return {id:s.id||uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)}})};
+    store.classes.push(c);persist();return c;
+  }
+  function removeClass(id){store.classes=store.classes.filter(function(c){return c.id!==id});persist()}
+  function setStudents(id,list){
+    var c=get(id);if(!c)return null;
+    var old=c.students.slice();
+    c.students=list.map(function(s,i){
+      var hit=null;
+      if(s.id)for(var j=0;j<old.length;j++){if(old[j].id===s.id)hit=old[j]}
+      if(!hit)for(var k=0;k<old.length;k++){if(old[k].name===s.name&&!old[k].__used)hit=old[k]}
+      if(hit)hit.__used=1;
+      return {id:hit?hit.id:uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)};
+    });
+    c.students.forEach(function(s){delete s.__used});
+    persist();return c;
+  }
+  /* 氏名文字列（"1 あおき" でも "あおき" でも）から sid を解決する */
+  function resolve(classId,key){
+    var c=get(classId);if(!c)return null;
+    var k=String(key==null?'':key).trim();if(!k)return null;
+    var norm1=function(s){return String(s).replace(/[\s　]/g,'')};
+    for(var i=0;i<c.students.length;i++)if(c.students[i].name===k)return c.students[i].id;
+    var m=k.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+    var body=m?m[2].trim():k, no=m?Number(m[1]):null;
+    for(var j=0;j<c.students.length;j++)if(c.students[j].name===body)return c.students[j].id;
+    for(var p=0;p<c.students.length;p++)if(norm1(c.students[p].name)===norm1(body))return c.students[p].id;
+    if(no!=null)for(var q=0;q<c.students.length;q++)if(c.students[q].no===no&&norm1(c.students[q].name)===norm1(body))return c.students[q].id;
+    return null;
+  }
+  function mergeStudents(classId,list){ /* 名前一致でマージし、無い子だけ足す */
+    var c=get(classId);if(!c)return {};
+    var map={};
+    list.forEach(function(s){
+      var sid=resolve(classId,s.raw||s.name);
+      if(!sid){var ns={id:uid('s'),no:s.no==null?c.students.length+1:Number(s.no),name:String(s.name)};c.students.push(ns);sid=ns.id}
+      map[s.raw||s.name]=sid;
+    });
+    persist();return map;
+  }
+  function nameOf(classId,sid){var c=get(classId);if(!c)return '';for(var i=0;i<c.students.length;i++)if(c.students[i].id===sid)return c.students[i].name;return ''}
+  function reload(){store=norm(read());return store}
+  return {KEY:KEY,uid:uid,curFY:curFY,all:function(){return store},persist:persist,parseLines:parseLines,
+    get:get,classesOf:classesOf,addClass:addClass,removeClass:removeClass,setStudents:setStudents,
+    resolve:resolve,mergeStudents:mergeStudents,nameOf:nameOf,reload:reload};
+})();
+
+/* ===== 見取りメモ帳Pro 本体 ===== */
+(function(){
+var KEY='mwpro_mitori_v1', FLAG='mwpro_mitori_imported';
+var FREE='mw_gyomu_11_';
+var MAXCLS=12;
+var SUBJ_GAKU=['国語','算数','社会','理科','生活','音楽','図工','体育','道徳','外国語','外国語活動','総合'];
+var DEF_SUBJS=['国語','算数','社会','理科','生活','音楽','図工','体育','道徳','外国語','総合','特活・学級','休み時間','行事','その他'];
+var DEF_TAGS=[{name:'よさ',color:'#2e7d5b',export:true},{name:'成長',color:'#3a6ea5',export:true},{name:'課題',color:'#c2703d',export:true}];
+var DEF_PHRASES=['〜と友だちに説明していた','自分から手をあげて','前より〜ができるようになった','困っている子に声をかけていた'];
+
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+function pad(n){return (n<10?'0':'')+n}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function readJSON(k){try{var r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e){return null}}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200)}
+function copyText(s){
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){toast('コピーしました')},function(){fallback(s)});return}}catch(e){}
+  fallback(s);
+  function fallback(x){var ta=document.createElement('textarea');ta.value=x;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('コピーしました')}catch(e){toast('コピーできませんでした。手で選んでコピーしてください')}document.body.removeChild(ta)}
+}
+function fy(d){var y=+String(d).slice(0,4),m=+String(d).slice(5,7);return m<4?y-1:y}
+function termOf(d){var m=+String(d).slice(5,7);return (m>=4&&m<=7)?1:((m>=8&&m<=12)?2:3)}
+function termEnd(y,t){return t===1?(y+'-07-31'):(t===2?(y+'-12-31'):((y+1)+'-03-31'))}
+function daysBetween(a,b){var A=new Date(a+'T00:00:00'),B=new Date(b+'T00:00:00');return Math.round((B-A)/86400000)}
+
+/* ---------- state ---------- */
+var DB=null, cls=null, selected={}, migrateInfo=null, matMode=null;
+
+function newClassRecord(id,fyv,name){return {id:id,fy:fyv,name:name,memos:[]}}
+function normDB(d){
+  if(!d||typeof d!=='object')d={};
+  d.version=1;
+  if(!Array.isArray(d.classes))d.classes=[];
+  d.classes=d.classes.map(function(c){
+    return {id:c.id||Roster.uid('c'),fy:Number(c.fy)||Roster.curFY(),name:String(c.name||'1組'),
+      memos:(Array.isArray(c.memos)?c.memos:[]).map(function(m){
+        return {id:m.id||(Date.now()+Math.random()),sid:m.sid||null,k:m.k||'',d:String(m.d||today()),s:String(m.s||'その他'),t:String(m.t||'よさ'),x:String(m.x||'')}})};
+  });
+  if(!Array.isArray(d.tags)||!d.tags.length)d.tags=JSON.parse(JSON.stringify(DEF_TAGS));
+  d.tags=d.tags.map(function(t){return {name:String(t.name),color:t.color||'#6b6b6b',export:t.export!==false}});
+  if(!Array.isArray(d.subjs)||!d.subjs.length)d.subjs=DEF_SUBJS.slice();
+  d.settings=d.settings||{};
+  var s=d.settings;
+  s.warnDays=Number(s.warnDays)||7; s.alertDays=Number(s.alertDays)||14;
+  s.badgeMode=(s.badgeMode==='count')?'count':'days';
+  if(!Array.isArray(s.quickPhrases))s.quickPhrases=DEF_PHRASES.slice();
+  if(!s.kindMap||typeof s.kindMap!=='object')s.kindMap={};
+  if(!Array.isArray(s.futureTags))s.futureTags=['課題'];
+  d.currentFY=Number(d.currentFY)||Roster.curFY();
+  if(!d.classes.length){
+    var rc=Roster.classesOf(d.currentFY)[0]||Roster.addClass(d.currentFY,'1組',[]);
+    d.classes.push(newClassRecord(rc.id,d.currentFY,rc.name));
+  }
+  if(!d.classes.filter(function(c){return c.id===d.currentClassId}).length)d.currentClassId=d.classes[0].id;
+  d.newYearAsked=Number(d.newYearAsked)||0;
+  return d;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('保存できませんでした（容量やプライベートモードを確認してください）')}}
+function bind(){
+  cls=null;
+  for(var i=0;i<DB.classes.length;i++)if(DB.classes[i].id===DB.currentClassId)cls=DB.classes[i];
+  if(!cls){cls=DB.classes[0];DB.currentClassId=cls.id}
+  DB.currentFY=cls.fy;
+  if(!Roster.get(cls.id)){var r=Roster.addClass(cls.fy,cls.name,[]);cls.id=r.id;DB.currentClassId=r.id}
+}
+function students(){var c=Roster.get(cls.id);return c?c.students.slice().sort(function(a,b){return (a.no||0)-(b.no||0)}):[]}
+function tagOf(name){for(var i=0;i<DB.tags.length;i++)if(DB.tags[i].name===name)return DB.tags[i];return {name:name,color:'#6b6b6b',export:true}}
+function exportable(m){return tagOf(m.t).export!==false}
+
+/* ---------- 無料版からの引き継ぎ ---------- */
+function migrate(){
+  var fr=readJSON(FREE+'roster'), fm=readJSON(FREE+'memos'), fs=readJSON(FREE+'subjs');
+  if(!Array.isArray(fr)&&!Array.isArray(fm))return null;
+  var memos=Array.isArray(fm)?fm:[];
+  var years={}; memos.forEach(function(m){if(m&&m.d)years[fy(m.d)]=1});
+  var curfy=Roster.curFY(); years[curfy]=1;
+  var ylist=Object.keys(years).map(Number).sort(function(a,b){return a-b});
+  var parsed=Roster.parseLines((Array.isArray(fr)?fr:[]).join('\n'));
+  var made=[],unmatched=0,total=0;
+  ylist.forEach(function(y){
+    /* 共通名簿にその年度のクラスがあれば、そこへマージする（3本で同じ名簿・同じsidを使うため） */
+    var rc=Roster.classesOf(y)[0];
+    if(rc)Roster.mergeStudents(rc.id,parsed);
+    else rc=Roster.addClass(y,(y===curfy?'1組':(y+'年度（無料版から）')),parsed.map(function(p){return {no:p.no,name:p.name}}));
+    var rec=newClassRecord(rc.id,y,rc.name);
+    memos.filter(function(m){return m&&m.d&&fy(m.d)===y}).forEach(function(m){
+      var sid=Roster.resolve(rc.id,m.k);
+      if(!sid)unmatched++;
+      total++;
+      rec.memos.push({id:m.id||(Date.now()+Math.random()),sid:sid,k:String(m.k||''),d:String(m.d),s:String(m.s||'その他'),t:String(m.t||'よさ'),x:String(m.x||'')});
+    });
+    made.push(rec);
+  });
+  var db={version:1,currentFY:curfy,currentClassId:null,classes:made,
+    tags:JSON.parse(JSON.stringify(DEF_TAGS)),subjs:(Array.isArray(fs)&&fs.length?fs:DEF_SUBJS.slice()),
+    settings:{warnDays:7,alertDays:14,badgeMode:'days',quickPhrases:DEF_PHRASES.slice(),kindMap:{},futureTags:['課題']},newYearAsked:0};
+  var cur=made.filter(function(r){return r.fy===curfy})[0];
+  db.currentClassId=(cur||made[made.length-1]).id;
+  migrateInfo={memos:total,kids:parsed.length,classes:made.length,unmatched:unmatched};
+  try{localStorage.setItem(FLAG,'true')}catch(e){}
+  return db;
+}
+function load(){
+  var d=readJSON(KEY);
+  if(!d||!Array.isArray(d.classes)||!d.classes.length){
+    var done=false;try{done=localStorage.getItem(FLAG)==='true'}catch(e){}
+    if(!done)d=migrate();
+  }
+  DB=normDB(d);
+  bind();
+}
+
+/* ---------- 期間 ---------- */
+function termOptions(){
+  var ys={}; DB.classes.forEach(function(c){ys[c.fy]=1}); ys[DB.currentFY]=1;
+  var arr=Object.keys(ys).map(Number).sort(function(a,b){return b-a});
+  var h='';
+  arr.forEach(function(y){
+    h+='<option value="'+y+'-0">'+y+'年度 全体</option>';
+    [1,2,3].forEach(function(t){h+='<option value="'+y+'-'+t+'">'+y+'年度 '+t+'学期</option>'});
+  });
+  return h;
+}
+function defTerm(){return DB.currentFY+'-'+termOf(today())}
+function inTerm(m,val){var p=String(val).split('-');var y=+p[0],t=+p[1];return fy(m.d)===y&&(t===0||termOf(m.d)===t)}
+function baseDateOf(val){
+  var p=String(val).split('-');var y=+p[0],t=+p[1];
+  var end=(t===0)?((y+1)+'-03-31'):termEnd(y,t);
+  return (end>today())?today():end;
+}
+
+/* ---------- 経過日数 ---------- */
+function lastDate(sid){
+  var last=null;
+  cls.memos.forEach(function(m){if(m.sid===sid&&(!last||m.d>last))last=m.d});
+  return last;
+}
+function daysFor(sid,base){var l=lastDate(sid);return l==null?null:Math.max(0,daysBetween(l,base))}
+function countFor(sid,term){var n=0;cls.memos.forEach(function(m){if(m.sid===sid&&inTerm(m,term))n++});return n}
+
+/* ---------- 画面：ヘッダー ---------- */
+function renderHead(){
+  var ys={}; DB.classes.forEach(function(c){ys[c.fy]=1}); Roster.all().classes.forEach(function(c){ys[c.fy]=1}); ys[Roster.curFY()]=1;
+  var arr=Object.keys(ys).map(Number).sort(function(a,b){return b-a});
+  $('fySel').innerHTML=arr.map(function(y){return '<option value="'+y+'"'+(y===DB.currentFY?' selected':'')+'>'+y+'年度</option>'}).join('');
+  var list=DB.classes.filter(function(c){return c.fy===DB.currentFY});
+  $('clsSel').innerHTML=list.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===DB.currentClassId?' selected':'')+'>'+esc(c.name)+'</option>'}).join('');
+}
+$('fySel').onchange=function(){
+  var y=+this.value;DB.currentFY=y;
+  var list=DB.classes.filter(function(c){return c.fy===y});
+  if(!list.length){
+    var rc=Roster.addClass(y,'1組',[]);
+    var rec=newClassRecord(rc.id,y,rc.name);DB.classes.push(rec);list=[rec];
+  }
+  DB.currentClassId=list[0].id;save();bind();renderAll();
+};
+$('clsSel').onchange=function(){DB.currentClassId=this.value;save();bind();renderAll()};
+
+/* ---------- 画面：メモする ---------- */
+function renderTagSel(){
+  $('tagSel').innerHTML=DB.tags.map(function(t,i){
+    return '<label><input type="radio" name="tag" value="'+esc(t.name)+'"'+(i===0?' checked':'')+'>'+esc(t.name)+(t.export===false?' <span class="lock">🔒</span>':'')+'</label>';
+  }).join('');
+}
+function renderChips(){
+  $('quickChips').innerHTML=DB.settings.quickPhrases.map(function(p){return '<button type="button" data-ph="'+esc(p)+'">'+esc(p)+'</button>'}).join('');
+}
+$('quickChips').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b||!b.dataset.ph)return;
+  var ta=$('mText');ta.value=(ta.value?ta.value.replace(/\s*$/,'')+' ':'')+b.dataset.ph;ta.focus();
+});
+function renderGrid(){
+  var term=$('termSel').value||defTerm();
+  var st=students();
+  var base=today();
+  if(!st.length){$('kidGrid').innerHTML='<p class="note">まず「名簿・クラス・設定」で名簿を入れてください。</p>';$('zeroAlert').innerHTML='';renderOrphans();return}
+  var mode=DB.settings.badgeMode;
+  $('badgeHelp').textContent=(mode==='days')?('バッジ＝最後にメモを書いた日からの日数（'+DB.settings.warnDays+'日で黄・'+DB.settings.alertDays+'日で赤・—は0件）'):('バッジ＝この期間のメモ件数（赤は0件）');
+  $('kidGrid').innerHTML=st.map(function(s){
+    var dd=daysFor(s.id,base), c=countFor(s.id,term), lv='';
+    var label;
+    if(mode==='days'){label=(dd==null)?'—':(dd+'日');lv=(dd==null||dd>=DB.settings.alertDays)?'alert':(dd>=DB.settings.warnDays?'warn':'')}
+    else{label=String(c);lv=(c===0)?'alert':''}
+    return '<button class="kid '+(selected[s.id]?'on':'')+' '+lv+'" data-sid="'+esc(s.id)+'">'+esc(s.name)+'<span class="cnt">'+esc(label)+'</span></button>';
+  }).join('');
+  var over=st.filter(function(s){var dd=daysFor(s.id,base);return dd==null||dd>=DB.settings.alertDays});
+  var mid=st.filter(function(s){var dd=daysFor(s.id,base);return dd!=null&&dd>=DB.settings.warnDays&&dd<DB.settings.alertDays});
+  var h='';
+  if(over.length)h+='<div class="alert">'+DB.settings.alertDays+'日以上あいている子：'+over.length+'人（'+over.map(function(s){return esc(s.name)}).join('、')+'）</div>';
+  if(mid.length)h+='<div class="alert y">'+DB.settings.warnDays+'日以上あいている子：'+mid.length+'人（'+mid.map(function(s){return esc(s.name)}).join('、')+'）</div>';
+  if(!over.length&&!mid.length)h='<p class="note" style="color:var(--ok)">いまのところ、'+DB.settings.warnDays+'日以上あいている子はいません。</p>';
+  $('zeroAlert').innerHTML=h;
+  renderOrphans();
+}
+function renderOrphans(){
+  var or=cls.memos.filter(function(m){return !m.sid});
+  if(!or.length){$('orphanBox').innerHTML='';return}
+  var st=students();
+  $('orphanBox').innerHTML='<div class="alert y">名簿にない記録：'+or.length+'件（捨てずに残しています）<br>'+
+    or.slice(0,20).map(function(m){
+      return '<div class="row" style="margin:4px 0"><span class="pill">'+esc(m.d)+'</span><b>'+esc(m.k||'（名前なし）')+'</b>'+
+        '<select data-assign="'+esc(String(m.id))+'"><option value="">— この子にする —</option>'+
+        st.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>'}).join('')+'</select>'+
+        '<span class="note">'+esc(String(m.x).slice(0,24))+'</span></div>';
+    }).join('')+(or.length>20?'<p class="note">…ほか'+(or.length-20)+'件</p>':'')+'</div>';
+}
+$('orphanBox').addEventListener('change',function(e){
+  var id=e.target.dataset.assign;if(!id||!e.target.value)return;
+  cls.memos.forEach(function(m){if(String(m.id)===id)m.sid=e.target.value});
+  save();renderAll();toast('名簿の子にひもづけました');
+});
+var pressTimer=null;
+$('kidGrid').addEventListener('click',function(e){
+  var b=e.target.closest('.kid');if(!b)return;
+  if(b.dataset.longpressed==='1'){b.dataset.longpressed='0';return}
+  var sid=b.dataset.sid;
+  if(selected[sid])delete selected[sid];else selected[sid]=1;
+  renderGrid();
+});
+$('kidGrid').addEventListener('pointerdown',function(e){
+  var b=e.target.closest('.kid');if(!b)return;
+  clearTimeout(pressTimer);
+  pressTimer=setTimeout(function(){b.dataset.longpressed='1';showRecentOf(b.dataset.sid)},550);
+});
+['pointerup','pointerleave','pointercancel'].forEach(function(ev){$('kidGrid').addEventListener(ev,function(){clearTimeout(pressTimer)})});
+function showRecentOf(sid){
+  var name=Roster.nameOf(cls.id,sid);
+  var list=cls.memos.filter(function(m){return m.sid===sid}).sort(function(a,b){return a.d<b.d?1:-1}).slice(0,5);
+  var d=document.createElement('div');d.className='pop';
+  d.innerHTML='<div class="inner"><h2 style="margin-top:0">'+esc(name)+' の直近のメモ</h2>'+
+    (list.length?list.map(function(m){return '<div class="memo" style="border-left-color:'+esc(tagOf(m.t).color)+'"><div class="meta">'+esc(m.d)+' <span class="pill">'+esc(m.s)+'</span><span class="pill">'+esc(m.t)+'</span></div>'+esc(m.x)+'</div>'}).join(''):'<p class="note">まだメモがありません。</p>')+
+    '<div class="row" style="margin-top:8px"><button class="pri" data-close="1">とじる</button></div></div>';
+  d.addEventListener('click',function(e){if(e.target===d||e.target.dataset.close)document.body.removeChild(d)});
+  document.body.appendChild(d);
+}
+$('termSel').addEventListener('change',renderGrid);
+$('badgeMode').addEventListener('change',function(){DB.settings.badgeMode=this.checked?'count':'days';save();renderGrid()});
+$('addBtn').onclick=function(){
+  var x=$('mText').value.trim();
+  var sids=Object.keys(selected);
+  if(!sids.length){$('addMsg').textContent='子どもをえらんでください';return}
+  if(!x){$('addMsg').textContent='メモを書いてください';return}
+  var t=(document.querySelector('input[name=tag]:checked')||{}).value||DB.tags[0].name;
+  var base=Date.now();
+  sids.forEach(function(sid){cls.memos.push({id:base++,sid:sid,k:Roster.nameOf(cls.id,sid),d:$('mDate').value||today(),s:$('mSubj').value,t:t,x:x})});
+  save();
+  $('addMsg').textContent=sids.length+'人分ためました';
+  $('mText').value='';selected={};renderAll();
+  setTimeout(function(){$('addMsg').textContent=''},2500);
+};
+function memoHTML(m,showName){
+  return '<div class="memo" style="border-left-color:'+esc(tagOf(m.t).color)+'"><div class="meta">'+esc(m.d)+'　<span class="pill">'+esc(m.s)+'</span><span class="pill">'+esc(m.t)+(tagOf(m.t).export===false?' 🔒':'')+'</span>'+
+    (showName?'<b>'+esc(m.sid?Roster.nameOf(cls.id,m.sid):(m.k||'（名簿にない記録）'))+'</b>':'')+
+    '<button class="del sm" style="float:right" data-del="'+esc(String(m.id))+'">削除</button></div>'+esc(m.x).replace(/\n/g,'<br>')+'</div>';
+}
+function renderRecent(){
+  var r=cls.memos.slice().sort(function(a,b){return b.id-a.id}).slice(0,8);
+  $('recent').innerHTML=r.length?r.map(function(m){return memoHTML(m,true)}).join(''):'<p class="note">まだメモはありません。</p>';
+}
+document.addEventListener('click',function(e){
+  var id=e.target.dataset&&e.target.dataset.del;
+  if(id&&confirm('このメモを削除しますか？')){cls.memos=cls.memos.filter(function(m){return String(m.id)!==id});save();renderAll()}
+});
+
+/* ---------- 子ども別 ---------- */
+function renderKid(){
+  var st=students();
+  var kv=$('kidSel').value;
+  $('kidSel').innerHTML=st.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>'}).join('');
+  if(kv&&st.filter(function(s){return s.id===kv}).length)$('kidSel').value=kv;
+  var sid=$('kidSel').value, term=$('termSel2').value||defTerm(), sf=$('subjFilter').value;
+  if(!sid){$('kidMemos').innerHTML='<p class="note">名簿を入れてください。</p>';$('kidSummary').innerHTML='';return}
+  var list=cls.memos.filter(function(m){return m.sid===sid&&inTerm(m,term)&&(!sf||m.s===sf)}).sort(function(a,b){return a.d<b.d?-1:1});
+  var byTag={},bySubj={};
+  list.forEach(function(m){byTag[m.t]=(byTag[m.t]||0)+1;bySubj[m.s]=(bySubj[m.s]||0)+1});
+  var dd=daysFor(sid,today());
+  $('kidSummary').innerHTML='<p><b>'+esc(Roster.nameOf(cls.id,sid))+'</b>：'+list.length+'件　'+
+    Object.keys(byTag).map(function(k){return '<span class="pill">'+esc(k)+' '+byTag[k]+'</span>'}).join('')+
+    '　<span class="pill">最後のメモから '+(dd==null?'—':dd+'日')+'</span></p>'+
+    '<p class="note">場面：'+(Object.keys(bySubj).map(function(k){return esc(k)+' '+bySubj[k]}).join('／')||'なし')+'</p>';
+  $('kidMemos').innerHTML=list.map(function(m){return memoHTML(m,false)}).join('')||'<p class="note">この条件のメモはありません。</p>';
+}
+['kidSel','termSel2','subjFilter'].forEach(function(id){$(id).addEventListener('change',function(){renderKid();$('matBox').classList.add('hidden')})});
+
+function kindOf(scene){
+  var k=DB.settings.kindMap[scene];
+  if(k==='学習'||k==='生活')return k;
+  return SUBJ_GAKU.indexOf(scene)>=0?'学習':'生活';
+}
+function isFuture(m){return DB.settings.futureTags.indexOf(m.t)>=0}
+function materialFor(sid,term){
+  var name=Roster.nameOf(cls.id,sid);
+  var p=String(term).split('-'); var tl=(+p[1]===0)?'年間':(p[1]+'学期');
+  var list=cls.memos.filter(function(m){return m.sid===sid&&inTerm(m,term)&&exportable(m)}).sort(function(a,b){return a.d<b.d?-1:1});
+  var gaku=[],sei=[],kon=[];
+  list.forEach(function(m){
+    var line=' '+(+String(m.d).slice(5,7))+'/'+(+String(m.d).slice(8,10))+'［'+m.s+'・'+m.t+'］ '+m.x;
+    if(isFuture(m))kon.push(line);
+    else if(kindOf(m.s)==='学習')gaku.push(line);
+    else sei.push(line);
+  });
+  var out='【'+name+'／'+tl+'】\n';
+  out+='■ 学習面\n'+(gaku.length?gaku.join('\n')+'\n':' （記録なし）\n');
+  out+='■ 生活面\n'+(sei.length?sei.join('\n')+'\n':' （記録なし）\n');
+  out+='■ 今後\n'+(kon.length?kon.join('\n')+'\n':' （記録なし）\n');
+  return out;
+}
+$('matBtn').onclick=function(){
+  var sid=$('kidSel').value;if(!sid){toast('名簿を入れてください');return}
+  $('matOut').value=materialFor(sid,$('termSel2').value||defTerm());
+  $('matBox').classList.remove('hidden');
+};
+$('matAllBtn').onclick=function(){
+  var term=$('termSel2').value||defTerm();
+  $('matOut').value=students().map(function(s){return materialFor(s.id,term)}).join('\n');
+  $('matBox').classList.remove('hidden');
+};
+$('matCopy').onclick=function(){copyText($('matOut').value)};
+
+/* ---------- 学期末一覧・印刷 ---------- */
+function renderList(){
+  var term=$('termSel3').value||defTerm(), good=$('onlyGood').checked;
+  var base=baseDateOf(term);
+  var st=students();
+  var f=function(m){return inTerm(m,term)&&exportable(m)&&(!good||!isFuture(m))};
+  var tagNames=DB.tags.map(function(t){return t.name});
+  $('countTable').innerHTML='<tr><th>名前</th><th>件数</th><th>期末時点の間隔</th>'+tagNames.map(function(n){return '<th>'+esc(n)+'</th>'}).join('')+'</tr>'+
+    st.map(function(s){
+      var l=cls.memos.filter(function(m){return m.sid===s.id&&inTerm(m,term)});
+      var last=null;cls.memos.forEach(function(m){if(m.sid===s.id&&m.d<=base&&(!last||m.d>last))last=m.d});
+      var dd=last==null?null:Math.max(0,daysBetween(last,base));
+      var style=(dd==null||dd>=DB.settings.alertDays)?' style="color:var(--danger)"':'';
+      return '<tr'+style+'><td>'+esc(s.name)+'</td><td>'+l.length+'</td><td>'+(dd==null?'—':dd+'日')+'</td>'+
+        tagNames.map(function(n){return '<td>'+l.filter(function(m){return m.t===n}).length+'</td>'}).join('')+'</tr>';
+    }).join('');
+  var label=$('termSel3').selectedOptions[0]?$('termSel3').selectedOptions[0].text:'';
+  $('printArea').innerHTML='<h2 style="font-size:1.1rem;margin:8px 0">見取りメモ一覧（'+esc(cls.name)+'／'+esc(label)+'）</h2>'+
+    '<p class="note">※ 件数は教師の見取りの記録です。評定の唯一の根拠にはしないでください。</p>'+
+    st.map(function(s){
+      var l=cls.memos.filter(function(m){return m.sid===s.id&&f(m)}).sort(function(a,b){return a.d<b.d?-1:1});
+      return '<div class="print-kid"><h3>'+esc(s.name)+'（'+l.length+'件）</h3>'+
+        (l.length?'<ul>'+l.map(function(m){return '<li>'+esc(String(m.d).slice(5).replace('-','/'))+'［'+esc(m.s)+'・'+esc(m.t)+'］'+esc(m.x)+'</li>'}).join('')+'</ul>':'<p class="note" style="margin:0">メモなし</p>')+'</div>';
+    }).join('');
+}
+['termSel3','onlyGood'].forEach(function(id){$(id).addEventListener('change',renderList)});
+$('tsvList').onclick=function(){
+  var term=$('termSel3').value||defTerm();
+  var rows=[['名前','日付','場面','タグ','本文'].join('\t')];
+  students().forEach(function(s){
+    cls.memos.filter(function(m){return m.sid===s.id&&inTerm(m,term)&&exportable(m)}).sort(function(a,b){return a.d<b.d?-1:1})
+      .forEach(function(m){rows.push([s.name,m.d,m.s,m.t,String(m.x).replace(/[\t\n]/g,' ')].join('\t'))});
+  });
+  copyText(rows.join('\n'));
+};
+
+/* ---------- 引き継ぎ ---------- */
+function handData(term,range){
+  return students().map(function(s){
+    var l=cls.memos.filter(function(m){return m.sid===s.id&&inTerm(m,term)&&exportable(m)}).sort(function(a,b){return a.d<b.d?-1:1});
+    var good=l.filter(function(m){return !isFuture(m)}).map(function(m){return m.x});
+    var iss=l.filter(function(m){return isFuture(m)}).map(function(m){return m.x});
+    return {name:s.name,good:(range==='issue')?[]:good,issue:(range==='good')?[]:iss};
+  });
+}
+$('handRange').addEventListener('change',function(){
+  $('handWarn').innerHTML=(this.value==='issue')?'<div class="alert y">課題だけを並べたリストは、引き継ぎではなく<b>先入観の配布</b>になりがちです。よさと対で渡すことをおすすめします。</div>':'';
+});
+$('handRun').onclick=function(){
+  var term=$('handTerm').value||defTerm(), range=$('handRange').value;
+  var d=handData(term,range);
+  $('handOut').value=d.map(function(r){
+    var s='【'+r.name+'】\n';
+    if(r.good.length||range!=='issue')s+='・よさ／成長：'+(r.good.length?r.good.join(' ／ '):'（記録なし）')+'\n';
+    if(r.issue.length||range!=='good')s+='・課題／手だて：'+(r.issue.length?r.issue.join(' ／ '):'（記録なし）')+'\n';
+    return s;
+  }).join('\n');
+  toast('つくりました');
+};
+$('handCopyTxt').onclick=function(){if(!$('handOut').value)$('handRun').onclick();copyText($('handOut').value)};
+$('handCopyTsv').onclick=function(){
+  var term=$('handTerm').value||defTerm(), range=$('handRange').value;
+  var d=handData(term,range);
+  var rows=[['名前','よさ・成長','課題・手だて'].join('\t')];
+  d.forEach(function(r){rows.push([r.name,r.good.join(' / ').replace(/[\t\n]/g,' '),r.issue.join(' / ').replace(/[\t\n]/g,' ')].join('\t'))});
+  copyText(rows.join('\n'));
+};
+
+/* ---------- 設定 ---------- */
+$('saveRoster').onclick=function(){
+  var list=Roster.parseLines($('roster').value);
+  if(list.length>60&&!confirm(list.length+'人になります。よろしいですか？'))return;
+  Roster.setStudents(cls.id,list);
+  $('rosterMsg').textContent=list.length+'人を保存しました（3本のPro版で共通）';
+  save();renderAll();
+};
+function renderClsList(){
+  var list=DB.classes.filter(function(c){return c.fy===DB.currentFY});
+  $('clsList').innerHTML='<table><tr><th>クラス</th><th>人数</th><th>メモ</th></tr>'+list.map(function(c){
+    var rc=Roster.get(c.id);
+    return '<tr'+(c.id===DB.currentClassId?' style="font-weight:700"':'')+'><td>'+esc(c.name)+'</td><td>'+(rc?rc.students.length:0)+'人</td><td>'+c.memos.length+'件</td></tr>';
+  }).join('')+'</table>';
+  $('clsName').value=cls.name;
+}
+$('clsRename').onclick=function(){
+  var n=$('clsName').value.trim();if(!n)return;
+  cls.name=n;var rc=Roster.get(cls.id);if(rc){rc.name=n;Roster.persist()}
+  save();renderAll();toast('名前を変えました');
+};
+function addClassRec(name,students){
+  var list=DB.classes.filter(function(c){return c.fy===DB.currentFY});
+  if(list.length>=MAXCLS){toast('1つの年度に'+MAXCLS+'クラスまでです');return null}
+  var rc=Roster.addClass(DB.currentFY,name,students||[]);
+  var rec=newClassRecord(rc.id,DB.currentFY,name);
+  DB.classes.push(rec);DB.currentClassId=rec.id;save();bind();renderAll();return rec;
+}
+$('clsAdd').onclick=function(){
+  var n=prompt('新しいクラスの名前','2組');if(!n)return;addClassRec(n.trim(),[]);
+};
+$('clsDup').onclick=function(){
+  var n=prompt('複製先のクラス名（名簿だけ引き継ぎます）',cls.name+'のコピー');if(!n)return;
+  addClassRec(n.trim(),students().map(function(s){return {no:s.no,name:s.name}}));
+};
+$('clsDel').onclick=function(){
+  if(DB.classes.filter(function(c){return c.fy===DB.currentFY}).length<=1){toast('この年度の最後のクラスは消せません');return}
+  if(!confirm('「'+cls.name+'」のメモ（'+cls.memos.length+'件）を消します。よろしいですか？'))return;
+  if(!confirm('本当に消しますか？（元に戻せません）'))return;
+  var id=cls.id;
+  DB.classes=DB.classes.filter(function(c){return c.id!==id});
+  Roster.removeClass(id);
+  DB.currentClassId=DB.classes.filter(function(c){return c.fy===DB.currentFY})[0].id;
+  save();bind();renderAll();
+};
+function renderTagEdit(){
+  $('tagEdit').innerHTML=DB.tags.map(function(t,i){
+    return '<div class="row" style="margin:4px 0"><input value="'+esc(t.name)+'" data-ti="'+i+'" data-f="name" style="min-width:140px">'+
+      '<input type="color" value="'+esc(t.color)+'" data-ti="'+i+'" data-f="color" style="width:56px;padding:2px">'+
+      '<label class="row"><input type="checkbox" data-ti="'+i+'" data-f="export" '+(t.export!==false?'checked':'')+' style="width:18px;height:18px;min-height:0"> 印刷・引き継ぎに出す</label>'+
+      (t.export===false?'<span class="lock">🔒 共有しない</span>':'')+
+      '<button class="del sm" data-rmtag="'+i+'">×</button></div>';
+  }).join('');
+}
+$('tagEdit').addEventListener('change',function(e){
+  var i=e.target.dataset.ti;if(i==null)return;i=+i;
+  var f=e.target.dataset.f;
+  if(f==='name'){
+    var old=DB.tags[i].name, nn=e.target.value.trim();if(!nn||nn===old){renderTagEdit();return}
+    DB.classes.forEach(function(c){c.memos.forEach(function(m){if(m.t===old)m.t=nn})});
+    DB.settings.futureTags=DB.settings.futureTags.map(function(x){return x===old?nn:x});
+    DB.tags[i].name=nn;
+  }else if(f==='color')DB.tags[i].color=e.target.value;
+  else DB.tags[i].export=e.target.checked;
+  save();renderAll();
+});
+$('tagEdit').addEventListener('click',function(e){
+  var i=e.target.dataset.rmtag;if(i==null)return;
+  if(DB.tags.length<=1){toast('タグは1つ以上必要です');return}
+  if(!confirm('タグ「'+DB.tags[i].name+'」を消しますか？（メモは残りますが、このタグの色分けは消えます）'))return;
+  DB.tags.splice(+i,1);save();renderAll();
+});
+$('addTag').onclick=function(){
+  var n=$('newTag').value.trim();if(!n)return;
+  if(DB.tags.filter(function(t){return t.name===n}).length){toast('同じ名前のタグがあります');return}
+  DB.tags.push({name:n,color:'#7a5ea5',export:true});$('newTag').value='';save();renderAll();
+};
+$('saveSubj').onclick=function(){
+  var v=$('subjList').value.split(/[,、，]/).map(function(s){return s.trim()}).filter(Boolean);
+  if(v.length)DB.subjs=v;save();renderAll();toast('保存しました');
+};
+function renderKindMap(){
+  $('kindMap').innerHTML='<p class="note">所見の材料で「学習面／生活面」のどちらに入れるか</p>'+DB.subjs.map(function(s){
+    var k=kindOf(s);
+    return '<label class="row" style="display:inline-flex;margin:2px 8px 2px 0"><span style="min-width:90px">'+esc(s)+'</span>'+
+      '<select data-kind="'+esc(s)+'"><option value="学習"'+(k==='学習'?' selected':'')+'>学習面</option><option value="生活"'+(k==='生活'?' selected':'')+'>生活面</option></select></label>';
+  }).join('');
+}
+$('kindMap').addEventListener('change',function(e){
+  var s=e.target.dataset.kind;if(!s)return;
+  DB.settings.kindMap[s]=e.target.value;save();
+});
+$('saveSet').onclick=function(){
+  DB.settings.warnDays=Math.max(1,+$('warnDays').value||7);
+  DB.settings.alertDays=Math.max(DB.settings.warnDays,+$('alertDays').value||14);
+  save();renderAll();toast('保存しました');
+};
+$('savePhrases').onclick=function(){
+  DB.settings.quickPhrases=$('phrases').value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+  save();renderAll();toast('保存しました');
+};
+$('expBtn').onclick=function(){
+  var payload={app:'mwpro_mitori_v1',data:DB,roster:Roster.all()};
+  var b=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='見取りメモPro_'+today()+'.json';a.click();
+};
+$('impFile').onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);
+      var d=o&&o.data?o.data:o;
+      if(!d||!Array.isArray(d.classes))throw 0;
+      var mode=prompt('「置きかえ」＝1 ／「追加（別クラスとして）」＝2 を入れてください','2');
+      if(mode==='1'){
+        if(!confirm('いまのデータを、読みこんだ内容で置きかえます。よろしいですか？'))return;
+        if(o.roster){try{localStorage.setItem(Roster.KEY,JSON.stringify(o.roster))}catch(err){}Roster.reload()}
+        DB=normDB(d);save();bind();renderAll();toast('置きかえました');
+      }else if(mode==='2'){
+        var added=0;
+        d.classes.forEach(function(c){
+          var srcRoster=(o.roster&&o.roster.classes||[]).filter(function(x){return x.id===c.id})[0];
+          var rc=Roster.addClass(Number(c.fy)||DB.currentFY,(c.name||'組')+'（読みこみ）',(srcRoster?srcRoster.students:[]).map(function(s){return {id:Roster.uid('s'),no:s.no,name:s.name}}));
+          var map={};
+          if(srcRoster)srcRoster.students.forEach(function(s,i){map[s.id]=rc.students[i]?rc.students[i].id:null});
+          var rec=newClassRecord(rc.id,rc.fy,rc.name);
+          (c.memos||[]).forEach(function(m){rec.memos.push({id:Date.now()+Math.random(),sid:map[m.sid]||null,k:m.k||'',d:m.d,s:m.s,t:m.t,x:m.x})});
+          DB.classes.push(rec);added++;
+        });
+        save();bind();renderAll();toast(added+'クラスを追加しました');
+      }
+    }catch(err){alert('ファイルを読めませんでした')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- 引き継ぎ通知 ---------- */
+function renderMigrate(){
+  var mb=$('migrateBox');
+  if(!migrateInfo){mb.style.display='none';return}
+  mb.style.display='';
+  mb.innerHTML='<button class="x" aria-label="閉じる">✕</button>'+
+    '📝 <b>無料版のデータを引き継ぎました。</b><br>'+
+    '同じブラウザに入っていたメモ'+migrateInfo.memos+'件・名簿'+migrateInfo.kids+'人を、'+migrateInfo.classes+'クラス（今年度は「1組」）として読みこみました。'+
+    '名前でつないでいた記録は、児童ID（sid）につなぎ直しています。'+
+    (migrateInfo.unmatched?'<br>名簿と一致しなかった記録が'+migrateInfo.unmatched+'件あります。捨てていないので、「メモする」の下にある一覧から手でひもづけてください。':'')+
+    '<br>無料版のデータはそのまま残っています。名簿は3本のPro版で共通になりました。';
+  mb.querySelector('.x').addEventListener('click',function(){migrateInfo=null;renderMigrate()});
+}
+
+/* ---------- 年度の確認 ---------- */
+function askNewYear(){
+  var y=Roster.curFY();
+  if(DB.newYearAsked===y)return;
+  DB.newYearAsked=y;
+  if(DB.classes.filter(function(c){return c.fy===y}).length){save();return}
+  var ok=confirm('新しい年度（'+y+'年度）を始めますか？\n「はい」で、いまのクラスの名簿を引き継いだ新しいクラスを作ります。過去のメモは消えません。');
+  if(ok){
+    var st=students().map(function(s){return {no:s.no,name:s.name}});
+    var rc=Roster.addClass(y,'1組',st);
+    var rec=newClassRecord(rc.id,y,rc.name);
+    DB.classes.push(rec);DB.currentFY=y;DB.currentClassId=rec.id;bind();
+  }
+  save();
+}
+
+/* ---------- タブ ---------- */
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+    ['add','kid','list','hand','set'].forEach(function(t){$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab)});
+    renderAll();
+  };
+});
+
+function renderAll(){
+  renderHead();
+  ['termSel','termSel2','termSel3','handTerm'].forEach(function(id){
+    var s=$(id),v=s.value;s.innerHTML=termOptions();
+    s.value=v||defTerm();if(!s.value)s.value=DB.currentFY+'-0';
+  });
+  $('mSubj').innerHTML=DB.subjs.map(function(s){return '<option>'+esc(s)+'</option>'}).join('');
+  var sfv=$('subjFilter').value;
+  $('subjFilter').innerHTML='<option value="">すべての場面</option>'+DB.subjs.map(function(s){return '<option>'+esc(s)+'</option>'}).join('');
+  $('subjFilter').value=sfv;
+  $('badgeMode').checked=DB.settings.badgeMode==='count';
+  renderTagSel();renderChips();renderGrid();renderRecent();renderKid();renderList();renderClsList();renderTagEdit();renderKindMap();renderMigrate();
+  $('roster').value=students().map(function(s){return s.no+' '+s.name}).join('\n');
+  $('subjList').value=DB.subjs.join(',');
+  $('warnDays').value=DB.settings.warnDays;$('alertDays').value=DB.settings.alertDays;
+  $('phrases').value=DB.settings.quickPhrases.join('\n');
+}
+
+load();
+save();  /* 初回（＝引き継ぎ直後）にすぐ書きこむ。無料版から読み直さないため */
+askNewYear();
+$('mDate').value=today();
+renderAll();
+})();
+</script>
+<div class="note-link" style="max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-size:13px;line-height:1.8;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600">note「教室ノオト」</a>
+</div>
+</body>
+</html>

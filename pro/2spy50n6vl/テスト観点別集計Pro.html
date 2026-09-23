@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テスト観点別集計 Pro</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b;--warn:#a5771f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:40}
+header a.back{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.16);font-size:.85rem;white-space:nowrap}
+header h1{font-size:1.1rem;margin:0}
+.pro-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--navy);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.hsel{font:inherit;font-size:.9rem;font-weight:700;padding:6px 8px;border-radius:10px;border:none;background:#fff;color:var(--navy);min-height:0}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.del{color:var(--danger)}
+button.sm{min-height:34px;padding:4px 10px;font-size:.85rem}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+textarea{width:100%;min-height:140px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.hidden{display:none}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{border:1px solid var(--line);padding:4px 6px;text-align:center;font-size:.92rem;white-space:nowrap}
+th{background:#f3eee3}
+td.name{text-align:left;font-weight:600;position:sticky;left:0;background:#fff}
+td input{width:64px;min-height:38px;text-align:center;padding:4px}
+.A{background:#e3f1ea;color:var(--ok);font-weight:700}
+.C{background:#fbe3df;color:var(--danger);font-weight:700}
+.B{color:var(--ink)}
+.flip{outline:3px solid #f0c94a}
+.testitem{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;flex-wrap:wrap}
+.testitem.on{border-color:var(--accent);background:#fff6ee}
+.viewrow{display:flex;gap:6px;margin:4px 0;flex-wrap:wrap}
+.stat{display:inline-block;background:var(--bg);border-radius:10px;padding:6px 12px;margin:4px 6px 4px 0}
+.caution{background:#fff8e8;border:1.5px solid #f0e2bf;border-radius:12px;padding:10px 14px;font-size:.85rem;line-height:1.7;margin-bottom:12px}
+.migrate-box{background:#eef4fa;border:1.5px solid #c8dcee;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:4px;border:none;background:none;font-size:1rem;color:var(--sub);cursor:pointer;min-height:0;padding:2px 6px}
+.alert{background:#fbe3df;color:var(--danger);padding:8px 12px;border-radius:10px;margin:8px 0}
+.alert.y{background:#fdf0cf;color:var(--warn)}
+.border-item{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;cursor:pointer}
+.border-item.on{background:#fff6ee;border-color:var(--accent)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 18px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,.noprint,.tabs,.migrate-box{display:none!important}body{background:#fff}main{padding:0;max-width:none}.card{box-shadow:none;padding:0}td input{border:none}table{min-width:0}th,td{font-size:10pt}.caution{border:1px solid #999}}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>テスト観点別集計<span class="pro-badge">PRO</span></h1>
+  <select id="fySel" class="hsel" aria-label="年度"></select>
+  <select id="clsSel" class="hsel" aria-label="クラス"></select>
+</header>
+<main>
+<div id="migrateBox" class="migrate-box" style="display:none"></div>
+<div class="caution">⚠ ここに出る％やA・B・Cは<b>判断の下資料</b>です。<b>評定の唯一の根拠にしないでください。</b>とくに「主体的に学習に取り組む態度」を、テストの配点だけで決めないでください。Cの名前は手だてを考えるためのもので、子どもに見せたり呼び出す材料にしたりしないでください。</div>
+
+<div class="tabs">
+  <button data-tab="tests" class="on">テスト</button>
+  <button data-tab="input">点数入力</button>
+  <button data-tab="sum">観点別まとめ</button>
+  <button data-tab="border">まよう子リスト</button>
+  <button data-tab="other">テスト以外の記録</button>
+  <button data-tab="kid">子ども別・推移</button>
+  <button data-tab="cross">クラス横断</button>
+  <button data-tab="set">名簿・設定</button>
+</div>
+
+<section id="tab-tests">
+  <div class="card noprint">
+    <h2>テストを追加</h2>
+    <div class="row">
+      <input id="tName" placeholder="例）かけ算の筆算" style="flex:1;min-width:180px">
+      <select id="tSubj"></select>
+      <input type="date" id="tDate">
+    </div>
+    <div id="viewEdit" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:6px">
+      <button id="addView">＋ 観点を足す</button>
+      <button id="preset2">知・思の2観点（70/30）</button>
+      <button id="preset3">3観点</button>
+      <button class="pri" id="addTest">テストを作る</button>
+    </div>
+    <p class="note">市販テストの「知識・技能／思考・判断・表現」の配点をそのまま入れてください。観点名がちがっても、同じ観点として束ねます。</p>
+  </div>
+  <div class="card">
+    <h2>テスト一覧</h2>
+    <div class="row noprint"><select id="listSubj"></select></div>
+    <div id="testList"></div>
+  </div>
+</section>
+
+<section id="tab-input" class="hidden">
+  <div class="card">
+    <div class="row noprint"><select id="inTest" style="min-width:240px"></select><button onclick="window.print()">印刷</button><button id="csvOne">CSV</button></div>
+    <p class="note noprint">数字を入れて Enter で下へ。欠席は「欠」または空欄のまま（平均に入りません）。返す前に、下に出るCの<b>人数</b>を見てください。</p>
+    <h2 id="inTitle"></h2>
+    <div class="scroll"><table id="inTable"></table></div>
+    <div id="inStats" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="tab-sum" class="hidden">
+  <div class="card">
+    <div class="row noprint">
+      <select id="sumSubj"></select>
+      <select id="sumRange"><option value="all">期間：すべて</option><option value="1">1学期</option><option value="2">2学期</option><option value="3">3学期</option></select>
+      <button onclick="window.print()">印刷</button><button id="csvSum">CSV</button><button id="tsvSum">TSVでコピー</button>
+    </div>
+    <p class="note">観点ごとに「とった点の合計 ÷ 満点の合計」で％を出します（重みをつけた場合は重みつきの合計）。通知表の評定そのものではなく、判断の下資料です。</p>
+    <div id="attitWarn"></div>
+    <div class="row noprint" style="background:var(--bg);border-radius:12px;padding:8px 12px">
+      <b>重み</b>
+      <label>テスト <input type="range" id="wTest" min="1" max="5" step="1" style="vertical-align:middle;min-height:0"> <span id="wTestV"></span></label>
+      <label>その他の記録 <input type="range" id="wOther" min="1" max="5" step="1" style="vertical-align:middle;min-height:0"> <span id="wOtherV"></span></label>
+      <button class="sm" id="wApply">この重みで確定（保存）</button>
+      <button class="sm" id="wReset">保存した重みにもどす</button>
+      <span class="note">動かすとその場で再計算します。<b>黄色の枠＝重みで判定が変わる子</b>（＝まよう子）。スライダーは確定するまで保存しません。</span>
+    </div>
+    <h2 id="sumTitle"></h2>
+    <p class="note" id="sumBasis"></p>
+    <div class="scroll"><table id="sumTable"></table></div>
+  </div>
+</section>
+
+<section id="tab-border" class="hidden">
+  <div class="card">
+    <h2>まよう子リスト</h2>
+    <div class="row noprint">
+      <select id="bdRange"><option value="all">期間：すべて</option><option value="1">1学期</option><option value="2">2学期</option><option value="3">3学期</option></select>
+      <label>境界の幅 <input type="number" id="bdBand" style="width:70px">ポイント</label>
+      <button class="pri" id="bdRun">出す</button><button id="bdCopy">コピー</button>
+    </div>
+    <p class="note">基準の前後にいる子だけを、教科・観点をまたいで集めます。ここに出てくるのが、時間をかけて考えるべき子です。<b>児童名が入ります。印刷・共有のときは取りあつかいに注意してください。</b></p>
+    <div id="bdList"></div>
+  </div>
+</section>
+
+<section id="tab-other" class="hidden noprint">
+  <div class="card">
+    <h2>テスト以外の記録を追加</h2>
+    <div class="row">
+      <input id="oName" placeholder="例）ノートの説明記述" style="flex:1;min-width:180px">
+      <select id="oSubj"></select>
+      <select id="oTerm"><option value="1">1学期</option><option value="2">2学期</option><option value="3">3学期</option></select>
+      <select id="oVkey"></select>
+      <label>満点 <input type="number" id="oMax" value="10" style="width:80px"></label>
+      <label>重み <input type="number" id="oWeight" value="1" style="width:70px"></label>
+      <button class="pri" id="addOther">追加</button>
+    </div>
+    <p class="note">「主体的に学習に取り組む態度」は、テストの配点ではなく、こちらの項目（提出物・振り返りの記述など）を主にすることをおすすめします。</p>
+    <div id="otherList"></div>
+  </div>
+  <div class="card">
+    <div class="row"><select id="inOther" style="min-width:240px"></select></div>
+    <h2 id="oTitle"></h2>
+    <div class="scroll"><table id="oTable"></table></div>
+  </div>
+</section>
+
+<section id="tab-kid" class="hidden">
+  <div class="card">
+    <div class="row noprint"><select id="kidSel"></select><select id="kidSubj"></select><button class="pri" id="kidMemo">懇談メモをコピー</button>
+      <label class="row note"><input type="checkbox" id="showPastFY" style="width:18px;height:18px;min-height:0"> 過去年度も表示</label></div>
+    <div id="kidBody"></div>
+    <textarea id="memoOut" style="min-height:120px" readonly></textarea>
+    <p class="note">数字を読み上げるためではなく、<b>自分が何を根拠に判断したかを思い出すため</b>のメモです。A・B・Cの文言は入れていません。</p>
+  </div>
+</section>
+
+<section id="tab-cross" class="hidden">
+  <div class="card">
+    <h2>クラス横断（授業の振り返り用）</h2>
+    <div class="alert y">この画面は、自分が複数クラスを持っているときに<b>授業を振り返るため</b>のものです。<b>先生どうしの比較には使わないでください。</b>テストの平均点は、担任の力量よりも学級の構成やその年の状況に左右されます。</div>
+    <div class="row noprint"><select id="crSubj"></select><select id="crRange"><option value="all">期間：すべて</option><option value="1">1学期</option><option value="2">2学期</option><option value="3">3学期</option></select></div>
+    <div class="scroll"><table id="crTable"></table></div>
+  </div>
+</section>
+
+<section id="tab-set" class="hidden noprint">
+  <div class="card">
+    <h2>名簿（1行に1人・3つのPro版で共通）</h2>
+    <p class="note">この名簿は <b>見取りメモ帳Pro／所見文チェッカーPro／テスト観点別集計Pro</b> で共有されます。点数は児童ID（sid）でつながっているので、名前を直しても消えません。</p>
+    <textarea id="roster" placeholder="1 あおき&#10;2 いとう"></textarea>
+    <div class="row" style="margin-top:8px"><button class="pri" id="saveRoster">名簿を保存</button><button id="numRoster">番号だけで作る</button><input type="number" id="numN" value="30" min="1" max="45" style="width:80px"><span id="rMsg" class="note"></span></div>
+    <div id="unmatchedBox"></div>
+  </div>
+  <div class="card">
+    <h2>クラス・年度</h2>
+    <div class="row">
+      <input id="clsName" placeholder="3年1組" style="min-width:160px">
+      <button id="clsRename">名前を変える</button>
+      <button id="clsAdd">クラスを追加</button>
+      <button id="clsDup">複製（名簿だけ引き継ぐ）</button>
+      <button class="del" id="clsDel">このクラスを消す</button>
+    </div>
+    <p class="note">1つの年度に12クラスまで。</p>
+    <div class="row" style="margin-top:8px"><select id="copyTest" style="min-width:200px"></select><select id="copyTo" style="min-width:140px"></select><button id="copyTestBtn">テストの枠を他のクラスへコピー</button></div>
+    <p class="note">コピーするのは 名前・教科・日付・観点の配点だけで、点数は空のままです。</p>
+  </div>
+  <div class="card">
+    <h2>A・B・Cの基準</h2>
+    <div class="row">A：<input type="number" id="thA" style="width:80px">％以上　C：<input type="number" id="thC" style="width:80px">％未満<button id="saveTh">保存</button></div>
+    <p class="note"><b>基準は学期の最初に決めて、そのあと触らないことをおすすめします。</b>数字を見てから基準を動かすと、それは評価ではなく人数の調整になります。<br>（変更した基準と日時は記録され、JSONの書き出しに含まれます。画面には出しません。）</p>
+  </div>
+  <div class="card">
+    <h2>書き出し・読みこみ</h2>
+    <div class="row">
+      <button id="expBtn">JSONで書き出す（全クラス・全年度）</button>
+      <label class="row"><span>読みこむ</span><input type="file" id="impFile" accept=".json"></label>
+    </div>
+    <p class="note">読みこみは「置きかえ」か「追加（別クラスとして）」を選べます。無料版のデータは消しません。</p>
+  </div>
+</section>
+</main>
+<div id="toast"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+
+<script>
+"use strict";
+/* ===== 共通名簿 mwpro_roster_v1 ===== */
+/* 見取りメモ帳Pro／所見文チェッカーPro／テスト観点別集計Pro の3本で同じ実装を使うこと */
+var Roster=(function(){
+  var KEY='mwpro_roster_v1';
+  function uid(p){return (p||'s')+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+  function curFY(){var d=new Date();return d.getMonth()+1<4?d.getFullYear()-1:d.getFullYear()}
+  function read(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+  function write(d){try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){return false}}
+  function norm(d){
+    if(!d||typeof d!=='object')d={};
+    if(!Array.isArray(d.classes))d.classes=[];
+    var seen={};
+    d.classes=d.classes.filter(function(c){return c&&typeof c==='object'}).map(function(c){
+      var id=c.id||uid('c'); while(seen[id])id=uid('c'); seen[id]=1;
+      var sseen={};
+      return {id:id,fy:Number(c.fy)||curFY(),name:String(c.name||'1組'),
+        students:(Array.isArray(c.students)?c.students:[]).filter(function(s){return s&&s.name}).map(function(s,i){
+          var sid=s.id||uid('s'); while(sseen[sid])sid=uid('s'); sseen[sid]=1;
+          return {id:sid,no:(s.no===''||s.no==null?i+1:Number(s.no)||i+1),name:String(s.name)};
+        })};
+    });
+    d.version=1;
+    d.fy=Number(d.fy)||(d.classes.length?d.classes[0].fy:curFY());
+    return d;
+  }
+  var store=norm(read());
+  function persist(){write(store)}
+  function parseLines(text){
+    return String(text||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(l,i){
+      var m=l.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+      return m?{no:Number(m[1]),name:m[2].trim(),raw:l}:{no:i+1,name:l,raw:l};
+    }).filter(function(s){return s.name});
+  }
+  function get(id){for(var i=0;i<store.classes.length;i++)if(store.classes[i].id===id)return store.classes[i];return null}
+  function classesOf(fy){return store.classes.filter(function(c){return c.fy===fy})}
+  function addClass(fy,name,students){
+    var c={id:uid('c'),fy:fy,name:name||'1組',students:(students||[]).map(function(s,i){
+      return {id:s.id||uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)}})};
+    store.classes.push(c);persist();return c;
+  }
+  function removeClass(id){store.classes=store.classes.filter(function(c){return c.id!==id});persist()}
+  function setStudents(id,list){
+    var c=get(id);if(!c)return null;
+    var old=c.students.slice();
+    c.students=list.map(function(s,i){
+      var hit=null;
+      if(s.id)for(var j=0;j<old.length;j++){if(old[j].id===s.id)hit=old[j]}
+      if(!hit)for(var k=0;k<old.length;k++){if(old[k].name===s.name&&!old[k].__used)hit=old[k]}
+      if(hit)hit.__used=1;
+      return {id:hit?hit.id:uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)};
+    });
+    c.students.forEach(function(s){delete s.__used});
+    persist();return c;
+  }
+  function resolve(classId,key){
+    var c=get(classId);if(!c)return null;
+    var k=String(key==null?'':key).trim();if(!k)return null;
+    var norm1=function(s){return String(s).replace(/[\s　]/g,'')};
+    for(var i=0;i<c.students.length;i++)if(c.students[i].name===k)return c.students[i].id;
+    var m=k.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+    var body=m?m[2].trim():k, no=m?Number(m[1]):null;
+    for(var j=0;j<c.students.length;j++)if(c.students[j].name===body)return c.students[j].id;
+    for(var p=0;p<c.students.length;p++)if(norm1(c.students[p].name)===norm1(body))return c.students[p].id;
+    if(no!=null)for(var q=0;q<c.students.length;q++)if(c.students[q].no===no&&norm1(c.students[q].name)===norm1(body))return c.students[q].id;
+    return null;
+  }
+  function mergeStudents(classId,list){
+    var c=get(classId);if(!c)return {};
+    var map={};
+    list.forEach(function(s){
+      var sid=resolve(classId,s.raw||s.name);
+      if(!sid){var ns={id:uid('s'),no:s.no==null?c.students.length+1:Number(s.no),name:String(s.name)};c.students.push(ns);sid=ns.id}
+      map[s.raw||s.name]=sid;
+    });
+    persist();return map;
+  }
+  function nameOf(classId,sid){var c=get(classId);if(!c)return '';for(var i=0;i<c.students.length;i++)if(c.students[i].id===sid)return c.students[i].name;return ''}
+  function reload(){store=norm(read());return store}
+  return {KEY:KEY,uid:uid,curFY:curFY,all:function(){return store},persist:persist,parseLines:parseLines,
+    get:get,classesOf:classesOf,addClass:addClass,removeClass:removeClass,setStudents:setStudents,
+    resolve:resolve,mergeStudents:mergeStudents,nameOf:nameOf,reload:reload};
+})();
+
+/* ===== テスト観点別集計Pro 本体 ===== */
+(function(){
+var KEY='mwpro_tenken_v1', FLAG='mwpro_tenken_imported', FREE='mw_gyomu_12_';
+var SUBJ=['国語','算数','社会','理科','生活','音楽','図工','体育','外国語','その他'];
+var MAXCLS=12;
+var DEF_ALIAS={'知識・技能':'know','知識技能':'know','知識':'know','思考・判断・表現':'think','思考判断表現':'think','思考':'think','主体的に学習に取り組む態度':'attit','主体的':'attit','態度':'attit'};
+var VLABEL={know:'知識・技能',think:'思考・判断・表現',attit:'主体的に学習に取り組む態度'};
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+function pad(n){return (n<10?'0':'')+n}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function readJSON(k){try{var r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e){return null}}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2400)}
+function copyText(s){
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){toast('コピーしました')},function(){fb(s)});return}}catch(e){}
+  fb(s);
+  function fb(x){var ta=document.createElement('textarea');ta.value=x;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('コピーしました')}catch(e){toast('コピーできませんでした')}document.body.removeChild(ta)}
+}
+function fyOf(d){var y=+String(d).slice(0,4),m=+String(d).slice(5,7);return m<4?y-1:y}
+function termOf(d){var m=+String(d).slice(5,7);return (m>=4&&m<=7)?1:((m>=8&&m<=12)?2:3)}
+function vkeyOf(name,aliases){
+  var n=String(name||'').replace(/[\s　]/g,'');
+  if(aliases[name])return aliases[name];
+  if(aliases[n])return aliases[n];
+  var n2=n.replace(/[・／\/、]/g,'');
+  for(var k in aliases){if(aliases.hasOwnProperty(k)&&String(k).replace(/[\s　・／\/、]/g,'')===n2)return aliases[k]}
+  if(/思考|判断|表現/.test(n))return 'think';
+  if(/知識|技能/.test(n))return 'know';
+  if(/主体|態度/.test(n))return 'attit';
+  return 'custom:'+n2;
+}
+function vLabel(vk){return VLABEL[vk]||String(vk).replace(/^custom:/,'')}
+
+/* ---------- state ---------- */
+var DB=null, cls=null, migrateInfo=null, tmpW=null, bdOpen={};
+
+function newClassRecord(id,fy,name){return {id:id,fy:fy,name:name,tests:[],others:[],unmatched:{}}}
+function normDB(d){
+  if(!d||typeof d!=='object')d={};
+  d.version=1;
+  if(!Array.isArray(d.classes))d.classes=[];
+  d.viewAliases=d.viewAliases||JSON.parse(JSON.stringify(DEF_ALIAS));
+  d.classes=d.classes.map(function(c){
+    return {id:c.id||Roster.uid('c'),fy:Number(c.fy)||Roster.curFY(),name:String(c.name||'1組'),
+      tests:(Array.isArray(c.tests)?c.tests:[]).map(function(t){
+        return {id:t.id||Date.now()+Math.random(),name:String(t.name||'テスト'),subj:String(t.subj||'算数'),
+          date:String(t.date||today()),term:Number(t.term)||termOf(t.date||today()),kind:'test',
+          views:(Array.isArray(t.views)?t.views:[]).map(function(v){return {name:String(v.name||'観点'),max:Number(v.max)||1,vkey:v.vkey||vkeyOf(v.name,d.viewAliases)}}),
+          scores:t.scores||{}};
+      }),
+      others:(Array.isArray(c.others)?c.others:[]).map(function(o){
+        return {id:o.id||Date.now()+Math.random(),name:String(o.name||'記録'),subj:String(o.subj||'算数'),
+          term:Number(o.term)||1,vkey:o.vkey||'think',max:Number(o.max)||10,weight:Number(o.weight)||1,scores:o.scores||{}};
+      }),
+      unmatched:c.unmatched||{}};
+  });
+  d.th=d.th||{};d.th.A=Number(d.th.A)||80;d.th.C=Number(d.th.C)||50;
+  d.borderBand=Number(d.borderBand)||5;
+  d.weights=d.weights||{};d.weights.test=Number(d.weights.test)||3;d.weights.other=Number(d.weights.other)||1;
+  if(!Array.isArray(d.thHistory))d.thHistory=[];
+  d.currentFY=Number(d.currentFY)||Roster.curFY();
+  if(!d.classes.length){
+    var rc=Roster.classesOf(d.currentFY)[0]||Roster.addClass(d.currentFY,'1組',[]);
+    d.classes.push(newClassRecord(rc.id,d.currentFY,rc.name));
+  }
+  if(!d.classes.filter(function(c){return c.id===d.currentClassId}).length)d.currentClassId=d.classes[0].id;
+  d.curTest=d.curTest||null;d.curOther=d.curOther||null;
+  return d;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('保存できませんでした（容量やプライベートモードを確認してください）')}}
+function bind(){
+  cls=null;
+  for(var i=0;i<DB.classes.length;i++)if(DB.classes[i].id===DB.currentClassId)cls=DB.classes[i];
+  if(!cls){cls=DB.classes[0];DB.currentClassId=cls.id}
+  DB.currentFY=cls.fy;
+  if(!Roster.get(cls.id)){var r=Roster.addClass(cls.fy,cls.name,[]);cls.id=r.id;DB.currentClassId=r.id}
+}
+function students(){var c=Roster.get(cls.id);return c?c.students.slice().sort(function(a,b){return (a.no||0)-(b.no||0)}):[]}
+function grade(p){if(p==null||isNaN(p))return '';return p>=DB.th.A?'A':(p<DB.th.C?'C':'B')}
+function fmt(p){return (p==null||isNaN(p))?'－':Math.round(p)+'%'}
+function W(){return tmpW||DB.weights}
+
+/* ---------- 無料版からの引き継ぎ ---------- */
+function migrate(){
+  var fr=readJSON(FREE+'roster'), ft=readJSON(FREE+'tests'), fth=readJSON(FREE+'th');
+  if(!Array.isArray(fr)&&!Array.isArray(ft))return null;
+  var tests=Array.isArray(ft)?ft:[];
+  var parsed=Roster.parseLines((Array.isArray(fr)?fr:[]).join('\n'));
+  var years={},curfy=Roster.curFY();
+  tests.forEach(function(t){if(t&&t.date)years[fyOf(t.date)]=1});
+  years[curfy]=1;
+  var ylist=Object.keys(years).map(Number).sort(function(a,b){return a-b});
+  var aliases=JSON.parse(JSON.stringify(DEF_ALIAS));
+  var made=[],unmatchedCount=0,tcount=0;
+  ylist.forEach(function(y){
+    var name=(y===curfy)?'1組':(y+'年度（無料版から）');
+    var rc=Roster.classesOf(y)[0];
+    if(rc)Roster.mergeStudents(rc.id,parsed);
+    else rc=Roster.addClass(y,name,parsed.map(function(p){return {no:p.no,name:p.name}}));
+    var rec=newClassRecord(rc.id,y,rc.name);
+    tests.filter(function(t){return t&&t.date&&fyOf(t.date)===y}).forEach(function(t){
+      var views=(t.views||[]).map(function(v){return {name:String(v.name||'観点'),max:Number(v.max)||1,vkey:vkeyOf(v.name,aliases)}});
+      var scores={},unm={};
+      Object.keys(t.scores||{}).forEach(function(k){
+        var sid=Roster.resolve(rc.id,k);
+        if(sid)scores[sid]=t.scores[k];
+        else{unm[k]=t.scores[k];unmatchedCount++}
+      });
+      var rt={id:t.id||Date.now()+Math.random(),name:String(t.name||'テスト'),subj:String(t.subj||'算数'),date:String(t.date),
+        term:termOf(t.date),kind:'test',views:views,scores:scores};
+      if(Object.keys(unm).length)rec.unmatched[rt.id]=unm;
+      rec.tests.push(rt);tcount++;
+    });
+    made.push(rec);
+  });
+  var db={version:1,currentFY:curfy,currentClassId:null,classes:made,
+    th:{A:(fth&&+fth.A)||80,C:(fth&&+fth.C)||50},borderBand:5,weights:{test:3,other:1},
+    viewAliases:aliases,thHistory:[],curTest:null,curOther:null};
+  var cur=made.filter(function(r){return r.fy===curfy})[0];
+  db.currentClassId=(cur||made[made.length-1]).id;
+  migrateInfo={tests:tcount,kids:parsed.length,classes:made.length,unmatched:unmatchedCount};
+  try{localStorage.setItem(FLAG,'true')}catch(e){}
+  return db;
+}
+function load(){
+  var d=readJSON(KEY);
+  if(!d||!Array.isArray(d.classes)||!d.classes.length){
+    var done=false;try{done=localStorage.getItem(FLAG)==='true'}catch(e){}
+    if(!done)d=migrate();
+  }
+  DB=normDB(d);bind();
+}
+
+/* ---------- 計算 ---------- */
+function itemsFor(c,subj,range){
+  var ts=c.tests.filter(function(t){return t.subj===subj&&(range==='all'||String(t.term)===String(range))});
+  var os=c.others.filter(function(o){return o.subj===subj&&(range==='all'||String(o.term)===String(range))});
+  return {ts:ts,os:os};
+}
+function vkeysOf(ts,os){
+  var keys=[],seen={};
+  ts.forEach(function(t){t.views.forEach(function(v){if(!seen[v.vkey]){seen[v.vkey]=1;keys.push(v.vkey)}})});
+  os.forEach(function(o){if(!seen[o.vkey]){seen[o.vkey]=1;keys.push(o.vkey)}});
+  return keys;
+}
+/* Σ(得点×weight) / Σ(満点×weight) */
+function pctOf(sid,vk,ts,os,w){
+  var got=0,max=0;
+  ts.forEach(function(t){
+    t.views.forEach(function(v,vi){
+      if(v.vkey!==vk)return;
+      var x=(t.scores[sid]||[])[vi];
+      if(x===''||x==null||x==='欠')return;
+      got+=(+x||0)*w.test;max+=v.max*w.test;
+    });
+  });
+  os.forEach(function(o){
+    if(o.vkey!==vk)return;
+    var x=o.scores[sid];
+    if(x===''||x==null||x==='欠')return;
+    var ww=(Number(o.weight)||1)*w.other;
+    got+=(+x||0)*ww;max+=o.max*ww;
+  });
+  return max?got/max*100:null;
+}
+function summary(c,subj,range,w){
+  var it=itemsFor(c,subj,range);
+  var keys=vkeysOf(it.ts,it.os);
+  var st=(function(){var rc=Roster.get(c.id);return rc?rc.students.slice().sort(function(a,b){return (a.no||0)-(b.no||0)}):[]})();
+  var rows=st.map(function(s){
+    return {sid:s.id,name:s.name,per:keys.map(function(vk){return pctOf(s.id,vk,it.ts,it.os,w)})};
+  });
+  return {ts:it.ts,os:it.os,keys:keys,rows:rows};
+}
+
+/* ---------- ヘッダー ---------- */
+function renderHead(){
+  var ys={};DB.classes.forEach(function(c){ys[c.fy]=1});Roster.all().classes.forEach(function(c){ys[c.fy]=1});ys[Roster.curFY()]=1;
+  var arr=Object.keys(ys).map(Number).sort(function(a,b){return b-a});
+  $('fySel').innerHTML=arr.map(function(y){return '<option value="'+y+'"'+(y===DB.currentFY?' selected':'')+'>'+y+'年度</option>'}).join('');
+  var list=DB.classes.filter(function(c){return c.fy===DB.currentFY});
+  $('clsSel').innerHTML=list.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===DB.currentClassId?' selected':'')+'>'+esc(c.name)+'</option>'}).join('');
+}
+$('fySel').onchange=function(){
+  var y=+this.value;DB.currentFY=y;
+  var list=DB.classes.filter(function(c){return c.fy===y});
+  if(!list.length){
+    var rc=Roster.classesOf(y)[0]||Roster.addClass(y,'1組',[]);
+    var rec=newClassRecord(rc.id,y,rc.name);DB.classes.push(rec);list=[rec];
+  }
+  DB.currentClassId=list[0].id;save();bind();renderAll();
+};
+$('clsSel').onchange=function(){DB.currentClassId=this.value;save();bind();renderAll()};
+
+/* ---------- テスト作成 ---------- */
+var draftViews=[{name:'知識・技能',max:70},{name:'思考・判断・表現',max:30}];
+function renderViewEdit(){
+  $('viewEdit').innerHTML=draftViews.map(function(v,i){
+    return '<div class="viewrow"><input value="'+esc(v.name)+'" data-vi="'+i+'" data-f="name" style="flex:1;min-width:150px">'+
+      '<input type="number" value="'+v.max+'" data-vi="'+i+'" data-f="max" style="width:90px"><span class="note" style="align-self:center">点満点 ／ '+esc(vLabel(vkeyOf(v.name,DB.viewAliases)))+'</span>'+
+      '<button class="del sm" data-rmv="'+i+'">×</button></div>';
+  }).join('')+'<p class="note">合計 <span id="vTot">'+draftViews.reduce(function(a,v){return a+(+v.max||0)},0)+'</span> 点</p>';
+}
+$('viewEdit').addEventListener('input',function(e){
+  var i=e.target.dataset.vi;if(i==null)return;
+  draftViews[i][e.target.dataset.f]=e.target.dataset.f==='max'?+e.target.value:e.target.value;
+  var tot=draftViews.reduce(function(a,v){return a+(+v.max||0)},0);
+  if($('vTot'))$('vTot').textContent=tot;
+});
+$('viewEdit').addEventListener('click',function(e){
+  var i=e.target.dataset.rmv;if(i!=null&&draftViews.length>1){draftViews.splice(i,1);renderViewEdit()}
+});
+$('addView').onclick=function(){draftViews.push({name:'観点',max:10});renderViewEdit()};
+$('preset2').onclick=function(){draftViews=[{name:'知識・技能',max:70},{name:'思考・判断・表現',max:30}];renderViewEdit()};
+$('preset3').onclick=function(){draftViews=[{name:'知識・技能',max:50},{name:'思考・判断・表現',max:40},{name:'主体的に学習に取り組む態度',max:10}];renderViewEdit()};
+$('addTest').onclick=function(){
+  var name=$('tName').value.trim();if(!name){alert('テスト名を入れてください');return}
+  if(draftViews.some(function(v){return !(+v.max>0)})){alert('満点は1以上にしてください');return}
+  var date=$('tDate').value||today();
+  var t={id:Date.now(),name:name,subj:$('tSubj').value,date:date,term:termOf(date),kind:'test',
+    views:draftViews.map(function(v){return {name:v.name||'観点',max:+v.max,vkey:vkeyOf(v.name||'観点',DB.viewAliases)}}),scores:{}};
+  cls.tests.push(t);DB.curTest=t.id;save();$('tName').value='';
+  switchTab('input');
+};
+function renderTestList(){
+  var f=$('listSubj').value;
+  var l=cls.tests.filter(function(t){return !f||t.subj===f}).sort(function(a,b){return a.date<b.date?1:-1});
+  $('testList').innerHTML=l.map(function(t){
+    return '<div class="testitem '+(t.id===DB.curTest?'on':'')+'"><div><b>'+esc(t.name)+'</b> <span class="note">'+esc(t.subj)+'／'+esc(t.date)+'（'+t.term+'学期）／'+
+      t.views.map(function(v){return esc(v.name)+v.max}).join('・')+'</span><br><span class="note">クラス平均 '+fmt(testAvg(t))+'</span></div>'+
+      '<div class="row noprint"><button class="sm" data-open="'+t.id+'">入力</button><button class="del sm" data-deltest="'+t.id+'">削除</button></div></div>';
+  }).join('')||'<p class="note">まだテストがありません。</p>';
+}
+function testAvg(t){
+  var got=0,max=0,tot=t.views.reduce(function(a,v){return a+v.max},0);
+  students().forEach(function(s){
+    var sc=t.scores[s.id];
+    if(!sc||sc.every(function(x){return x===''||x==null||x==='欠'}))return;
+    got+=sc.reduce(function(a,x){return a+(x==='欠'?0:(+x||0))},0);max+=tot;
+  });
+  return max?got/max*100:null;
+}
+$('testList').addEventListener('click',function(e){
+  var o=e.target.dataset.open,d=e.target.dataset.deltest;
+  if(o){DB.curTest=+o;save();switchTab('input')}
+  if(d&&confirm('このテストと点数を削除しますか？')){cls.tests=cls.tests.filter(function(t){return String(t.id)!==String(d)});save();renderTestList()}
+});
+$('listSubj').onchange=renderTestList;
+
+/* ---------- 点数入力 ---------- */
+function getTest(){
+  var t=cls.tests.filter(function(x){return String(x.id)===String(DB.curTest)})[0];
+  return t||cls.tests[cls.tests.length-1];
+}
+function renderInput(){
+  $('inTest').innerHTML=cls.tests.slice().sort(function(a,b){return a.date<b.date?1:-1}).map(function(t){
+    return '<option value="'+t.id+'">'+esc(t.subj)+'｜'+esc(t.name)+'（'+esc(t.date)+'）</option>'}).join('');
+  var t=getTest();
+  if(!t){$('inTitle').textContent='テストを作ってください';$('inTable').innerHTML='';$('inStats').innerHTML='';return}
+  DB.curTest=t.id;$('inTest').value=t.id;
+  var st=students();
+  if(!st.length){$('inTitle').textContent='先に「名簿・設定」で名簿を入れてください';$('inTable').innerHTML='';$('inStats').innerHTML='';return}
+  $('inTitle').textContent=t.subj+'「'+t.name+'」 '+t.date+'（'+cls.name+'）';
+  var tot=t.views.reduce(function(a,v){return a+v.max},0);
+  var h='<tr><th>名前</th>'+t.views.map(function(v){return '<th>'+esc(v.name)+'<br><span class="note">/'+v.max+'</span></th>'}).join('')+
+    '<th>合計<br><span class="note">/'+tot+'</span></th>'+t.views.map(function(v){return '<th>'+esc(v.name.slice(0,4))+'<br>判定</th>'}).join('')+'</tr>';
+  st.forEach(function(s,ri){
+    var sc=t.scores[s.id]||[];
+    h+='<tr id="row'+ri+'"><td class="name">'+esc(s.name)+'</td>'+
+      t.views.map(function(v,vi){return '<td><input inputmode="numeric" data-r="'+ri+'" data-v="'+vi+'" value="'+esc(sc[vi]==null?'':sc[vi])+'"></td>'}).join('')+
+      rowTail(t,s.id)+'</tr>';
+  });
+  $('inTable').innerHTML=h;
+  renderStats(t);
+}
+function rowTail(t,sid){
+  var s=t.scores[sid]||[];
+  var filled=s.some(function(x){return x!==''&&x!=null&&x!=='欠'});
+  return '<td class="tot">'+(filled?s.reduce(function(a,x){return a+(x==='欠'?0:(+x||0))},0):'－')+'</td>'+
+    t.views.map(function(v,vi){
+      var x=s[vi];
+      if(x===''||x==null||x==='欠')return '<td class="gr">－</td>';
+      var g=grade(+x/v.max*100);
+      return '<td class="gr '+g+'">'+g+'</td>';
+    }).join('');
+}
+function renderStats(t){
+  var st=students(),h='';
+  t.views.forEach(function(v,vi){
+    var xs=st.map(function(s){return (t.scores[s.id]||[])[vi]}).filter(function(x){return x!==''&&x!=null&&x!=='欠'}).map(Number);
+    if(!xs.length){h+='<span class="stat">'+esc(v.name)+'：未入力</span>';return}
+    var avg=xs.reduce(function(a,b){return a+b},0)/xs.length;
+    var cs=st.filter(function(s){var x=(t.scores[s.id]||[])[vi];return x!==''&&x!=null&&x!=='欠'&&grade(+x/v.max*100)==='C'});
+    h+='<div class="stat"><b>'+esc(v.name)+'</b> 平均 '+avg.toFixed(1)+'/'+v.max+'（'+Math.round(avg/v.max*100)+'%）最高 '+Math.max.apply(null,xs)+' 最低 '+Math.min.apply(null,xs)+
+      ' ／ <b>C：'+cs.length+'人</b>'+(cs.length?'（'+cs.map(function(s){return esc(s.name)}).join('、')+'）':'')+'</div>';
+  });
+  var nInput=st.filter(function(s){return (t.scores[s.id]||[]).some(function(x){return x!==''&&x!=null&&x!=='欠'})}).length;
+  h+='<p class="note">入力済み '+nInput+'/'+st.length+'人　／　Cが多いときは、その子たちではなく<b>次の一時間の使いみち</b>を考える材料にしてください。</p>';
+  $('inStats').innerHTML=h;
+}
+$('inTest').onchange=function(){DB.curTest=+this.value;save();renderInput()};
+$('inTable').addEventListener('change',function(e){
+  var i=e.target;if(i.dataset.r==null)return;
+  var t=getTest(),st=students(),sid=st[i.dataset.r].id,vi=+i.dataset.v,max=t.views[vi].max;
+  var v=i.value.trim().replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-65248)});
+  if(v!==''&&v!=='欠'){
+    if(isNaN(+v)){alert('数字か「欠」を入れてください');i.value='';return}
+    if(+v>max||+v<0){alert('0〜'+max+'の範囲で入れてください');i.value='';return}
+  }
+  if(!t.scores[sid])t.scores[sid]=t.views.map(function(){return ''});
+  i.value=v;t.scores[sid][vi]=v;save();
+  var tr=$('row'+i.dataset.r);
+  if(tr){
+    tr.querySelectorAll('td.tot,td.gr').forEach(function(td){td.remove()});
+    tr.insertAdjacentHTML('beforeend',rowTail(t,sid));
+  }
+  renderStats(t);
+});
+$('inTable').addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;e.preventDefault();
+  var i=e.target,r=+i.dataset.r,v=+i.dataset.v;
+  var nx=document.querySelector('#inTable input[data-r="'+(r+1)+'"][data-v="'+v+'"]')||document.querySelector('#inTable input[data-r="0"][data-v="'+(v+1)+'"]');
+  if(nx){nx.focus();nx.select()}
+});
+
+/* ---------- 観点別まとめ ---------- */
+function renderSum(){
+  var subj=$('sumSubj').value,range=$('sumRange').value;
+  var w=W(), sv=DB.weights;
+  $('wTest').value=w.test;$('wOther').value=w.other;$('wTestV').textContent=w.test;$('wOtherV').textContent=w.other;
+  var r=summary(cls,subj,range,w), rSaved=summary(cls,subj,range,sv);
+  $('sumTitle').textContent=subj+' 観点別まとめ（'+cls.name+'／テスト'+r.ts.length+'本'+(r.os.length?'＋記録'+r.os.length+'件':'')+(range==='all'?'':'・'+range+'学期')+'）';
+  $('sumBasis').textContent='基準：A ≧ '+DB.th.A+'%／C < '+DB.th.C+'%　対象：'+
+    (r.ts.map(function(t){return t.name}).concat(r.os.map(function(o){return o.name+'（記録）'})).join('、')||'なし')+
+    '　重み：テスト'+w.test+'／その他'+w.other;
+  var attit=r.keys.indexOf('attit')>=0 && !r.os.filter(function(o){return o.vkey==='attit'}).length;
+  $('attitWarn').innerHTML=attit?'<div class="alert y">「主体的に学習に取り組む態度」にテストの配点だけがひもづいています。<b>この観点はテストだけで判断しないことをおすすめします。</b>提出物や振り返りの記述などを「テスト以外の記録」に足して、そちらを主にしてください。</div>':'';
+  if(!r.ts.length&&!r.os.length){$('sumTable').innerHTML='<tr><td>この教科・期間のテストがありません</td></tr>';return}
+  if(!r.rows.length){$('sumTable').innerHTML='<tr><td>名簿を入れてください</td></tr>';return}
+  var h='<tr><th>名前</th>'+r.keys.map(function(k){return '<th>'+esc(vLabel(k))+'</th><th>判定</th>'}).join('')+'</tr>';
+  r.rows.forEach(function(row,ri){
+    h+='<tr><td class="name">'+esc(row.name)+'</td>'+row.per.map(function(p,i){
+      var g=grade(p), gs=grade(rSaved.rows[ri]?rSaved.rows[ri].per[i]:null);
+      var flip=(tmpW&&g&&gs&&g!==gs)?' flip':'';
+      return '<td>'+fmt(p)+'</td><td class="'+g+flip+'">'+(g||'－')+'</td>';
+    }).join('')+'</tr>';
+  });
+  var avgs=r.keys.map(function(k,i){
+    var xs=r.rows.map(function(x){return x.per[i]}).filter(function(p){return p!=null});
+    return xs.length?xs.reduce(function(a,b){return a+b},0)/xs.length:null;
+  });
+  h+='<tr><th>クラス平均</th>'+avgs.map(function(p){return '<th>'+fmt(p)+'</th><th></th>'}).join('')+'</tr>';
+  h+='<tr><th>A/B/C人数</th>'+r.keys.map(function(k,i){
+    var g=r.rows.map(function(x){return grade(x.per[i])});
+    return '<th colspan="2">'+['A','B','C'].map(function(x){return x+' '+g.filter(function(y){return y===x}).length}).join('／')+'</th>';
+  }).join('')+'</tr>';
+  $('sumTable').innerHTML=h;
+}
+['sumSubj','sumRange'].forEach(function(id){$(id).addEventListener('change',renderSum)});
+['wTest','wOther'].forEach(function(id){
+  $(id).addEventListener('input',function(){
+    tmpW={test:+$('wTest').value||1,other:+$('wOther').value||1};
+    renderSum();
+  });
+});
+$('wApply').onclick=function(){if(tmpW){DB.weights={test:tmpW.test,other:tmpW.other};tmpW=null;save();renderSum();toast('重みを保存しました')}};
+$('wReset').onclick=function(){tmpW=null;renderSum()};
+
+/* ---------- まよう子リスト ---------- */
+function borderList(){
+  var band=DB.borderBand, range=$('bdRange').value, out=[];
+  SUBJ.forEach(function(subj){
+    var r=summary(cls,subj,range,W());
+    if(!r.ts.length&&!r.os.length)return;
+    r.rows.forEach(function(row){
+      row.per.forEach(function(p,i){
+        if(p==null)return;
+        var vk=r.keys[i];
+        if(p>=DB.th.A-band&&p<DB.th.A)out.push({subj:subj,vk:vk,sid:row.sid,name:row.name,p:p,to:'A',gap:DB.th.A-p});
+        else if(p>=DB.th.C&&p<DB.th.C+band)out.push({subj:subj,vk:vk,sid:row.sid,name:row.name,p:p,to:'C',gap:p-DB.th.C});
+      });
+    });
+  });
+  out.sort(function(a,b){return a.gap-b.gap});
+  return out;
+}
+function renderBorder(){
+  $('bdBand').value=DB.borderBand;
+  var l=borderList();
+  if(!l.length){$('bdList').innerHTML='<p class="note">境界にいる子はいません（または、まだ点数が入っていません）。</p>';return}
+  $('bdList').innerHTML=l.map(function(x,i){
+    var key=x.sid+'_'+x.subj+'_'+x.vk;
+    var head='<b>'+esc(x.subj)+'・'+esc(vLabel(x.vk))+'</b>：'+esc(x.name)+' '+Math.round(x.p)+'%（'+(x.to==='A'?('Aまで'+Math.ceil(x.gap)+'%'):('Cまで'+Math.ceil(x.gap+0.0001)+'%'))+'）';
+    var body='';
+    if(bdOpen[key]){
+      var r=summary(cls,x.subj,$('bdRange').value,W());
+      var row=r.rows.filter(function(y){return y.sid===x.sid})[0];
+      body='<div class="note" style="margin-top:4px">この子のほかの観点：'+r.keys.map(function(k,j){
+        return esc(vLabel(k))+' '+fmt(row?row.per[j]:null)+'（'+(grade(row?row.per[j]:null)||'－')+'）';
+      }).join('／')+'</div>';
+    }
+    return '<div class="border-item '+(bdOpen[key]?'on':'')+'" data-key="'+esc(key)+'">'+head+body+'</div>';
+  }).join('');
+}
+$('bdList').addEventListener('click',function(e){
+  var it=e.target.closest('.border-item');if(!it)return;
+  var k=it.dataset.key;bdOpen[k]=!bdOpen[k];renderBorder();
+});
+$('bdRun').onclick=function(){DB.borderBand=Math.max(1,+$('bdBand').value||5);save();renderBorder()};
+$('bdRange').onchange=renderBorder;
+$('bdCopy').onclick=function(){
+  var l=borderList();
+  copyText('【まよう子リスト】'+cls.name+'　基準：A≧'+DB.th.A+'% / C<'+DB.th.C+'%　幅±'+DB.borderBand+'\n'+
+    l.map(function(x){return x.subj+'・'+vLabel(x.vk)+'：'+x.name+' '+Math.round(x.p)+'%（'+x.to+'まで'+Math.ceil(x.gap)+'%）'}).join('\n')+
+    '\n※ 児童名が入っています。取りあつかいに注意してください。判断の下資料であり、評定の唯一の根拠にはしないでください。');
+};
+
+/* ---------- テスト以外の記録 ---------- */
+function vkeyOptions(sel){
+  var keys=['know','think','attit'];
+  cls.tests.forEach(function(t){t.views.forEach(function(v){if(keys.indexOf(v.vkey)<0)keys.push(v.vkey)})});
+  cls.others.forEach(function(o){if(keys.indexOf(o.vkey)<0)keys.push(o.vkey)});
+  return keys.map(function(k){return '<option value="'+esc(k)+'"'+(k===sel?' selected':'')+'>'+esc(vLabel(k))+'</option>'}).join('');
+}
+$('addOther').onclick=function(){
+  var n=$('oName').value.trim();if(!n){alert('記録の名前を入れてください');return}
+  var o={id:Date.now(),name:n,subj:$('oSubj').value,term:+$('oTerm').value,vkey:$('oVkey').value,
+    max:Math.max(1,+$('oMax').value||10),weight:Math.max(1,+$('oWeight').value||1),scores:{}};
+  cls.others.push(o);DB.curOther=o.id;$('oName').value='';save();renderOther();toast('追加しました');
+};
+function renderOther(){
+  $('oVkey').innerHTML=vkeyOptions($('oVkey').value||'think');
+  $('otherList').innerHTML=cls.others.length?cls.others.map(function(o){
+    return '<div class="testitem '+(String(o.id)===String(DB.curOther)?'on':'')+'"><div><b>'+esc(o.name)+'</b> <span class="note">'+esc(o.subj)+'／'+o.term+'学期／'+esc(vLabel(o.vkey))+'／'+o.max+'点満点／重み'+o.weight+'</span></div>'+
+      '<div class="row"><button class="sm" data-oopen="'+o.id+'">入力</button><button class="del sm" data-odel="'+o.id+'">削除</button></div></div>';
+  }).join(''):'<p class="note">まだ記録がありません。ノート・発表・作品・提出物などを足せます。</p>';
+  $('inOther').innerHTML=cls.others.map(function(o){return '<option value="'+o.id+'">'+esc(o.subj)+'｜'+esc(o.name)+'</option>'}).join('');
+  var o=cls.others.filter(function(x){return String(x.id)===String(DB.curOther)})[0]||cls.others[cls.others.length-1];
+  if(!o){$('oTitle').textContent='';$('oTable').innerHTML='';return}
+  DB.curOther=o.id;$('inOther').value=o.id;
+  $('oTitle').textContent=o.name+'（'+o.subj+'／'+vLabel(o.vkey)+'／'+o.max+'点満点）';
+  var st=students();
+  $('oTable').innerHTML='<tr><th>名前</th><th>点（/'+o.max+'）</th><th>判定</th></tr>'+st.map(function(s,ri){
+    var x=o.scores[s.id];
+    var g=(x===''||x==null||x==='欠')?'':grade(+x/o.max*100);
+    return '<tr><td class="name">'+esc(s.name)+'</td><td><input inputmode="numeric" data-or="'+ri+'" value="'+esc(x==null?'':x)+'"></td><td class="'+g+'">'+(g||'－')+'</td></tr>';
+  }).join('');
+}
+$('otherList').addEventListener('click',function(e){
+  var o=e.target.dataset.oopen,d=e.target.dataset.odel;
+  if(o){DB.curOther=+o;save();renderOther()}
+  if(d&&confirm('この記録と点数を削除しますか？')){cls.others=cls.others.filter(function(x){return String(x.id)!==String(d)});save();renderOther()}
+});
+$('inOther').onchange=function(){DB.curOther=+this.value;save();renderOther()};
+$('oTable').addEventListener('change',function(e){
+  var i=e.target;if(i.dataset.or==null)return;
+  var o=cls.others.filter(function(x){return String(x.id)===String(DB.curOther)})[0];if(!o)return;
+  var sid=students()[i.dataset.or].id;
+  var v=i.value.trim().replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-65248)});
+  if(v!==''&&v!=='欠'){
+    if(isNaN(+v)){alert('数字か「欠」を入れてください');i.value='';return}
+    if(+v>o.max||+v<0){alert('0〜'+o.max+'の範囲で入れてください');i.value='';return}
+  }
+  o.scores[sid]=v;save();renderOther();
+});
+
+/* ---------- 子ども別・推移 ---------- */
+function renderKid(){
+  var st=students();
+  var kv=$('kidSel').value;
+  $('kidSel').innerHTML=st.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>'}).join('');
+  if(kv&&st.filter(function(s){return s.id===kv}).length)$('kidSel').value=kv;
+  var sid=$('kidSel').value, subj=$('kidSubj').value;
+  if(!sid){$('kidBody').innerHTML='<p class="note">名簿を入れてください。</p>';return}
+  var recs=[{c:cls,label:cls.name}];
+  if($('showPastFY').checked){
+    DB.classes.forEach(function(c){
+      if(c.id!==cls.id&&Roster.get(c.id)&&Roster.get(c.id).students.filter(function(s){return s.id===sid}).length)recs.push({c:c,label:c.fy+'年度 '+c.name});
+    });
+  }
+  var h='';
+  recs.forEach(function(rc){
+    var all=summary(rc.c,subj,'all',W());
+    if(!all.keys.length){h+='<p class="note">'+esc(rc.label)+'：この教科のテストがありません。</p>';return}
+    h+='<h3 style="font-size:1rem;color:var(--navy)">'+esc(rc.label)+'／'+esc(subj)+'</h3>';
+    h+='<div class="scroll"><table><tr><th>観点</th><th>1学期</th><th>2学期</th><th>3学期</th><th>通年</th></tr>'+
+      all.keys.map(function(vk){
+        var vals=[1,2,3].map(function(tm){
+          var it=itemsFor(rc.c,subj,String(tm));
+          return pctOf(sid,vk,it.ts,it.os,W());
+        });
+        var it=itemsFor(rc.c,subj,'all');
+        var tot=pctOf(sid,vk,it.ts,it.os,W());
+        return '<tr><td class="name">'+esc(vLabel(vk))+'</td>'+vals.map(function(p){return '<td>'+fmt(p)+'</td>'}).join('')+'<td><b>'+fmt(tot)+'</b></td></tr>';
+      }).join('')+'</table></div>';
+    h+=sparkline(rc.c,sid,subj,all.keys);
+  });
+  $('kidBody').innerHTML=h;
+}
+function sparkline(c,sid,subj,keys){
+  var W2=520,H=160,pad=34;
+  var series=keys.map(function(vk,ki){
+    var pts=[1,2,3].map(function(tm){var it=itemsFor(c,subj,String(tm));return pctOf(sid,vk,it.ts,it.os,W())});
+    var avg=[1,2,3].map(function(tm){
+      var it=itemsFor(c,subj,String(tm));
+      var rc=Roster.get(c.id);if(!rc)return null;
+      var xs=rc.students.map(function(s){return pctOf(s.id,vk,it.ts,it.os,W())}).filter(function(p){return p!=null});
+      return xs.length?xs.reduce(function(a,b){return a+b},0)/xs.length:null;
+    });
+    return {vk:vk,pts:pts,avg:avg,color:['#1f3a5f','#c2703d','#2e7d5b','#7a5ea5'][ki%4]};
+  });
+  var x=function(i){return pad+i*((W2-pad*2)/2)};
+  var y=function(p){return H-pad-(p/100)*(H-pad*2)};
+  var svg='<svg viewBox="0 0 '+W2+' '+H+'" style="width:100%;max-width:560px;height:auto;background:#fcfaf5;border-radius:10px" role="img" aria-label="学期ごとの推移">';
+  [0,50,100].forEach(function(v){svg+='<line x1="'+pad+'" y1="'+y(v)+'" x2="'+(W2-pad)+'" y2="'+y(v)+'" stroke="#e3dccd"/><text x="4" y="'+(y(v)+4)+'" font-size="10" fill="#6b6b6b">'+v+'%</text>'});
+  ['1学期','2学期','3学期'].forEach(function(t,i){svg+='<text x="'+(x(i)-14)+'" y="'+(H-8)+'" font-size="10" fill="#6b6b6b">'+t+'</text>'});
+  series.forEach(function(s){
+    var d='',da='';
+    s.pts.forEach(function(p,i){if(p!=null)d+=(d?'L':'M')+x(i)+','+y(p)});
+    s.avg.forEach(function(p,i){if(p!=null)da+=(da?'L':'M')+x(i)+','+y(p)});
+    if(da)svg+='<path d="'+da+'" fill="none" stroke="'+s.color+'" stroke-width="1.5" stroke-dasharray="4 3" opacity=".5"/>';
+    if(d)svg+='<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="2.5"/>';
+    s.pts.forEach(function(p,i){if(p!=null)svg+='<circle cx="'+x(i)+'" cy="'+y(p)+'" r="4" fill="'+s.color+'"/>'});
+  });
+  svg+='</svg>';
+  return svg+'<p class="note">実線＝この子／点線＝クラス平均。<b>評定は学期ごとに切れますが、子どもは切れていません。</b>伸びを見るための図です。</p>';
+}
+['kidSel','kidSubj','showPastFY'].forEach(function(id){$(id).addEventListener('change',renderKid)});
+$('kidMemo').onclick=function(){
+  var sid=$('kidSel').value,subj=$('kidSubj').value;
+  if(!sid){toast('名簿を入れてください');return}
+  var name=Roster.nameOf(cls.id,sid);
+  var range=String((function(){var m=new Date().getMonth()+1;return (m>=4&&m<=7)?1:((m>=8&&m<=12)?2:3)})());
+  var r=summary(cls,subj,range,W());
+  if(!r.keys.length){$('memoOut').value='（'+subj+'のテストがありません）';return}
+  var row=r.rows.filter(function(x){return x.sid===sid})[0];
+  var parts=r.keys.map(function(vk,i){
+    var p=row?row.per[i]:null;
+    var n=r.ts.filter(function(t){return t.views.some(function(v){return v.vkey===vk})}).length;
+    var prev=null;
+    if(+range>1){var it=itemsFor(cls,subj,String(+range-1));prev=pctOf(sid,vk,it.ts,it.os,W())}
+    return vLabel(vk)+' '+fmt(p)+'（テスト'+n+'本'+(prev!=null?'、'+(+range-1)+'学期'+Math.round(prev)+'%→'+range+'学期'+Math.round(p)+'%':'')+'）';
+  });
+  /* 落とした単元＝その観点の得点率が本人平均より15ポイント以上低いテスト */
+  var lowByVk=[];
+  r.keys.forEach(function(vk,i){
+    var base=row?row.per[i]:null;if(base==null)return;
+    var lows=r.ts.filter(function(t){
+      var vi=-1;t.views.forEach(function(v,j){if(v.vkey===vk)vi=j});
+      if(vi<0)return false;
+      var x=(t.scores[sid]||[])[vi];
+      if(x===''||x==null||x==='欠')return false;
+      return (+x/t.views[vi].max*100) <= base-15;
+    }).map(function(t){return t.name});
+    if(lows.length)lowByVk.push(vLabel(vk)+'で落とした単元：「'+lows.join('」「')+'」');
+  });
+  $('memoOut').value=name+'／'+subj+'（'+cls.name+'・'+range+'学期）\n'+subj+'：'+parts.join('、')+'。'+(lowByVk.length?'\n'+lowByVk.join('\n'):'')+
+    '\n※ 数字は判断の下資料です。評定の唯一の根拠にはしないでください。';
+  copyText($('memoOut').value);
+};
+
+/* ---------- クラス横断 ---------- */
+function renderCross(){
+  var subj=$('crSubj').value,range=$('crRange').value;
+  var list=DB.classes.filter(function(c){return c.fy===DB.currentFY});
+  var keys=[];
+  list.forEach(function(c){summary(c,subj,range,W()).keys.forEach(function(k){if(keys.indexOf(k)<0)keys.push(k)})});
+  if(!keys.length){$('crTable').innerHTML='<tr><td>この教科・期間のテストがありません</td></tr>';return}
+  var h='<tr><th>クラス</th>'+keys.map(function(k){return '<th>'+esc(vLabel(k))+'</th>'}).join('')+'</tr>';
+  list.forEach(function(c){
+    var r=summary(c,subj,range,W());
+    h+='<tr><td class="name">'+esc(c.name)+'</td>'+keys.map(function(k){
+      var i=r.keys.indexOf(k);
+      if(i<0)return '<td>－</td>';
+      var xs=r.rows.map(function(x){return x.per[i]}).filter(function(p){return p!=null});
+      return '<td>'+(xs.length?fmt(xs.reduce(function(a,b){return a+b},0)/xs.length):'－')+'</td>';
+    }).join('')+'</tr>';
+  });
+  $('crTable').innerHTML=h;
+}
+['crSubj','crRange'].forEach(function(id){$(id).addEventListener('change',renderCross)});
+
+/* ---------- CSV / TSV ---------- */
+function dl(name,text,type){
+  var b=new Blob(['﻿'+text],{type:type||'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+}
+function csvq(s){return '"'+String(s==null?'':s).replace(/"/g,'""')+'"'}
+$('csvOne').onclick=function(){
+  var t=getTest();if(!t)return;
+  var c=['名前'].concat(t.views.map(function(v){return v.name+'('+v.max+')'})).concat(['合計']).map(csvq).join(',')+'\n';
+  students().forEach(function(s){
+    var sc=t.scores[s.id]||[];
+    c+=[s.name].concat(t.views.map(function(v,i){return sc[i]==null?'':sc[i]})).concat([sc.reduce(function(a,x){return a+(x==='欠'?0:(+x||0))},0)]).map(csvq).join(',')+'\n';
+  });
+  dl(t.name+'.csv',c);
+};
+$('csvSum').onclick=function(){
+  var subj=$('sumSubj').value,r=summary(cls,subj,$('sumRange').value,W());
+  var head=['名前'];r.keys.forEach(function(k){head.push(vLabel(k)+'%');head.push(vLabel(k)+'判定')});
+  var c='"基準 A>='+DB.th.A+'% / C<'+DB.th.C+'%"\n'+head.map(csvq).join(',')+'\n';
+  r.rows.forEach(function(x){
+    var line=[x.name];
+    x.per.forEach(function(p){line.push(p==null?'':Math.round(p));line.push(grade(p))});
+    c+=line.map(csvq).join(',')+'\n';
+  });
+  dl(subj+'_観点別.csv',c);
+};
+$('tsvSum').onclick=function(){
+  var subj=$('sumSubj').value,r=summary(cls,subj,$('sumRange').value,W());
+  var head=['名前'];r.keys.forEach(function(k){head.push(vLabel(k)+'%');head.push(vLabel(k)+'判定')});
+  var rows=[head.join('\t')];
+  r.rows.forEach(function(x){
+    var line=[x.name];
+    x.per.forEach(function(p){line.push(p==null?'':Math.round(p));line.push(grade(p))});
+    rows.push(line.join('\t'));
+  });
+  copyText(rows.join('\n'));
+};
+
+/* ---------- 名簿・クラス・設定 ---------- */
+$('saveRoster').onclick=function(){
+  var list=Roster.parseLines($('roster').value);
+  Roster.setStudents(cls.id,list);
+  $('rMsg').textContent=list.length+'人を保存しました（3本のPro版で共通）';
+  save();renderAll();
+};
+$('numRoster').onclick=function(){
+  var n=+$('numN').value||30;
+  var a=[];for(var i=1;i<=n;i++)a.push(i+' '+i+'番');
+  $('roster').value=a.join('\n');
+};
+function renderUnmatched(){
+  var keys=Object.keys(cls.unmatched||{});
+  if(!keys.length){$('unmatchedBox').innerHTML='';return}
+  var st=students(),h='<div class="alert y">名簿と一致しなかった点数：'+keys.length+'本のテスト分（捨てていません）<br>';
+  keys.forEach(function(tid){
+    var t=cls.tests.filter(function(x){return String(x.id)===String(tid)})[0];
+    Object.keys(cls.unmatched[tid]).forEach(function(k){
+      h+='<span class="row" style="display:inline-flex;margin:4px 8px 0 0"><b>'+esc(k)+'</b><span class="note">'+esc(t?t.name:'')+'</span>'+
+        '<select data-utid="'+esc(String(tid))+'" data-ukey="'+esc(k)+'"><option value="">— この子にする —</option>'+
+        st.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>'}).join('')+'</select></span>';
+    });
+  });
+  $('unmatchedBox').innerHTML=h+'</div>';
+}
+$('unmatchedBox').addEventListener('change',function(e){
+  var tid=e.target.dataset.utid,k=e.target.dataset.ukey;
+  if(!tid||!k||!e.target.value)return;
+  var t=cls.tests.filter(function(x){return String(x.id)===String(tid)})[0];
+  if(t){t.scores[e.target.value]=cls.unmatched[tid][k]}
+  delete cls.unmatched[tid][k];
+  if(!Object.keys(cls.unmatched[tid]).length)delete cls.unmatched[tid];
+  save();renderAll();toast('名簿の子にひもづけました');
+});
+function renderClsUI(){
+  $('clsName').value=cls.name;
+  $('copyTest').innerHTML=cls.tests.map(function(t){return '<option value="'+t.id+'">'+esc(t.subj)+'｜'+esc(t.name)+'</option>'}).join('');
+  $('copyTo').innerHTML=DB.classes.filter(function(c){return c.fy===DB.currentFY&&c.id!==cls.id}).map(function(c){
+    return '<option value="'+esc(c.id)+'">'+esc(c.name)+' へ</option>'}).join('')||'<option value="">（他のクラスなし）</option>';
+}
+$('clsRename').onclick=function(){
+  var n=$('clsName').value.trim();if(!n)return;
+  cls.name=n;var rc=Roster.get(cls.id);if(rc){rc.name=n;Roster.persist()}
+  save();renderAll();toast('名前を変えました');
+};
+function addClassRec(name,st){
+  if(DB.classes.filter(function(c){return c.fy===DB.currentFY}).length>=MAXCLS){toast('1つの年度に'+MAXCLS+'クラスまでです');return null}
+  var rc=Roster.addClass(DB.currentFY,name,st||[]);
+  var rec=newClassRecord(rc.id,DB.currentFY,name);
+  DB.classes.push(rec);DB.currentClassId=rec.id;save();bind();renderAll();return rec;
+}
+$('clsAdd').onclick=function(){var n=prompt('新しいクラスの名前','2組');if(n)addClassRec(n.trim(),[])};
+$('clsDup').onclick=function(){
+  var n=prompt('複製先のクラス名（名簿だけ引き継ぎます）',cls.name+'のコピー');if(!n)return;
+  addClassRec(n.trim(),students().map(function(s){return {no:s.no,name:s.name}}));
+};
+$('clsDel').onclick=function(){
+  if(DB.classes.filter(function(c){return c.fy===DB.currentFY}).length<=1){toast('この年度の最後のクラスは消せません');return}
+  if(!confirm('「'+cls.name+'」のテスト（'+cls.tests.length+'本）と点数を消します。よろしいですか？'))return;
+  if(!confirm('本当に消しますか？（元に戻せません）'))return;
+  var id=cls.id;
+  DB.classes=DB.classes.filter(function(c){return c.id!==id});
+  Roster.removeClass(id);
+  DB.currentClassId=DB.classes.filter(function(c){return c.fy===DB.currentFY})[0].id;
+  save();bind();renderAll();
+};
+$('copyTestBtn').onclick=function(){
+  var tid=$('copyTest').value, to=$('copyTo').value;
+  if(!tid||!to){toast('コピー先のクラスがありません');return}
+  var t=cls.tests.filter(function(x){return String(x.id)===String(tid)})[0];
+  var dst=DB.classes.filter(function(c){return c.id===to})[0];
+  if(!t||!dst)return;
+  dst.tests.push({id:Date.now(),name:t.name,subj:t.subj,date:t.date,term:t.term,kind:'test',
+    views:t.views.map(function(v){return {name:v.name,max:v.max,vkey:v.vkey}}),scores:{}});
+  save();toast('「'+dst.name+'」へコピーしました（点数は空）');
+};
+$('saveTh').onclick=function(){
+  var A=+$('thA').value||80, C=+$('thC').value||50;
+  if(A===DB.th.A&&C===DB.th.C){toast('変わっていません');return}
+  DB.thHistory.push({A:DB.th.A,C:DB.th.C,at:new Date().toISOString()});
+  DB.th={A:A,C:C};save();renderAll();toast('保存しました');
+};
+$('expBtn').onclick=function(){
+  var payload={app:'mwpro_tenken_v1',data:DB,roster:Roster.all()};
+  var b=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='テスト観点別集計Pro_'+today()+'.json';a.click();
+};
+$('impFile').onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);var d=o&&o.data?o.data:o;
+      if(!d||!Array.isArray(d.classes))throw 0;
+      var mode=prompt('「置きかえ」＝1 ／「追加（別クラスとして）」＝2 を入れてください','2');
+      if(mode==='1'){
+        if(!confirm('いまのデータを、読みこんだ内容で置きかえます。よろしいですか？'))return;
+        if(o.roster){try{localStorage.setItem(Roster.KEY,JSON.stringify(o.roster))}catch(err){}Roster.reload()}
+        DB=normDB(d);save();bind();renderAll();toast('置きかえました');
+      }else if(mode==='2'){
+        var n=0;
+        d.classes.forEach(function(c){
+          var src=(o.roster&&o.roster.classes||[]).filter(function(x){return x.id===c.id})[0];
+          var rc=Roster.addClass(Number(c.fy)||DB.currentFY,(c.name||'組')+'（読みこみ）',(src?src.students:[]).map(function(s){return {no:s.no,name:s.name}}));
+          var map={};
+          if(src)src.students.forEach(function(s,i){map[s.id]=rc.students[i]?rc.students[i].id:null});
+          var rec=newClassRecord(rc.id,rc.fy,rc.name);
+          (c.tests||[]).forEach(function(t){
+            var sc={};
+            Object.keys(t.scores||{}).forEach(function(k){if(map[k])sc[map[k]]=t.scores[k]});
+            rec.tests.push({id:Date.now()+Math.random(),name:t.name,subj:t.subj,date:t.date,term:t.term||termOf(t.date),kind:'test',views:t.views,scores:sc});
+          });
+          (c.others||[]).forEach(function(ot){
+            var sc={};
+            Object.keys(ot.scores||{}).forEach(function(k){if(map[k])sc[map[k]]=ot.scores[k]});
+            rec.others.push({id:Date.now()+Math.random(),name:ot.name,subj:ot.subj,term:ot.term,vkey:ot.vkey,max:ot.max,weight:ot.weight,scores:sc});
+          });
+          DB.classes.push(rec);n++;
+        });
+        save();bind();renderAll();toast(n+'クラスを追加しました');
+      }
+    }catch(err){alert('ファイルを読めませんでした')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- 引き継ぎ通知 ---------- */
+function renderMigrate(){
+  var mb=$('migrateBox');
+  if(!migrateInfo){mb.style.display='none';return}
+  mb.style.display='';
+  mb.innerHTML='<button class="x" aria-label="閉じる">✕</button>'+
+    '📊 <b>無料版のデータを引き継ぎました。</b><br>'+
+    'テスト'+migrateInfo.tests+'本・名簿'+migrateInfo.kids+'人を、'+migrateInfo.classes+'クラス（今年度は「1組」）として読みこみました。'+
+    '氏名で持っていた点数は、児童ID（sid）につなぎ直しています。観点も「思考・判断・表現」などの表記ちがいをまとめました。'+
+    (migrateInfo.unmatched?'<br>名簿と一致しなかった点数が'+migrateInfo.unmatched+'件あります。捨てていないので「名簿・設定」から手でひもづけてください。':'')+
+    '<br>無料版のデータはそのまま残っています。名簿は3本のPro版で共通になりました。';
+  mb.querySelector('.x').addEventListener('click',function(){migrateInfo=null;renderMigrate()});
+}
+
+/* ---------- タブ ---------- */
+function switchTab(tab){
+  document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x.dataset.tab===tab)});
+  ['tests','input','sum','border','other','kid','cross','set'].forEach(function(t){$('tab-'+t).classList.toggle('hidden',t!==tab)});
+  if(tab==='tests')renderTestList();
+  if(tab==='input')renderInput();
+  if(tab==='sum')renderSum();
+  if(tab==='border')renderBorder();
+  if(tab==='other')renderOther();
+  if(tab==='kid')renderKid();
+  if(tab==='cross')renderCross();
+  if(tab==='set'){renderClsUI();renderUnmatched()}
+}
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){switchTab(b.dataset.tab)}});
+
+function subjOptions(withAll){
+  return (withAll?'<option value="">すべての教科</option>':'')+SUBJ.map(function(s){return '<option>'+s+'</option>'}).join('');
+}
+function renderAll(){
+  renderHead();
+  ['tSubj','sumSubj','oSubj','kidSubj','crSubj'].forEach(function(id){
+    var v=$(id).value;$(id).innerHTML=subjOptions(false);$(id).value=v||'算数';if(!$(id).value)$(id).value='算数';
+  });
+  var lv=$('listSubj').value;$('listSubj').innerHTML=subjOptions(true);$('listSubj').value=lv;
+  if(!$('tDate').value)$('tDate').value=today();
+  $('roster').value=students().map(function(s){return s.no+' '+s.name}).join('\n');
+  $('thA').value=DB.th.A;$('thC').value=DB.th.C;$('bdBand').value=DB.borderBand;
+  $('oVkey').innerHTML=vkeyOptions($('oVkey').value||'think');
+  renderViewEdit();renderTestList();renderInput();renderSum();renderBorder();renderOther();renderKid();renderCross();renderClsUI();renderUnmatched();renderMigrate();
+}
+
+load();
+save();  /* 初回（＝引き継ぎ直後）にすぐ書きこむ。無料版から読み直さないため */
+renderAll();
+})();
+</script>
+<div class="note-link" style="max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-size:13px;line-height:1.8;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600">note「教室ノオト」</a>
+</div>
+</body>
+</html>
