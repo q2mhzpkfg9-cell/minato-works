@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健康観察・欠席集計 Pro</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ok:#2f855a;--okbg:#e6f4ea;--warn:#b7791f;--warnbg:#fdf3dc;--ng:#b83232;--ngbg:#fbe9e7;--pur:#6b46c1;--purbg:#efe9fb;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1300px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.15rem;letter-spacing:.03em}
+.pro-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--navy);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.hsel{font:inherit;font-size:.9rem;font-weight:700;padding:6px 8px;border-radius:10px;border:none;background:#fff;color:var(--navy);min-height:0;max-width:46vw}
+.roflag{background:#f0e2bf;color:#6b4d0b;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700}
+main{max-width:1300px;margin:0 auto;padding:16px}
+.priv{background:#fff8e8;border:1.5px solid #f0e2bf;border-radius:12px;padding:8px 12px;font-size:.82rem;color:#5c4a22;line-height:1.7;margin-bottom:12px}
+.priv b{color:#7a5a10}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:150px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+#printArea{display:none}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{flex:1;min-width:110px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;font-family:inherit;font-weight:700;font-size:.92rem;cursor:pointer;color:var(--navy);position:relative}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tabs .badge{position:absolute;top:-6px;right:-4px;background:var(--ng);color:#fff;border-radius:999px;font-size:.72rem;padding:0 7px;min-width:20px}
+.pane{display:none}.pane.on{display:block}
+.migrate-box{background:#eef4fa;border:1.5px solid #c8dcee;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:4px;border:none;background:none;font-size:1rem;color:var(--sub);cursor:pointer;padding:2px 8px}
+.daybar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.daybar .dt{font-size:1.2rem;font-weight:800;color:var(--navy)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+.tile{border:1.5px solid var(--line);border-radius:12px;background:#fff;min-height:64px;padding:6px 8px;text-align:left;font-family:inherit;cursor:pointer;line-height:1.3}
+.tile b{display:block;font-size:.95rem}
+.tile .s{font-size:.75rem;font-weight:700}
+.tile.abs{background:var(--ngbg);border-color:#e3a39c}.tile.abs .s{color:var(--ng)}
+.tile.stop,.tile.mourn{background:var(--purbg);border-color:#c7b5ee}.tile.stop .s,.tile.mourn .s{color:var(--pur)}
+.tile.late,.tile.early{background:var(--warnbg);border-color:#e7c77a}.tile.late .s,.tile.early .s{color:var(--warn)}
+.tile.sym{box-shadow:inset 0 -4px 0 #e07b39}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px;margin:10px 0}
+.stats div{background:#f8f5ee;border-radius:10px;padding:6px 8px;text-align:center}
+.stats b{display:block;font-size:1.35rem;color:var(--navy);line-height:1.2}
+.stats .ng b{color:var(--ng)}
+.symsum{display:flex;gap:6px;flex-wrap:wrap}
+.symsum span{background:#fff4ec;color:#a4521c;border-radius:999px;padding:2px 10px;font-size:.84rem;font-weight:700}
+.alert{border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:.9rem}
+.alert.r{background:var(--ngbg);color:var(--ng)}
+.alert.y{background:var(--warnbg);color:#8a5a0b}
+.alert.g{background:var(--okbg);color:var(--ok)}
+.delta{background:var(--ngbg);border:1.5px solid #e3a39c;color:#7d2420;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:.92rem;line-height:1.7}
+.modal{position:fixed;inset:0;background:rgba(20,30,45,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.on{display:flex}
+.sheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:16px}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:18px}}
+.sheet h3{margin:0 0 8px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}
+.choices button{min-height:48px;border:1.5px solid var(--line);background:#fff;border-radius:12px;font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer;color:var(--ink)}
+.choices button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lbl{font-weight:700;font-size:.85rem;color:var(--sub);margin:12px 0 4px}
+.mwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px}
+table.mt{border-collapse:separate;border-spacing:0;font-size:.8rem}
+table.mt th,table.mt td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:3px 4px;text-align:center;background:#fff;min-width:26px}
+table.mt thead th{position:sticky;top:0;background:#f1ede4;z-index:2}
+table.mt .nm{position:sticky;left:0;z-index:1;text-align:left;white-space:nowrap;min-width:114px;background:#fff}
+table.mt thead .nm{z-index:3;background:#f1ede4}
+table.mt td.a{color:var(--ng);font-weight:800}
+table.mt td.p{color:var(--pur);font-weight:800}
+table.mt td.l{color:var(--warn);font-weight:800}
+table.mt td.tot{background:#f8f5ee;font-weight:700}
+table.g{border-collapse:collapse;width:100%;font-size:.88rem}
+table.g th,table.g td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+table.g th.l,table.g td.l{text-align:left}
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.legend button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;min-height:34px;font-family:inherit;font-size:.82rem;cursor:pointer;font-weight:700}
+.legend button.off{opacity:.38}
+.kata{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.kata .t{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.78rem;font-weight:700;margin-right:6px;background:#eef2f7;color:var(--navy)}
+.kata .t.r{background:var(--ngbg);color:var(--ng)}
+.kata .t.y{background:var(--warnbg);color:#8a5a0b}
+.cares div{border-left:4px solid var(--line);background:#fcfaf5;border-radius:0 8px 8px 0;padding:4px 10px;margin:4px 0;font-size:.86rem;display:flex;gap:8px;align-items:center}
+.cares div span{flex:1}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block;color:#000;font-size:8.5pt}
+  #printArea h1{font-size:13pt;margin:0 0 4pt}
+  #printArea table{border-collapse:collapse;width:100%}
+  #printArea th,#printArea td{border:1px solid #555;padding:1.5pt 2pt;text-align:center}
+  #printArea td.nm,#printArea th.nm{text-align:left;white-space:nowrap}
+  @page{size:A4 landscape;margin:8mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>健康観察・欠席集計<span class="pro-badge">PRO</span></h1>
+  <select id="fySel" class="hsel" aria-label="年度"></select>
+  <select id="clsSel" class="hsel" aria-label="クラス"></select>
+  <span class="roflag" id="roFlag" style="display:none">読み取り専用</span>
+</div></header>
+<main>
+<div id="migrateBox" class="migrate-box" style="display:none"></div>
+<div class="priv">🔒 <b>健康情報はこの端末（ブラウザ）の中だけ</b>に保存され、外部には送信されません。／ <b>勤務校のルールがいつでも優先です。</b>校務システムに入力する決まりがあるなら、そちらが正です。／ このアプリは<b>公式な出席簿の代わりにはなりません</b>（必ず正式な様式に転記してください）。／ 共有のPCでは使わないでください。／ <b>診断名や推測は書かないでください。判断は養護教諭・管理職へ。出欠の記録を評価に使わないでください。</b></div>
+
+<div class="tabs" id="tabs">
+  <button data-t="today" class="on">🌤 今日</button>
+  <button data-t="month">📅 月・症状の推移</button>
+  <button data-t="kata">🔔 気になる子<span class="badge" id="badge" style="display:none"></span></button>
+  <button data-t="grade">🏫 学年</button>
+  <button data-t="book">📘 出席簿・引き継ぎ</button>
+  <button data-t="set">⚙ 名簿・設定</button>
+</div>
+
+<div class="pane on" id="p-today">
+  <section class="card">
+    <div class="daybar">
+      <button class="btn s" id="prev">◀</button>
+      <input type="date" id="date">
+      <button class="btn s" id="next">▶</button>
+      <span class="dt" id="dLabel"></span>
+      <span class="note" id="dState"></span>
+    </div>
+    <div id="deltaBox"></div>
+    <div class="stats" id="dStats"></div>
+    <div class="symsum" id="dSym"></div>
+    <p class="note" style="margin:10px 0 6px">子どもの名前をタップして記録。何もなければそのまま「出席・元気」です。記録を始めると、その日は授業日として数えます。</p>
+    <div class="tiles" id="tiles"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn p" id="confirmDay">✓ この日を記録済みにする</button>
+      <button class="btn" id="copyReport">保健室への報告をコピー</button>
+      <button class="btn" id="copySoudan">管理職・養護教諭への相談用をコピー</button>
+      <button class="btn s d" id="unDay">この日を授業日から外す</button>
+    </div>
+    <details style="margin-top:10px"><summary>相談用テキストを見る</summary><textarea id="soudanOut" readonly style="min-height:190px;margin-top:8px"></textarea></details>
+  </section>
+</div>
+
+<div class="pane" id="p-month">
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row"><button class="btn s" id="mPrev">◀</button><b id="mLabel" style="font-size:1.1rem;color:var(--navy)"></b><button class="btn s" id="mNext">▶</button></div>
+      <div class="row"><button class="btn" id="prMonth">🖨 月の一覧を印刷</button><button class="btn" id="csv">CSVで保存</button></div>
+    </div>
+    <p class="note" id="markNote"></p>
+    <div class="mwrap"><table class="mt" id="mt"></table></div>
+    <h2 style="margin-top:16px">日ごとの欠席数</h2>
+    <div id="chart"></div>
+    <h2 style="margin-top:16px">症状別の推移</h2>
+    <p class="note">感染症は、たいてい欠席が増える前に症状が増えます。凡例をタップすると表示を切りかえられます。</p>
+    <div class="legend" id="symLegend"></div>
+    <div id="symChart"></div>
+    <div id="symComment"></div>
+  </section>
+</div>
+
+<div class="pane" id="p-kata">
+  <section class="card">
+    <h2>欠席の「型」</h2>
+    <p class="note"><b>これは診断ではありません。</b>「気にかけるきっかけ」を作るための分類です。サボりの証拠にしないでください。子どもにも保護者にも「月曜が多いですね」という言い方で切り出さないでください。</p>
+    <div id="kataList"></div>
+  </section>
+  <section class="card">
+    <h2>基準をこえた子（日数のアラート）</h2>
+    <div id="alerts"></div>
+    <p class="note">基準は「⚙ 名簿・設定」で変えられます。年間の累計は年度はじめ（4月1日）からの欠席日数（出席停止・忌引は除く）です。</p>
+  </section>
+</div>
+
+<div class="pane" id="p-grade">
+  <section class="card">
+    <h2>学年の横断ビュー</h2>
+    <div class="row"><label class="f">日付<input type="date" id="gDate"></label></div>
+    <p class="note"><b>個人名は出しません。</b>学年で見ると、学級閉鎖ではなく学年閉鎖の相談材料になります。判断するのは養護教諭・管理職です。</p>
+    <div style="overflow:auto"><table class="g" id="gradeTbl"></table></div>
+  </section>
+</div>
+
+<div class="pane" id="p-book">
+  <section class="card">
+    <h2>出席簿への転記用</h2>
+    <div class="row">
+      <select id="bkRange"><option value="month">表示中の月</option><option value="fy">この年度ぜんぶ</option></select>
+      <button class="btn p" id="bkRun">つくる</button>
+      <button class="btn" id="bkPrint">🖨 印刷</button>
+    </div>
+    <p class="note">これは転記を楽にするための下書きです。<b>必ず正式な様式に転記し、そちらを正としてください。</b>記号と列の並びは「⚙ 名簿・設定」で学校の様式に合わせられます。</p>
+    <div style="overflow:auto"><table class="g" id="bkTbl"></table></div>
+  </section>
+  <section class="card">
+    <h2>年度</h2>
+    <div class="row">
+      <button class="btn" id="newYear">新しい年度を始める（名簿を引き継ぐ）</button>
+      <span class="note">名簿は共通名簿から引き継ぎ（同じ子は同じ児童ID）、記録は新しい年度で空になります。前の年度は読み取り専用です。</span>
+    </div>
+  </section>
+  <section class="card">
+    <h2>引き継ぎ用テキスト</h2>
+    <p class="note">出るのは<b>数字と事実だけ</b>です。児童名・症状・メモは入りません。引き継ぐべき個別の事情は、アプリの書き出しではなく<b>学校の正式な引き継ぎの場と様式で</b>渡してください。</p>
+    <div class="row"><button class="btn p" id="handRun">つくる</button><button class="btn" id="handCopy">コピー</button></div>
+    <textarea id="handOut" readonly style="min-height:170px;margin-top:8px"></textarea>
+  </section>
+  <section class="card">
+    <h2>書き出し・読みこみ</h2>
+    <div class="row">
+      <button class="btn" id="expBtn">JSONで書き出す（全クラス・全年度＋名簿）</button>
+      <label class="btn" style="display:inline-flex;align-items:center">JSONを読みこむ<input type="file" id="impFile" accept=".json" style="display:none"></label>
+    </div>
+    <p class="note">読みこみのときに「置きかえ」か「クラスとして追加」を選べます。無料版のデータは消しません。</p>
+  </section>
+</div>
+
+<div class="pane" id="p-set">
+  <section class="card">
+    <h2>名簿（1行に1人・Pro版で共通）</h2>
+    <p class="note">この名簿は <b>MINATO WORKS の Pro版すべて</b>で共有されます。名前を直しても、記録は児童ID（sid）でつながっているので消えません。</p>
+    <textarea id="rosterTxt" style="min-height:180px" placeholder="1 あおき はると&#10;2 いとう さくら"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn p" id="rosterSave">名簿を保存</button>
+      <button class="btn" id="rosterCommon">共通名簿（せんせいアプリ）から読み込む</button>
+      <span class="note" id="rosterMsg"></span>
+    </div>
+  </section>
+  <section class="card">
+    <h2>クラス</h2>
+    <div class="row">
+      <input id="clsName" placeholder="3年1組" style="min-width:160px">
+      <button class="btn s" id="clsRename">名前を変える</button>
+      <button class="btn s" id="clsAdd">クラスを追加</button>
+      <button class="btn s d" id="clsDel">このクラスを消す</button>
+    </div>
+    <div id="clsList" style="margin-top:8px"></div>
+  </section>
+  <section class="card">
+    <h2>アラートの基準</h2>
+    <div class="row">
+      <label class="f">連続欠席（日）<input type="number" id="thCont" min="2" style="width:100px"></label>
+      <label class="f">月の欠席（日）<input type="number" id="thMonth" min="1" style="width:100px"></label>
+      <label class="f">年間の欠席・注意（日）<input type="number" id="thYear1" min="1" style="width:120px"></label>
+      <label class="f">年間の欠席・要対応（日）<input type="number" id="thYear2" min="1" style="width:120px"></label>
+      <label class="f">学級の欠席率の注意（%）<input type="number" id="thRate" min="1" style="width:120px"></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="f">増え方アラート：何人ふえたら<input type="number" id="thDelta" min="1" style="width:130px"></label>
+      <label class="f">何授業日前とくらべる<input type="number" id="thDeltaDays" min="1" style="width:130px"></label>
+    </div>
+    <p class="note">増え方アラートは、横ばい・減少のときは出ません。騒がないことも機能です。</p>
+  </section>
+  <section class="card">
+    <h2>出席簿の様式（学校に合わせる）</h2>
+    <div class="row" id="markBox"></div>
+    <label class="f" style="margin-top:8px">列の並び（カンマ区切り・使えるのは 欠席／出停／忌引／遅刻／早退）<input id="colsInput" style="width:100%"></label>
+    <div class="row" style="margin-top:8px"><button class="btn p" id="fmtSave">様式を保存</button><button class="btn s" id="fmtReset">はじめにもどす</button></div>
+  </section>
+  <section class="card">
+    <details><summary>データの管理</summary>
+      <div class="row" style="margin-top:8px">
+        <label class="f">年度<select id="delFy"></select></label>
+        <button class="btn s d" id="delYear" style="align-self:flex-end">この年度のデータを削除</button>
+      </div>
+      <p class="note">健康情報を必要以上に長く持たないための機能です。<b>年度が終わったら、その年度のデータを消してください。</b>必要な記録は学校の正式な帳簿に残っています。削除の前にJSONで書き出しておくと安心です。</p>
+    </details>
+  </section>
+</div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+
+<div class="modal" id="modal"><div class="sheet">
+  <h3><span id="mName"></span><button class="btn s" id="mClose">閉じる</button></h3>
+  <div class="lbl">出欠</div>
+  <div class="choices" id="cSt"></div>
+  <div class="lbl">理由</div>
+  <div class="choices" id="cRs"></div>
+  <div class="lbl">症状（出席していても記録できます）</div>
+  <div class="choices" id="cSym"></div>
+  <div class="lbl">メモ（連絡の内容など）</div>
+  <input id="mMemo" style="width:100%" placeholder="聞いた事実だけを書いてください（例：母より電話 8:05、38.2℃）。診断名や推測は書かない">
+  <div class="row" style="margin-top:12px"><button class="btn p" id="mOk">OK</button><button class="btn" id="mNextKid">OK して次の子へ</button></div>
+</div></div>
+
+<div class="modal" id="careModal"><div class="sheet">
+  <h3><span id="careName"></span><button class="btn s" id="careClose">閉じる</button></h3>
+  <p class="note">気にかけた記録を一行だけ残せます。評価の欄ではありません。数字が教えてくれるのはここまでで、そこから先は数字の仕事ではありません。</p>
+  <div class="row"><input type="date" id="careDate"><input id="careText" placeholder="例：休み時間に声をかけた。給食の量の話をしていた" style="flex:1;min-width:200px"><button class="btn p" id="careAdd">ためる</button></div>
+  <div class="cares" id="careList"></div>
+</div></div>
+
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+"use strict";
+/* ===== 共通名簿 mwpro_roster_v1 ===== */
+/* MINATO WORKS の Pro版すべてで同じ実装を使うこと（クラスID・児童ID sid を共有します） */
+/* sid は年度をまたいで不変。年度更新では新しいクラスを作り、students の id をそのまま引き継ぎます */
+var Roster=(function(){
+  var KEY='mwpro_roster_v1';
+  function uid(p){return (p||'s')+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+  function curFY(){var d=new Date();return d.getMonth()+1<4?d.getFullYear()-1:d.getFullYear()}
+  function read(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+  function write(d){try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){return false}}
+  function norm(d){
+    if(!d||typeof d!=='object')d={};
+    if(!Array.isArray(d.classes))d.classes=[];
+    var seen={};
+    d.classes=d.classes.filter(function(c){return c&&typeof c==='object'}).map(function(c){
+      var id=c.id||uid('c'); while(seen[id])id=uid('c'); seen[id]=1;
+      var sseen={};
+      return {id:id,fy:Number(c.fy)||curFY(),name:String(c.name||'1組'),
+        students:(Array.isArray(c.students)?c.students:[]).filter(function(s){return s&&s.name}).map(function(s,i){
+          var sid=s.id||uid('s'); while(sseen[sid])sid=uid('s'); sseen[sid]=1;
+          return {id:sid,no:(s.no===''||s.no==null?i+1:Number(s.no)||i+1),name:String(s.name)};
+        })};
+    });
+    d.version=1;
+    d.fy=Number(d.fy)||(d.classes.length?d.classes[0].fy:curFY());
+    return d;
+  }
+  var store=norm(read());
+  function persist(){write(store)}
+  function parseLines(text){
+    return String(text||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(l,i){
+      var m=l.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+      return m?{no:Number(m[1]),name:m[2].trim(),raw:l}:{no:i+1,name:l,raw:l};
+    }).filter(function(s){return s.name});
+  }
+  function get(id){for(var i=0;i<store.classes.length;i++)if(store.classes[i].id===id)return store.classes[i];return null}
+  function classesOf(fy){return store.classes.filter(function(c){return c.fy===fy})}
+  function addClass(fy,name,students){
+    var c={id:uid('c'),fy:fy,name:name||'1組',students:(students||[]).map(function(s,i){
+      return {id:s.id||uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)}})};
+    store.classes.push(c);persist();return c;
+  }
+  function removeClass(id){store.classes=store.classes.filter(function(c){return c.id!==id});persist()}
+  function setStudents(id,list){
+    var c=get(id);if(!c)return null;
+    var old=c.students.slice();
+    c.students=list.map(function(s,i){
+      var hit=null;
+      if(s.id)for(var j=0;j<old.length;j++){if(old[j].id===s.id)hit=old[j]}
+      if(!hit)for(var k=0;k<old.length;k++){if(old[k].name===s.name&&!old[k].__used)hit=old[k]}
+      if(hit)hit.__used=1;
+      return {id:hit?hit.id:uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)};
+    });
+    c.students.forEach(function(s){delete s.__used});
+    persist();return c;
+  }
+  function resolve(classId,key){
+    var c=get(classId);if(!c)return null;
+    var k=String(key==null?'':key).trim();if(!k)return null;
+    var norm1=function(s){return String(s).replace(/[\s　]/g,'')};
+    for(var i=0;i<c.students.length;i++)if(c.students[i].name===k)return c.students[i].id;
+    var m=k.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+    var body=m?m[2].trim():k, no=m?Number(m[1]):null;
+    for(var j=0;j<c.students.length;j++)if(c.students[j].name===body)return c.students[j].id;
+    for(var p=0;p<c.students.length;p++)if(norm1(c.students[p].name)===norm1(body))return c.students[p].id;
+    if(no!=null)for(var q=0;q<c.students.length;q++)if(c.students[q].no===no&&norm1(c.students[q].name)===norm1(body))return c.students[q].id;
+    return null;
+  }
+  function mergeStudents(classId,list){
+    var c=get(classId);if(!c)return {};
+    var map={};
+    list.forEach(function(s){
+      var sid=resolve(classId,s.raw||s.name);
+      if(!sid){var ns={id:uid('s'),no:s.no==null?c.students.length+1:Number(s.no),name:String(s.name)};c.students.push(ns);sid=ns.id}
+      map[s.raw||s.name]=sid;
+    });
+    persist();return map;
+  }
+  function nameOf(classId,sid){var c=get(classId);if(!c)return '';for(var i=0;i<c.students.length;i++)if(c.students[i].id===sid)return c.students[i].name;return ''}
+  function reload(){store=norm(read());return store}
+  return {KEY:KEY,uid:uid,curFY:curFY,all:function(){return store},persist:persist,parseLines:parseLines,
+    get:get,classesOf:classesOf,addClass:addClass,removeClass:removeClass,setStudents:setStudents,
+    resolve:resolve,mergeStudents:mergeStudents,nameOf:nameOf,reload:reload};
+})();
+
+
+/* ===== 健康観察・欠席集計Pro 本体 ===== */
+(function(){
+var KEY='mwpro_gyomu10_v1', FLAG='mwpro_gyomu10_imported', FREE='mw_gyomu_10_data';
+var MAXCLS=12;
+var ST=[{k:'',n:'出席・元気'},{k:'abs',n:'欠席'},{k:'late',n:'遅刻'},{k:'early',n:'早退'},{k:'stop',n:'出席停止'},{k:'mourn',n:'忌引'}];
+var STN={'':'出席',abs:'欠席',late:'遅刻',early:'早退',stop:'出席停止',mourn:'忌引'};
+var REASONS=['病気','けが','家庭の都合','通院','感染症','その他'];
+var SYMS=['発熱','せき','のどの痛み','鼻水','頭痛','腹痛','はき気・おう吐','下痢','発しん','けが','その他'];
+var SYMC=['#b83232','#2d5282','#6b46c1','#2f855a','#b7791f','#c2703d','#7a5ea5','#0f766e','#9d174d','#57534e','#6b7280'];
+var COLDEF=['欠席','出停','忌引','遅刻','早退'];
+var COLKEY={'欠席':'abs','出停':'stop','忌引':'mourn','遅刻':'late','早退':'early'};
+var DEFMARK={abs:'／',stop:'停',mourn:'忌',late:'遅',early:'早'};
+var DEFTH={cont:3,month:5,y1:15,y2:30,rate:15,delta:3,deltaDays:3};
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},2200)}
+function pad(n){return String(n).padStart(2,'0')}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parseD(s){return new Date(s+'T00:00:00')}
+function lab(s){var d=parseD(s);if(isNaN(d))return String(s);return (d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）'}
+function shortD(s){var d=parseD(s);return (d.getMonth()+1)+'/'+d.getDate()}
+function fyOf(s){var y=+String(s).slice(0,4),m=+String(s).slice(5,7);return m<4?y-1:y}
+function readJSON(k){try{var r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e){return null}}
+function download(name,text,type){var b=new Blob([text],{type:type||'text/plain'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function copyText(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){toast('コピーしました')},fb)}else fb();
+  function fb(){var ta=document.createElement('textarea');ta.value=s;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('コピーしました')}catch(e){toast('コピーできませんでした')}ta.remove()}
+}
+function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')}).join('\r\n')}
+
+/* ---------- state ---------- */
+var DB=null, curD=ymd(new Date()), curMonth=curD.slice(0,7), editKid=null, tmp=null, migrateInfo=null, symOff={}, careSid=null;
+function blank(){return {days:{},cares:{}}}
+function normClass(c){
+  if(!c||typeof c!=='object')c={};
+  var days={};
+  if(c.days&&typeof c.days==='object')Object.keys(c.days).forEach(function(d){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return;
+    var x=c.days[d]||{},recs={};
+    if(x.recs&&typeof x.recs==='object')Object.keys(x.recs).forEach(function(sid){
+      var r=x.recs[sid]||{};
+      recs[sid]={st:(['abs','late','early','stop','mourn'].indexOf(r.st)>=0?r.st:''),reason:String(r.reason||''),
+        sym:(Array.isArray(r.sym)?r.sym.filter(function(y){return typeof y==='string'}):[]),memo:String(r.memo||'')};
+    });
+    days[d]={recs:recs,done:!!x.done};
+  });
+  var cares={};
+  if(c.cares&&typeof c.cares==='object')Object.keys(c.cares).forEach(function(sid){
+    cares[sid]=(Array.isArray(c.cares[sid])?c.cares[sid]:[]).map(function(x){return {d:String(x&&x.d||''),text:String(x&&x.text||'')}}).filter(function(x){return x.text});
+  });
+  return {days:days,cares:cares};
+}
+function normDB(d){
+  if(!d||typeof d!=='object')d={};
+  d.v=1;
+  if(!d.byClass||typeof d.byClass!=='object')d.byClass={};
+  Object.keys(d.byClass).forEach(function(k){d.byClass[k]=normClass(d.byClass[k])});
+  var th={};Object.keys(DEFTH).forEach(function(k){th[k]=Math.max(1,Number(d.th&&d.th[k])||DEFTH[k])});
+  d.th=th;
+  var f=d.fmt||{},marks={};
+  Object.keys(DEFMARK).forEach(function(k){marks[k]=(f.marks&&typeof f.marks[k]==='string'&&f.marks[k])?f.marks[k]:DEFMARK[k]});
+  var cols=(Array.isArray(f.cols)?f.cols:[]).filter(function(x){return COLDEF.indexOf(x)>=0});
+  d.fmt={marks:marks,cols:cols.length?cols:COLDEF.slice()};
+  d.currentFY=Number(d.currentFY)||Roster.curFY();
+  var list=Roster.classesOf(d.currentFY);
+  if(!list.length)list=[Roster.addClass(d.currentFY,'1組',[])];
+  var okc=null;for(var i=0;i<list.length;i++)if(list[i].id===d.currentCid)okc=list[i];
+  if(!okc)d.currentCid=list[0].id;
+  if(!d.byClass[d.currentCid])d.byClass[d.currentCid]=blank();
+  d.newYearAsked=Number(d.newYearAsked)||0;
+  return d;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('保存できませんでした（容量やプライベートモードを確認してください）')}}
+function cur(){if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();return DB.byClass[DB.currentCid]}
+function kids(){var c=Roster.get(DB.currentCid);return c?c.students.slice().sort(function(a,b){return (a.no||0)-(b.no||0)}):[]}
+function isRO(){return DB.currentFY<Roster.curFY()}
+function guard(){if(isRO()){toast('過去の年度は読み取り専用です');return true}return false}
+
+/* ---------- 無料版からの引き継ぎ ---------- */
+function migrate(){
+  var f=readJSON(FREE);
+  if(!f||typeof f!=='object')return null;
+  var ks=Array.isArray(f.kids)?f.kids:[];
+  var days=(f.days&&typeof f.days==='object')?f.days:{};
+  if(!ks.length&&!Object.keys(days).length)return null;
+  var curfy=Roster.curFY();
+  var years={};Object.keys(days).forEach(function(d){if(/^\d{4}-\d{2}-\d{2}$/.test(d))years[fyOf(d)]=1});
+  years[curfy]=1;
+  var ylist=Object.keys(years).map(Number).sort(function(a,b){return a-b});
+  var parsed=ks.map(function(k,i){return {no:i+1,name:String(k&&k.name||('児童'+(i+1))),raw:String(k&&k.name||'')}}).filter(function(p){return p.name});
+  var db={v:1,currentFY:curfy,currentCid:null,byClass:{},th:{},fmt:{marks:JSON.parse(JSON.stringify(DEFMARK)),cols:COLDEF.slice()},newYearAsked:0};
+  Object.keys(DEFTH).forEach(function(k){db.th[k]=Math.max(1,Number(f.th&&f.th[k])||DEFTH[k])});
+  var madeCls=0,movedDays=0,lost=0;
+  ylist.forEach(function(y){
+    var rc=Roster.classesOf(y)[0];
+    if(rc)Roster.mergeStudents(rc.id,parsed);
+    else{rc=Roster.addClass(y,(y===curfy?'1組':(y+'年度（無料版から）')),parsed.map(function(p){return {no:p.no,name:p.name}}));madeCls++}
+    var map={};
+    ks.forEach(function(k){var sid=Roster.resolve(rc.id,String(k&&k.name||''));if(sid)map[k.id]=sid});
+    var c=blank();
+    Object.keys(days).forEach(function(d){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||fyOf(d)!==y)return;
+      var x=days[d]||{},recs={};
+      if(x.recs)Object.keys(x.recs).forEach(function(oid){
+        var sid=map[oid];if(!sid){lost++;return}
+        var r=x.recs[oid]||{};
+        recs[sid]={st:(['abs','late','early','stop','mourn'].indexOf(r.st)>=0?r.st:''),reason:String(r.reason||''),sym:(Array.isArray(r.sym)?r.sym:[]),memo:String(r.memo||'')};
+      });
+      c.days[d]={recs:recs,done:!!x.done};movedDays++;
+    });
+    db.byClass[rc.id]=c;
+    if(y===curfy)db.currentCid=rc.id;
+  });
+  if(!db.currentCid){var rc2=Roster.classesOf(curfy)[0]||Roster.addClass(curfy,'1組',parsed.map(function(p){return {no:p.no,name:p.name}}));db.currentCid=rc2.id;if(!db.byClass[rc2.id])db.byClass[rc2.id]=blank()}
+  migrateInfo={kids:parsed.length,days:movedDays,years:ylist.length,lost:lost};
+  try{localStorage.setItem(FLAG,'true')}catch(e){}
+  return db;
+}
+function load(){
+  var d=readJSON(KEY);
+  if(!d||!d.byClass||!Object.keys(d.byClass).length){
+    var done=false;try{done=localStorage.getItem(FLAG)==='true'}catch(e){}
+    if(!done)d=migrate()||d;
+  }
+  DB=normDB(d);
+}
+function renderMigrate(){
+  var mb=$('#migrateBox');
+  if(!migrateInfo){mb.style.display='none';return}
+  mb.style.display='';
+  mb.innerHTML='<button class="x" aria-label="閉じる">✕</button>📝 <b>無料版のデータを引き継ぎました。</b><br>'+
+    '同じブラウザに入っていた名簿'+migrateInfo.kids+'人・授業日'+migrateInfo.days+'日ぶんを、年度ごとに'+migrateInfo.years+'クラス（今年度は「1組」）として読みこみました。'+
+    '名前でつないでいた記録は、児童ID（sid）につなぎ直しています。名簿はPro版の他のアプリと共通になりました。'+
+    (migrateInfo.lost?'<br>名簿と一致しなかった記録が'+migrateInfo.lost+'件ありました。':'')+
+    '<br><b>無料版のデータはそのまま残っています。</b>（不要なら無料版側で消してください）';
+  mb.querySelector('.x').addEventListener('click',function(){migrateInfo=null;renderMigrate()});
+}
+
+/* ---------- 日・集計 ---------- */
+function day(d,create){if(!cur().days[d]&&create)cur().days[d]={recs:{},done:false};return cur().days[d]}
+function rec(d,sid){var x=cur().days[d];return (x&&x.recs[sid])||null}
+function schoolDays(prefix,cid){
+  var src=(cid?(DB.byClass[cid]||{days:{}}):cur()).days;
+  return Object.keys(src).filter(function(d){return !prefix||d.indexOf(prefix)===0}).sort();
+}
+function dayStats(d,cid){
+  var box=cid?(DB.byClass[cid]||{days:{}}):cur();
+  var ks=cid?((Roster.get(cid)||{students:[]}).students):kids();
+  var x=box.days[d];
+  var s={abs:0,late:0,early:0,stop:0,mourn:0,sym:{},symN:0,symTotal:0};
+  ks.forEach(function(k){
+    var r=x&&x.recs[k.id];if(!r)return;
+    if(r.st)s[r.st]++;
+    if(r.sym&&r.sym.length){s.symN++;r.sym.forEach(function(y){s.sym[y]=(s.sym[y]||0)+1;s.symTotal++})}
+  });
+  s.total=ks.length;s.absAll=s.abs+s.stop+s.mourn;s.present=s.total-s.absAll;
+  s.rate=s.total?Math.round(s.absAll/s.total*1000)/10:0;
+  return s;
+}
+function countKid(sid,days){var c={abs:0,late:0,early:0,stop:0,mourn:0};days.forEach(function(d){var r=rec(d,sid);if(r&&r.st)c[r.st]++});return c}
+function fyRange(){return {from:DB.currentFY+'-04-01',to:(DB.currentFY+1)+'-03-31'}}
+function fyDays(){var r=fyRange();return schoolDays().filter(function(d){return d>=r.from&&d<=r.to})}
+
+/* ---------- ① 増え方アラート ---------- */
+function deltaAlert(d){
+  var all=schoolDays();
+  var i=all.indexOf(d);
+  if(i<0)return null;
+  var j=i-DB.th.deltaDays;
+  if(j<0)return null;
+  var base=all[j],now=dayStats(d),was=dayStats(base);
+  var dAbs=now.absAll-was.absAll, dSym=now.symTotal-was.symTotal;
+  if(dAbs<DB.th.delta&&dSym<DB.th.delta)return null;
+  var top='',topd=0;
+  Object.keys(now.sym).forEach(function(k){var diff=(now.sym[k]||0)-(was.sym[k]||0);if(diff>topd){topd=diff;top=k}});
+  return {base:base,dAbs:dAbs,dSym:dSym,now:now,was:was,top:top,topd:topd,days:DB.th.deltaDays};
+}
+function renderDelta(){
+  var a=deltaAlert(curD);
+  if(!a){$('#deltaBox').innerHTML='';return}
+  var h='<div class="delta">⚠ '+a.days+'授業日前（'+shortD(a.base)+'）は欠席'+a.was.absAll+'名、今日は'+a.now.absAll+'名。';
+  if(a.dAbs>0)h+='<b>'+a.days+'授業日で+'+a.dAbs+'名</b>。';
+  if(a.topd>0)h+='「'+esc(a.top)+'」の訴えも +'+a.topd+'名。';
+  h+='増え方が急です。<b>養護教諭に共有してください。</b><br><span class="note">判断するのは養護教諭・学校医・管理職です。このアプリの出力を根拠に何かを決めないでください。</span></div>';
+  $('#deltaBox').innerHTML=h;
+}
+
+/* ---------- 今日 ---------- */
+$('#date').value=curD;
+$('#date').onchange=function(){if(this.value){curD=this.value;renderToday()}};
+function shiftD(n){var d=parseD(curD);do{d.setDate(d.getDate()+n)}while(d.getDay()===0||d.getDay()===6);curD=ymd(d);$('#date').value=curD;renderToday()}
+$('#prev').onclick=function(){shiftD(-1)};
+$('#next').onclick=function(){shiftD(1)};
+function renderToday(){
+  var x=cur().days[curD];
+  $('#dLabel').textContent=lab(curD);
+  var warn=(fyOf(curD)!==DB.currentFY)?'　⚠ この日は'+fyOf(curD)+'年度です（表示中は'+DB.currentFY+'年度）':'';
+  $('#dState').textContent=(x?(x.done?'✓ 記録済み（授業日）':'記録中（授業日）'):'まだ記録なし')+warn;
+  var s=dayStats(curD);
+  $('#dStats').innerHTML="<div><span class='note'>在籍</span><b>"+s.total+"</b></div><div><span class='note'>出席</span><b>"+s.present+"</b></div><div class='"+(s.abs?'ng':'')+"'><span class='note'>欠席</span><b>"+s.abs+"</b></div><div><span class='note'>出停・忌引</span><b>"+(s.stop+s.mourn)+"</b></div><div><span class='note'>遅刻</span><b>"+s.late+"</b></div><div><span class='note'>早退</span><b>"+s.early+"</b></div><div class='"+(s.rate>=DB.th.rate?'ng':'')+"'><span class='note'>欠席率</span><b>"+s.rate+'%</b></div>';
+  $('#dSym').innerHTML=Object.keys(s.sym).map(function(k){return '<span>'+esc(k)+' '+s.sym[k]+'</span>'}).join('')+
+    ((s.rate>=DB.th.rate&&s.total)?"<span style='background:var(--ngbg);color:var(--ng)'>⚠ 欠席率が"+DB.th.rate+'%をこえています。養護教諭・管理職に相談を</span>':'');
+  var ks=kids();
+  $('#tiles').innerHTML=ks.length?ks.map(function(k){
+    var r=rec(curD,k.id);var st=(r&&r.st)||'';
+    var sub=st?(STN[st]+(r.reason?'（'+r.reason+'）':'')):'';
+    var sy=(r&&r.sym&&r.sym.length)?r.sym.join('・'):'';
+    return "<button class='tile "+st+(sy?' sym':'')+"' data-k='"+esc(k.id)+"'><b>"+(k.no||'')+'. '+esc(k.name)+"</b><span class='s'>"+esc(sub)+'</span>'+(sy?"<br><span class='s' style='color:#a4521c'>"+esc(sy)+'</span>':'')+'</button>';
+  }).join(''):"<p class='note'>「⚙ 名簿・設定」で名簿を入れてください。</p>";
+  renderDelta();
+  $('#soudanOut').value=soudanText();
+}
+$('#tiles').addEventListener('click',function(e){var b=e.target.closest('[data-k]');if(b)openKid(b.dataset.k)});
+$('#confirmDay').onclick=function(){
+  if(guard())return;
+  if(!kids().length){toast('名簿を入れてください');return}
+  day(curD,true).done=true;save();renderAll();
+  var a=deltaAlert(curD);
+  toast(lab(curD)+'を記録しました'+(a?'　⚠ 増え方が急です':''));
+};
+$('#unDay').onclick=function(){
+  if(guard())return;
+  if(!cur().days[curD]){toast('この日は記録がありません');return}
+  if(!confirm('この日の記録を消して、授業日から外しますか？'))return;
+  delete cur().days[curD];save();renderAll();
+};
+function reportText(){
+  var s=dayStats(curD);var x=cur().days[curD]||{recs:{}};
+  var list=function(st){return kids().filter(function(k){var r=x.recs[k.id];return r&&r.st===st}).map(function(k){
+    var r=x.recs[k.id];
+    return k.name+(r.reason?('（'+r.reason+((r.sym&&r.sym.length)?'：'+r.sym.join('・'):'')+'）'):((r.sym&&r.sym.length)?'（'+r.sym.join('・')+'）':''));
+  })};
+  var t='【健康観察】'+lab(curD)+'\n在籍'+s.total+'名　出席'+s.present+'名　欠席'+s.abs+'名　出停'+s.stop+'名　忌引'+s.mourn+'名　遅刻'+s.late+'名　早退'+s.early+'名（欠席率'+s.rate+'%）';
+  var a=list('abs');if(a.length)t+='\n欠席：'+a.join('、');
+  var p=list('stop');if(p.length)t+='\n出席停止：'+p.join('、');
+  var sy=Object.keys(s.sym);if(sy.length)t+='\n症状：'+sy.map(function(k){return k+s.sym[k]+'名'}).join('、');
+  var pres=kids().filter(function(k){var r=x.recs[k.id];return r&&(!r.st||r.st==='late'||r.st==='early')&&r.sym&&r.sym.length}).map(function(k){return k.name+'（'+x.recs[k.id].sym.join('・')+'）'});
+  if(pres.length)t+='\n登校しているが症状あり：'+pres.join('、');
+  return t;
+}
+function soudanText(){
+  var c=Roster.get(DB.currentCid);
+  var s=dayStats(curD);
+  var all=schoolDays();var i=all.indexOf(curD);
+  var span=[];
+  if(i>=0){for(var j=Math.max(0,i-4);j<=i;j++)span.push(dayStats(all[j]).absAll)}
+  var t='【'+(c?c.name:'')+'・出席状況の推移】'+lab(curD)+'現在\n';
+  t+='在籍'+s.total+'名／本日欠席'+s.abs+'名（'+s.rate+'%）＋出席停止'+s.stop+'名・忌引'+s.mourn+'名\n';
+  if(span.length>1)t+='直近'+span.length+'授業日：'+span.join(' → ')+'名\n';
+  var sy=Object.keys(s.sym);
+  if(sy.length)t+='症状（登校中も含む）：'+sy.map(function(k){return k+s.sym[k]}).join('、')+'\n';
+  var x=cur().days[curD]||{recs:{}};
+  var rs={};kids().forEach(function(k){var r=x.recs[k.id];if(r&&r.st==='abs'&&r.reason)rs[r.reason]=(rs[r.reason]||0)+1});
+  var rk=Object.keys(rs);
+  if(rk.length)t+='欠席の主な訴え：'+rk.map(function(k){return k+rs[k]+'名'}).join('、')+'\n';
+  var cs=Roster.classesOf(DB.currentFY);
+  if(cs.length>1){
+    t+='※学年：'+cs.map(function(cc){var ss=dayStats(curD,cc.id);return cc.name+' '+ss.rate+'%'}).join('　')+'\n';
+  }
+  var a=deltaAlert(curD);
+  if(a)t+='※'+a.days+'授業日前（'+shortD(a.base)+'）の欠席'+a.was.absAll+'名から'+a.now.absAll+'名に増えています。\n';
+  t+='※ 学級閉鎖などの判断は、養護教諭・学校医・管理職にお願いします。これは相談のための材料です。\n';
+  return t;
+}
+$('#copyReport').onclick=function(){copyText(reportText())};
+$('#copySoudan').onclick=function(){copyText(soudanText())};
+
+/* ---------- モーダル ---------- */
+function openKid(sid){
+  if(guard())return;
+  var k=kids().filter(function(x){return x.id===sid})[0];if(!k)return;
+  editKid=sid;
+  var r=rec(curD,sid)||{};
+  tmp={st:r.st||'',reason:r.reason||'',sym:(r.sym||[]).slice(),memo:r.memo||''};
+  $('#mName').textContent=k.name+' ／ '+lab(curD);
+  $('#mMemo').value=tmp.memo;drawChoices();$('#modal').classList.add('on');
+}
+function drawChoices(){
+  $('#cSt').innerHTML=ST.map(function(s){return "<button data-st='"+s.k+"' class='"+(tmp.st===s.k?'on':'')+"'>"+s.n+'</button>'}).join('');
+  $('#cRs').innerHTML=REASONS.map(function(s){return "<button data-rs='"+s+"' class='"+(tmp.reason===s?'on':'')+"'>"+s+'</button>'}).join('');
+  $('#cSym').innerHTML=SYMS.map(function(s){return "<button data-sy='"+s+"' class='"+(tmp.sym.indexOf(s)>=0?'on':'')+"'>"+s+'</button>'}).join('');
+}
+$('#modal').addEventListener('click',function(e){
+  if(e.target===this){closeM();return}
+  var b=e.target.closest('button');if(!b||!tmp)return;
+  if(b.dataset.st!=null){tmp.st=b.dataset.st;if(!tmp.st)tmp.reason='';if(tmp.st==='stop'&&!tmp.reason)tmp.reason='感染症';if(tmp.st==='mourn')tmp.reason='';drawChoices()}
+  else if(b.dataset.rs!=null){tmp.reason=(tmp.reason===b.dataset.rs)?'':b.dataset.rs;drawChoices()}
+  else if(b.dataset.sy!=null){var i=tmp.sym.indexOf(b.dataset.sy);if(i>=0)tmp.sym.splice(i,1);else tmp.sym.push(b.dataset.sy);drawChoices()}
+});
+function commit(){
+  if(!tmp||!editKid)return;
+  tmp.memo=$('#mMemo').value.trim();
+  var d=day(curD,true);
+  if(!tmp.st&&!tmp.sym.length&&!tmp.memo)delete d.recs[editKid];
+  else d.recs[editKid]={st:tmp.st,reason:tmp.reason,sym:tmp.sym,memo:tmp.memo};
+  save();
+}
+function closeM(){$('#modal').classList.remove('on');editKid=null;tmp=null}
+$('#mClose').onclick=closeM;
+$('#mOk').onclick=function(){commit();closeM();renderAll()};
+$('#mNextKid').onclick=function(){
+  commit();
+  var ks=kids(),i=-1;for(var j=0;j<ks.length;j++)if(ks[j].id===editKid)i=j;
+  closeM();renderAll();
+  if(i>=0&&i<ks.length-1)openKid(ks[i+1].id);
+};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(editKid)closeM();if($('#careModal').classList.contains('on')){$('#careModal').classList.remove('on');careSid=null}}});
+
+/* ---------- 月・グラフ ---------- */
+function mShift(n){var y=+curMonth.slice(0,4),m=+curMonth.slice(5,7)+n;if(m<1){m=12;y--}if(m>12){m=1;y++}curMonth=y+'-'+pad(m);renderMonth()}
+$('#mPrev').onclick=function(){mShift(-1)};
+$('#mNext').onclick=function(){mShift(1)};
+function renderMonth(){
+  var MK=DB.fmt.marks;
+  $('#markNote').innerHTML='記号：'+DB.fmt.cols.map(function(c){return esc(MK[COLKEY[c]])+'＝'+esc(c)}).join('　')+'。列は記録した授業日だけ並びます。';
+  var y=+curMonth.slice(0,4),m=+curMonth.slice(5,7);$('#mLabel').textContent=y+'年'+m+'月';
+  var days=schoolDays(curMonth);
+  var fyd=fyDays();
+  var cols=DB.fmt.cols;
+  var h='<thead><tr><th class="nm">名前</th>'+days.map(function(d){var x=parseD(d);return '<th>'+x.getDate()+'<br><small>'+'日月火水木金土'[x.getDay()]+'</small></th>'}).join('')+
+    cols.map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'<th>年度<br>欠席</th></tr></thead><tbody>';
+  kids().forEach(function(k){
+    var c=countKid(k.id,days);
+    h+='<tr><td class="nm">'+(k.no||'')+'. '+esc(k.name)+'</td>';
+    days.forEach(function(d){
+      var r=rec(d,k.id);var st=(r&&r.st)||'';
+      h+='<td class="'+(st==='abs'?'a':(st==='stop'||st==='mourn')?'p':(st?'l':''))+'" title="'+esc(r?(STN[st]+' '+(r.reason||'')+' '+((r.sym||[]).join('・'))+' '+(r.memo||'')):'')+'">'+(st?esc(MK[st]||''):'')+'</td>';
+    });
+    h+=cols.map(function(cc){return '<td class="tot">'+c[COLKEY[cc]]+'</td>'}).join('');
+    h+='<td class="tot">'+countKid(k.id,fyd).abs+'</td></tr>';
+  });
+  h+='</tbody><tfoot><tr><td class="nm tot">欠席数（出停・忌引含む）</td>'+days.map(function(d){return '<td class="tot">'+dayStats(d).absAll+'</td>'}).join('')+
+    '<td colspan="'+(cols.length+1)+'" class="tot">授業日 '+days.length+'日</td></tr></tfoot>';
+  $('#mt').innerHTML=(days.length||kids().length)?h:'<tbody><tr><td style="padding:16px">記録がありません。</td></tr></tbody>';
+  renderChart(days);
+  renderSymChart(days);
+}
+function renderChart(days){
+  if(!days.length){$('#chart').innerHTML='<p class="note">この月の記録はまだありません。</p>';return}
+  var vals=days.map(function(d){return dayStats(d).absAll});
+  var max=Math.max(3,Math.max.apply(null,vals));
+  var W=Math.max(320,days.length*28+40),H=160,bw=(W-40)/days.length;
+  var n=kids().length;
+  var svg="<svg class='chart' viewBox='0 0 "+W+' '+(H+30)+"' role='img' aria-label='日ごとの欠席数'>";
+  var step=Math.max(1,Math.ceil(max/4));
+  for(var g=0;g<=max;g+=step){var yy=H-(g/max)*H+5;svg+="<line x1='30' x2='"+W+"' y1='"+yy+"' y2='"+yy+"' stroke='#e5dfd2'/><text x='24' y='"+(yy+4)+"' font-size='10' text-anchor='end' fill='#6b7280'>"+g+'</text>'}
+  vals.forEach(function(v,i){
+    var bh=v/max*H,x=34+i*bw;
+    svg+="<rect x='"+(x+2)+"' y='"+(H-bh+5)+"' width='"+Math.max(4,bw-6)+"' height='"+bh+"' rx='3' fill='"+((n&&v/n*100>=DB.th.rate)?'#b83232':'#2d5282')+"'><title>"+lab(days[i])+' '+v+"人</title></rect><text x='"+(x+bw/2)+"' y='"+(H+20)+"' font-size='10' text-anchor='middle' fill='#6b7280'>"+parseD(days[i]).getDate()+'</text>'+
+      (v?"<text x='"+(x+bw/2)+"' y='"+(H-bh+1)+"' font-size='10' text-anchor='middle' fill='#2b2f36'>"+v+'</text>':'');
+  });
+  $('#chart').innerHTML=svg+'</svg>';
+}
+function symSeries(days){
+  var used=[];
+  var series={};
+  SYMS.forEach(function(s){series[s]=days.map(function(d){return dayStats(d).sym[s]||0})});
+  SYMS.forEach(function(s){if(series[s].some(function(v){return v>0}))used.push(s)});
+  return {used:used,series:series};
+}
+function renderSymChart(days){
+  if(!days.length){$('#symLegend').innerHTML='';$('#symChart').innerHTML='<p class="note">この月の記録はまだありません。</p>';$('#symComment').innerHTML='';return}
+  var S=symSeries(days);
+  if(!S.used.length){$('#symLegend').innerHTML='';$('#symChart').innerHTML='<p class="note">この月は、記録された症状がありません。</p>';$('#symComment').innerHTML='';return}
+  $('#symLegend').innerHTML=S.used.map(function(s){
+    var c=SYMC[SYMS.indexOf(s)%SYMC.length];
+    return '<button data-sym="'+esc(s)+'" class="'+(symOff[s]?'off':'')+'"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c+';margin-right:6px"></span>'+esc(s)+'</button>';
+  }).join('');
+  var shown=S.used.filter(function(s){return !symOff[s]});
+  var max=1;
+  shown.forEach(function(s){S.series[s].forEach(function(v){if(v>max)max=v})});
+  var W=Math.max(320,days.length*28+40),H=170;
+  var px=function(i){return 34+(days.length>1?(i*(W-48)/(days.length-1)):0)};
+  var py=function(v){return H-(v/max)*H+5};
+  var svg="<svg class='chart' viewBox='0 0 "+W+' '+(H+30)+"' role='img' aria-label='症状別の推移'>";
+  var step=Math.max(1,Math.ceil(max/4));
+  for(var g=0;g<=max;g+=step){var yy=py(g);svg+="<line x1='30' x2='"+W+"' y1='"+yy+"' y2='"+yy+"' stroke='#e5dfd2'/><text x='24' y='"+(yy+4)+"' font-size='10' text-anchor='end' fill='#6b7280'>"+g+'</text>'}
+  days.forEach(function(d,i){if(days.length<=20||i%2===0)svg+="<text x='"+px(i)+"' y='"+(H+20)+"' font-size='10' text-anchor='middle' fill='#6b7280'>"+parseD(d).getDate()+'</text>'});
+  shown.forEach(function(s){
+    var c=SYMC[SYMS.indexOf(s)%SYMC.length];
+    var pts=S.series[s].map(function(v,i){return px(i)+','+py(v)}).join(' ');
+    svg+="<polyline fill='none' stroke='"+c+"' stroke-width='2' stroke-linejoin='round' points='"+pts+"'/>";
+    S.series[s].forEach(function(v,i){if(v)svg+="<circle cx='"+px(i)+"' cy='"+py(v)+"' r='3' fill='"+c+"'><title>"+esc(s)+' '+shortD(days[i])+' '+v+'名</title></circle>'});
+  });
+  $('#symChart').innerHTML=svg+'</svg>';
+  $('#symComment').innerHTML=symComment();
+}
+$('#symLegend').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-sym]');if(!b)return;
+  var s=b.dataset.sym;symOff[s]=!symOff[s];renderMonth();
+});
+function symComment(){
+  var all=schoolDays();
+  var last=all.slice(-7);
+  if(last.length<3)return '';
+  var lines=[];
+  SYMS.forEach(function(s){
+    var v=last.map(function(d){return dayStats(d).sym[s]||0});
+    var end=v[v.length-1];
+    if(end<2)return;
+    var zero=-1;for(var i=0;i<v.length;i++)if(v[i]===0)zero=i;
+    if(zero<0||zero===v.length-1)return;
+    if(end-0<2)return;
+    lines.push('「'+s+'」は'+shortD(last[zero+1])+'から増えはじめ、'+(v.length-1-zero)+'授業日で 0→'+end+'名。');
+  });
+  if(!lines.length)return '';
+  return '<div class="alert y">'+lines.slice(0,2).map(esc).join('<br>')+'</div>';
+}
+$('#prMonth').onclick=function(){
+  var days=schoolDays(curMonth);
+  if(!days.length){toast('この月の記録がありません');return}
+  var MK=DB.fmt.marks,cols=DB.fmt.cols;
+  var c=Roster.get(DB.currentCid);
+  var h='<h1>'+$('#mLabel').textContent+' 出欠・健康観察 一覧（'+esc(c?c.name:'')+'／授業日 '+days.length+'日）</h1>'+
+    '<p>※ 学校の公式な出席簿ではありません。正式な様式に転記してください。</p><table><tr><th class="nm">名前</th>'+
+    days.map(function(d){return '<th>'+parseD(d).getDate()+'</th>'}).join('')+cols.map(function(x){return '<th>'+esc(x)+'</th>'}).join('')+'</tr>';
+  kids().forEach(function(k){
+    var cc=countKid(k.id,days);
+    h+='<tr><td class="nm">'+(k.no||'')+'. '+esc(k.name)+'</td>'+days.map(function(d){var r=rec(d,k.id);return '<td>'+((r&&r.st)?esc(MK[r.st]||''):'')+'</td>'}).join('')+
+      cols.map(function(x){return '<td>'+cc[COLKEY[x]]+'</td>'}).join('')+'</tr>';
+  });
+  h+='</table><p>記号：'+cols.map(function(x){return esc(MK[COLKEY[x]])+' '+esc(x)}).join('　')+'</p>';
+  $('#printArea').innerHTML=h;window.print();
+};
+$('#csv').onclick=function(){
+  var rows=[['日付','番号','名前','出欠','理由','症状','メモ']];
+  schoolDays().forEach(function(d){
+    kids().forEach(function(k){var r=rec(d,k.id);if(r)rows.push([d,k.no||'',k.name,STN[r.st||''],r.reason,(r.sym||[]).join('・'),r.memo])});
+  });
+  download('健康観察Pro_'+ymd(new Date())+'.csv',toCSV(rows),'text/csv');
+};
+
+/* ---------- ③ 型判定 ---------- */
+function kataOf(sid){
+  var all=fyDays();
+  var out=[];
+  if(!all.length)return out;
+  var stOf=function(d){var r=rec(d,sid);return (r&&r.st)||''};
+  var cont=0;
+  for(var i=all.length-1;i>=0;i--){if(stOf(all[i])==='abs')cont++;else break}
+  if(cont>=DB.th.cont)out.push({lv:'r',t:'連続型',d:'直近'+cont+'授業日連続。病気の可能性。家庭への連絡を。'});
+  var last14=all.slice(-14);
+  var absN=0,run=0,maxRun=0;
+  last14.forEach(function(d){if(stOf(d)==='abs'){absN++;run++;if(run>maxRun)maxRun=run}else run=0});
+  if(absN>=3&&maxRun<=2)out.push({lv:'y',t:'飛び石型',d:'直近'+last14.length+'授業日で'+absN+'日。間隔が空いています。'});
+  var absDays=all.filter(function(d){return stOf(d)==='abs'}).slice(-8);
+  if(absDays.length>=5){
+    var wd={};absDays.forEach(function(d){var w=parseD(d).getDay();wd[w]=(wd[w]||0)+1});
+    var topw=-1,topn=0;Object.keys(wd).forEach(function(w){if(wd[w]>topn){topn=wd[w];topw=+w}});
+    if(topn>=5)out.push({lv:'y',t:'曜日かたより型',d:'直近'+absDays.length+'回の欠席のうち'+topn+'回が'+'日月火水木金土'[topw]+'曜。'});
+  }
+  var last10=all.slice(-10);
+  var lateN=last10.filter(function(d){return stOf(d)==='late'}).length;
+  var hasAbs=last10.some(function(d){return stOf(d)==='abs'});
+  if(lateN>=3&&hasAbs)out.push({lv:'y',t:'遅刻先行型',d:'直近'+last10.length+'授業日で遅刻'+lateN+'回、欠席もあります。'});
+  return out;
+}
+function renderKata(){
+  var ks=kids();
+  var any=false,h='';
+  ks.forEach(function(k){
+    var ka=kataOf(k.id);
+    var cares=(cur().cares[k.id]||[]);
+    if(!ka.length&&!cares.length)return;
+    any=true;
+    h+='<div class="kata"><b>'+esc(k.name)+'</b>　'+ka.map(function(x){return '<span class="t '+x.lv+'">［'+esc(x.t)+'］</span><span class="note">'+esc(x.d)+'</span>'}).join('<br>')+
+      (cares.length?'<div class="note" style="margin-top:6px">気にかけた記録 '+cares.length+'件（最新 '+esc(cares[cares.length-1].d)+'）</div>':'')+
+      '<div class="row" style="margin-top:6px"><button class="btn s" data-care="'+esc(k.id)+'">気にかけた記録</button></div></div>';
+  });
+  $('#kataList').innerHTML=any?h:'<p class="note">いまのところ、型がついた子はいません。</p>';
+}
+$('#kataList').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-care]');if(!b)return;openCare(b.dataset.care);
+});
+function openCare(sid){
+  careSid=sid;
+  $('#careName').textContent=Roster.nameOf(DB.currentCid,sid)+' ／ 気にかけた記録';
+  $('#careDate').value=ymd(new Date());$('#careText').value='';
+  drawCare();$('#careModal').classList.add('on');
+}
+function drawCare(){
+  var L=cur().cares[careSid]||[];
+  $('#careList').innerHTML=L.length?L.slice().sort(function(a,b){return a.d<b.d?1:-1}).map(function(x,i){
+    return '<div><span>'+esc(x.d)+'　'+esc(x.text)+'</span><button class="btn s d" data-rmcare="'+esc(x.d)+'|'+esc(x.text)+'">消す</button></div>';
+  }).join(''):'<p class="note">まだ記録はありません。</p>';
+}
+$('#careClose').onclick=function(){$('#careModal').classList.remove('on');careSid=null};
+$('#careModal').addEventListener('click',function(e){if(e.target===this){$('#careModal').classList.remove('on');careSid=null}});
+$('#careAdd').onclick=function(){
+  if(guard())return;
+  var t=$('#careText').value.trim();if(!t||!careSid){toast('ひとこと書いてください');return}
+  if(!cur().cares[careSid])cur().cares[careSid]=[];
+  cur().cares[careSid].push({d:$('#careDate').value||ymd(new Date()),text:t});
+  $('#careText').value='';save();drawCare();renderKata();
+};
+$('#careList').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-rmcare]');if(!b||!careSid)return;
+  if(guard())return;
+  var p=b.dataset.rmcare.split('|');
+  cur().cares[careSid]=(cur().cares[careSid]||[]).filter(function(x){return !(x.d===p[0]&&x.text===p.slice(1).join('|'))});
+  save();drawCare();renderKata();
+});
+function alerts(){
+  var out=[];var all=fyDays();if(!all.length)return out;
+  var last=all[all.length-1];
+  var mDays=schoolDays(last.slice(0,7));
+  kids().forEach(function(k){
+    var cont=0;for(var i=all.length-1;i>=0;i--){var r=rec(all[i],k.id);if(r&&r.st==='abs')cont++;else break}
+    var yc=countKid(k.id,all).abs, mc=countKid(k.id,mDays).abs;
+    if(cont>=DB.th.cont)out.push({lv:'r',n:k.name,t:'連続 '+cont+'日 欠席中（'+lab(all[all.length-cont])+'〜）。家庭への連絡・状況の確認を。'});
+    if(yc>=DB.th.y2)out.push({lv:'r',n:k.name,t:'年度の欠席が '+yc+'日（'+DB.th.y2+'日以上）。管理職・関係者と情報共有を。'});
+    else if(yc>=DB.th.y1)out.push({lv:'y',n:k.name,t:'年度の欠席が '+yc+'日（'+DB.th.y1+'日以上）。'});
+    if(mc>=DB.th.month)out.push({lv:'y',n:k.name,t:(+last.slice(5,7))+'月の欠席が '+mc+'日。'});
+  });
+  return out;
+}
+function renderAlerts(){
+  var a=alerts();
+  $('#alerts').innerHTML=a.length?a.map(function(x){return '<div class="alert '+x.lv+'"><b>'+esc(x.n)+'</b>　'+esc(x.t)+'</div>'}).join(''):'<p class="note">いまのところ、基準をこえている子はいません。</p>';
+  var n=a.filter(function(x){return x.lv==='r'}).length;
+  var b=$('#badge');b.style.display=n?'':'none';b.textContent=n;
+}
+
+/* ---------- ④ 学年ビュー ---------- */
+function renderGrade(){
+  var d=$('#gDate').value||curD;
+  var cs=Roster.classesOf(DB.currentFY);
+  var syms={};
+  cs.forEach(function(c){var s=dayStats(d,c.id);Object.keys(s.sym).forEach(function(k){syms[k]=1})});
+  var sk=Object.keys(syms);
+  var h='<thead><tr><th class="l">クラス</th><th>在籍</th><th>欠席</th><th>出停・忌引</th><th>欠席率</th>'+sk.map(function(k){return '<th>'+esc(k)+'</th>'}).join('')+'</tr></thead><tbody>';
+  var tot={n:0,abs:0,sa:0},symTot={};
+  cs.forEach(function(c){
+    var s=dayStats(d,c.id);
+    tot.n+=s.total;tot.abs+=s.abs;tot.sa+=s.stop+s.mourn;
+    sk.forEach(function(k){symTot[k]=(symTot[k]||0)+(s.sym[k]||0)});
+    h+='<tr><td class="l">'+esc(c.name)+(c.id===DB.currentCid?'（表示中）':'')+'</td><td>'+s.total+'</td><td'+(s.rate>=DB.th.rate?' style="color:var(--ng);font-weight:700"':'')+'>'+s.abs+'</td><td>'+(s.stop+s.mourn)+'</td><td'+(s.rate>=DB.th.rate?' style="color:var(--ng);font-weight:700"':'')+'>'+s.rate+'%</td>'+
+      sk.map(function(k){return '<td>'+(s.sym[k]||0)+'</td>'}).join('')+'</tr>';
+  });
+  var rate=tot.n?Math.round((tot.abs+tot.sa)/tot.n*1000)/10:0;
+  h+='</tbody><tfoot><tr><th class="l">学年</th><th>'+tot.n+'</th><th>'+tot.abs+'</th><th>'+tot.sa+'</th><th>'+rate+'%</th>'+sk.map(function(k){return '<th>'+(symTot[k]||0)+'</th>'}).join('')+'</tr></tfoot>';
+  $('#gradeTbl').innerHTML=h;
+}
+$('#gDate').onchange=renderGrade;
+
+/* ---------- ⑥ 出席簿・引き継ぎ ---------- */
+function bookDays(){return $('#bkRange').value==='fy'?fyDays():schoolDays(curMonth)}
+function renderBook(){
+  var days=bookDays();
+  var cols=DB.fmt.cols;
+  if(!days.length){$('#bkTbl').innerHTML='<tbody><tr><td style="padding:16px">この範囲に授業日の記録がありません。</td></tr></tbody>';return}
+  var h='<thead><tr><th class="l">名前</th><th>授業日数</th>'+cols.map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'<th>出席日数</th></tr></thead><tbody>';
+  kids().forEach(function(k){
+    var c=countKid(k.id,days);
+    var pres=days.length-c.abs-c.stop-c.mourn;
+    h+='<tr><td class="l">'+(k.no||'')+'. '+esc(k.name)+'</td><td>'+days.length+'</td>'+
+      cols.map(function(x){return '<td>'+c[COLKEY[x]]+'</td>'}).join('')+'<td>'+pres+'</td></tr>';
+  });
+  h+='</tbody>';
+  $('#bkTbl').innerHTML=h;
+}
+$('#bkRun').onclick=renderBook;
+$('#bkRange').onchange=renderBook;
+$('#bkPrint').onclick=function(){
+  var days=bookDays();if(!days.length){toast('この範囲に記録がありません');return}
+  renderBook();
+  var c=Roster.get(DB.currentCid);
+  var label=$('#bkRange').value==='fy'?(DB.currentFY+'年度'):$('#mLabel').textContent;
+  $('#printArea').innerHTML='<h1>出席簿への転記用（'+esc(c?c.name:'')+'／'+esc(label)+'）</h1>'+
+    '<p>授業日 '+days.length+'日　※ これは下書きです。正式な様式に転記し、そちらを正としてください。</p>'+
+    $('#bkTbl').outerHTML.replace(/class="g"/,'');
+  window.print();
+};
+function newYear(){
+  var y=Roster.curFY();
+  if(DB.currentFY>=y&&Roster.classesOf(y).length&&!confirm(y+'年度のクラスはすでにあります。もう一度、いまのクラスの名簿から新しいクラスを作りますか？'))return;
+  var src=Roster.classesOf(DB.currentFY);
+  if(!src.length){toast('引き継ぐクラスがありません');return}
+  var made=0;
+  src.forEach(function(c){
+    if(Roster.classesOf(y).filter(function(x){return x.name===c.name}).length)return;
+    var rc=Roster.addClass(y,c.name,c.students.map(function(s){return {id:s.id,no:s.no,name:s.name}}));
+    DB.byClass[rc.id]=blank();made++;
+  });
+  DB.currentFY=y;
+  var list=Roster.classesOf(y);
+  DB.currentCid=list.length?list[0].id:DB.currentCid;
+  if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();
+  save();renderAll();
+  toast(made?(made+'クラスを'+y+'年度に作りました（名簿は同じ児童IDで引き継ぎ）'):(y+'年度に切りかえました'));
+}
+$('#newYear').onclick=newYear;
+function handText(){
+  var c=Roster.get(DB.currentCid);
+  var days=fyDays();
+  var t='【'+DB.currentFY+'年度・出欠の概況】'+(c?c.name:'')+'\n';
+  if(!days.length)return t+'（記録がありません）\n';
+  var totalAbs=0;
+  kids().forEach(function(k){totalAbs+=countKid(k.id,days).abs});
+  t+='授業日数 '+days.length+'日／学級の延べ欠席 '+totalAbs+'日\n';
+  var months={};
+  days.forEach(function(d){var m=d.slice(0,7);if(!months[m])months[m]={d:0,a:0};months[m].d++;months[m].a+=dayStats(d).absAll});
+  var n=kids().length;
+  t+='欠席率の月別：'+Object.keys(months).sort().map(function(m){
+    var r=(n&&months[m].d)?Math.round(months[m].a/(n*months[m].d)*1000)/10:0;
+    return (+m.slice(5,7))+'月'+r+'%';
+  }).join(' ')+'\n';
+  var over=kids().filter(function(k){return countKid(k.id,days).abs>=DB.th.y1}).length;
+  t+='年間欠席'+DB.th.y1+'日以上：'+over+'名（個別の記録は別途）\n';
+  t+='\n※ 児童名・症状・メモは入っていません。引き継ぐべき個別の事情は、学校の正式な引き継ぎの場と様式で渡してください。\n';
+  return t;
+}
+$('#handRun').onclick=function(){$('#handOut').value=handText();toast('つくりました')};
+$('#handCopy').onclick=function(){if(!$('#handOut').value)$('#handOut').value=handText();copyText($('#handOut').value)};
+$('#expBtn').onclick=function(){
+  var payload={app:'mwpro_gyomu10_v1',data:DB,roster:Roster.all()};
+  download('健康観察Pro_'+ymd(new Date())+'.json',JSON.stringify(payload,null,1),'application/json');
+};
+$('#impFile').onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);
+      var d=(o&&o.data)?o.data:o;
+      if(!d||!d.byClass)throw 0;
+      var m=prompt('「置きかえ」＝1 ／「クラスとして追加」＝2 を入れてください','2');
+      if(m==='1'){
+        if(!confirm('いまのデータを、読みこんだ内容で置きかえます。よろしいですか？'))return;
+        if(o.roster){try{localStorage.setItem(Roster.KEY,JSON.stringify(o.roster))}catch(err){}Roster.reload()}
+        DB=normDB(d);save();renderAll();toast('置きかえました');
+      }else if(m==='2'){
+        var added=0;
+        Object.keys(d.byClass).forEach(function(cid){
+          var src=((o.roster&&o.roster.classes)||[]).filter(function(x){return x.id===cid})[0];
+          var fy=src?(Number(src.fy)||DB.currentFY):DB.currentFY;
+          var rc=Roster.addClass(fy,(src?src.name:'読みこみ')+'（読みこみ）',(src?src.students:[]).map(function(s){return {no:s.no,name:s.name}}));
+          var map={};
+          if(src)src.students.forEach(function(s,i){map[s.id]=rc.students[i]?rc.students[i].id:null});
+          var nc=normClass(JSON.parse(JSON.stringify(d.byClass[cid])));
+          var nd={};
+          Object.keys(nc.days).forEach(function(dd){
+            var recs={};
+            Object.keys(nc.days[dd].recs).forEach(function(sid){var ns=map[sid];if(ns)recs[ns]=nc.days[dd].recs[sid]});
+            nd[dd]={recs:recs,done:nc.days[dd].done};
+          });
+          var ncare={};
+          Object.keys(nc.cares).forEach(function(sid){var ns=map[sid];if(ns)ncare[ns]=nc.cares[sid]});
+          DB.byClass[rc.id]={days:nd,cares:ncare};added++;
+        });
+        save();renderAll();toast(added+'クラスを追加しました');
+      }
+    }catch(err){alert('ファイルを読めませんでした')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- 設定 ---------- */
+function renderHead(){
+  var ys={};Roster.all().classes.forEach(function(c){ys[c.fy]=1});ys[Roster.curFY()]=1;ys[DB.currentFY]=1;
+  var arr=Object.keys(ys).map(Number).sort(function(a,b){return b-a});
+  $('#fySel').innerHTML=arr.map(function(y){return '<option value="'+y+'"'+(y===DB.currentFY?' selected':'')+'>'+y+'年度</option>'}).join('');
+  var list=Roster.classesOf(DB.currentFY);
+  $('#clsSel').innerHTML=list.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===DB.currentCid?' selected':'')+'>'+esc(c.name)+'</option>'}).join('');
+  $('#roFlag').style.display=isRO()?'':'none';
+  var dv=$('#delFy').value;
+  $('#delFy').innerHTML=arr.map(function(y){return '<option value="'+y+'">'+y+'年度</option>'}).join('');
+  if(dv)$('#delFy').value=dv;
+}
+$('#fySel').onchange=function(){
+  var y=+this.value;DB.currentFY=y;
+  var list=Roster.classesOf(y);
+  if(!list.length)list=[Roster.addClass(y,'1組',[])];
+  DB.currentCid=list[0].id;if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();
+  var d=schoolDays();if(d.length){curD=d[d.length-1];curMonth=curD.slice(0,7);$('#date').value=curD}
+  save();renderAll();
+};
+$('#clsSel').onchange=function(){DB.currentCid=this.value;if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();save();renderAll()};
+$('#rosterSave').onclick=function(){
+  if(guard())return;
+  var list=Roster.parseLines($('#rosterTxt').value);
+  if(list.length>60&&!confirm(list.length+'人になります。よろしいですか？'))return;
+  Roster.setStudents(DB.currentCid,list);
+  $('#rosterMsg').textContent=list.length+'人を保存しました（Pro版で共通）';
+  save();renderAll();
+};
+$('#rosterCommon').onclick=function(){
+  var t='';try{t=localStorage.getItem('sensei25_names')||''}catch(e){}
+  if(!t.trim()){toast('共通名簿が見つかりません');return}
+  $('#rosterTxt').value=t;toast('読み込みました。「名簿を保存」を押してください');
+};
+$('#clsRename').onclick=function(){
+  if(guard())return;
+  var n=$('#clsName').value.trim();if(!n)return;
+  var rc=Roster.get(DB.currentCid);if(rc){rc.name=n;Roster.persist()}
+  save();renderAll();toast('名前を変えました');
+};
+$('#clsAdd').onclick=function(){
+  if(guard())return;
+  if(Roster.classesOf(DB.currentFY).length>=MAXCLS){toast('1つの年度に'+MAXCLS+'クラスまでです');return}
+  var n=prompt('新しいクラスの名前','2組');if(!n)return;
+  var rc=Roster.addClass(DB.currentFY,n.trim(),[]);
+  DB.byClass[rc.id]=blank();DB.currentCid=rc.id;save();renderAll();
+};
+$('#clsDel').onclick=function(){
+  if(guard())return;
+  if(Roster.classesOf(DB.currentFY).length<=1){toast('この年度の最後のクラスは消せません');return}
+  var rc=Roster.get(DB.currentCid);
+  if(!confirm('「'+(rc?rc.name:'')+'」の健康観察の記録を消します。名簿もPro版全体から消えます。よろしいですか？'))return;
+  if(!confirm('本当に消しますか？（元に戻せません。先にJSONで書き出すことをおすすめします）'))return;
+  var id=DB.currentCid;
+  delete DB.byClass[id];Roster.removeClass(id);
+  DB.currentCid=Roster.classesOf(DB.currentFY)[0].id;
+  if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();
+  save();renderAll();
+};
+function renderClsList(){
+  var list=Roster.classesOf(DB.currentFY);
+  $('#clsList').innerHTML='<table class="g"><tr><th class="l">クラス</th><th>人数</th><th>授業日</th></tr>'+list.map(function(c){
+    var b=DB.byClass[c.id];
+    return '<tr'+(c.id===DB.currentCid?' style="font-weight:700"':'')+'><td class="l">'+esc(c.name)+'</td><td>'+c.students.length+'人</td><td>'+(b?Object.keys(b.days).length:0)+'日</td></tr>';
+  }).join('')+'</table>';
+  var rc=Roster.get(DB.currentCid);
+  $('#clsName').value=rc?rc.name:'';
+}
+[['thCont','cont'],['thMonth','month'],['thYear1','y1'],['thYear2','y2'],['thRate','rate'],['thDelta','delta'],['thDeltaDays','deltaDays']].forEach(function(p){
+  var el=$('#'+p[0]);
+  el.onchange=function(){DB.th[p[1]]=Math.max(1,parseInt(el.value,10)||1);save();renderAll()};
+});
+function renderFmt(){
+  $('#markBox').innerHTML=COLDEF.map(function(c){
+    return '<label class="f">'+esc(c)+'の記号<input data-mk="'+COLKEY[c]+'" value="'+esc(DB.fmt.marks[COLKEY[c]])+'" style="width:90px"></label>';
+  }).join('');
+  $('#colsInput').value=DB.fmt.cols.join(',');
+}
+$('#fmtSave').onclick=function(){
+  var m={};
+  Array.prototype.forEach.call($('#markBox').querySelectorAll('input'),function(i){m[i.dataset.mk]=i.value.slice(0,3)||DEFMARK[i.dataset.mk]});
+  DB.fmt.marks=m;
+  var cols=$('#colsInput').value.split(/[,、，]/).map(function(s){return s.trim()}).filter(function(s){return COLDEF.indexOf(s)>=0});
+  DB.fmt.cols=cols.length?cols:COLDEF.slice();
+  save();renderAll();toast('様式を保存しました');
+};
+$('#fmtReset').onclick=function(){
+  DB.fmt={marks:JSON.parse(JSON.stringify(DEFMARK)),cols:COLDEF.slice()};save();renderAll();toast('もどしました');
+};
+$('#delYear').onclick=function(){
+  var y=+$('#delFy').value||DB.currentFY;
+  if(!confirm(y+'年度の健康観察の記録をすべて削除します。（名簿は残ります）よろしいですか？'))return;
+  if(!confirm('本当に削除しますか？　元に戻せません。先にJSONで書き出しましたか？'))return;
+  Roster.classesOf(y).forEach(function(c){DB.byClass[c.id]=blank()});
+  save();renderAll();toast(y+'年度のデータを削除しました');
+};
+
+/* ---------- タブ ---------- */
+$('#tabs').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id==='p-'+b.dataset.t)});
+  renderAll();
+});
+
+function renderAll(){
+  renderHead();renderMigrate();
+  renderToday();renderMonth();renderKata();renderAlerts();
+  if(!$('#gDate').value)$('#gDate').value=curD;
+  renderGrade();renderBook();renderClsList();renderFmt();
+  $('#rosterTxt').value=kids().map(function(s){return (s.no||'')+' '+s.name}).join('\n');
+  $('#thCont').value=DB.th.cont;$('#thMonth').value=DB.th.month;$('#thYear1').value=DB.th.y1;
+  $('#thYear2').value=DB.th.y2;$('#thRate').value=DB.th.rate;$('#thDelta').value=DB.th.delta;$('#thDeltaDays').value=DB.th.deltaDays;
+  var ro=isRO();
+  ['#confirmDay','#unDay','#rosterSave','#clsRename','#clsAdd','#clsDel','#careAdd'].forEach(function(s){$(s).disabled=ro});
+}
+function askNewYear(){
+  var y=Roster.curFY();
+  if(DB.newYearAsked===y)return;
+  DB.newYearAsked=y;
+  if(Roster.classesOf(y).length){save();return}
+  if(confirm('新しい年度（'+y+'年度）を始めますか？\n「はい」で、いまのクラスの名簿を引き継いだクラスを作ります。前の年度の記録は読み取り専用で残ります。'))newYear();
+  save();
+}
+load();
+save();  /* 初回（＝引き継ぎ直後）にすぐ書きこむ。無料版から読み直さないため */
+askNewYear();
+renderAll();
+if(!kids().length)$('#tabs [data-t="set"]').click();
+})();
+</script>
+<div class="note-link" style="max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-size:13px;line-height:1.8;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600">note「教室ノオト」</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在校時間ログ Pro</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b;--warn:#a5771f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:40}
+header a.back{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.16);font-size:.85rem;white-space:nowrap}
+header h1{font-size:1.1rem;margin:0}
+.pro-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--navy);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.hsel{font:inherit;font-size:.9rem;font-weight:700;padding:6px 8px;border-radius:10px;border:none;background:#fff;color:var(--navy);min-height:0}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.big{min-height:72px;font-size:1.3rem;flex:1;min-width:140px}
+button.go{background:var(--ok);color:#fff;border-color:var(--ok)}
+button.bye{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.sm{min-height:34px;padding:4px 10px;font-size:.85rem}
+button.del{color:var(--danger)}
+input,select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+textarea{width:100%;min-height:120px;padding:8px 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.hidden{display:none}
+.caution{background:#fdf6e3;border:1.5px solid #ecdca8;border-radius:12px;padding:10px 14px;font-size:.85rem;margin-bottom:12px}
+.clock{font-size:2.6rem;font-weight:800;color:var(--navy);text-align:center;letter-spacing:.05em}
+.today{text-align:center;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--bg);border-radius:12px;padding:10px 14px}
+.kpi .v{font-size:1.6rem;font-weight:800;color:var(--navy)}
+.kpi.warn .v{color:var(--danger)}
+.kpi .dn{color:var(--ok);font-weight:700}
+.kpi .up{color:var(--danger);font-weight:700}
+.meter{height:14px;background:#e9e2d3;border-radius:7px;overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:var(--navy)}
+.meter i.over{background:var(--danger)}
+.band{display:flex;height:26px;border-radius:8px;overflow:hidden;margin:8px 0;background:#eee}
+.band i{display:block;height:100%}
+.mixlist{margin:6px 0 0}
+.mixrow{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mixrow .sw{width:14px;height:14px;border-radius:4px;flex:0 0 auto}
+.mixrow .nm{flex:1;min-width:120px}
+.mixrow .tm{font-weight:700}
+.mixrow .pc{color:var(--sub);width:4em;text-align:right}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:680px}
+th,td{border-bottom:1px solid var(--line);padding:4px;text-align:center;font-size:.9rem}
+th{background:#f3eee3}
+td input[type=time]{min-height:38px;width:110px}
+td input[type=number]{min-height:38px;width:70px}
+tr.we td:first-child{color:var(--danger)}
+tr.off{background:#faf7f0}
+.ot{font-weight:700}
+.ot.hi{color:var(--danger)}
+.tagcell{font-size:.78rem;min-height:30px;padding:2px 8px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+svg text{font-size:10px;fill:#666}
+.tagsel{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tagsel button{position:relative;min-height:48px}
+.tagsel button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tagsel button .ord{position:absolute;right:4px;top:2px;font-size:.7rem}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:90;padding:14px}
+.mbox{background:#fff;border-radius:16px;padding:18px;max-width:560px;width:100%;max-height:88vh;overflow:auto}
+.mbox h2{margin:0 0 4px;font-size:1.05rem;color:var(--navy)}
+.busy{display:grid;grid-template-columns:3.2em repeat(5,1fr);gap:3px;font-size:.78rem;align-items:center}
+.busy .mh{font-weight:700;color:var(--navy)}
+.busy i{display:block;border-radius:6px;padding:3px 0;text-align:center;background:#f1ede4;font-style:normal;color:var(--sub)}
+.busy i.hot{background:#f7d9d3;color:var(--danger);font-weight:700}
+.busy i.none{background:#f8f6f1;color:#c9c3b6}
+.tagedit{display:flex;gap:6px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.tagedit input{flex:1;min-width:150px}
+.migrate-box{background:#eef4fa;border:1.5px solid #c8dcee;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:4px;border:none;background:none;font-size:1rem;color:var(--sub);cursor:pointer;min-height:0;padding:2px 6px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,.noprint,.tabs,.migrate-box{display:none!important}body{background:#fff}main{padding:0}.card{box-shadow:none;padding:0;margin-bottom:8px}td input{border:none;appearance:none;-webkit-appearance:none}table{min-width:0}th,td{font-size:9pt;padding:1px}.hidden{display:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>在校時間ログ<span class="pro-badge">PRO</span></h1>
+  <select id="fySel" class="hsel" aria-label="年度"></select>
+</header>
+<main>
+<div id="migrateBox" class="migrate-box" style="display:none"></div>
+<div class="caution">⚠ このアプリは自分のための手控えです。<b>勤務校の公式な勤務時間記録の代わりにはなりません。校内のルールが優先です。</b>時間外を短く見せるための記録にはしないでください。</div>
+
+<div class="tabs noprint">
+  <button data-tab="month" class="on">今日と今月</button>
+  <button data-tab="pat">曜日・週のパターン</button>
+  <button data-tab="fy">年度で見る</button>
+  <button data-tab="sum">まとめをコピー</button>
+  <button data-tab="set">設定・データ</button>
+</div>
+
+<section id="tab-month">
+  <div class="card noprint">
+    <div class="clock" id="clock">--:--</div>
+    <div class="today" id="todayInfo"></div>
+    <div class="row"><button class="big go" id="inBtn">出勤</button><button class="big bye" id="outBtn">退勤</button></div>
+    <p class="note" style="text-align:center">押した時刻がそのまま記録されます。退勤のあと「今日は何に使ったか」を3つまでタップで残せます（15秒）。</p>
+  </div>
+
+  <div class="card">
+    <div class="row noprint"><button id="prevM">◀</button><h2 id="mTitle" style="margin:0"></h2><button id="nextM">▶</button><button id="thisM">今月</button><button onclick="window.print()">印刷</button><button id="csvBtn">CSV</button></div>
+    <h2 class="printonly" id="mTitle2" style="display:none"></h2>
+    <div class="kpis" style="margin-top:10px" id="kpis"></div>
+    <div style="margin-top:12px" id="chart"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="mixTitle">何に使ったか（今月の内訳）</h2>
+    <div id="mix"></div>
+  </div>
+
+  <div class="card">
+    <h2>日ごとの記録</h2>
+    <div class="scroll"><table id="tbl"></table></div>
+    <p class="note">「休」にチェックした日（土日祝・休暇）は、所定勤務時間を0として在校時間をすべて時間外に数えます。持ち帰りは参考値（在校時間には入れません）。内訳は「＋」から後からでも足せます。</p>
+  </div>
+</section>
+
+<section id="tab-pat" class="hidden">
+  <div class="card">
+    <div class="row"><h2 style="margin:0">曜日ごとの平均（時間外）</h2><select id="patRange"><option value="fy">この年度</option><option value="m">この月</option></select></div>
+    <div id="dowChart"></div>
+    <p class="note" id="dowNote"></p>
+  </div>
+  <div class="card">
+    <h2>週ごとの推移（月曜始まり・この月）</h2>
+    <div id="weekChart"></div>
+    <p class="note">「月の後半に寄っている」「第3週が毎回跳ねる」といった自分の型が見えます。</p>
+  </div>
+</section>
+
+<section id="tab-fy" class="hidden">
+  <div class="card">
+    <h2 id="fyTitle">年度の推移</h2>
+    <div id="fyChart"></div>
+    <div id="fyLegend" class="note"></div>
+  </div>
+  <div class="card">
+    <h2>去年の同じ月とくらべる</h2>
+    <div class="scroll"><div id="fyTable"></div></div>
+    <p class="note">減っていなくても構いません。<b>同じだった、と知ることも情報です。</b>比べる相手は去年の自分だけで足ります。</p>
+  </div>
+  <div class="card">
+    <h2>繁忙期カレンダー（過去の年度から）</h2>
+    <div id="busy"></div>
+    <p class="note" id="busyNote"></p>
+    <div class="row noprint"><button id="busyCopy">来年度への申し送りをコピー</button></div>
+  </div>
+</section>
+
+<section id="tab-sum" class="hidden">
+  <div class="card">
+    <h2>まとめのテキスト</h2>
+    <div class="row noprint"><button id="sumM">今月のまとめ</button><button id="sumY">年度のまとめ</button><button class="pri" id="sumCopy">コピー</button></div>
+    <textarea id="sumOut" placeholder="ボタンを押すと、面談や学年での相談にそのまま使える文章が出ます"></textarea>
+    <p class="note">面談でも学年での相談でも、これがあると主観の話をしなくて済みます。人と比べるためではなく、去年の自分と比べるために使ってください。</p>
+  </div>
+</section>
+
+<section id="tab-set" class="hidden">
+  <div class="card">
+    <h2 id="setTitle">勤務の設定（年度ごと）</h2>
+    <div class="row">
+      <label>学校名 <input id="sName" style="width:160px" placeholder="（任意）"></label>
+      <label>勤務開始 <input type="time" id="sStart"></label>
+      <label>勤務終了 <input type="time" id="sEnd"></label>
+      <label>休憩（分） <input type="number" id="sBreak" style="width:80px"></label>
+      <label>月の目安（時間） <input type="number" id="sLimit" style="width:80px"></label>
+      <button id="saveSet">保存</button>
+    </div>
+    <p class="note">「公立学校の教師の勤務時間の上限に関する指針」の目安は、時間外在校等時間 月45時間・年360時間です。設定は年度ごとに持てるので、異動しても過去の年度の計算がずれません。</p>
+  </div>
+  <div class="card">
+    <h2>内訳の項目（タグ）</h2>
+    <div id="tagEdit"></div>
+    <div class="row"><button id="addTag">＋ 項目を足す</button></div>
+    <p class="note">名前を書きかえると、これまでの記録の中の項目名も一緒に書きかわります。迷ったら「その他」で構いません。正確さより、続くことのほうが大事です。</p>
+  </div>
+  <div class="card">
+    <h2>書き出し・読みこみ</h2>
+    <div class="row">
+      <button id="expBtn">JSONで書き出す（全年度）</button>
+      <label class="row note"><span>読みこむ</span><input type="file" id="impFile" accept=".json,application/json"></label>
+      <button id="csvBtn2">今月のCSV</button>
+    </div>
+    <p class="note">読みこみのときに「置きかえ」か「年度単位で追加」を選べます。<b>無料版のデータは消しません。</b></p>
+  </div>
+</section>
+</main>
+
+<div id="modal" class="modal" style="display:none">
+  <div class="mbox">
+    <h2 id="mdTitle">今日の時間外</h2>
+    <p class="note" id="mdOt"></p>
+    <p style="margin:6px 0 0">何に使いましたか？（多い順に3つまで）</p>
+    <div class="tagsel" id="mdTags"></div>
+    <p class="note" id="mdPick"></p>
+    <div class="row" style="justify-content:flex-end">
+      <button id="mdLater">あとで</button>
+      <button class="pri" id="mdSave">保存する</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+"use strict";
+(function(){
+var FK='mw_gyomu_16_';       /* 無料版（読むだけ・消さない） */
+var PK='mwpro_gyomu16_v1';   /* Pro版 */
+var DEF_TAGS=['丸つけ・点検','授業準備','所見・事務','会議・打ち合わせ','行事の準備','保護者対応','分掌・校務','部活・クラブ','その他'];
+var DEF_SET={start:'08:15',end:'16:45',brk:45,limit:45,schoolName:''};
+var COL=['#1f3a5f','#c2703d','#2e7d5b','#a5771f','#6b7fa3','#b83b2e','#7a6a9b','#4f8a8b','#9c6644','#8d99ae'];
+var WD='日月火水木金土';
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var pad=function(n){return String(n).padStart(2,'0')};
+var ymd=function(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+var hm=function(d){return pad(d.getHours())+':'+pad(d.getMinutes())};
+var toMin=function(s){if(!s)return null;var p=String(s).split(':');return (+p[0])*60+(+p[1])};
+var fmtH=function(m){if(m==null||isNaN(m))return '－';var s=m<0?'-':'';m=Math.abs(Math.round(m));return s+Math.floor(m/60)+':'+pad(m%60)};
+function toast(t){var el=$('toast');el.textContent=t;el.className='show';setTimeout(function(){el.className=''},2400)}
+function fyOfDate(ds){var y=+String(ds).slice(0,4),m=+String(ds).slice(5,7);return String(m>=4?y:y-1)}
+function isWeekend(ds){var p=String(ds).split('-').map(Number);var w=new Date(p[0],p[1]-1,p[2]).getDay();return w===0||w===6}
+function dow(ds){var p=String(ds).split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).getDay()}
+
+/* ---------- データ ---------- */
+var DB=null,view=new Date(),migrateInfo=null,tab='month',mdDate=null,mdSel=[],sumMode='m';
+view.setDate(1);
+
+function normSet(s){s=s&&typeof s==='object'?s:{};return {start:s.start||DEF_SET.start,end:s.end||DEF_SET.end,brk:typeof s.brk==='number'?s.brk:(+s.brk||0),limit:+s.limit||45,schoolName:s.schoolName||''}}
+function normDay(d){
+  d=d&&typeof d==='object'?d:{};
+  return {in:d.in||'',out:d.out||'',off:!!d.off,home:+d.home||0,tags:(Array.isArray(d.tags)?d.tags:[]).slice(0,3).map(String)};
+}
+function normYear(y){
+  y=y&&typeof y==='object'?y:{};
+  var days={},src=y.days&&typeof y.days==='object'?y.days:{};
+  Object.keys(src).forEach(function(k){if(/^\d{4}-\d{2}-\d{2}$/.test(k))days[k]=normDay(src[k])});
+  return {set:normSet(y.set),days:days};
+}
+function normDB(d){
+  d=d&&typeof d==='object'?d:{};
+  var years={},src=d.years&&typeof d.years==='object'?d.years:{};
+  Object.keys(src).forEach(function(k){if(/^\d{4}$/.test(k))years[k]=normYear(src[k])});
+  var tags=(Array.isArray(d.tags)&&d.tags.length?d.tags:DEF_TAGS).map(String);
+  return {v:1,currentFY:String(d.currentFY||fyOfDate(ymd(new Date()))),years:years,tags:tags};
+}
+function readJSON(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
+function save(){try{localStorage.setItem(PK,JSON.stringify(DB))}catch(e){toast('保存できませんでした（容量オーバーかもしれません）')}}
+
+function baseSet(fy){
+  if(DB.years[fy])return DB.years[fy].set;
+  var ks=Object.keys(DB.years).sort();
+  var prev=null;
+  ks.forEach(function(k){if(k<fy)prev=k});
+  if(!prev&&ks.length)prev=ks[ks.length-1];
+  return prev?DB.years[prev].set:DEF_SET;
+}
+function year(fy,create){
+  if(DB.years[fy])return DB.years[fy];
+  var y={set:normSet(JSON.parse(JSON.stringify(baseSet(fy)))),days:{}};
+  if(create)DB.years[fy]=y;
+  return y;
+}
+function setOf(fy){return year(fy,false).set}
+function daysOf(fy){return year(fy,false).days}
+function recOf(ds){var d=daysOf(fyOfDate(ds))[ds];return d?d:normDay({off:isWeekend(ds)})}
+function putRec(ds,r){year(fyOfDate(ds),true).days[ds]=r}
+function stdMin(fy){var s=setOf(fy);return toMin(s.end)-toMin(s.start)-s.brk}
+function calc(ds){
+  var r=recOf(ds),fy=fyOfDate(ds),s=setOf(fy);
+  var a=toMin(r.in),b=toMin(r.out);
+  if(a==null||b==null||b<=a)return {stay:null,ot:null,home:+r.home||0};
+  var stay=b-a;
+  if(!r.off&&stay>360)stay-=s.brk;
+  var ot=r.off?stay:stay-stdMin(fy);
+  return {stay:stay,ot:Math.max(0,ot),home:+r.home||0};
+}
+
+function load(){
+  var d=readJSON(PK);
+  if(!d||typeof d!=='object'||!d.years){
+    /* 初回起動：同じブラウザに無料版のデータがあれば年度ごとに振り分けて引き継ぐ */
+    var fset=normSet(readJSON(FK+'set')||DEF_SET);
+    var fdays=readJSON(FK+'days');
+    var years={},n=0,fys={};
+    if(fdays&&typeof fdays==='object'){
+      Object.keys(fdays).forEach(function(ds){
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(ds))return;
+        var fy=fyOfDate(ds);
+        if(!years[fy])years[fy]={set:normSet(JSON.parse(JSON.stringify(fset))),days:{}};
+        years[fy].days[ds]=normDay(fdays[ds]);
+        n++;fys[fy]=1;
+      });
+    }
+    if(n)migrateInfo={days:n,years:Object.keys(fys).sort()};
+    d={v:1,currentFY:fyOfDate(ymd(new Date())),years:years,tags:DEF_TAGS.slice()};
+  }
+  DB=normDB(d);
+  if(migrateInfo&&migrateInfo.years.length&&migrateInfo.years.indexOf(DB.currentFY)<0){
+    DB.currentFY=migrateInfo.years[migrateInfo.years.length-1];
+    view=new Date(+DB.currentFY,3,1);
+  }
+  if(!DB.years[DB.currentFY])year(DB.currentFY,true);
+}
+
+/* ---------- 期間ヘルパ ---------- */
+function monthDays(y,m){var n=new Date(y,m+1,0).getDate();var o=[];for(var i=1;i<=n;i++)o.push(y+'-'+pad(m+1)+'-'+pad(i));return o}
+function viewDays(){return monthDays(view.getFullYear(),view.getMonth())}
+function viewFY(){return fyOfDate(ymd(view))}
+function fyMonths(fy){var o=[];for(var i=0;i<12;i++){var m=(3+i)%12;var y=+fy+(m<3?1:0);o.push([y,m])}return o}
+function fyDays(fy){var o=[];fyMonths(fy).forEach(function(p){o=o.concat(monthDays(p[0],p[1]))});return o}
+function sumOt(list){var t=0;list.forEach(function(ds){var c=calc(ds);if(c.ot)t+=c.ot});return t}
+function fyTotalUpTo(fy,lastDs){
+  var t=0;
+  fyDays(fy).forEach(function(ds){if(lastDs&&ds>lastDs)return;var c=calc(ds);if(c.ot)t+=c.ot});
+  return t;
+}
+
+/* ---------- ② 内訳（重み 3:2:1） ---------- */
+function mixOf(list){
+  var out={},order=[];
+  list.forEach(function(ds){
+    var c=calc(ds);if(c.ot==null||c.ot<=0)return;
+    var tg=(recOf(ds).tags||[]).slice(0,3);
+    if(!tg.length){if(!(('未分類') in out)){out['未分類']=0;order.push('未分類')}out['未分類']+=c.ot;return}
+    var w=[3,2,1].slice(0,tg.length),sum=0;
+    w.forEach(function(x){sum+=x});
+    tg.forEach(function(t,i){if(!(t in out)){out[t]=0;order.push(t)}out[t]+=c.ot*w[i]/sum});
+  });
+  var arr=order.map(function(k){return {k:k,v:out[k]}}).sort(function(a,b){return b.v-a.v});
+  var tot=0;arr.forEach(function(x){tot+=x.v});
+  arr.forEach(function(x){x.p=tot?Math.round(x.v/tot*100):0});
+  return {rows:arr,total:tot};
+}
+function tagColor(k){
+  if(k==='未分類')return '#b9b3a8';
+  var i=DB.tags.indexOf(k);
+  return COL[(i<0?DB.tags.length:i)%COL.length];
+}
+function renderMix(){
+  $('mixTitle').textContent='何に使ったか（'+(view.getMonth()+1)+'月の内訳）';
+  var m=mixOf(viewDays());
+  if(!m.total){$('mix').innerHTML='<p class="note">まだ記録がありません。退勤ボタンを押したあと、項目をタップすると出てきます。</p>';return}
+  var band=m.rows.map(function(r){return '<i style="width:'+(r.v/m.total*100)+'%;background:'+tagColor(r.k)+'" title="'+esc(r.k)+'"></i>'}).join('');
+  var list=m.rows.map(function(r){
+    return '<div class="mixrow"><span class="sw" style="background:'+tagColor(r.k)+'"></span><span class="nm">'+esc(r.k)+'</span><span class="tm">'+fmtH(r.v)+'</span><span class="pc">'+r.p+'%</span></div>';
+  }).join('');
+  $('mix').innerHTML='<div class="band">'+band+'</div><div class="mixlist">'+list+'</div>'+
+    '<p class="note">いちばん上の項目を<b>一割</b>減らすとしたら、何をやめられますか。</p>';
+}
+
+/* ---------- 時計・今日 ---------- */
+function tick(){var d=new Date();$('clock').textContent=hm(d)+':'+pad(d.getSeconds())}
+setInterval(tick,1000);tick();
+function renderToday(){
+  var ds=ymd(new Date()),r=recOf(ds),c=calc(ds),d=new Date();
+  $('todayInfo').innerHTML=(d.getMonth()+1)+'月'+d.getDate()+'日（'+WD[d.getDay()]+'）　出勤 <b>'+esc(r.in||'－')+'</b>　退勤 <b>'+esc(r.out||'－')+'</b>'+
+    (c.ot!=null?'　時間外 <b>'+fmtH(c.ot)+'</b>':'')+
+    ((r.tags&&r.tags.length)?'　<span class="note">'+esc(r.tags.join('・'))+'</span>':'');
+}
+$('inBtn').onclick=function(){
+  var ds=ymd(new Date()),r=recOf(ds);
+  if(r.in&&!confirm('出勤は '+r.in+' で記録済みです。今の時刻で上書きしますか？'))return;
+  r.in=hm(new Date());putRec(ds,r);save();renderAll();
+};
+$('outBtn').onclick=function(){
+  var ds=ymd(new Date()),r=recOf(ds);
+  if(!r.in)r.in=setOf(fyOfDate(ds)).start;
+  if(r.out&&!confirm('退勤は '+r.out+' で記録済みです。今の時刻で上書きしますか？'))return;
+  r.out=hm(new Date());putRec(ds,r);save();renderAll();
+  openModal(ds);
+};
+
+/* ---------- ① 退勤時の内訳入力モーダル ---------- */
+function openModal(ds){
+  mdDate=ds;mdSel=(recOf(ds).tags||[]).slice(0,3);
+  var c=calc(ds),p=ds.split('-');
+  $('mdTitle').textContent=(+p[1])+'月'+(+p[2])+'日の時間外';
+  $('mdOt').textContent=(c.ot!=null?'今日の時間外 '+fmtH(c.ot)+'。':'時間が入っていません。')+' 15秒で終わります。迷ったら「その他」で構いません。';
+  $('modal').style.display='flex';
+  renderModal();
+}
+function renderModal(){
+  $('mdTags').innerHTML=DB.tags.map(function(t){
+    var i=mdSel.indexOf(t);
+    return '<button data-t="'+esc(t)+'" class="'+(i>=0?'on':'')+'">'+esc(t)+(i>=0?'<span class="ord">'+'①②③'[i]+'</span>':'')+'</button>';
+  }).join('');
+  $('mdPick').textContent=mdSel.length?('選んだ順：'+mdSel.join(' → ')+'（1つ目を重めに数えます）'):'タップするだけです。時間の配分までは聞きません。';
+}
+$('mdTags').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  var t=b.dataset.t,i=mdSel.indexOf(t);
+  if(i>=0)mdSel.splice(i,1);
+  else if(mdSel.length<3)mdSel.push(t);
+  else toast('3つまでです');
+  renderModal();
+});
+$('mdSave').onclick=function(){
+  if(!mdDate)return;
+  var r=recOf(mdDate);r.tags=mdSel.slice(0,3);putRec(mdDate,r);save();
+  $('modal').style.display='none';mdDate=null;renderAll();toast('記録しました');
+};
+$('mdLater').onclick=function(){$('modal').style.display='none';mdDate=null;renderAll()};
+$('modal').addEventListener('click',function(e){if(e.target===$('modal')){$('modal').style.display='none';mdDate=null;renderAll()}});
+
+/* ---------- 月 ---------- */
+function renderMonth(skipTable){
+  var title=view.getFullYear()+'年'+(view.getMonth()+1)+'月';
+  $('mTitle').textContent=title;$('mTitle2').textContent=title+' 在校時間';
+  var ds=viewDays(),td=ymd(new Date()),fy=viewFY(),s=setOf(fy);
+  var tot=0,stay=0,home=0,n=0,hiDays=0;
+  ds.forEach(function(d){var c=calc(d);if(c.ot!=null){tot+=c.ot;stay+=c.stay;n++;if(c.ot>=180)hiDays++}home+=c.home||0});
+  var remain=ds.filter(function(d){return d>td&&!recOf(d).off&&!isWeekend(d)}).length;
+  var avg=n?tot/n:0,proj=tot+avg*remain;
+  var lim=s.limit*60;
+  var fyt=fyTotalUpTo(fy,ds[ds.length-1]);
+  var pct=Math.min(100,lim?tot/lim*100:0);
+  /* ④ 去年の同じ月 */
+  var py=view.getFullYear()-1,lastTot=sumOt(monthDays(py,view.getMonth())),lastHas=hasData(monthDays(py,view.getMonth()));
+  var diff=tot-lastTot;
+  $('kpis').innerHTML=
+   '<div class="kpi '+(tot>lim?'warn':'')+'"><div class="note">今月の時間外</div><div class="v">'+fmtH(tot)+'</div><div class="meter"><i class="'+(tot>lim?'over':'')+'" style="width:'+pct+'%"></i></div><div class="note">目安 '+s.limit+'時間の '+(lim?Math.round(tot/lim*100):0)+'%</div></div>'+
+   '<div class="kpi '+(proj>lim?'warn':'')+'"><div class="note">このペースだと月末</div><div class="v">'+fmtH(proj)+'</div><div class="note">1日平均 '+fmtH(avg)+'（'+n+'日記録）</div></div>'+
+   '<div class="kpi"><div class="note">去年の同じ月</div><div class="v">'+(lastHas?fmtH(lastTot):'－')+'</div><div class="note">'+(lastHas?('今年 '+fmtH(tot)+'／<span class="'+(diff<0?'dn':'up')+'">'+(diff<0?'−':'＋')+fmtH(Math.abs(diff))+'</span>'):'記録がありません')+'</div></div>'+
+   '<div class="kpi"><div class="note">在校時間の合計</div><div class="v">'+fmtH(stay)+'</div><div class="note">3時間以上の時間外：'+hiDays+'日</div></div>'+
+   '<div class="kpi '+(fyt>360*60?'warn':'')+'"><div class="note">'+fy+'年度の累計（年360h）</div><div class="v">'+fmtH(fyt)+'</div><div class="meter"><i class="'+(fyt>360*60?'over':'')+'" style="width:'+Math.min(100,fyt/(360*60)*100)+'%"></i></div><div class="note">持ち帰り（今月）'+fmtH(home)+'</div></div>';
+  renderChart(ds);
+  renderMix();
+  if(skipTable)return;
+  $('tbl').innerHTML='<tr><th>日</th><th>休</th><th>出勤</th><th>退勤</th><th>在校</th><th>時間外</th><th>持ち帰り(分)</th><th>何に使ったか</th></tr>'+ds.map(function(d){
+    var r=recOf(d),c=calc(d),w=dow(d);
+    return '<tr class="'+(w===0||w===6?'we':'')+' '+(r.off?'off':'')+'" data-d="'+d+'"><td>'+(+d.slice(8))+'（'+WD[w]+'）</td>'+
+      '<td><input type="checkbox" data-f="off"'+(r.off?' checked':'')+' style="min-height:0;width:22px;height:22px"></td>'+
+      '<td><input type="time" data-f="in" value="'+esc(r.in)+'"></td><td><input type="time" data-f="out" value="'+esc(r.out)+'"></td>'+
+      '<td>'+(c.stay!=null?fmtH(c.stay):'')+'</td><td class="ot '+(c.ot>=180?'hi':'')+'">'+(c.ot!=null?fmtH(c.ot):'')+'</td>'+
+      '<td><input type="number" min="0" step="10" data-f="home" value="'+(r.home||'')+'"></td>'+
+      '<td><button class="sm tagcell" data-tag="'+d+'">'+(r.tags&&r.tags.length?esc(r.tags.join('・')):'＋')+'</button></td></tr>';
+  }).join('');
+}
+function hasData(list){for(var i=0;i<list.length;i++){var c=calc(list[i]);if(c.ot!=null)return true}return false}
+function renderChart(ds){
+  var W=Math.max(620,ds.length*24),H=190,pl=34,pb=22,ch=H-pb-10;
+  var vals=ds.map(function(d){return calc(d).ot||0});
+  var maxV=Math.max.apply(null,[240].concat(vals));
+  var bw=(W-pl-6)/ds.length;
+  var y=function(v){return 10+ch-(v/maxV)*ch};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="日ごとの時間外">';
+  for(var h=0;h<=maxV;h+=60){s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(h)+'" y2="'+y(h)+'" stroke="#eee"/><text x="'+(pl-4)+'" y="'+(y(h)+3)+'" text-anchor="end">'+(h/60)+'h</text>'}
+  var set=setOf(viewFY());
+  var wd=ds.filter(function(d){return !isWeekend(d)}).length||20;
+  var per=set.limit*60/wd;
+  s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(per)+'" y2="'+y(per)+'" stroke="#c2703d" stroke-dasharray="4 3"/><text x="'+(W-4)+'" y="'+(y(per)-3)+'" text-anchor="end" style="fill:#c2703d">目安 '+fmtH(per)+'/日</text>';
+  vals.forEach(function(v,i){
+    var x=pl+i*bw+2,dd=+ds[i].slice(8),w=dow(ds[i]);
+    if(v>0)s+='<rect x="'+x+'" y="'+y(v)+'" width="'+Math.max(2,bw-4)+'" height="'+(10+ch-y(v))+'" rx="3" fill="'+(v>=180?'#b83b2e':'#1f3a5f')+'"><title>'+dd+'日 '+fmtH(v)+'</title></rect>';
+    s+='<text x="'+(x+bw/2-2)+'" y="'+(H-6)+'" text-anchor="middle" style="'+(w===0||w===6?'fill:#b83b2e':'')+'">'+dd+'</text>';
+  });
+  s+='</svg>';
+  $('chart').innerHTML='<div class="scroll">'+s+'</div>';
+}
+$('tbl').addEventListener('change',function(e){
+  var el=e.target,tr=el.closest('tr');if(!tr||!el.dataset.f)return;
+  var d=tr.dataset.d,r=recOf(d),f=el.dataset.f;
+  r[f]=f==='off'?el.checked:(f==='home'?(+el.value||0):el.value);
+  putRec(d,r);
+  if(!r.in&&!r.out&&!r.home&&(!r.tags||!r.tags.length)&&r.off===isWeekend(d))delete daysOf(fyOfDate(d))[d];
+  save();
+  var c=calc(d),tds=tr.children;
+  tds[4].textContent=c.stay!=null?fmtH(c.stay):'';
+  tds[5].textContent=c.ot!=null?fmtH(c.ot):'';
+  tds[5].classList.toggle('hi',c.ot>=180);
+  tr.classList.toggle('off',!!r.off);
+  renderToday();renderMonth(true);
+});
+$('tbl').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-tag]');if(!b)return;
+  openModal(b.dataset.tag);
+});
+$('prevM').onclick=function(){view.setMonth(view.getMonth()-1);syncFY();renderAll()};
+$('nextM').onclick=function(){view.setMonth(view.getMonth()+1);syncFY();renderAll()};
+$('thisM').onclick=function(){view=new Date();view.setDate(1);syncFY();renderAll()};
+function syncFY(){DB.currentFY=viewFY();if(!DB.years[DB.currentFY])year(DB.currentFY,true);save()}
+
+/* ---------- ③ 曜日・週のパターン ---------- */
+function renderPat(){
+  var rng=$('patRange').value;
+  var list=rng==='m'?viewDays():fyDays(viewFY());
+  var sum=[0,0,0,0,0,0,0],cnt=[0,0,0,0,0,0,0];
+  list.forEach(function(ds){
+    var r=recOf(ds),c=calc(ds);
+    if(c.ot==null||r.off)return;
+    var w=dow(ds);sum[w]+=c.ot;cnt[w]++;
+  });
+  var avg=sum.map(function(v,i){return cnt[i]?v/cnt[i]:0});
+  var maxV=Math.max.apply(null,[60].concat(avg));
+  var W=620,H=170,pl=34,ch=H-32;
+  var y=function(v){return 10+ch-(v/maxV)*ch};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="曜日ごとの平均時間外">';
+  for(var h=0;h<=maxV;h+=60)s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(h)+'" y2="'+y(h)+'" stroke="#eee"/><text x="'+(pl-4)+'" y="'+(y(h)+3)+'" text-anchor="end">'+(h/60)+'h</text>';
+  var top=0;avg.forEach(function(v,i){if(v>avg[top])top=i});
+  [1,2,3,4,5,6,0].forEach(function(w,k){
+    var bw=(W-pl-10)/7,x=pl+k*bw+4,v=avg[w];
+    if(v>0)s+='<rect x="'+x+'" y="'+y(v)+'" width="'+(bw-8)+'" height="'+(10+ch-y(v))+'" rx="4" fill="'+(w===top&&v>0?'#c2703d':'#1f3a5f')+'"><title>'+WD[w]+' '+fmtH(v)+'</title></rect>';
+    s+='<text x="'+(x+(bw-8)/2)+'" y="'+(H-14)+'" text-anchor="middle">'+WD[w]+'</text>';
+    s+='<text x="'+(x+(bw-8)/2)+'" y="'+(H-2)+'" text-anchor="middle">'+(v?fmtH(v):'－')+'</text>';
+  });
+  s+='</svg>';
+  $('dowChart').innerHTML='<div class="scroll">'+s+'</div>';
+  $('dowNote').innerHTML=avg[top]>0?('いちばん長いのは<b>'+WD[top]+'曜日</b>（平均 '+fmtH(avg[top])+'）。その曜日には、重い仕事を置かない手があります。'):'記録がまだありません。';
+  /* 週ごと（月曜始まり・この月） */
+  var wk=[],cur=null;
+  viewDays().forEach(function(ds){
+    var w=dow(ds);
+    if(!cur||w===1){cur={label:'',v:0,from:ds};wk.push(cur)}
+    var c=calc(ds);if(c.ot)cur.v+=c.ot;
+    cur.to=ds;
+  });
+  wk.forEach(function(x,i){x.label='第'+(i+1)+'週'});
+  var W2=620,H2=170,pl2=34,ch2=H2-32;
+  var maxW=Math.max.apply(null,[60].concat(wk.map(function(x){return x.v})));
+  var y2=function(v){return 10+ch2-(v/maxW)*ch2};
+  var s2='<svg viewBox="0 0 '+W2+' '+H2+'" width="100%" role="img" aria-label="週ごとの時間外">';
+  for(var h2=0;h2<=maxW;h2+=120)s2+='<line x1="'+pl2+'" x2="'+W2+'" y1="'+y2(h2)+'" y2="'+y2(h2)+'" stroke="#eee"/><text x="'+(pl2-4)+'" y="'+(y2(h2)+3)+'" text-anchor="end">'+(h2/60)+'h</text>';
+  var pts=wk.map(function(x,i){var bw=(W2-pl2-10)/wk.length;return [pl2+i*bw+bw/2,y2(x.v)]});
+  s2+='<polyline fill="none" stroke="#1f3a5f" stroke-width="2.5" points="'+pts.map(function(p){return p[0]+','+p[1]}).join(' ')+'"/>';
+  pts.forEach(function(p,i){
+    s2+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="#1f3a5f"><title>'+wk[i].label+' '+fmtH(wk[i].v)+'</title></circle>';
+    s2+='<text x="'+p[0]+'" y="'+(H2-14)+'" text-anchor="middle">'+wk[i].label+'</text>';
+    s2+='<text x="'+p[0]+'" y="'+(H2-2)+'" text-anchor="middle">'+fmtH(wk[i].v)+'</text>';
+  });
+  s2+='</svg>';
+  $('weekChart').innerHTML='<div class="scroll">'+s2+'</div>';
+}
+$('patRange').onchange=renderPat;
+
+/* ---------- ④ 年度で見る ---------- */
+function monthOt(fy){return fyMonths(fy).map(function(p){return sumOt(monthDays(p[0],p[1]))})}
+function fyList(){
+  var ks=Object.keys(DB.years).filter(function(k){return hasData(fyDays(k))}).sort();
+  if(ks.indexOf(viewFY())<0)ks.push(viewFY());
+  return ks.sort();
+}
+function renderFY(){
+  var fy=viewFY();
+  $('fyTitle').textContent=fy+'年度の推移（月ごとの時間外）';
+  var ks=fyList().slice(-3);
+  var W=680,H=210,pl=36,ch=H-40;
+  var all=[];ks.forEach(function(k){all=all.concat(monthOt(k))});
+  var maxV=Math.max.apply(null,[180].concat(all));
+  var y=function(v){return 12+ch-(v/maxV)*ch};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="年度ごとの月別時間外">';
+  for(var h=0;h<=maxV;h+=600)s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(h)+'" y2="'+y(h)+'" stroke="#eee"/><text x="'+(pl-4)+'" y="'+(y(h)+3)+'" text-anchor="end">'+(h/60)+'h</text>';
+  var lim=setOf(fy).limit*60;
+  s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(lim)+'" y2="'+y(lim)+'" stroke="#c2703d" stroke-dasharray="4 3"/><text x="'+(W-4)+'" y="'+(y(lim)-3)+'" text-anchor="end" style="fill:#c2703d">目安 '+setOf(fy).limit+'h/月</text>';
+  var bw=(W-pl-10)/12;
+  ks.forEach(function(k,ki){
+    var v=monthOt(k);
+    var col=k===fy?'#1f3a5f':COL[(ki+4)%COL.length];
+    var pts=v.map(function(x,i){return [pl+i*bw+bw/2,y(x)]});
+    s+='<polyline fill="none" stroke="'+col+'" stroke-width="'+(k===fy?2.6:1.6)+'" '+(k===fy?'':'stroke-dasharray="5 3"')+' points="'+pts.map(function(p){return p[0]+','+p[1]}).join(' ')+'"/>';
+    if(k===fy)pts.forEach(function(p,i){s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.5" fill="'+col+'"><title>'+((3+i)%12+1)+'月 '+fmtH(v[i])+'</title></circle>'});
+  });
+  fyMonths(fy).forEach(function(p,i){s+='<text x="'+(pl+i*bw+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+(p[1]+1)+'</text>'});
+  s+='</svg>';
+  $('fyChart').innerHTML='<div class="scroll">'+s+'</div>';
+  $('fyLegend').innerHTML=ks.map(function(k,ki){
+    var col=k===fy?'#1f3a5f':COL[(ki+4)%COL.length];
+    return '<span style="margin-right:12px"><span class="sw" style="display:inline-block;width:12px;height:12px;border-radius:3px;background:'+col+'"></span> '+k+'年度</span>';
+  }).join('');
+  /* 前年同月の表 */
+  var prev=String(+fy-1),cur=monthOt(fy),pre=monthOt(prev);
+  var rows=fyMonths(fy).map(function(p,i){
+    var d=cur[i]-pre[i];
+    var has=hasData(monthDays(p[0],p[1]))||hasData(monthDays(p[0]-1,p[1]));
+    if(!has)return '';
+    return '<tr><td>'+(p[1]+1)+'月</td><td>'+fmtH(cur[i])+'</td><td>'+(pre[i]?fmtH(pre[i]):'－')+'</td><td class="'+(d<0?'':'ot hi')+'">'+(pre[i]?((d<0?'−':'＋')+fmtH(Math.abs(d))):'')+'</td></tr>';
+  }).join('');
+  $('fyTable').innerHTML='<table><tr><th>月</th><th>'+fy+'年度</th><th>'+prev+'年度</th><th>差</th></tr>'+(rows||'<tr><td colspan="4">記録がありません</td></tr>')+'</table>';
+  renderBusy();
+}
+/* 繁忙期カレンダー：全年度の週別 ot を平均し、上位20%に印 */
+function busyCells(){
+  var acc={};
+  Object.keys(DB.years).forEach(function(k){
+    fyMonths(k).forEach(function(p){
+      monthDays(p[0],p[1]).forEach(function(ds){
+        var c=calc(ds);if(c.ot==null)return;
+        var wom=Math.min(5,Math.ceil((+ds.slice(8))/7));
+        var key=(p[1]+1)+'-'+wom;
+        if(!acc[key])acc[key]={sum:0,years:{}};
+        acc[key].years[k]=(acc[key].years[k]||0)+(c.ot||0);
+      });
+    });
+  });
+  var cells={},vals=[];
+  Object.keys(acc).forEach(function(key){
+    var ys=Object.keys(acc[key].years);
+    if(!ys.length)return;
+    var t=0;ys.forEach(function(y){t+=acc[key].years[y]});
+    var avg=t/ys.length;
+    cells[key]={avg:avg,n:ys.length};
+    vals.push(avg);
+  });
+  vals.sort(function(a,b){return b-a});
+  var th=vals.length?vals[Math.max(0,Math.floor(vals.length*0.2)-1)]:0;
+  Object.keys(cells).forEach(function(k){cells[k].hot=vals.length>=5&&cells[k].avg>=th&&cells[k].avg>0});
+  return cells;
+}
+function renderBusy(){
+  var cells=busyCells();
+  var html='<div class="busy"><span></span>'+[1,2,3,4,5].map(function(w){return '<span class="mh" style="text-align:center">第'+w+'週</span>'}).join('');
+  fyMonths(viewFY()).forEach(function(p){
+    var m=p[1]+1;
+    html+='<span class="mh">'+m+'月</span>';
+    for(var w=1;w<=5;w++){
+      var c=cells[m+'-'+w];
+      html+='<i class="'+(c?(c.hot?'hot':''):'none')+'" title="'+(c?fmtH(c.avg)+'（'+c.n+'年度の平均）':'記録なし')+'">'+(c?(c.hot?'▲ '+fmtH(c.avg):fmtH(c.avg)):'－')+'</i>';
+    }
+  });
+  html+='</div>';
+  $('busy').innerHTML=html;
+  var hot=[];
+  Object.keys(cells).forEach(function(k){if(cells[k].hot){var p=k.split('-');hot.push({m:+p[0],w:+p[1],v:cells[k].avg})}});
+  hot.sort(function(a,b){return b.v-a.v});
+  $('busyNote').innerHTML=hot.length
+    ? '▲ が過去の年度で跳ねた週（上位20%）です。'+hot.slice(0,4).map(function(x){return x.m+'月第'+x.w+'週'}).join('・')+'。<b>その週には新しいことを始めない</b>、とだけ決めておくと十二月の自分が少し楽になります。'
+    : '印がつくのは、記録が5週分ほどたまってからです。跳ねている週は、たいてい毎年同じところに出ます。';
+}
+$('busyCopy').onclick=function(){
+  var cells=busyCells(),hot=[];
+  Object.keys(cells).forEach(function(k){if(cells[k].hot){var p=k.split('-');hot.push({m:+p[0],w:+p[1],v:cells[k].avg})}});
+  hot.sort(function(a,b){return a.m===b.m?a.w-b.w:(a.m<4?a.m+12:a.m)-(b.m<4?b.m+12:b.m)});
+  var t='【来年度への申し送り／繁忙期】\n';
+  if(!hot.length)t+='（まだ印がつくほど記録がたまっていません）\n';
+  hot.forEach(function(x){t+='・'+x.m+'月 第'+x.w+'週（過去の平均 '+fmtH(x.v)+'）\n'});
+  t+='この週には新しいことを始めない。授業準備の山を置かない。\n';
+  copyText(t);toast('申し送りをコピーしました');
+};
+
+/* ---------- ⑥ まとめテキスト ---------- */
+function monthSummary(){
+  var ds=viewDays(),fy=viewFY(),s=setOf(fy);
+  var tot=sumOt(ds),lim=s.limit*60,fyt=fyTotalUpTo(fy,ds[ds.length-1]);
+  var hi=0;ds.forEach(function(d){var c=calc(d);if(c.ot!=null&&c.ot>=180)hi++});
+  var m=mixOf(ds);
+  var t=view.getFullYear()+'年'+(view.getMonth()+1)+'月／時間外 '+fmtH(tot)+'（目安'+s.limit+'時間の'+(lim?Math.round(tot/lim*100):0)+'%）、年度累計 '+fmtH(fyt)+'（年360時間の'+Math.round(fyt/(360*60)*100)+'%）\n';
+  if(m.rows.length)t+='内訳：'+m.rows.map(function(r){return r.k+r.p+'%'}).join('、')+'\n';
+  t+='3時間以上の時間外：'+hi+'日\n';
+  var py=view.getFullYear()-1,last=sumOt(monthDays(py,view.getMonth()));
+  if(last)t+='去年の同じ月：'+fmtH(last)+'（'+(tot-last<0?'−':'＋')+fmtH(Math.abs(tot-last))+'）\n';
+  if(s.schoolName)t='【'+s.schoolName+'】'+t;
+  return t;
+}
+function yearSummary(){
+  var fy=viewFY(),s=setOf(fy),v=monthOt(fy);
+  var t=fy+'年度のまとめ／時間外の合計 '+fmtH(fyTotalUpTo(fy,null))+'（年360時間の'+Math.round(fyTotalUpTo(fy,null)/(360*60)*100)+'%）\n';
+  fyMonths(fy).forEach(function(p,i){if(v[i])t+='・'+(p[1]+1)+'月 '+fmtH(v[i])+'\n'});
+  var m=mixOf(fyDays(fy));
+  if(m.rows.length){
+    t+='内訳（年度の合計）\n';
+    m.rows.forEach(function(r){t+='・'+r.k+'　'+fmtH(r.v)+'（'+r.p+'%）\n'});
+  }
+  t+='※自分のための手控えです。勤務校の公式な記録とは別のものです。\n';
+  if(s.schoolName)t='【'+s.schoolName+'】'+t;
+  return t;
+}
+function copyText(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){},function(){fb(t)})}else fb(t);
+  function fb(x){var ta=document.createElement('textarea');ta.value=x;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+}
+$('sumM').onclick=function(){sumMode='m';$('sumOut').value=monthSummary()};
+$('sumY').onclick=function(){sumMode='y';$('sumOut').value=yearSummary()};
+$('sumCopy').onclick=function(){
+  var t=$('sumOut').value;
+  if(!t){t=sumMode==='y'?yearSummary():monthSummary();$('sumOut').value=t}
+  copyText(t);toast('コピーしました');
+};
+function renderSum(){if(!$('sumOut').value)$('sumOut').value=monthSummary()}
+
+/* ---------- ⑤ 設定・タグ・データ ---------- */
+function renderSet(){
+  var fy=viewFY(),s=setOf(fy);
+  $('setTitle').textContent='勤務の設定（'+fy+'年度）';
+  $('sName').value=s.schoolName||'';$('sStart').value=s.start;$('sEnd').value=s.end;$('sBreak').value=s.brk;$('sLimit').value=s.limit;
+  $('tagEdit').innerHTML=DB.tags.map(function(t,i){
+    return '<div class="tagedit" data-i="'+i+'"><span class="sw" style="display:inline-block;width:14px;height:14px;border-radius:4px;background:'+tagColor(t)+'"></span>'+
+      '<input data-tn="'+i+'" value="'+esc(t)+'">'+
+      '<button class="sm" data-tmv="-1">↑</button><button class="sm" data-tmv="1">↓</button><button class="sm del" data-tdel="1">削除</button></div>';
+  }).join('');
+}
+$('saveSet').onclick=function(){
+  var fy=viewFY(),y=year(fy,true);
+  y.set=normSet({schoolName:$('sName').value,start:$('sStart').value||DEF_SET.start,end:$('sEnd').value||DEF_SET.end,brk:+$('sBreak').value||0,limit:+$('sLimit').value||45});
+  save();renderAll();toast(fy+'年度の設定を保存しました（所定勤務 '+fmtH(stdMin(fy))+'）');
+};
+$('tagEdit').addEventListener('change',function(e){
+  var i=e.target.dataset.tn;if(i==null)return;
+  var oldName=DB.tags[+i],nu=e.target.value.trim();
+  if(!nu||nu===oldName){e.target.value=oldName;return}
+  if(DB.tags.indexOf(nu)>=0){alert('同じ名前の項目があります。');e.target.value=oldName;return}
+  DB.tags[+i]=nu;
+  Object.keys(DB.years).forEach(function(k){
+    var ds=DB.years[k].days;
+    Object.keys(ds).forEach(function(d){
+      ds[d].tags=(ds[d].tags||[]).map(function(t){return t===oldName?nu:t});
+    });
+  });
+  save();renderAll();toast('「'+oldName+'」を「'+nu+'」に直しました（これまでの記録も）');
+});
+$('tagEdit').addEventListener('click',function(e){
+  var box=e.target.closest('.tagedit');if(!box)return;
+  var i=+box.dataset.i,d=e.target.dataset;
+  if(d.tmv){var k=i+ +d.tmv;if(k<0||k>=DB.tags.length)return;var t=DB.tags[i];DB.tags[i]=DB.tags[k];DB.tags[k]=t}
+  else if(d.tdel){
+    if(DB.tags.length<2){alert('項目は1つ以上必要です。');return}
+    if(!confirm('「'+DB.tags[i]+'」を項目から消しますか？\nこれまでの記録に入っている分はそのまま残ります。'))return;
+    DB.tags.splice(i,1);
+  }else return;
+  save();renderAll();
+});
+$('addTag').onclick=function(){
+  var n=prompt('項目の名前','');if(!n)return;n=n.trim();if(!n)return;
+  if(DB.tags.indexOf(n)>=0){alert('同じ名前の項目があります。');return}
+  DB.tags.push(n);save();renderAll();
+};
+function csv(){
+  var c='日付,休,出勤,退勤,在校(分),時間外(分),持ち帰り(分),内訳1,内訳2,内訳3\n';
+  viewDays().forEach(function(d){
+    var r=recOf(d),x=calc(d),t=r.tags||[];
+    c+=[d,r.off?'休':'',r.in,r.out,x.stay==null?'':x.stay,x.ot==null?'':x.ot,r.home||'',t[0]||'',t[1]||'',t[2]||''].join(',')+'\n';
+  });
+  var b=new Blob(['﻿'+c],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='在校時間_'+view.getFullYear()+'-'+pad(view.getMonth()+1)+'.csv';a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+}
+$('csvBtn').onclick=csv;$('csvBtn2').onclick=csv;
+$('expBtn').onclick=function(){
+  try{
+    var b=new Blob([JSON.stringify({app:PK,data:DB},null,1)],{type:'application/json'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(b);
+    a.download='在校時間ログ_backup_'+ymd(new Date())+'.json';a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+    toast('書き出しました');
+  }catch(e){alert('書き出せませんでした')}
+};
+$('impFile').onchange=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);
+      var d=o&&o.data?o.data:o;
+      if(!d||typeof d!=='object'||!d.years)throw 0;
+      var mode=prompt('「置きかえ」＝1 ／「年度単位で追加（同じ年度はとばす）」＝2 を入れてください','2');
+      if(mode==='1'){
+        if(!confirm('いまのデータを、読みこんだ内容で置きかえます。よろしいですか？'))return;
+        DB=normDB(d);save();renderAll();toast('置きかえました（'+Object.keys(DB.years).length+'年度）');
+      }else if(mode==='2'){
+        var nd=normDB(d),add=0;
+        Object.keys(nd.years).forEach(function(k){
+          if(DB.years[k])return;
+          DB.years[k]=nd.years[k];add++;
+        });
+        nd.tags.forEach(function(t){if(DB.tags.indexOf(t)<0)DB.tags.push(t)});
+        save();renderAll();toast(add+'年度ぶんを足しました');
+      }
+    }catch(err){alert('ファイルを読めませんでした')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- 引き継ぎ通知 ---------- */
+function renderMigrate(){
+  var mb=$('migrateBox');
+  if(!migrateInfo){mb.style.display='none';return}
+  mb.style.display='';
+  mb.innerHTML='<button class="x" aria-label="閉じる">✕</button>'+
+    '🕒 <b>無料版のデータを引き継ぎました。</b><br>'+
+    '同じブラウザに入っていた'+migrateInfo.days+'日ぶんの記録を、日付から年度に振り分けて読みこみました（'+migrateInfo.years.join('・')+'年度）。勤務時間の設定も同じ値を入れてあります。<br>'+
+    '内訳（何に使ったか）は空のままです。これからの分を退勤時にタップするか、日ごとの表の「＋」から後で足せます。<br>'+
+    '<b>無料版のデータはそのまま残しています。</b>しばらく両方を開いて確かめてもだいじょうぶです。';
+  mb.querySelector('.x').addEventListener('click',function(){migrateInfo=null;renderMigrate()});
+}
+
+/* ---------- ヘッダー・タブ ---------- */
+function renderHead(){
+  var ks={};Object.keys(DB.years).forEach(function(k){ks[k]=1});
+  ks[viewFY()]=1;ks[fyOfDate(ymd(new Date()))]=1;
+  var l=Object.keys(ks).sort(function(a,b){return b-a});
+  $('fySel').innerHTML=l.map(function(y){return '<option value="'+y+'"'+(y===viewFY()?' selected':'')+'>'+y+'年度</option>'}).join('');
+}
+$('fySel').onchange=function(){
+  var fy=this.value,now=new Date();
+  if(fy===fyOfDate(ymd(now))){view=new Date();view.setDate(1)}
+  else view=new Date(+fy,3,1);
+  year(fy,true);syncFY();renderAll();
+};
+function switchTab(t){
+  tab=t;
+  document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x.dataset.tab===t)});
+  ['month','pat','fy','sum','set'].forEach(function(k){$('tab-'+k).classList.toggle('hidden',k!==t)});
+  renderAll();
+}
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){switchTab(b.dataset.tab)}});
+
+function renderAll(){
+  renderHead();renderMigrate();renderToday();
+  if(tab==='month')renderMonth();
+  else if(tab==='pat'){renderMonth(true);renderPat()}
+  else if(tab==='fy'){renderMonth(true);renderFY()}
+  else if(tab==='sum'){renderMonth(true);renderSum()}
+  else if(tab==='set'){renderMonth(true);renderSet()}
+}
+window.addEventListener('beforeprint',function(){$('mTitle2').style.display='block'});
+window.addEventListener('afterprint',function(){$('mTitle2').style.display='none'});
+
+load();
+save();   /* 初回（＝引き継ぎ直後）にすぐ書きこむ。これをしないと毎回無料版から読み直してしまう */
+renderSet();
+renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

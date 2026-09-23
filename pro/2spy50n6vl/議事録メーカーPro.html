@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>議事録メーカー Pro</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e3dccd;--accent:#c2703d;--r:14px;--danger:#b83b2e;--ok:#2e7d5b;--warn:#a5771f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:40}
+header a.back{color:#fff;text-decoration:none;font-weight:600;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.16);font-size:.85rem;white-space:nowrap}
+header h1{font-size:1.1rem;margin:0}
+.pro-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--navy);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.hsel{font:inherit;font-size:.9rem;font-weight:700;padding:6px 8px;border-radius:10px;border:none;background:#fff;color:var(--navy);min-height:0;max-width:44vw}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card h2{font-size:1.05rem;margin:0 0 10px;color:var(--navy)}
+button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--ink)}
+button.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.del{color:var(--danger)}
+button.sm{min-height:34px;padding:4px 10px;font-size:.85rem}
+button:disabled{opacity:.45;cursor:default}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-height:44px;background:#fff;max-width:100%}
+textarea{width:100%;min-height:64px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.grid2 label{display:flex;flex-direction:column;font-size:.85rem;color:var(--sub)}
+.note{font-size:.85rem;color:var(--sub)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--navy);color:#fff}
+.hidden{display:none}
+.agenda{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:#fcfaf5}
+.agenda.carried{background:#eef4fa;border-color:#c8dcee}
+.agenda .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.agenda .head input[data-f=t]{flex:1;min-width:200px;font-weight:700}
+.sub{font-size:.85rem;color:var(--navy);font-weight:700;margin:8px 0 2px}
+.act{display:grid;grid-template-columns:1fr 140px 150px 44px;gap:6px;margin:4px 0}
+@media (max-width:600px){.act{grid-template-columns:1fr 1fr}.act input:first-child{grid-column:1/-1}}
+.carr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #c8dcee;border-radius:10px;padding:6px 10px;margin:4px 0}
+.carr input[type=checkbox]{width:24px;height:24px;min-height:0}
+.carr .w{flex:1;min-width:160px;font-weight:700}
+.carr.done{opacity:.5;text-decoration:line-through}
+.todo{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:8px 0;flex-wrap:wrap}
+.todo input[type=checkbox]{width:24px;height:24px;min-height:0}
+.todo.done{opacity:.5;text-decoration:line-through}
+.late{color:var(--danger);font-weight:700}
+.soon{color:var(--accent);font-weight:700}
+.gh{font-weight:700;color:var(--navy);margin:14px 0 2px;border-bottom:2px solid var(--line)}
+.mitem{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;flex-wrap:wrap}
+.decrow{border-bottom:1px solid var(--line);padding:8px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;cursor:pointer}
+.decrow:hover{background:#fcfaf5}
+.decrow .dt{font-size:.82rem;color:var(--sub);white-space:nowrap}
+.decrow .bd{font-size:.75rem;background:var(--bg);border-radius:8px;padding:0 8px;white-space:nowrap}
+.decrow .tx{flex:1;min-width:200px}
+.bodyrow{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0;flex-wrap:wrap;background:#fcfaf5}
+.bodyrow .nm{flex:1;min-width:160px}
+.bodyrow textarea{min-height:76px}
+.migrate-box{background:#eef4fa;border:1.5px solid #c8dcee;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:4px;border:none;background:none;font-size:1rem;color:var(--sub);cursor:pointer;min-height:0;padding:2px 6px}
+.ro{background:#fdf6e3;border:1.5px solid #ecdca8;border-radius:12px;padding:10px 14px;font-size:.88rem;margin-bottom:12px}
+#preview{font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+#preview h3{text-align:center;margin:0 0 8px;font-size:1.3rem}
+#preview table{border-collapse:collapse;width:100%;margin:6px 0}
+#preview th,#preview td{border:1px solid #999;padding:4px 8px;font-size:.95rem;text-align:left;vertical-align:top}
+#preview th{background:#f1ede4;width:7em}
+#preview .ag{margin:10px 0;page-break-inside:avoid}
+#preview .ag h4{margin:0 0 4px;border-bottom:2px solid var(--navy);font-size:1.02rem}
+#preview .dec{background:#eef3f9;border-radius:6px;padding:4px 8px;margin:4px 0}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{text-align:center;color:var(--sub);font-size:.85rem;padding:24px 16px}
+footer a{color:var(--navy)}
+@media print{header,footer,.noprint,.tabs,.migrate-box,.ro{display:none!important}body{background:#fff}main{padding:0}.card{box-shadow:none;padding:0}#tab-edit,#tab-todo,#tab-list,#tab-dec,#tab-set{display:none!important}#tab-out{display:block!important}}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>議事録メーカー<span class="pro-badge">PRO</span></h1>
+  <select id="bodySel" class="hsel" aria-label="会議体"></select>
+  <select id="ySel" class="hsel" aria-label="年度"></select>
+</header>
+<main>
+<div id="migrateBox" class="migrate-box" style="display:none"></div>
+
+<div class="tabs noprint">
+  <button data-tab="edit" class="on">記録する</button>
+  <button data-tab="out">できあがり</button>
+  <button data-tab="todo">宿題（担当・期限）</button>
+  <button data-tab="dec">決定事項の一覧</button>
+  <button data-tab="list">これまでの会議</button>
+  <button data-tab="set">会議体・年度・データ</button>
+</div>
+
+<section id="tab-edit">
+  <div id="roBox"></div>
+  <div class="card">
+    <div class="row noprint" style="margin-bottom:8px">
+      <button class="pri" id="newBtn">＋ 新しい議事録</button>
+      <select id="tpl"><option value="">ひな形をえらぶ…</option></select>
+      <span id="saveMsg" class="note"></span>
+    </div>
+    <div id="editBody"></div>
+  </div>
+  <div id="editRest"></div>
+</section>
+
+<section id="tab-out" class="hidden">
+  <div class="card">
+    <div class="row noprint" style="margin-bottom:10px">
+      <button class="pri" onclick="window.print()">印刷する</button>
+      <button id="copyFull">正式版でコピー</button>
+      <button id="copyBrief">連絡版でコピー</button>
+      <span id="copyMsg" class="note"></span>
+    </div>
+    <div id="briefPre" class="note noprint" style="white-space:pre-wrap;background:#fcfaf5;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:12px;display:none"></div>
+    <div id="preview"></div>
+  </div>
+</section>
+
+<section id="tab-todo" class="hidden">
+  <div class="card">
+    <h2>まだ終わっていない宿題</h2>
+    <div class="row noprint">
+      <input id="who" placeholder="担当者でしぼる（例：湊）">
+      <select id="todoBody"></select>
+      <label class="row"><input type="checkbox" id="byPerson">担当者でまとめる</label>
+      <label class="row"><input type="checkbox" id="thisWeek">今週やること（期限3日前まで）</label>
+      <label class="row"><input type="checkbox" id="showDone">終わったものも表示</label>
+    </div>
+    <p class="note">この一覧は、人の進みぐあいを見るためではなく、自分のぶんを拾うために使ってください。</p>
+    <div id="todos"></div>
+  </div>
+</section>
+
+<section id="tab-dec" class="hidden">
+  <div class="card">
+    <h2>決定事項だけの通し一覧（全年度）</h2>
+    <div class="row noprint">
+      <input id="dq" placeholder="キーワードでさがす" style="flex:1;min-width:200px">
+      <select id="decBody"></select>
+    </div>
+    <div id="decs"></div>
+  </div>
+</section>
+
+<section id="tab-list" class="hidden">
+  <div class="card">
+    <h2 id="listTitle">これまでの会議</h2>
+    <input id="q" placeholder="キーワードでさがす（会議名・決定事項）" style="width:100%">
+    <p class="note">会議体は行ごとに変えられます（無料版から引き継いだ議事録の割り当て直しにも使えます）。</p>
+    <div id="mlist"></div>
+  </div>
+</section>
+
+<section id="tab-set" class="hidden">
+  <div class="card">
+    <h2>会議体</h2>
+    <p class="note">会議体ごとに、ひな形（定例の議題）と標準の出席者を持てます。新しい議事録を作るとそのまま入ります。</p>
+    <div id="bodies"></div>
+    <div class="row"><button id="addBody">＋ 会議体を足す</button></div>
+  </div>
+  <div class="card">
+    <h2>年度</h2>
+    <div class="row">
+      <span class="note">いまの年度：</span><b id="curY"></b>
+      <button id="nextY">年度を進める</button>
+    </div>
+    <p class="note">前年度の議事録は読み取り専用で残ります（消えません）。年度を切り替えると読み書きできます。</p>
+  </div>
+  <div class="card">
+    <h2>引き継ぎ用テキスト（次の担当者へ）</h2>
+    <div class="row"><select id="handBody"></select><button id="handBtn">作る</button><button id="handCopy">コピー</button></div>
+    <textarea id="handOut" style="min-height:160px;margin-top:8px" placeholder="「作る」を押すと、その年度の決定事項・継続審議・年度をまたぐ宿題がまとまります"></textarea>
+  </div>
+  <div class="card">
+    <h2>書き出し・読みこみ</h2>
+    <div class="row">
+      <button id="expBtn">JSONで書き出す（全会議体・全年度）</button>
+      <label class="row note"><span>読みこむ</span><input type="file" id="impFile" accept=".json,application/json"></label>
+    </div>
+    <p class="note">読みこみのときに「置きかえ」か「追加（同じidの議事録はとばす）」を選べます。無料版のデータは消しません。</p>
+  </div>
+</section>
+</main>
+<div id="toast"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+<script>
+"use strict";
+(function(){
+var FK='mw_gyomu_14_';        /* 無料版（読むだけ・消さない） */
+var PK='mwpro_gyomu14_v1';    /* Pro版 */
+var TPL={
+ '学年会':['行事の確認','学習進度','児童の様子（共有）','学年だより'],
+ '職員会議':['提案事項','報告事項','連絡事項'],
+ '研究部会':['研究授業の日程','指導案検討','協議会の持ち方'],
+ '委員会・部会':['前回の確認','今月の活動','次回までの準備'],
+ '行事の打ち合わせ':['日程・時程','役割分担','準備物','雨天時の対応']
+};
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var pad=function(n){return String(n).padStart(2,'0')};
+var ymd=function(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+var nowLocal=function(){var d=new Date();return ymd(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())};
+var lines=function(s){return String(s||'').split('\n').map(function(x){return x.trim()}).filter(Boolean)};
+function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function fmtDT(s){if(!s)return '';var p=s.split('T');var d=p[0].split('-').map(Number);var w='日月火水木金土'[new Date(d[0],d[1]-1,d[2]).getDay()];return d[0]+'年'+d[1]+'月'+d[2]+'日（'+w+'）'+(p[1]||'')}
+function md(s){return s?String(s).slice(5,10).replace('-','/'):''}
+function fyOf(dt){var y,m;if(dt&&/^\d{4}-\d{2}/.test(dt)){y=+dt.slice(0,4);m=+dt.slice(5,7)}else{var d=new Date();y=d.getFullYear();m=d.getMonth()+1}return String(m>=4?y:y-1)}
+function toast(t){var el=$('toast');el.textContent=t;el.className='show';setTimeout(function(){el.className=''},2200)}
+
+/* ---------- データ ---------- */
+var DB=null,migrateInfo=null,tab='edit',timer=null;
+
+function normAct(x){
+  if(!x||typeof x!=='object')return null;
+  var aid=x.aid||uid();
+  if(x.ref&&x.ref.minId)return {aid:aid,ref:{minId:String(x.ref.minId),aid:x.ref.aid||''}};
+  return {aid:aid,w:x.w||'',p:x.p||'',d:x.d||'',done:!!x.done};
+}
+function normAg(a){
+  a=a||{};
+  return {t:a.t||'',memo:a.memo||'',dec:a.dec||'',cont:!!a.cont,carried:!!a.carried,
+    acts:(a.acts||[]).map(normAct).filter(Boolean)};
+}
+function normMin(m){
+  m=m||{};
+  var o={id:(m.id===0||m.id)?String(m.id):uid(),bodyId:m.bodyId?String(m.bodyId):'',year:m.year||fyOf(m.dt),carriedFrom:m.carriedFrom||null,
+    title:m.title||'',dt:m.dt||nowLocal(),place:m.place||'',role:m.role||'',members:m.members||'',misc:m.misc||'',
+    agendas:(m.agendas||[]).map(normAg)};
+  if(!o.agendas.length)o.agendas=[normAg({})];
+  return o;
+}
+function normBody(b,i){b=b||{};return {id:b.id||uid(),name:b.name||'会議',tpl:(b.tpl||[]).map(String),members:b.members||'',order:typeof b.order==='number'?b.order:i}}
+function presetBodies(){
+  var out=[],i=0;
+  Object.keys(TPL).forEach(function(k){out.push(normBody({id:uid(),name:k,tpl:TPL[k],members:''},i++))});
+  return out;
+}
+function normDB(d){
+  d=d&&typeof d==='object'?d:{};
+  var bodies=(Array.isArray(d.bodies)?d.bodies:[]).map(normBody);
+  if(!bodies.length)bodies=presetBodies();
+  bodies.sort(function(a,b){return a.order-b.order});
+  var mins=(Array.isArray(d.mins)?d.mins:[]).map(normMin);
+  var ids={};bodies.forEach(function(b){ids[b.id]=1});
+  mins.forEach(function(m){if(!ids[m.bodyId])m.bodyId=bodies[0].id});
+  var cb=ids[d.currentBodyId]?d.currentBodyId:bodies[0].id;
+  return {v:1,currentYear:String(d.currentYear||fyOf(null)),currentBodyId:cb,bodies:bodies,mins:mins,curMinId:d.curMinId||null};
+}
+function readJSON(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
+function save(){try{localStorage.setItem(PK,JSON.stringify(DB))}catch(e){toast('保存できませんでした（容量オーバーかもしれません）')}}
+function persist(){clearTimeout(timer);timer=setTimeout(function(){save();$('saveMsg').textContent='保存しました '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})},300)}
+
+function load(){
+  var d=readJSON(PK);
+  if(!d||typeof d!=='object'||!Array.isArray(d.bodies)){
+    /* 初回起動：同じブラウザに無料版のデータがあれば「その他の会議」として丸ごと引き継ぐ */
+    var bodies=presetBodies();
+    var mins=[],cur=bodies[0].id;
+    var free=readJSON(FK+'mins');
+    if(Array.isArray(free)&&free.length){
+      var other=normBody({id:uid(),name:'その他の会議',tpl:[],members:''},bodies.length);
+      bodies.push(other);
+      free.forEach(function(m){var mm=normMin(m);mm.bodyId=other.id;mm.year=fyOf(mm.dt);mins.push(mm)});
+      cur=other.id;
+      var ys={};mins.forEach(function(m){ys[m.year]=1});
+      migrateInfo={n:mins.length,body:other.name,years:Object.keys(ys).sort()};
+    }
+    d={v:1,currentYear:fyOf(null),currentBodyId:cur,bodies:bodies,mins:mins,curMinId:null};
+  }
+  DB=normDB(d);
+  if(migrateInfo&&migrateInfo.years&&migrateInfo.years.length){
+    /* 引き継いだ議事録が見える年度を初期表示にする */
+    if(migrateInfo.years.indexOf(DB.currentYear)<0)DB.currentYear=migrateInfo.years[migrateInfo.years.length-1];
+  }
+}
+
+/* ---------- 参照 ---------- */
+function curBody(){for(var i=0;i<DB.bodies.length;i++){if(DB.bodies[i].id===DB.currentBodyId)return DB.bodies[i]}return DB.bodies[0]}
+function bodyName(id){for(var i=0;i<DB.bodies.length;i++){if(DB.bodies[i].id===id)return DB.bodies[i].name}return '（未分類）'}
+function minById(id){for(var i=0;i<DB.mins.length;i++){if(DB.mins[i].id===id)return DB.mins[i]}return null}
+function cur(){
+  var m=minById(DB.curMinId);
+  if(m&&m.bodyId===DB.currentBodyId&&m.year===DB.currentYear)return m;
+  var l=viewMins();
+  return l.length?l[0]:null;
+}
+function viewMins(){
+  return DB.mins.filter(function(m){return m.bodyId===DB.currentBodyId&&m.year===DB.currentYear})
+    .sort(function(a,b){return (a.dt||'')<(b.dt||'')?1:-1});
+}
+function isPast(){return DB.currentYear<fyOf(null)}
+/* ref を実体に解決（見つからなければ null） */
+function resolve(x){
+  if(!x)return null;
+  if(!x.ref)return x;
+  var m=minById(x.ref.minId);if(!m)return null;
+  for(var i=0;i<m.agendas.length;i++){var as=m.agendas[i].acts;
+    for(var j=0;j<as.length;j++){if(as[j].aid===x.ref.aid&&!as[j].ref)return as[j]}}
+  return null;
+}
+function refMin(x){return x&&x.ref?minById(x.ref.minId):null}
+/* 原本の acts だけを集める（ref は元をたどるので数えない） */
+function allActs(filter){
+  var out=[];
+  DB.mins.forEach(function(m){
+    m.agendas.forEach(function(a,ai){
+      a.acts.forEach(function(x,j){
+        if(x.ref||!x.w)return;
+        if(filter&&!filter(m,x))return;
+        out.push({m:m,ai:ai,j:j,x:x});
+      });
+    });
+  });
+  return out;
+}
+
+/* ---------- ヘッダー ---------- */
+function renderHead(){
+  var bs=DB.bodies.map(function(b){return '<option value="'+esc(b.id)+'"'+(b.id===DB.currentBodyId?' selected':'')+'>'+esc(b.name)+'</option>'}).join('');
+  $('bodySel').innerHTML=bs;
+  var ys={};DB.mins.forEach(function(m){ys[m.year]=1});ys[DB.currentYear]=1;ys[fyOf(null)]=1;
+  var yl=Object.keys(ys).sort(function(a,b){return b-a});
+  $('ySel').innerHTML=yl.map(function(y){return '<option value="'+y+'"'+(y===DB.currentYear?' selected':'')+'>'+y+'年度</option>'}).join('');
+  var opt='<option value="">すべての会議体</option>'+DB.bodies.map(function(b){return '<option value="'+esc(b.id)+'">'+esc(b.name)+'</option>'}).join('');
+  ['todoBody','decBody'].forEach(function(id){var v=$(id).value;$(id).innerHTML=opt;$(id).value=v||''});
+  $('handBody').innerHTML=DB.bodies.map(function(b){return '<option value="'+esc(b.id)+'"'+(b.id===DB.currentBodyId?' selected':'')+'>'+esc(b.name)+'</option>'}).join('');
+  $('curY').textContent=DB.currentYear+'年度';
+}
+$('bodySel').onchange=function(){DB.currentBodyId=this.value;DB.curMinId=null;save();renderAll()};
+$('ySel').onchange=function(){DB.currentYear=this.value;DB.curMinId=null;save();renderAll()};
+
+/* ---------- 記録する ---------- */
+function renderEdit(){
+  var m=cur();
+  $('roBox').innerHTML=isPast()?'<div class="ro">🔒 '+DB.currentYear+'年度は読み取り専用です。書きこむときはヘッダーの年度を'+fyOf(null)+'年度にもどしてください（複製はできます）。</div>':'';
+  if(!m){
+    $('editBody').innerHTML='<p class="note">'+esc(curBody().name)+'（'+DB.currentYear+'年度）の議事録はまだありません。「＋ 新しい議事録」から作ってください。</p>';
+    $('editRest').innerHTML='';
+    $('tpl').disabled=true;
+    return;
+  }
+  DB.curMinId=m.id;
+  $('tpl').disabled=isPast();
+  $('editBody').innerHTML=
+    '<div class="grid2">'+
+    '<label>会議名<input id="f_title" value="'+esc(m.title)+'" placeholder="第5回 学年会"></label>'+
+    '<label>日時<input type="datetime-local" id="f_dt" value="'+esc(m.dt)+'"></label>'+
+    '<label>場所<input id="f_place" value="'+esc(m.place)+'" placeholder="3年1組教室"></label>'+
+    '<label>司会／記録<input id="f_role" value="'+esc(m.role)+'" placeholder="司会 田中／記録 湊"></label>'+
+    '</div>'+
+    '<label class="note" style="display:block;margin-top:8px">出席者<input id="f_members" style="width:100%" value="'+esc(m.members)+'" placeholder="田中、佐藤、湊（欠：鈴木）"></label>';
+  $('editRest').innerHTML=
+    '<div class="card"><h2>議題</h2><div id="agendas"></div><button id="addAg">＋ 議題を足す</button></div>'+
+    '<div class="card"><h2>連絡・その他</h2><textarea id="f_misc" placeholder="次回：10/6（火）15:45〜　など">'+esc(m.misc)+'</textarea>'+
+    '<p class="note">入力するたびに自動で保存されます（この端末の中だけ）。</p></div>';
+  ['title','dt','place','role','members','misc'].forEach(function(f){
+    var el=$('f_'+f);if(!el)return;
+    el.addEventListener('input',function(){var c=cur();if(!c)return;c[f]=el.value;if(f==='dt')c.year=fyOf(el.value);persist()});
+  });
+  $('addAg').onclick=function(){cur().agendas.push(normAg({}));persist();renderAgendas()};
+  renderAgendas();
+  if(isPast())document.querySelectorAll('#tab-edit input,#tab-edit textarea,#tab-edit select,#tab-edit button').forEach(function(el){if(el.id!=='newBtn')el.disabled=true});
+}
+function renderAgendas(){
+  var m=cur();if(!m)return;
+  $('agendas').innerHTML=m.agendas.map(function(a,i){
+    var carr=a.acts.map(function(x,j){
+      if(!x.ref)return '';
+      var t=resolve(x),src=refMin(x);
+      if(!t)return '<div class="carr" data-j="'+j+'"><span class="w">（元の宿題が見つかりません）</span><button class="sm del" data-cx="'+j+'">はずす</button></div>';
+      return '<div class="carr'+(t.done?' done':'')+'" data-j="'+j+'">'+
+        '<input type="checkbox" data-ck="'+j+'"'+(t.done?' checked':'')+'>'+
+        '<span class="w">'+esc(t.w)+'</span>'+
+        '<span class="note">'+esc(t.p||'担当未定')+'／'+esc(src?(src.title||'前回')+' '+md(src.dt):'')+'</span>'+
+        '<input type="date" data-cd="'+j+'" value="'+esc(t.d||'')+'">'+
+        '<button class="sm del" data-cx="'+j+'">はずす</button></div>';
+    }).join('');
+    var acts=a.acts.map(function(x,j){
+      if(x.ref)return '';
+      return '<div class="act" data-j="'+j+'"><input data-a="w" value="'+esc(x.w)+'" placeholder="何を"><input data-a="p" value="'+esc(x.p)+'" placeholder="担当"><input type="date" data-a="d" value="'+esc(x.d)+'"><button class="sm del" data-rma="'+j+'">×</button></div>';
+    }).join('');
+    return '<div class="agenda'+(a.carried?' carried':'')+'" data-i="'+i+'">'+
+      '<div class="head"><b>'+(i+1)+'.</b><input data-f="t" value="'+esc(a.t)+'" placeholder="議題名">'+
+      '<label class="row note"><input type="checkbox" data-f="cont"'+(a.cont?' checked':'')+'>継続審議</label>'+
+      '<button class="sm" data-mv="-1">↑</button><button class="sm" data-mv="1">↓</button><button class="sm del" data-rm="1">削除</button></div>'+
+      (a.carried?'<p class="note">前回までの宿題です。終わったらチェック、続けるなら期限を書き直してください（元の議事録と連動します）。</p>':'')+
+      carr+
+      '<div class="sub">話し合いのメモ</div><textarea data-f="memo" placeholder="出た意見など">'+esc(a.memo)+'</textarea>'+
+      '<div class="sub">決定事項</div><textarea data-f="dec" placeholder="1行に1つ" style="min-height:48px">'+esc(a.dec)+'</textarea>'+
+      '<div class="sub">やること（担当・期限）</div>'+acts+
+      '<button class="sm" data-adda="1">＋ やることを足す</button></div>';
+  }).join('');
+  if(isPast())document.querySelectorAll('#agendas input,#agendas textarea,#agendas button').forEach(function(el){el.disabled=true});
+}
+document.addEventListener('input',function(e){
+  var box=e.target.closest?e.target.closest('#agendas .agenda'):null;if(!box)return;
+  var m=cur();if(!m)return;var a=m.agendas[+box.dataset.i];if(!a)return;
+  var d=e.target.dataset;
+  if(d.f){a[d.f]=e.target.type==='checkbox'?e.target.checked:e.target.value}
+  if(d.a){var j=+e.target.closest('.act').dataset.j;a.acts[j][d.a]=e.target.value}
+  if(d.cd!=null){var t=resolve(a.acts[+d.cd]);if(t)t.d=e.target.value}
+  persist();
+});
+document.addEventListener('change',function(e){
+  var box=e.target.closest?e.target.closest('#agendas .agenda'):null;if(!box)return;
+  var m=cur();if(!m)return;var a=m.agendas[+box.dataset.i];if(!a)return;
+  var d=e.target.dataset;
+  if(d.ck!=null){var t=resolve(a.acts[+d.ck]);if(t){t.done=e.target.checked;save();renderAgendas()}return}
+  if(e.target.type==='checkbox'&&d.f){a[d.f]=e.target.checked;persist();return}
+  if(e.target.type==='date'&&(d.a||d.cd!=null)){e.target.dispatchEvent(new Event('input',{bubbles:true}))}
+});
+document.addEventListener('click',function(e){
+  var box=e.target.closest?e.target.closest('#agendas .agenda'):null;if(!box)return;
+  var m=cur();if(!m)return;var i=+box.dataset.i;var a=m.agendas[i];var d=e.target.dataset;
+  if(d.adda){a.acts.push(normAct({w:'',p:'',d:'',done:false}))}
+  else if(d.rma!=null){a.acts.splice(+d.rma,1)}
+  else if(d.cx!=null){a.acts.splice(+d.cx,1)}
+  else if(d.rm){if(!confirm('この議題を削除しますか？'))return;m.agendas.splice(i,1);if(!m.agendas.length)m.agendas.push(normAg({}))}
+  else if(d.mv){var k=i+ +d.mv;if(k<0||k>=m.agendas.length)return;var tmp=m.agendas[i];m.agendas[i]=m.agendas[k];m.agendas[k]=tmp}
+  else return;
+  persist();renderAgendas();
+});
+$('tpl').innerHTML+=Object.keys(TPL).map(function(k){return '<option>'+k+'</option>'}).join('');
+$('tpl').onchange=function(){
+  var k=$('tpl').value;if(!k)return;var m=cur();if(!m){$('tpl').value='';return}
+  var empty=m.agendas.every(function(a){return !a.t&&!a.memo&&!a.dec&&!a.acts.length});
+  if(!empty&&!confirm('いまの議題を「'+k+'」のひな形に置きかえますか？')){$('tpl').value='';return}
+  m.agendas=TPL[k].map(function(t){return normAg({t:t})});
+  if(!m.title)m.title=k;
+  persist();renderEdit();$('tpl').value='';
+};
+/* ① 前回の続きから始まる議事録 */
+function openActsOfBody(bodyId){
+  return allActs(function(m,x){return m.bodyId===bodyId&&!x.done})
+    .sort(function(a,b){return (a.x.d||'9999')<(b.x.d||'9999')?-1:1});
+}
+$('newBtn').onclick=function(){
+  if(isPast()&&!confirm(DB.currentYear+'年度は読み取り専用です。'+fyOf(null)+'年度に新しい議事録を作りますか？'))return;
+  if(isPast()){DB.currentYear=fyOf(null)}
+  var b=curBody();
+  var prev=DB.mins.filter(function(m){return m.bodyId===b.id}).sort(function(a,c){return (a.dt||'')<(c.dt||'')?1:-1})[0];
+  var m=normMin({bodyId:b.id,year:DB.currentYear,title:b.name,dt:nowLocal(),members:b.members||'',carriedFrom:prev?prev.id:null,agendas:[]});
+  m.agendas=[];
+  var open=openActsOfBody(b.id);
+  if(open.length){
+    m.agendas.push(normAg({t:'前回の確認',carried:true,
+      acts:open.map(function(o){return {aid:uid(),ref:{minId:o.m.id,aid:o.x.aid}}})}));
+  }
+  (b.tpl||[]).forEach(function(t){m.agendas.push(normAg({t:t}))});
+  if(!m.agendas.length)m.agendas.push(normAg({}));
+  DB.mins.push(m);DB.curMinId=m.id;save();renderAll();
+  var el=$('f_title');if(el)el.focus();
+  if(open.length)toast('前回までの宿題を'+open.length+'件、いちばん上に入れました');
+};
+
+/* ---------- できあがり ---------- */
+function actList(a){
+  var out=[];
+  a.acts.forEach(function(x){var t=x.ref?resolve(x):x;if(t&&t.w)out.push(t)});
+  return out;
+}
+function renderOut(){
+  var m=cur();
+  if(!m){$('preview').innerHTML='<p class="note">議事録がありません。</p>';return}
+  var h='<h3>'+esc(m.title||'（会議名）')+' 記録</h3><table>'+
+    '<tr><th>会議体</th><td>'+esc(bodyName(m.bodyId))+'（'+esc(m.year)+'年度）</td></tr>'+
+    '<tr><th>日時</th><td>'+esc(fmtDT(m.dt))+'</td></tr>'+
+    '<tr><th>場所</th><td>'+esc(m.place)+'</td></tr>'+
+    '<tr><th>出席者</th><td>'+esc(m.members)+'</td></tr>'+
+    '<tr><th>司会・記録</th><td>'+esc(m.role)+'</td></tr></table>';
+  m.agendas.forEach(function(a,i){
+    h+='<div class="ag"><h4>'+(i+1)+'. '+esc(a.t||'（議題）')+(a.cont?'　［継続審議］':'')+'</h4>';
+    if(a.memo)h+='<div>'+esc(a.memo).replace(/\n/g,'<br>')+'</div>';
+    var dl=lines(a.dec);
+    if(dl.length)h+='<div class="dec"><b>決定：</b>'+dl.map(esc).join('<br>')+'</div>';
+    var al=actList(a);
+    if(al.length)h+='<table><tr><th>やること</th><th style="width:auto">担当</th><th style="width:auto">期限</th><th style="width:4em">済</th></tr>'+
+      al.map(function(x){return '<tr><td>'+esc(x.w)+'</td><td>'+esc(x.p)+'</td><td>'+esc(md(x.d))+'</td><td>'+(x.done?'✓':'')+'</td></tr>'}).join('')+'</table>';
+    h+='</div>';
+  });
+  if(m.misc)h+='<div class="ag"><h4>連絡・その他</h4>'+esc(m.misc).replace(/\n/g,'<br>')+'</div>';
+  $('preview').innerHTML=h;
+}
+function toText(m){
+  var t='【'+(m.title||'会議')+' 記録】\n'+bodyName(m.bodyId)+'／'+m.year+'年度\n日時：'+fmtDT(m.dt)+'\n場所：'+m.place+'\n出席：'+m.members+'\n'+m.role+'\n\n';
+  m.agendas.forEach(function(a,i){
+    t+='■'+(i+1)+'. '+a.t+(a.cont?'［継続審議］':'')+'\n';
+    if(a.memo)t+=a.memo.trim()+'\n';
+    lines(a.dec).forEach(function(d){t+='　→決定：'+d+'\n'});
+    actList(a).forEach(function(x){t+='　'+(x.done?'☑':'☐')+' '+x.w+'（'+(x.p||'担当未定')+(x.d?'／'+md(x.d)+'まで':'')+'）\n'});
+    t+='\n';
+  });
+  if(m.misc)t+='■連絡・その他\n'+m.misc.trim()+'\n';
+  return t;
+}
+/* ④ 連絡版 */
+function toBrief(m){
+  var dtp=(m.dt||'').slice(5,10).replace('-','/');
+  var t='【'+dtp+' '+(m.title||bodyName(m.bodyId))+'】決まったこと\n';
+  var dn=0,an=[];
+  m.agendas.forEach(function(a){
+    lines(a.dec).forEach(function(d){t+='・'+d+'\n';dn++});
+    actList(a).forEach(function(x){if(!x.done)an.push(x)});
+  });
+  if(!dn)t+='（決定事項はありません）\n';
+  if(an.length){
+    t+='やること\n';
+    an.forEach(function(x){t+='☐ '+x.w+'（'+(x.p||'担当未定')+(x.d?'／'+md(x.d)+'まで':'')+'）\n'});
+  }
+  return t;
+}
+function copyText(t,msg){
+  var done=function(){$('copyMsg').textContent=msg;setTimeout(function(){$('copyMsg').textContent=''},3000)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){fb(t,done)})}else fb(t,done);
+  function fb(t,cb){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb()}catch(e){alert('コピーできませんでした')}ta.remove()}
+}
+$('copyFull').onclick=function(){var m=cur();if(!m)return;copyText(toText(m),'正式版をコピーしました（校務メールやTeamsに貼れます）');$('briefPre').style.display='none'};
+$('copyBrief').onclick=function(){var m=cur();if(!m)return;var t=toBrief(m);copyText(t,'連絡版をコピーしました（学年のチャットに貼れます）');var p=$('briefPre');p.textContent=t;p.style.display=''};
+
+/* ---------- ③ 宿題 ---------- */
+function renderTodo(){
+  var who=$('who').value.trim(),showDone=$('showDone').checked,byP=$('byPerson').checked,tw=$('thisWeek').checked;
+  var bf=$('todoBody').value;
+  var td=ymd(new Date());
+  var lim=ymd(new Date(Date.now()+3*864e5));
+  var l=allActs(function(m,x){
+    if(bf&&m.bodyId!==bf)return false;
+    if(!showDone&&x.done)return false;
+    if(who&&(x.p||'').indexOf(who)<0)return false;
+    if(tw&&(!x.d||x.d>lim||x.done))return false;
+    return true;
+  }).sort(function(a,b){return (a.x.d||'9999')<(b.x.d||'9999')?-1:1});
+  if(!l.length){$('todos').innerHTML='<p class="note">宿題はありません。</p>';return}
+  var row=function(o){
+    var d=o.x.d,cls='';
+    if(!o.x.done&&d){if(d<td)cls='late';else if(d<=lim)cls='soon'}
+    return '<div class="todo'+(o.x.done?' done':'')+'"><input type="checkbox" data-m="'+esc(o.m.id)+'" data-ai="'+o.ai+'" data-j="'+o.j+'"'+(o.x.done?' checked':'')+'>'+
+      '<div style="flex:1;min-width:200px"><b>'+esc(o.x.w)+'</b><br><span class="note">'+esc(bodyName(o.m.bodyId))+'／'+esc(o.m.title||'会議')+'（'+esc(md(o.m.dt))+'）</span></div>'+
+      '<div>'+esc(o.x.p||'担当未定')+'</div>'+
+      '<div class="'+cls+'">'+(d?esc(md(d))+(cls==='late'?' 期限切れ':''):'期限なし')+'</div></div>';
+  };
+  if(byP){
+    var g={},order=[];
+    l.forEach(function(o){var k=o.x.p||'担当未定';if(!g[k]){g[k]=[];order.push(k)}g[k].push(o)});
+    order.sort();
+    $('todos').innerHTML=order.map(function(k){
+      return '<div class="gh">'+esc(k)+'（'+g[k].length+'件）</div>'+g[k].map(row).join('');
+    }).join('');
+  }else{
+    $('todos').innerHTML=l.map(row).join('');
+  }
+}
+$('todos').addEventListener('change',function(e){
+  var c=e.target;if(c.type!=='checkbox')return;
+  var m=minById(c.dataset.m);if(!m)return;
+  m.agendas[+c.dataset.ai].acts[+c.dataset.j].done=c.checked;
+  save();renderTodo();
+});
+['who','todoBody','byPerson','thisWeek','showDone'].forEach(function(id){
+  $(id).addEventListener('input',renderTodo);$(id).addEventListener('change',renderTodo);
+});
+
+/* ---------- ⑥ 決定事項の通し一覧 ---------- */
+function renderDec(){
+  var q=$('dq').value.trim(),bf=$('decBody').value;
+  var rows=[];
+  DB.mins.forEach(function(m){
+    if(bf&&m.bodyId!==bf)return;
+    m.agendas.forEach(function(a){
+      lines(a.dec).forEach(function(d){
+        if(q&&d.indexOf(q)<0&&(m.title||'').indexOf(q)<0&&(a.t||'').indexOf(q)<0)return;
+        rows.push({m:m,a:a,d:d});
+      });
+    });
+  });
+  rows.sort(function(x,y){return (x.m.dt||'')<(y.m.dt||'')?1:-1});
+  $('decs').innerHTML=rows.map(function(r){
+    return '<div class="decrow" data-open="'+esc(r.m.id)+'">'+
+      '<span class="dt">'+esc((r.m.dt||'').slice(0,10).replace(/-/g,'/'))+'</span>'+
+      '<span class="bd">'+esc(bodyName(r.m.bodyId))+'</span>'+
+      '<span class="tx">'+esc(r.d)+(r.a.cont?'　<b style="color:var(--warn)">［継続審議］</b>':'')+'</span>'+
+      '<span class="note">'+esc(r.m.title||'')+'</span></div>';
+  }).join('')||'<p class="note">決定事項はまだありません。</p>';
+}
+$('decs').addEventListener('click',function(e){
+  var r=e.target.closest('.decrow');if(!r)return;
+  openMin(r.dataset.open);
+});
+$('dq').addEventListener('input',renderDec);
+$('decBody').addEventListener('change',renderDec);
+
+/* ---------- これまでの会議 ---------- */
+function openMin(id){
+  var m=minById(id);if(!m)return;
+  DB.currentBodyId=m.bodyId;DB.currentYear=m.year;DB.curMinId=m.id;
+  save();switchTab('edit');
+}
+function renderList(){
+  $('listTitle').textContent='これまでの会議（'+curBody().name+'・'+DB.currentYear+'年度）';
+  var q=$('q').value.trim();
+  var l=viewMins().filter(function(m){return !q||JSON.stringify(m).indexOf(q)>=0});
+  var opt=function(sel){return DB.bodies.map(function(b){return '<option value="'+esc(b.id)+'"'+(b.id===sel?' selected':'')+'>'+esc(b.name)+'</option>'}).join('')};
+  $('mlist').innerHTML=l.map(function(m){
+    var dec=0,open=0;
+    m.agendas.forEach(function(a){dec+=lines(a.dec).length;a.acts.forEach(function(x){if(!x.ref&&x.w&&!x.done)open++})});
+    return '<div class="mitem"><div><b>'+esc(m.title||'（無題）')+'</b><br><span class="note">'+esc(fmtDT(m.dt))+'　決定'+dec+'件・未完了の宿題'+open+'件</span></div>'+
+      '<div class="row"><select data-mv2="'+esc(m.id)+'" title="会議体を変える">'+opt(m.bodyId)+'</select>'+
+      '<button data-open="'+esc(m.id)+'">開く</button><button data-dup="'+esc(m.id)+'">複製</button>'+
+      '<button class="del" data-del="'+esc(m.id)+'">削除</button></div></div>';
+  }).join('')||'<p class="note">まだありません。</p>';
+}
+$('q').addEventListener('input',renderList);
+$('mlist').addEventListener('click',function(e){
+  var d=e.target.dataset;
+  if(d.open){openMin(d.open)}
+  else if(d.dup){
+    var s=minById(d.dup);if(!s)return;
+    var c=normMin(JSON.parse(JSON.stringify(s)));
+    c.id=uid();c.dt=nowLocal();c.year=fyOf(c.dt);c.carriedFrom=s.id;
+    c.title=(s.title||'')+'（次回）';
+    c.agendas=c.agendas.map(function(a){return normAg({t:a.t,cont:a.cont})});
+    DB.mins.push(c);DB.currentYear=c.year;DB.curMinId=c.id;save();switchTab('edit');
+  }
+  else if(d.del){
+    if(!confirm('この議事録を削除しますか？'))return;
+    DB.mins=DB.mins.filter(function(m){return m.id!==d.del});
+    if(DB.curMinId===d.del)DB.curMinId=null;
+    save();renderList();
+  }
+});
+$('mlist').addEventListener('change',function(e){
+  var id=e.target.dataset.mv2;if(!id)return;
+  var m=minById(id);if(!m)return;
+  m.bodyId=e.target.value;save();renderAll();toast('会議体を「'+bodyName(m.bodyId)+'」に変えました');
+});
+
+/* ---------- ② 会議体 / ⑤ 年度 / ⑦ データ ---------- */
+function renderSet(){
+  $('bodies').innerHTML=DB.bodies.map(function(b,i){
+    var n=DB.mins.filter(function(m){return m.bodyId===b.id}).length;
+    return '<div class="bodyrow" data-b="'+esc(b.id)+'">'+
+      '<div class="nm"><input data-bf="name" value="'+esc(b.name)+'" placeholder="会議体の名前" style="width:100%">'+
+      '<p class="note" style="margin:4px 0 0">議事録 '+n+'件</p></div>'+
+      '<div style="flex:2;min-width:220px"><span class="note">ひな形（定例の議題・1行に1つ）</span>'+
+      '<textarea data-bf="tpl">'+esc((b.tpl||[]).join('\n'))+'</textarea>'+
+      '<span class="note">標準の出席者</span><input data-bf="members" value="'+esc(b.members)+'" style="width:100%" placeholder="田中、佐藤、湊"></div>'+
+      '<div class="row"><button class="sm" data-bmv="-1">↑</button><button class="sm" data-bmv="1">↓</button><button class="sm del" data-bdel="1">削除</button></div></div>';
+  }).join('');
+}
+$('bodies').addEventListener('input',function(e){
+  var box=e.target.closest('.bodyrow');if(!box)return;
+  var b=null;DB.bodies.forEach(function(x){if(x.id===box.dataset.b)b=x});if(!b)return;
+  var f=e.target.dataset.bf;if(!f)return;
+  b[f]=f==='tpl'?lines(e.target.value):e.target.value;
+  clearTimeout(timer);timer=setTimeout(function(){save();renderHead()},400);
+});
+$('bodies').addEventListener('click',function(e){
+  var box=e.target.closest('.bodyrow');if(!box)return;
+  var i=-1;DB.bodies.forEach(function(x,k){if(x.id===box.dataset.b)i=k});if(i<0)return;
+  var d=e.target.dataset;
+  if(d.bmv){var k=i+ +d.bmv;if(k<0||k>=DB.bodies.length)return;var t=DB.bodies[i];DB.bodies[i]=DB.bodies[k];DB.bodies[k]=t;DB.bodies.forEach(function(b,n){b.order=n})}
+  else if(d.bdel){
+    if(DB.bodies.length<2){alert('会議体は1つ以上必要です。');return}
+    var n=DB.mins.filter(function(m){return m.bodyId===DB.bodies[i].id}).length;
+    if(!confirm('会議体「'+DB.bodies[i].name+'」を削除しますか？'+(n?'\n議事録'+n+'件は「'+DB.bodies[(i===0?1:0)].name+'」に移ります。':'')))return;
+    var mv=DB.bodies[i===0?1:0].id,del=DB.bodies[i].id;
+    DB.mins.forEach(function(m){if(m.bodyId===del)m.bodyId=mv});
+    DB.bodies.splice(i,1);
+    if(DB.currentBodyId===del)DB.currentBodyId=mv;
+  }else return;
+  save();renderAll();
+});
+$('addBody').onclick=function(){
+  var n=prompt('会議体の名前','新しい会議体');if(!n)return;
+  DB.bodies.push(normBody({id:uid(),name:n},DB.bodies.length));
+  DB.currentBodyId=DB.bodies[DB.bodies.length-1].id;DB.curMinId=null;
+  save();renderAll();
+};
+$('nextY').onclick=function(){
+  var n=String(+DB.currentYear+1);
+  if(!confirm(n+'年度にしますか？\n'+DB.currentYear+'年度の議事録は読み取り専用で残ります（消えません）。'))return;
+  DB.currentYear=n;DB.curMinId=null;save();renderAll();toast(n+'年度にしました');
+};
+/* 引き継ぎ用テキスト */
+function handText(bodyId){
+  var b=null;DB.bodies.forEach(function(x){if(x.id===bodyId)b=x});if(!b)return '';
+  var y=DB.currentYear;
+  var ms=DB.mins.filter(function(m){return m.bodyId===bodyId&&m.year===y}).sort(function(a,c){return (a.dt||'')<(c.dt||'')?-1:1});
+  var t='【'+b.name+'・'+y+'年度の決定事項／継続中】\n';
+  var any=false;
+  ms.forEach(function(m){
+    m.agendas.forEach(function(a){
+      lines(a.dec).forEach(function(d){t+='・'+d+'（'+md(m.dt)+'決定）\n';any=true});
+      if(a.cont&&a.t){t+='・［継続］'+a.t+'（次年度へ）\n';any=true}
+    });
+  });
+  var open=allActs(function(m,x){return m.bodyId===bodyId&&!x.done});
+  if(open.length){
+    t+='\n［年度をまたぐやること］\n';
+    open.sort(function(a,c){return (a.x.d||'9999')<(c.x.d||'9999')?-1:1}).forEach(function(o){
+      t+='☐ '+o.x.w+'（'+(o.x.p||'担当未定')+(o.x.d?'／'+md(o.x.d)+'まで':'')+'）\n';
+    });
+    any=true;
+  }
+  if(!any)t+='（この年度の記録はまだありません）\n';
+  return t;
+}
+$('handBtn').onclick=function(){$('handOut').value=handText($('handBody').value)};
+$('handCopy').onclick=function(){
+  var t=$('handOut').value;if(!t){t=handText($('handBody').value);$('handOut').value=t}
+  copyText(t,'');toast('引き継ぎ用テキストをコピーしました');
+};
+/* JSON 書き出し・読みこみ */
+$('expBtn').onclick=function(){
+  try{
+    var b=new Blob([JSON.stringify({app:PK,data:DB},null,1)],{type:'application/json'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(b);
+    a.download='議事録_backup_'+ymd(new Date())+'.json';a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+    toast('書き出しました');
+  }catch(e){alert('書き出せませんでした')}
+};
+$('impFile').onchange=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);
+      var d=o&&o.data?o.data:o;
+      if(!d||typeof d!=='object'||!Array.isArray(d.mins))throw 0;
+      var mode=prompt('「置きかえ」＝1 ／「追加（同じidの議事録はとばす）」＝2 を入れてください','2');
+      if(mode==='1'){
+        if(!confirm('いまのデータを、読みこんだ内容で置きかえます。よろしいですか？'))return;
+        DB=normDB(d);save();renderAll();toast('置きかえました（議事録'+DB.mins.length+'件）');
+      }else if(mode==='2'){
+        var nd=normDB(d),addB=0,addM=0,map={};
+        nd.bodies.forEach(function(b){
+          var hit=null;DB.bodies.forEach(function(x){if(x.name===b.name)hit=x});
+          if(hit){map[b.id]=hit.id}
+          else{var nb=normBody({id:b.id,name:b.name,tpl:b.tpl,members:b.members},DB.bodies.length);
+            var dup=DB.bodies.some(function(x){return x.id===nb.id});if(dup)nb.id=uid();
+            DB.bodies.push(nb);map[b.id]=nb.id;addB++}
+        });
+        nd.mins.forEach(function(m){
+          if(DB.mins.some(function(x){return x.id===m.id}))return;
+          m.bodyId=map[m.bodyId]||DB.bodies[0].id;
+          DB.mins.push(m);addM++;
+        });
+        DB.bodies.forEach(function(b,n){b.order=n});
+        save();renderAll();toast('会議体'+addB+'件・議事録'+addM+'件を足しました');
+      }
+    }catch(err){alert('ファイルを読めませんでした')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- 引き継ぎ通知 ---------- */
+function renderMigrate(){
+  var mb=$('migrateBox');
+  if(!migrateInfo){mb.style.display='none';return}
+  mb.style.display='';
+  mb.innerHTML='<button class="x" aria-label="閉じる">✕</button>'+
+    '📋 <b>無料版のデータを引き継ぎました。</b><br>'+
+    '同じブラウザに入っていた議事録'+migrateInfo.n+'件を、会議体「'+esc(migrateInfo.body)+'」として読みこみました（年度は日時から振り分けています：'+migrateInfo.years.join('・')+'年度）。<br>'+
+    '「これまでの会議」の各行にある会議体のプルダウンで、1件ずつ学年会・職員会議などに割りふれます。<br>'+
+    '<b>無料版のデータはそのまま残しています。</b>しばらく両方を開いて確かめてもだいじょうぶです。';
+  mb.querySelector('.x').addEventListener('click',function(){migrateInfo=null;renderMigrate()});
+}
+
+/* ---------- タブ ---------- */
+function switchTab(t){
+  tab=t;
+  document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x.dataset.tab===t)});
+  ['edit','out','todo','dec','list','set'].forEach(function(k){$('tab-'+k).classList.toggle('hidden',k!==t)});
+  renderAll();
+}
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){switchTab(b.dataset.tab)}});
+
+function renderAll(){
+  renderHead();renderMigrate();
+  if(tab==='edit')renderEdit();
+  else if(tab==='out')renderOut();
+  else if(tab==='todo')renderTodo();
+  else if(tab==='dec')renderDec();
+  else if(tab==='list')renderList();
+  else if(tab==='set'){renderSet()}
+}
+window.addEventListener('beforeprint',renderOut);
+
+load();
+save();   /* 初回（＝引き継ぎ直後）にすぐ書きこむ。これをしないと毎回無料版から読み直してしまう */
+renderAll();
+})();
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>
