@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保護者対応きろく帳 Pro</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2d5282;--ink:#2b2f36;--sub:#6b7280;--line:#e5dfd2;--ok:#2f855a;--okbg:#e6f4ea;--warn:#b7791f;--warnbg:#fdf3dc;--ng:#b83232;--ngbg:#fbe9e7;--pur:#6b46c1;--purbg:#efe9fb;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.top{background:var(--navy);color:#fff}
+.top-in{max-width:1300px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.back{color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;padding:6px 12px;border:1px solid rgba(255,255,255,.45);border-radius:999px;white-space:nowrap}
+.top h1{margin:0;font-size:1.15rem;letter-spacing:.03em}
+.pro-badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;background:#fff;color:var(--navy);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.hsel{font:inherit;font-size:.9rem;font-weight:700;padding:6px 8px;border-radius:10px;border:none;background:#fff;color:var(--navy);min-height:0;max-width:46vw}
+.roflag{background:#f0e2bf;color:#6b4d0b;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700}
+main{max-width:1300px;margin:0 auto;padding:16px}
+.priv{background:#fff8e8;border:1.5px solid #f0e2bf;border-radius:12px;padding:8px 12px;font-size:.82rem;color:#5c4a22;line-height:1.7;margin-bottom:12px}
+.priv b{color:#7a5a10}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--navy)}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:#eef2f7}
+.btn.p{background:var(--navy);color:#fff}
+.btn.d{border-color:var(--ng);color:var(--ng)}
+.btn.s{min-height:36px;padding:4px 10px;font-size:.84rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+input,select,textarea{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fdfcf9;min-height:44px;max-width:100%;color:var(--ink)}
+textarea{width:100%;min-height:80px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);border-color:var(--navy2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{font-size:.82rem;color:var(--sub)}
+label.f{display:flex;flex-direction:column;font-size:.8rem;color:var(--sub);font-weight:700;gap:2px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;font-size:.82rem;color:var(--sub);padding:24px 16px 40px}
+footer a{color:var(--navy)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+#printArea{display:none}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{flex:1;min-width:120px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;font-family:inherit;font-weight:700;font-size:.92rem;cursor:pointer;color:var(--navy)}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pane{display:none}.pane.on{display:block}
+.migrate-box{background:#eef4fa;border:1.5px solid #c8dcee;border-radius:12px;padding:12px 14px;font-size:.88rem;line-height:1.7;margin-bottom:12px;position:relative}
+.migrate-box .x{position:absolute;right:8px;top:4px;border:none;background:none;font-size:1rem;color:var(--sub);cursor:pointer;padding:2px 8px}
+.layout{display:grid;gap:14px}
+@media(min-width:1000px){.layout{grid-template-columns:430px minmax(0,1fr)}.side{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto}}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fgrid .w{grid-column:1/-1}
+.fgrid input,.fgrid select{width:100%}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pills button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;min-height:38px;font-family:inherit;font-size:.86rem;cursor:pointer}
+.pills button.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.follow{border-left:5px solid var(--warn);background:var(--warnbg);border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:.88rem;display:flex;gap:8px;align-items:center}
+.follow.over{border-left-color:var(--ng);background:var(--ngbg)}
+.follow div{flex:1}
+.rec{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.rec .h{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.85rem;color:var(--sub)}
+.rec .h b{color:var(--ink);font-size:.98rem}
+.tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.76rem;font-weight:700;background:#eef2f7;color:var(--navy)}
+.tag.k{background:var(--ngbg);color:var(--ng)}
+.tag.ok{background:var(--okbg);color:var(--ok)}
+.tag.w{background:var(--warnbg);color:var(--warn)}
+.tag.v{background:var(--purbg);color:var(--pur)}
+.rec p{margin:6px 0 0;font-size:.92rem;white-space:pre-wrap}
+.rec .lb{font-size:.76rem;color:var(--sub);font-weight:700}
+.rec .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.stats div{background:#f8f5ee;border-radius:10px;padding:6px 12px;font-size:.82rem}
+.stats b{font-size:1.15rem;color:var(--navy);margin-left:4px}
+.timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy)}
+#tlWrap{position:relative;padding-left:96px}
+#tlSvg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.tlrow{position:relative;margin-bottom:10px}
+.tlrow .ax{position:absolute;left:-96px;top:8px;width:84px;text-align:right;font-size:.8rem;color:var(--sub);font-weight:700}
+.tlrow .dot{position:absolute;left:-16px;top:16px;width:11px;height:11px;border-radius:50%;background:var(--navy)}
+.tlrow.linked .dot{background:var(--ok)}
+.sumbox{background:#f8f5ee;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:.9rem;line-height:1.8}
+#lockOv{position:fixed;inset:0;background:#1f3a5f;color:#fff;display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+#lockOv.on{display:flex}
+#lockOv .box{background:#fff;color:var(--ink);border-radius:16px;padding:22px;max-width:380px;width:100%;text-align:center}
+#lockOv input{width:160px;text-align:center;font-size:1.4rem;letter-spacing:.4em}
+table.g{border-collapse:collapse;width:100%;font-size:.88rem}
+table.g th,table.g td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+table.g th.l,table.g td.l{text-align:left}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff}
+  #printArea{display:block;color:#000;font-size:10pt}
+  #printArea h1{font-size:14pt;margin:0 0 6pt}
+  #printArea h2{font-size:11.5pt;margin:10pt 0 4pt}
+  #printArea table{border-collapse:collapse;width:100%}
+  #printArea th,#printArea td{border:1px solid #555;padding:4pt;vertical-align:top;text-align:left}
+  #printArea td{white-space:pre-wrap}
+  #printArea tr{page-break-inside:avoid}
+  #printArea .pb{page-break-before:always}
+  @page{size:A4;margin:12mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="back" href="index.html">← Pro版いちらん</a>
+  <h1>保護者対応きろく帳<span class="pro-badge">PRO</span></h1>
+  <select id="fySel" class="hsel" aria-label="年度"></select>
+  <select id="clsSel" class="hsel" aria-label="クラス"></select>
+  <span class="roflag" id="roFlag" style="display:none">読み取り専用</span>
+  <button class="btn s" id="lockNow" style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.45);color:#fff">🔒 いますぐロック</button>
+</div></header>
+<main>
+<div id="migrateBox" class="migrate-box" style="display:none"></div>
+<div class="priv">🔒 <b>記録はこの端末（ブラウザ）の中だけ</b>に保存され、外部には送信されません。／ <b>勤務校のルールがいつでも最優先です。</b>校務システムや所定の様式に記録する決まりがあるなら、そちらが正です。／ 共有のPCでは使わないでください。／ <b>保護者の人格を評価する言葉を書かない。事実と解釈を分ける。いつか誰かに読まれるかもしれない前提で書く。</b>／ 管理職への報告を、この記録で代替しないでください。<b>子どもの評価に流用しないでください。</b></div>
+
+<div class="tabs" id="tabs">
+  <button data-t="rec" class="on">📝 記録・一覧</button>
+  <button data-t="tl">🧭 子どもの経過</button>
+  <button data-t="hand">📦 引き継ぎ・印刷</button>
+  <button data-t="set">⚙ 名簿・テンプレ・設定</button>
+</div>
+
+<div class="pane on" id="p-rec">
+<div class="layout">
+<div class="side">
+  <section class="card" id="formCard">
+    <h2 id="formTitle">記録を書く</h2>
+    <div class="row" style="margin-bottom:8px">
+      <label class="f" style="flex:1;min-width:180px">対応の型テンプレ<select id="tplSel"></select></label>
+      <button class="btn s" id="tplApply" style="align-self:flex-end">流しこむ</button>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn s" id="callStart">📞 通話開始（時刻を記録）</button>
+      <span class="timer" id="timer"></span>
+    </div>
+    <div class="fgrid">
+      <label class="f">日付<input type="date" id="fDate"></label>
+      <label class="f">時刻<input type="time" id="fTime"></label>
+      <label class="f w">児童<select id="fChild"></select></label>
+      <label class="f">相手<select id="fWho"><option>母</option><option>父</option><option>祖父母</option><option>保護者</option><option>その他</option></select></label>
+      <label class="f">手段<select id="fHow"><option>電話（受）</option><option>電話（発）</option><option>連絡帳</option><option>来校・面談</option><option>家庭訪問</option><option>メール・連絡アプリ</option></select></label>
+      <label class="f w">種別<select id="fKind"></select></label>
+      <label class="f w">［事実］保護者の話・起きたこと<textarea id="fFact" placeholder="相手の言葉を、できるだけそのまま。要約すると自分の解釈が入ります。"></textarea></label>
+      <label class="f w">［所感・自分の見立て］<textarea id="fView" placeholder="見立てを書く欄です。人物評（感情的・理不尽 など）は書かないでください。"></textarea></label>
+      <label class="f w">こちらの対応・回答<textarea id="fResp" placeholder="伝えたこと・約束したこと（約束は一字一句）"></textarea></label>
+      <label class="f w">次にすること<input id="fNext" placeholder="例：明日、本人と面談して結果を電話で伝える"></label>
+      <label class="f">期限<input type="date" id="fDue"></label>
+      <label class="f">通話・面談時間（分）<input type="number" id="fMin" min="0"></label>
+      <label class="f w">この記録は、どの「次にすること」の実行ですか？（任意）<select id="fLink"></select></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="row note"><input type="checkbox" id="fBoss" style="min-height:auto"> 管理職に報告済み</label>
+      <label class="row note"><input type="checkbox" id="fShare" style="min-height:auto"> 学年で共有済み</label>
+    </div>
+    <p class="note">チェックボックスは「報告した」という記録であって、報告そのものではありません。けが・いじめに関わること・法に触れる可能性のあることは、<b>記録する前に、まず人に話してください。</b></p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn p" id="save">記録する</button>
+      <button class="btn" id="cancel" style="display:none">編集をやめる</button>
+    </div>
+  </section>
+</div>
+
+<div>
+  <section class="card">
+    <h2>⏰ フォロー待ち</h2>
+    <div id="follows"></div>
+    <p class="note">「まだできていません」という連絡は、できてからの連絡より価値があることがあります。待っている側がいちばん不安なのは、何も来ない時間だからです。</p>
+  </section>
+  <section class="card">
+    <h2>記録一覧</h2>
+    <div class="stats" id="stats"></div>
+    <div class="row" style="margin-bottom:8px">
+      <input id="q" placeholder="🔍 キーワード検索" style="flex:1;min-width:180px">
+      <select id="fcChild"><option value="">児童：すべて</option></select>
+      <select id="fcKind"><option value="">種別：すべて</option></select>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <div class="pills" id="fcFlag">
+        <button data-v="" class="on">すべて</button>
+        <button data-v="open">未完了のみ</button>
+        <button data-v="noboss">管理職未報告</button>
+      </div>
+      <label class="row note"><input type="checkbox" id="showView" style="min-height:auto" checked> 画面に所感を表示</label>
+      <button class="btn s" id="prList">🖨 表示中の記録を印刷</button>
+    </div>
+    <div id="list"></div>
+  </section>
+</div>
+</div>
+</div>
+
+<div class="pane" id="p-tl">
+  <section class="card">
+    <div class="row">
+      <label class="f">児童<select id="tlChild"></select></label>
+      <button class="btn s" id="tlHand">この子の引き継ぎシートへ</button>
+      <button class="btn s" id="tlPrint">🖨 ケース会議用に印刷</button>
+    </div>
+    <div id="tlSummary" class="sumbox" style="margin-top:10px"></div>
+    <p class="note">「次にすること」と、それを実行した記録は<b>線で結ばれます</b>。約束が果たされたかどうかが目で追えます。電話を取る前にこの画面を開けば、「先日の件」が三秒で戻ってきます。</p>
+    <div id="tlWrap"><svg id="tlSvg"></svg><div id="tlList"></div></div>
+  </section>
+</div>
+
+<div class="pane" id="p-hand">
+  <section class="card">
+    <h2>引き継ぎシート</h2>
+    <p class="note">含まれるのは<b>事実と、継続中の課題だけ</b>です。所感も人物評も種別のラベルも入りません（先入観を渡さないため）。</p>
+    <div class="row">
+      <select id="hChild"></select>
+      <button class="btn p" id="hRun">つくる</button>
+      <button class="btn" id="hCopy">コピー</button>
+    </div>
+    <textarea id="hOut" readonly style="min-height:240px;margin-top:8px"></textarea>
+  </section>
+  <section class="card">
+    <h2>ケース会議・管理職報告のための印刷</h2>
+    <div class="row">
+      <select id="prChild"></select>
+      <label class="row note"><input type="checkbox" id="prView" style="min-height:auto"> 所感を含める（既定：含めない）</label>
+      <button class="btn p" id="prRun">🖨 印刷する</button>
+    </div>
+    <p class="note">1ページ目は要約、2ページ目から時系列表です。会議では「まず全体像」を共有できます。</p>
+  </section>
+  <section class="card">
+    <h2>年度</h2>
+    <div class="row">
+      <button class="btn" id="newYear">新しい年度を始める（名簿を引き継ぐ）</button>
+      <span class="note">名簿は共通名簿から引き継ぎ（同じ子は同じ児童ID）、記録は新しい年度で空になります。前の年度は読み取り専用です。</span>
+    </div>
+  </section>
+  <section class="card">
+    <h2>書き出し・読みこみ</h2>
+    <div class="row">
+      <button class="btn" id="expBtn">JSONで書き出す（全クラス・全年度＋名簿）</button>
+      <label class="btn" style="display:inline-flex;align-items:center">JSONを読みこむ<input type="file" id="impFile" accept=".json" style="display:none"></label>
+      <button class="btn" id="csv">CSVで保存</button>
+      <label class="row note"><input type="checkbox" id="csvView" style="min-height:auto"> CSVに所感を含める（既定：含めない）</label>
+    </div>
+    <p class="note">読みこみのときに「置きかえ」か「クラスとして追加」を選べます。無料版のデータは消しません。</p>
+  </section>
+</div>
+
+<div class="pane" id="p-set">
+  <section class="card">
+    <h2>名簿（1行に1人・Pro版で共通）</h2>
+    <p class="note">この名簿は <b>MINATO WORKS の Pro版すべて</b>で共有されます。名前を直しても、記録は児童ID（sid）でつながっているので消えません。</p>
+    <textarea id="rosterTxt" style="min-height:170px" placeholder="1 あおき はると&#10;2 いとう さくら"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn p" id="rosterSave">名簿を保存</button>
+      <button class="btn" id="rosterCommon">共通名簿（せんせいアプリ）から読み込む</button>
+      <span class="note" id="rosterMsg"></span>
+    </div>
+  </section>
+  <section class="card">
+    <h2>クラス</h2>
+    <div class="row">
+      <input id="clsName" placeholder="3年1組" style="min-width:160px">
+      <button class="btn s" id="clsRename">名前を変える</button>
+      <button class="btn s" id="clsAdd">クラスを追加</button>
+      <button class="btn s d" id="clsDel">このクラスを消す</button>
+    </div>
+    <div id="clsList" style="margin-top:8px"></div>
+  </section>
+  <section class="card">
+    <h2>対応の型テンプレ</h2>
+    <p class="note">突然の電話でいちばん危ないのは、その場で結論や約束を出してしまうことです。「確認して、いつまでに返す」という型を目の前に置いておくと、踏みとどまれます。</p>
+    <div id="tplList"></div>
+    <div class="row" style="margin-top:8px"><input id="tplNew" placeholder="新しいテンプレの名前"><button class="btn s" id="tplAdd">テンプレを足す</button></div>
+  </section>
+  <section class="card">
+    <h2>画面のロック</h2>
+    <p class="note"><b>これは暗号化ではありません。</b>本気で調べる人には見られます。「通りかかった人の目に入らない」ための壁だと思ってください。パスコードを忘れたときの復旧手段はありません（全消去して再設定のみ）。</p>
+    <div class="row">
+      <label class="f">パスコード（4桁）<input id="pcA" type="password" inputmode="numeric" maxlength="8" style="width:130px"></label>
+      <label class="f">もう一度<input id="pcB" type="password" inputmode="numeric" maxlength="8" style="width:130px"></label>
+      <button class="btn p" id="pcSet" style="align-self:flex-end">ロックを設定する</button>
+      <button class="btn d" id="pcOff" style="align-self:flex-end">ロックを解除する（設定を消す）</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="f">何秒さわらないとロックするか<input type="number" id="pcIdle" min="30" style="width:140px"></label>
+      <button class="btn s" id="pcIdleSave" style="align-self:flex-end">保存</button>
+      <span class="note" id="pcState"></span>
+    </div>
+  </section>
+  <section class="card">
+    <details><summary>データの管理</summary>
+      <div class="row" style="margin-top:8px">
+        <label class="f">年度<select id="delFy"></select></label>
+        <button class="btn s d" id="delYear" style="align-self:flex-end">この年度のデータを削除</button>
+      </div>
+      <p class="note"><b>年度が終わったら、その年度のデータを消してください。</b>必要な記録は学校の正式な様式に残っています。引き継ぐべきことは、引き継ぎの場で渡してあります。手元に残し続ける理由は、もうありません。</p>
+    </details>
+  </section>
+</div>
+</main>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+
+<div id="lockOv"><div class="box">
+  <h2 style="margin-top:0;color:var(--navy)">🔒 ロック中</h2>
+  <p class="note">パスコードを入れてください。</p>
+  <input id="pcIn" type="password" inputmode="numeric" maxlength="8">
+  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn p" id="pcGo">ひらく</button></div>
+  <p class="note" id="pcMsg" style="min-height:1.6em"></p>
+  <button class="btn s d" id="pcForgot">パスコードを忘れた（全消去して再設定）</button>
+</div></div>
+
+<div id="toast"></div>
+<div id="printArea"></div>
+<script>
+"use strict";
+/* ===== 共通名簿 mwpro_roster_v1 ===== */
+/* MINATO WORKS の Pro版すべてで同じ実装を使うこと（クラスID・児童ID sid を共有します） */
+/* sid は年度をまたいで不変。年度更新では新しいクラスを作り、students の id をそのまま引き継ぎます */
+var Roster=(function(){
+  var KEY='mwpro_roster_v1';
+  function uid(p){return (p||'s')+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+  function curFY(){var d=new Date();return d.getMonth()+1<4?d.getFullYear()-1:d.getFullYear()}
+  function read(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+  function write(d){try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){return false}}
+  function norm(d){
+    if(!d||typeof d!=='object')d={};
+    if(!Array.isArray(d.classes))d.classes=[];
+    var seen={};
+    d.classes=d.classes.filter(function(c){return c&&typeof c==='object'}).map(function(c){
+      var id=c.id||uid('c'); while(seen[id])id=uid('c'); seen[id]=1;
+      var sseen={};
+      return {id:id,fy:Number(c.fy)||curFY(),name:String(c.name||'1組'),
+        students:(Array.isArray(c.students)?c.students:[]).filter(function(s){return s&&s.name}).map(function(s,i){
+          var sid=s.id||uid('s'); while(sseen[sid])sid=uid('s'); sseen[sid]=1;
+          return {id:sid,no:(s.no===''||s.no==null?i+1:Number(s.no)||i+1),name:String(s.name)};
+        })};
+    });
+    d.version=1;
+    d.fy=Number(d.fy)||(d.classes.length?d.classes[0].fy:curFY());
+    return d;
+  }
+  var store=norm(read());
+  function persist(){write(store)}
+  function parseLines(text){
+    return String(text||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(l,i){
+      var m=l.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+      return m?{no:Number(m[1]),name:m[2].trim(),raw:l}:{no:i+1,name:l,raw:l};
+    }).filter(function(s){return s.name});
+  }
+  function get(id){for(var i=0;i<store.classes.length;i++)if(store.classes[i].id===id)return store.classes[i];return null}
+  function classesOf(fy){return store.classes.filter(function(c){return c.fy===fy})}
+  function addClass(fy,name,students){
+    var c={id:uid('c'),fy:fy,name:name||'1組',students:(students||[]).map(function(s,i){
+      return {id:s.id||uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)}})};
+    store.classes.push(c);persist();return c;
+  }
+  function removeClass(id){store.classes=store.classes.filter(function(c){return c.id!==id});persist()}
+  function setStudents(id,list){
+    var c=get(id);if(!c)return null;
+    var old=c.students.slice();
+    c.students=list.map(function(s,i){
+      var hit=null;
+      if(s.id)for(var j=0;j<old.length;j++){if(old[j].id===s.id)hit=old[j]}
+      if(!hit)for(var k=0;k<old.length;k++){if(old[k].name===s.name&&!old[k].__used)hit=old[k]}
+      if(hit)hit.__used=1;
+      return {id:hit?hit.id:uid('s'),no:s.no==null?i+1:Number(s.no),name:String(s.name)};
+    });
+    c.students.forEach(function(s){delete s.__used});
+    persist();return c;
+  }
+  function resolve(classId,key){
+    var c=get(classId);if(!c)return null;
+    var k=String(key==null?'':key).trim();if(!k)return null;
+    var norm1=function(s){return String(s).replace(/[\s　]/g,'')};
+    for(var i=0;i<c.students.length;i++)if(c.students[i].name===k)return c.students[i].id;
+    var m=k.match(/^\s*(\d+)[\s.．、　]*(.+)$/);
+    var body=m?m[2].trim():k, no=m?Number(m[1]):null;
+    for(var j=0;j<c.students.length;j++)if(c.students[j].name===body)return c.students[j].id;
+    for(var p=0;p<c.students.length;p++)if(norm1(c.students[p].name)===norm1(body))return c.students[p].id;
+    if(no!=null)for(var q=0;q<c.students.length;q++)if(c.students[q].no===no&&norm1(c.students[q].name)===norm1(body))return c.students[q].id;
+    return null;
+  }
+  function mergeStudents(classId,list){
+    var c=get(classId);if(!c)return {};
+    var map={};
+    list.forEach(function(s){
+      var sid=resolve(classId,s.raw||s.name);
+      if(!sid){var ns={id:uid('s'),no:s.no==null?c.students.length+1:Number(s.no),name:String(s.name)};c.students.push(ns);sid=ns.id}
+      map[s.raw||s.name]=sid;
+    });
+    persist();return map;
+  }
+  function nameOf(classId,sid){var c=get(classId);if(!c)return '';for(var i=0;i<c.students.length;i++)if(c.students[i].id===sid)return c.students[i].name;return ''}
+  function reload(){store=norm(read());return store}
+  return {KEY:KEY,uid:uid,curFY:curFY,all:function(){return store},persist:persist,parseLines:parseLines,
+    get:get,classesOf:classesOf,addClass:addClass,removeClass:removeClass,setStudents:setStudents,
+    resolve:resolve,mergeStudents:mergeStudents,nameOf:nameOf,reload:reload};
+})();
+
+
+/* ===== 保護者対応きろく帳Pro 本体 ===== */
+(function(){
+var KEY='mwpro_gyomu03_v1', FLAG='mwpro_gyomu03_imported', FREE='mw_gyomu_03_data';
+var MAXCLS=12;
+var KINDS=['連絡・報告','相談','要望・苦情','けが・体調','友だち関係','欠席・登校しぶり','お礼','その他'];
+var DEFTPL=[
+  {id:'t1',name:'初期対応',fact:'（聞いたことを、相手の言葉のまま）',resp:'話を最後まで聞いた。事実確認のうえ、◯日までに折り返すと伝えた。',next:'本人・関係児童から話を聞く／◯日までに電話'},
+  {id:'t2',name:'けが・体調の連絡',fact:'（いつ・どこで・何が起きたか。聞いた事実だけ）',resp:'状況を伝え、学校での手当てと今後の見守りを説明した。',next:'翌日に本人の様子を確認し、必要なら連絡する'},
+  {id:'t3',name:'欠席の連絡',fact:'（欠席の理由として聞いた言葉。推測や診断名は書かない）',resp:'お大事に、と伝えた。持ち物・宿題の連絡をした。',next:'登校したら本人に声をかける'},
+  {id:'t4',name:'お礼・良い報告',fact:'（子どものよかった場面）',resp:'家庭での様子もうかがい、学校での姿を伝えた。',next:''}
+];
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},2000)}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
+function pad(n){return String(n).padStart(2,'0')}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function nowT(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())}
+function fmtDate(s){if(!s)return'';var d=new Date(s+'T00:00:00');if(isNaN(d))return String(s);return (d.getMonth()+1)+'/'+d.getDate()+'('+'日月火水木金土'[d.getDay()]+')'}
+function fyOf(s){var y=+String(s).slice(0,4),m=+String(s).slice(5,7);return m<4?y-1:y}
+function md(s){if(!s)return '';var p=String(s).split('-');return p.length>=3?((+p[1])+'/'+(+p[2])):String(s)}
+function readJSON(k){try{var r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e){return null}}
+function download(name,text,type){var b=new Blob([text],{type:type||'text/plain'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function copyText(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){toast('コピーしました')},fb)}else fb();
+  function fb(){var ta=document.createElement('textarea');ta.value=s;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('コピーしました')}catch(e){toast('コピーできませんでした')}ta.remove()}
+}
+function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')}).join('\r\n')}
+function firstSentence(s){
+  s=String(s||'').replace(/\s+/g,' ').trim();
+  if(!s)return '';
+  var m=s.match(/^[^。！!？?]*[。！!？?]?/);
+  var t=m?m[0]:s;
+  return t.length>70?t.slice(0,70)+'…':t;
+}
+function simpleHash(s){var h=5381;for(var i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0}return 'x'+h.toString(16)}
+function sha(s){
+  try{
+    if(window.crypto&&crypto.subtle&&crypto.subtle.digest&&window.TextEncoder){
+      return crypto.subtle.digest('SHA-256',new TextEncoder().encode('mwpro03:'+s)).then(function(b){
+        return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2)}).join('');
+      });
+    }
+  }catch(e){}
+  return Promise.resolve(simpleHash('mwpro03:'+s));
+}
+
+/* ---------- state ---------- */
+var DB=null, editing=null, migrateInfo=null, locked=false, lastAct=Date.now();
+var filt={q:'',child:'',kind:'',flag:''};
+function blank(){return {recs:[]}}
+function normRec(r){
+  if(!r||typeof r!=='object')r={};
+  return {id:r.id||uid(),date:String(r.date||today()),time:String(r.time||''),sid:r.sid||'',childName:String(r.childName||''),
+    who:String(r.who||'母'),how:String(r.how||'電話（受）'),kind:(KINDS.indexOf(r.kind)>=0?r.kind:'連絡・報告'),
+    fact:String(r.fact||''),view:String(r.view||''),resp:String(r.resp||''),next:String(r.next||''),due:String(r.due||''),
+    min:Number(r.min)||0,boss:!!r.boss,share:!!r.share,done:r.next?!!r.done:true,doneAt:String(r.doneAt||''),
+    created:Number(r.created)||Date.now(),linkedTo:r.linkedTo||null};
+}
+function normClass(c){
+  if(!c||typeof c!=='object')c={};
+  return {recs:(Array.isArray(c.recs)?c.recs:[]).map(normRec)};
+}
+function normDB(d){
+  if(!d||typeof d!=='object')d={};
+  d.v=1;
+  if(!d.byClass||typeof d.byClass!=='object')d.byClass={};
+  Object.keys(d.byClass).forEach(function(k){d.byClass[k]=normClass(d.byClass[k])});
+  var tp=(Array.isArray(d.tpls)?d.tpls:[]).filter(function(t){return t&&t.name}).map(function(t){
+    return {id:t.id||uid(),name:String(t.name),fact:String(t.fact||''),resp:String(t.resp||''),next:String(t.next||'')};
+  });
+  d.tpls=tp.length?tp:JSON.parse(JSON.stringify(DEFTPL));
+  var L=d.lock||{};
+  d.lock={on:!!L.on&&!!L.hash,hash:String(L.hash||''),idleSec:Math.max(30,Number(L.idleSec)||180)};
+  d.currentFY=Number(d.currentFY)||Roster.curFY();
+  var list=Roster.classesOf(d.currentFY);
+  if(!list.length)list=[Roster.addClass(d.currentFY,'1組',[])];
+  var okc=null;for(var i=0;i<list.length;i++)if(list[i].id===d.currentCid)okc=list[i];
+  if(!okc)d.currentCid=list[0].id;
+  if(!d.byClass[d.currentCid])d.byClass[d.currentCid]=blank();
+  d.newYearAsked=Number(d.newYearAsked)||0;
+  return d;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('保存できませんでした（容量やプライベートモードを確認してください）')}}
+function cur(){if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();return DB.byClass[DB.currentCid]}
+function recs(){return cur().recs}
+function kids(){var c=Roster.get(DB.currentCid);return c?c.students.slice().sort(function(a,b){return (a.no||0)-(b.no||0)}):[]}
+function nameOf(r){return (r.sid&&Roster.nameOf(DB.currentCid,r.sid))||r.childName||''}
+function isRO(){return DB.currentFY<Roster.curFY()}
+function guard(){if(isRO()){toast('過去の年度は読み取り専用です');return true}return false}
+function byId(id){var L=recs();for(var i=0;i<L.length;i++)if(L[i].id===id)return L[i];return null}
+
+/* ---------- 無料版からの引き継ぎ ---------- */
+function migrate(){
+  var f=readJSON(FREE);
+  if(!f||typeof f!=='object')return null;
+  var rs=Array.isArray(f.recs)?f.recs:[];
+  var ros=Array.isArray(f.roster)?f.roster:[];
+  if(!rs.length&&!ros.length)return null;
+  var curfy=Roster.curFY();
+  var years={};rs.forEach(function(r){if(r&&r.date)years[fyOf(r.date)]=1});years[curfy]=1;
+  var ylist=Object.keys(years).map(Number).sort(function(a,b){return a-b});
+  var names=[];
+  ros.forEach(function(n){n=String(n||'').trim();if(n&&names.indexOf(n)<0)names.push(n)});
+  rs.forEach(function(r){var n=String((r&&r.child)||'').trim();if(n&&names.indexOf(n)<0)names.push(n)});
+  var parsed=Roster.parseLines(names.join('\n'));
+  var db={v:1,currentFY:curfy,currentCid:null,byClass:{},tpls:JSON.parse(JSON.stringify(DEFTPL)),lock:{on:false,hash:'',idleSec:180},newYearAsked:0};
+  var moved=0,unmatched=0;
+  ylist.forEach(function(y){
+    var rc=Roster.classesOf(y)[0];
+    if(rc)Roster.mergeStudents(rc.id,parsed);
+    else rc=Roster.addClass(y,(y===curfy?'1組':(y+'年度（無料版から）')),parsed.map(function(p){return {no:p.no,name:p.name}}));
+    var c=blank();
+    rs.filter(function(r){return r&&r.date&&fyOf(r.date)===y}).forEach(function(r){
+      var sid=r.child?Roster.resolve(rc.id,String(r.child)):'';
+      if(r.child&&!sid)unmatched++;
+      c.recs.push(normRec({id:r.id||uid(),date:r.date,time:r.time,sid:sid||'',childName:String(r.child||''),
+        who:r.who,how:r.how,kind:r.kind,fact:String(r.body||''),view:'',resp:r.resp,next:r.next,due:r.due,
+        min:r.min,boss:r.boss,share:r.share,done:r.done,doneAt:r.doneAt,created:r.created,linkedTo:null}));
+      moved++;
+    });
+    db.byClass[rc.id]=c;
+    if(y===curfy)db.currentCid=rc.id;
+  });
+  if(!db.currentCid){
+    var rc2=Roster.classesOf(curfy)[0]||Roster.addClass(curfy,'1組',parsed.map(function(p){return {no:p.no,name:p.name}}));
+    db.currentCid=rc2.id;if(!db.byClass[rc2.id])db.byClass[rc2.id]=blank();
+  }
+  migrateInfo={recs:moved,kids:parsed.length,years:ylist.length,unmatched:unmatched};
+  try{localStorage.setItem(FLAG,'true')}catch(e){}
+  return db;
+}
+function load(){
+  var d=readJSON(KEY);
+  if(!d||!d.byClass||!Object.keys(d.byClass).length){
+    var done=false;try{done=localStorage.getItem(FLAG)==='true'}catch(e){}
+    if(!done)d=migrate()||d;
+  }
+  DB=normDB(d);
+}
+function renderMigrate(){
+  var mb=$('#migrateBox');
+  if(!migrateInfo){mb.style.display='none';return}
+  mb.style.display='';
+  mb.innerHTML='<button class="x" aria-label="閉じる">✕</button>📝 <b>無料版のデータを引き継ぎました。</b><br>'+
+    '同じブラウザに入っていた記録'+migrateInfo.recs+'件・名簿'+migrateInfo.kids+'人を、年度ごとに'+migrateInfo.years+'クラス（今年度は「1組」）として読みこみました。'+
+    '児童名は児童ID（sid）につなぎ直し、無料版の「内容」は［事実］欄に入れています。<b>所感が混ざっている場合は、あとから手で分けてください。</b>'+
+    (migrateInfo.unmatched?'<br>名簿と一致しなかった児童名が'+migrateInfo.unmatched+'件ありました（名前はそのまま残しています）。':'')+
+    '<br><b>無料版のデータはそのまま残っています。</b>';
+  mb.querySelector('.x').addEventListener('click',function(){migrateInfo=null;renderMigrate()});
+}
+
+/* ---------- ロック ---------- */
+function showLock(){
+  if(!DB.lock.on)return;
+  locked=true;$('#lockOv').classList.add('on');$('#pcIn').value='';$('#pcMsg').textContent='';
+  setTimeout(function(){try{$('#pcIn').focus()}catch(e){}},50);
+}
+function hideLock(){locked=false;$('#lockOv').classList.remove('on');lastAct=Date.now()}
+$('#pcGo').onclick=function(){
+  var v=$('#pcIn').value;
+  sha(v).then(function(h){
+    if(h===DB.lock.hash){hideLock()}
+    else{$('#pcMsg').textContent='ちがうようです。';$('#pcIn').value=''}
+  });
+};
+$('#pcIn').addEventListener('keydown',function(e){if(e.key==='Enter')$('#pcGo').click()});
+$('#pcForgot').onclick=function(){
+  if(!confirm('パスコードの復旧手段はありません。このアプリの記録をすべて消して、ロックを解除しますか？'))return;
+  if(!confirm('本当に全部消しますか？　元に戻せません。'))return;
+  try{localStorage.removeItem(KEY)}catch(e){}
+  location.reload();
+};
+$('#lockNow').onclick=function(){
+  if(!DB.lock.on){toast('先に「⚙ 設定」でパスコードを設定してください');return}
+  showLock();
+};
+$('#pcSet').onclick=function(){
+  var a=$('#pcA').value,b=$('#pcB').value;
+  if(!/^\d{4,8}$/.test(a)){toast('4〜8桁の数字を入れてください');return}
+  if(a!==b){toast('2つが合っていません');return}
+  sha(a).then(function(h){
+    DB.lock.on=true;DB.lock.hash=h;save();
+    $('#pcA').value='';$('#pcB').value='';renderAll();
+    toast('ロックを設定しました（暗号化ではありません）');
+  });
+};
+$('#pcOff').onclick=function(){
+  if(!DB.lock.on){toast('ロックは設定されていません');return}
+  if(!confirm('ロックの設定を消しますか？（記録は消えません）'))return;
+  DB.lock.on=false;DB.lock.hash='';save();renderAll();toast('ロックを解除しました');
+};
+$('#pcIdleSave').onclick=function(){
+  DB.lock.idleSec=Math.max(30,parseInt($('#pcIdle').value,10)||180);save();renderAll();toast('保存しました');
+};
+['pointerdown','keydown','wheel'].forEach(function(ev){document.addEventListener(ev,function(){if(!locked)lastAct=Date.now()},{passive:true})});
+setInterval(function(){
+  if(!DB||!DB.lock.on||locked)return;
+  if(Date.now()-lastAct>DB.lock.idleSec*1000)showLock();
+},5000);
+
+/* ---------- フォーム ---------- */
+function childOptions(includeNone,sel){
+  var h=includeNone?'<option value="">（児童を指定しない）</option>':'';
+  h+=kids().map(function(k){return '<option value="'+esc(k.id)+'"'+(k.id===sel?' selected':'')+'>'+esc(k.name)+'</option>'}).join('');
+  return h;
+}
+function renderLinkOptions(){
+  var sid=$('#fChild').value;
+  var open=recs().filter(function(r){return r.next&&!r.done&&r.sid===sid&&r.id!==editing});
+  var keep=$('#fLink').value;
+  $('#fLink').innerHTML='<option value="">（なし）</option>'+open.map(function(r){
+    return '<option value="'+esc(r.id)+'">'+fmtDate(r.date)+'　'+esc(firstSentence(r.next))+'</option>';
+  }).join('');
+  if(keep)$('#fLink').value=keep;
+}
+$('#fChild').addEventListener('change',renderLinkOptions);
+function clearForm(){
+  editing=null;
+  $('#fDate').value=today();$('#fTime').value=nowT();
+  ['#fFact','#fView','#fResp','#fNext','#fDue','#fMin'].forEach(function(s){$(s).value=''});
+  $('#fBoss').checked=false;$('#fShare').checked=false;$('#fLink').value='';
+  $('#formTitle').textContent='記録を書く';$('#save').textContent='記録する';$('#cancel').style.display='none';
+  renderLinkOptions();
+}
+$('#cancel').onclick=clearForm;
+$('#save').onclick=function(){
+  if(guard())return;
+  var sid=$('#fChild').value;
+  var r={date:$('#fDate').value||today(),time:$('#fTime').value,sid:sid,
+    childName:sid?Roster.nameOf(DB.currentCid,sid):'',
+    who:$('#fWho').value,how:$('#fHow').value,kind:$('#fKind').value,
+    fact:$('#fFact').value.trim(),view:$('#fView').value.trim(),resp:$('#fResp').value.trim(),
+    next:$('#fNext').value.trim(),due:$('#fDue').value,min:parseInt($('#fMin').value,10)||0,
+    boss:$('#fBoss').checked,share:$('#fShare').checked,linkedTo:$('#fLink').value||null};
+  if(!r.sid&&!r.fact){toast('児童か［事実］を入れてください');return}
+  if(editing){
+    var o=byId(editing);
+    if(o){
+      r.id=o.id;r.created=o.created;
+      r.done=r.next?(o.next===r.next?!!o.done:false):true;
+      r.doneAt=o.doneAt||'';
+      var n=normRec(r);
+      for(var k in n)o[k]=n[k];
+    }
+    toast('更新しました');
+  }else{
+    var n2=normRec(r);n2.id=uid();n2.created=Date.now();n2.done=!n2.next;
+    recs().push(n2);
+    if(n2.linkedTo){var src=byId(n2.linkedTo);if(src&&!src.done){src.done=true;src.doneAt=n2.date}}
+    toast('記録しました');
+  }
+  save();clearForm();renderAll();
+};
+function edit(id){
+  var r=byId(id);if(!r)return;editing=id;
+  $('#fDate').value=r.date;$('#fTime').value=r.time||'';
+  $('#fChild').value=r.sid||'';
+  $('#fWho').value=r.who;$('#fHow').value=r.how;$('#fKind').value=r.kind;
+  $('#fFact').value=r.fact;$('#fView').value=r.view;$('#fResp').value=r.resp;
+  $('#fNext').value=r.next;$('#fDue').value=r.due||'';$('#fMin').value=r.min||'';
+  $('#fBoss').checked=!!r.boss;$('#fShare').checked=!!r.share;
+  renderLinkOptions();$('#fLink').value=r.linkedTo||'';
+  $('#formTitle').textContent='記録を編集';$('#save').textContent='更新する';$('#cancel').style.display='';
+  $('#formCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+/* 通話タイマー */
+var tStart=null,tH=null;
+$('#callStart').onclick=function(){
+  if(tStart){
+    var m=Math.max(1,Math.round((Date.now()-tStart)/60000));
+    $('#fMin').value=m;clearInterval(tH);tStart=null;$('#timer').textContent='';
+    this.textContent='📞 通話開始（時刻を記録）';toast(m+'分で記録しました');return;
+  }
+  tStart=Date.now();$('#fDate').value=today();$('#fTime').value=nowT();this.textContent='⏹ 通話終了';
+  tH=setInterval(function(){var s=Math.floor((Date.now()-tStart)/1000);$('#timer').textContent=Math.floor(s/60)+'分'+pad(s%60)+'秒'},1000);
+};
+/* テンプレ */
+$('#tplApply').onclick=function(){
+  var t=DB.tpls.filter(function(x){return x.id===$('#tplSel').value})[0];
+  if(!t){toast('テンプレを選んでください');return}
+  if(($('#fFact').value||$('#fResp').value||$('#fNext').value)&&!confirm('いま書いてある内容を、テンプレで置きかえますか？'))return;
+  $('#fFact').value=t.fact;$('#fResp').value=t.resp;$('#fNext').value=t.next;
+  toast('流しこみました');
+};
+
+/* ---------- 一覧 ---------- */
+function sorted(){return recs().slice().sort(function(a,b){return (b.date+(b.time||'')).localeCompare(a.date+(a.time||''))})}
+function filtered(){
+  var q=filt.q.toLowerCase();
+  return sorted().filter(function(r){
+    if(filt.child&&r.sid!==filt.child)return false;
+    if(filt.kind&&r.kind!==filt.kind)return false;
+    if(filt.flag==='open'&&r.done)return false;
+    if(filt.flag==='noboss'&&r.boss)return false;
+    if(q&&[nameOf(r),r.fact,r.view,r.resp,r.next,r.kind,r.how].join(' ').toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+}
+function recHTML(r){
+  var showV=$('#showView').checked;
+  var h='<div class="rec"><div class="h"><b>'+esc(nameOf(r)||'（児童名なし）')+'</b><span>'+fmtDate(r.date)+' '+esc(r.time||'')+'</span>'+
+    '<span class="tag">'+esc(r.how)+'</span><span class="tag'+(r.kind==='要望・苦情'?' k':'')+'">'+esc(r.kind)+'</span><span>相手：'+esc(r.who)+'</span>'+
+    (r.min?'<span>'+r.min+'分</span>':'')+
+    (r.boss?'<span class="tag ok">管理職報告済</span>':'<span class="tag w">管理職未報告</span>')+
+    (r.share?'<span class="tag ok">学年共有済</span>':'')+
+    (r.linkedTo?'<span class="tag v">前の「次にすること」の実行</span>':'')+'</div>';
+  if(r.fact)h+='<p><span class="lb">［事実］</span><br>'+esc(r.fact)+'</p>';
+  if(r.view&&showV)h+='<p><span class="lb">［所感・自分の見立て］</span><br>'+esc(r.view)+'</p>';
+  if(r.resp)h+='<p><span class="lb">対応</span><br>'+esc(r.resp)+'</p>';
+  if(r.next)h+='<p><span class="lb">次にすること</span> '+(r.done?'<span class="tag ok">完了</span>':'<span class="tag w">未完了</span>')+'<br>'+esc(r.next)+(r.due?'（期限 '+fmtDate(r.due)+'）':'')+'</p>';
+  h+='<div class="acts"><button class="btn s" data-a="edit" data-id="'+esc(r.id)+'">編集</button>'+
+    (r.next?'<button class="btn s" data-a="done" data-id="'+esc(r.id)+'">'+(r.done?'未完了に戻す':'✓ 完了にする')+'</button>':'')+
+    (!r.boss?'<button class="btn s" data-a="boss" data-id="'+esc(r.id)+'">管理職に報告した</button>':'')+
+    '<button class="btn s" data-a="child" data-id="'+esc(r.id)+'">この子の経過を見る</button>'+
+    '<button class="btn s d" data-a="del" data-id="'+esc(r.id)+'">削除</button></div></div>';
+  return h;
+}
+function renderList(){
+  var sel=$('#fcChild'),c0=filt.child;
+  sel.innerHTML='<option value="">児童：すべて</option>'+kids().map(function(k){
+    var n=recs().filter(function(r){return r.sid===k.id}).length;
+    return '<option value="'+esc(k.id)+'">'+esc(k.name)+'（'+n+'）</option>';
+  }).join('');
+  sel.value=c0;
+  var t=today();
+  var fol=recs().filter(function(r){return r.next&&!r.done}).sort(function(a,b){return (a.due||'9999').localeCompare(b.due||'9999')});
+  $('#follows').innerHTML=fol.length?fol.map(function(r){
+    var over=r.due&&r.due<t,td=r.due===t;
+    return '<div class="follow'+(over?' over':'')+'"><div><b>'+esc(nameOf(r))+'</b>：'+esc(r.next)+'<br><span class="note">'+
+      (r.due?'期限 '+fmtDate(r.due)+(over?'（過ぎています）':(td?'（今日）':'')):'期限なし')+' ／ '+fmtDate(r.date)+'の'+esc(r.how)+
+      '</span></div><button class="btn s" data-a="done" data-id="'+esc(r.id)+'">✓ 完了</button></div>';
+  }).join(''):'<span class="note">フォロー待ちはありません。</span>';
+  var m=t.slice(0,7);
+  var thisM=recs().filter(function(r){return r.date.slice(0,7)===m});
+  $('#stats').innerHTML='<div>総件数<b>'+recs().length+'</b></div><div>今月<b>'+thisM.length+'</b></div>'+
+    '<div>今月の対応時間<b>'+thisM.reduce(function(s,r){return s+(r.min||0)},0)+'分</b></div>'+
+    '<div>未完了<b>'+fol.length+'</b></div><div>管理職未報告<b>'+recs().filter(function(r){return !r.boss}).length+'</b></div>';
+  var L=filtered();
+  $('#list').innerHTML=L.length?L.map(recHTML).join(''):'<p class="note">該当する記録はありません。</p>';
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('button[data-a]');if(!b)return;
+  var r=byId(b.dataset.id);if(!r)return;
+  var a=b.dataset.a;
+  if(a==='edit'){if(guard())return;return edit(r.id)}
+  if(a==='child'){
+    $('#tlChild').value=r.sid||'';
+    $('#tabs button[data-t="tl"]').click();
+    return;
+  }
+  if(guard())return;
+  if(a==='done'){r.done=!r.done;if(r.done)r.doneAt=today();else r.doneAt=''}
+  if(a==='boss')r.boss=true;
+  if(a==='del'){
+    if(!confirm('この記録を削除しますか？'))return;
+    cur().recs=recs().filter(function(x){return x.id!==r.id});
+    recs().forEach(function(x){if(x.linkedTo===r.id)x.linkedTo=null});
+  }
+  save();renderAll();
+});
+$('#q').oninput=function(){filt.q=this.value;renderList()};
+$('#fcChild').onchange=function(){filt.child=this.value;renderList()};
+$('#fcKind').onchange=function(){filt.kind=this.value;renderList()};
+$('#showView').onchange=renderList;
+$('#fcFlag').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  filt.flag=b.dataset.v;
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});
+  renderList();
+});
+$('#prList').onclick=function(){
+  var L=filtered().slice().reverse();
+  if(!L.length){toast('印刷する記録がありません');return}
+  var ttl=filt.child?(Roster.nameOf(DB.currentCid,filt.child)+' 保護者対応 経過記録'):'保護者対応記録';
+  var h='<h1>'+esc(ttl)+'</h1><p>作成日 '+fmtDate(today())+' ／ '+L.length+'件（古い順）　※ 学校の正式な様式が優先です</p>'+
+    '<table><thead><tr><th style="width:14%">日時・手段</th>'+(filt.child?'':'<th style="width:10%">児童</th>')+
+    '<th>［事実］</th><th>対応</th><th style="width:18%">次にすること</th></tr></thead><tbody>';
+  L.forEach(function(r){
+    h+='<tr><td>'+fmtDate(r.date)+' '+esc(r.time||'')+'<br>'+esc(r.how)+'<br>相手：'+esc(r.who)+'<br>'+esc(r.kind)+(r.min?'<br>'+r.min+'分':'')+'</td>'+
+      (filt.child?'':'<td>'+esc(nameOf(r))+'</td>')+'<td>'+esc(r.fact)+'</td><td>'+esc(r.resp)+'</td><td>'+esc(r.next)+
+      (r.next?(r.done?'<br>【完了】':'<br>【未完了】'):'')+(r.boss?'<br>管理職報告済':'')+'</td></tr>';
+  });
+  h+='</tbody></table><p>※ 所感はこの印刷に含まれていません。</p>';
+  $('#printArea').innerHTML=h;window.print();
+};
+
+/* ---------- タイムライン ---------- */
+function childRecs(sid){return recs().filter(function(r){return r.sid===sid}).sort(function(a,b){return (a.date+(a.time||'')).localeCompare(b.date+(b.time||''))})}
+function summaryOf(sid){
+  var L=childRecs(sid);
+  if(!L.length)return {html:'<span class="note">この子の記録はまだありません。</span>',text:''};
+  var kinds={},whos={};
+  L.forEach(function(r){kinds[r.kind]=(kinds[r.kind]||0)+1;whos[r.who]=(whos[r.who]||0)+1});
+  var kk=Object.keys(kinds).sort(function(a,b){return kinds[b]-kinds[a]}).slice(0,2);
+  var wk=Object.keys(whos).sort(function(a,b){return whos[b]-whos[a]});
+  var open=L.filter(function(r){return r.next&&!r.done});
+  var boss=L.filter(function(r){return r.boss}).length;
+  var share=L.filter(function(r){return r.share}).length;
+  var last=L[L.length-1];
+  var t=today();
+  var h='<b>'+esc(Roster.nameOf(DB.currentCid,sid))+'さん</b>　記録'+L.length+'件（'+fmtDate(L[0].date)+'〜'+fmtDate(last.date)+'）／未完了のフォロー'+open.length+'件<br>'+
+    '多い種別：'+kk.map(function(k){return esc(k)+kinds[k]}).join('、')+'<br>'+
+    '主な相手：'+wk.map(function(w){return esc(w)+whos[w]}).join('、')+'<br>'+
+    '管理職報告済 '+boss+'件／学年共有済 '+share+'件<br>'+
+    '前回の対応：'+fmtDate(last.date)+'（'+esc(last.how)+'）';
+  if(open.length){
+    var o=open[0];
+    h+='<br>次にすること：'+esc(firstSentence(o.next))+' → <b style="color:'+((o.due&&o.due<t)?'var(--ng)':'var(--warn)')+'">未完了'+(o.due?'（期限 '+fmtDate(o.due)+(o.due<t?' を過ぎています':'')+'）':'')+'</b>';
+  }
+  return {html:h,text:h.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'')};
+}
+function renderTL(){
+  var sel=$('#tlChild'),keep=sel.value;
+  sel.innerHTML=childOptions(false,null);
+  if(keep&&kids().filter(function(k){return k.id===keep}).length)sel.value=keep;
+  var sid=sel.value;
+  if(!sid){$('#tlSummary').innerHTML='<span class="note">名簿を入れてください。</span>';$('#tlList').innerHTML='';$('#tlSvg').innerHTML='';return}
+  $('#tlSummary').innerHTML=summaryOf(sid).html;
+  var L=childRecs(sid);
+  if(!L.length){$('#tlList').innerHTML='<p class="note">この子の記録はまだありません。</p>';$('#tlSvg').innerHTML='';return}
+  $('#tlList').innerHTML=L.map(function(r){
+    var h='<div class="tlrow'+(r.linkedTo?' linked':'')+'" id="tl_'+esc(r.id)+'"><div class="ax">'+fmtDate(r.date)+'<br><span style="font-weight:400">'+esc(r.time||'')+'</span></div><div class="dot"></div>'+recHTML(r)+'</div>';
+    return h;
+  }).join('');
+  drawLinks(L);
+}
+function drawLinks(L){
+  var svg=$('#tlSvg'),wrap=$('#tlWrap');
+  var wb=wrap.getBoundingClientRect();
+  var paths='';
+  L.forEach(function(r){
+    if(!r.linkedTo)return;
+    var a=document.getElementById('tl_'+r.linkedTo),b=document.getElementById('tl_'+r.id);
+    if(!a||!b)return;
+    var ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();
+    var x=84,y1=ra.top-wb.top+22,y2=rb.top-wb.top+22;
+    paths+='<path d="M '+x+' '+y1+' C '+(x-40)+' '+y1+', '+(x-40)+' '+y2+', '+x+' '+y2+'" fill="none" stroke="#2f855a" stroke-width="2" stroke-dasharray="4 3"/>'+
+      '<polygon points="'+x+','+y2+' '+(x-8)+','+(y2-5)+' '+(x-8)+','+(y2+5)+'" fill="#2f855a"/>';
+  });
+  svg.setAttribute('width',wrap.offsetWidth);
+  svg.setAttribute('height',wrap.offsetHeight);
+  svg.setAttribute('viewBox','0 0 '+wrap.offsetWidth+' '+wrap.offsetHeight);
+  svg.innerHTML=paths;
+}
+$('#tlChild').addEventListener('change',renderTL);
+$('#tlHand').onclick=function(){$('#hChild').value=$('#tlChild').value;$('#tabs button[data-t="hand"]').click();$('#hRun').click()};
+$('#tlPrint').onclick=function(){$('#prChild').value=$('#tlChild').value;$('#prRun').click()};
+window.addEventListener('resize',function(){if($('#p-tl').classList.contains('on'))renderTL()});
+
+/* ---------- 引き継ぎシート ---------- */
+function handSheet(sid){
+  var name=Roster.nameOf(DB.currentCid,sid);
+  var L=childRecs(sid);
+  var t='【引き継ぎ】'+name+'さん／'+DB.currentFY+'年度\n';
+  t+='※ 学校の正式な引き継ぎ様式が優先です。これは、その場で自分が話すときの下書きです。\n';
+  t+='■ 対応の経過（事実）\n';
+  if(!L.length)t+='・（記録なし）\n';
+  L.forEach(function(r){
+    var f=firstSentence(r.fact)||firstSentence(r.resp);
+    if(!f)return;
+    t+='・'+md(r.date)+' '+r.how+'　'+f+'\n';
+  });
+  var open=L.filter(function(r){return r.next&&!r.done});
+  t+='■ 継続中\n';
+  if(open.length)open.forEach(function(r){t+='・'+firstSentence(r.next)+(r.due?'（期限 '+md(r.due)+'）':'')+'\n'});
+  else t+='・（継続中の課題はありません）\n';
+  t+='■ 共有の状況\n';
+  t+='・管理職報告 '+L.filter(function(r){return r.boss}).length+'件／学年共有 '+L.filter(function(r){return r.share}).length+'件\n';
+  t+='\n※ 所感・人物評は含まれていません。次の担任が、先入観ではなく事実から始められる形にしてあります。\n';
+  return t;
+}
+$('#hRun').onclick=function(){
+  var sid=$('#hChild').value;if(!sid){toast('児童を選んでください');return}
+  $('#hOut').value=handSheet(sid);toast('つくりました');
+};
+$('#hCopy').onclick=function(){
+  var sid=$('#hChild').value;if(!sid){toast('児童を選んでください');return}
+  if(!$('#hOut').value)$('#hOut').value=handSheet(sid);
+  copyText($('#hOut').value);
+};
+$('#prRun').onclick=function(){
+  var sid=$('#prChild').value;if(!sid){toast('児童を選んでください');return}
+  var L=childRecs(sid);
+  if(!L.length){toast('この子の記録がありません');return}
+  var withV=$('#prView').checked;
+  var name=Roster.nameOf(DB.currentCid,sid);
+  var s=summaryOf(sid);
+  var h='<h1>'+esc(name)+'さん　保護者対応の記録</h1><p>作成日 '+fmtDate(today())+'　※ 学校の正式な様式・引き継ぎの場が優先です</p>'+
+    '<h2>要約</h2><p>'+esc(s.text)+'</p>'+
+    '<p>'+(withV?'この資料には所感を含めています。':'この資料に所感は含まれていません（既定）。')+'</p>'+
+    '<h2 class="pb">時系列の記録</h2><table><thead><tr><th style="width:14%">日時・手段</th><th>［事実］</th>'+
+    (withV?'<th>［所感］</th>':'')+'<th>対応</th><th style="width:18%">次にすること</th></tr></thead><tbody>';
+  L.forEach(function(r){
+    h+='<tr><td>'+fmtDate(r.date)+' '+esc(r.time||'')+'<br>'+esc(r.how)+'<br>相手：'+esc(r.who)+(r.min?'<br>'+r.min+'分':'')+'</td>'+
+      '<td>'+esc(r.fact)+'</td>'+(withV?'<td>'+esc(r.view)+'</td>':'')+'<td>'+esc(r.resp)+'</td>'+
+      '<td>'+esc(r.next)+(r.next?(r.done?'<br>【完了'+(r.doneAt?' '+md(r.doneAt):'')+'】':'<br>【未完了】'):'')+(r.boss?'<br>管理職報告済':'')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  $('#printArea').innerHTML=h;window.print();
+};
+$('#csv').onclick=function(){
+  var withV=$('#csvView').checked;
+  var head=['日付','時刻','児童','相手','手段','種別','事実'];
+  if(withV)head.push('所感');
+  head=head.concat(['対応','次にすること','期限','完了','時間(分)','管理職報告','学年共有']);
+  var rows=[head];
+  sorted().reverse().forEach(function(r){
+    var a=[r.date,r.time,nameOf(r),r.who,r.how,r.kind,r.fact];
+    if(withV)a.push(r.view);
+    rows.push(a.concat([r.resp,r.next,r.due,r.done?'済':'',r.min||'',r.boss?'済':'',r.share?'済':'']));
+  });
+  download('保護者対応Pro_'+today()+'.csv',toCSV(rows),'text/csv');
+};
+
+/* ---------- 年度・クラス・JSON ---------- */
+function newYear(){
+  var y=Roster.curFY();
+  if(DB.currentFY>=y&&Roster.classesOf(y).length&&!confirm(y+'年度のクラスはすでにあります。もう一度、いまのクラスの名簿から新しいクラスを作りますか？'))return;
+  var src=Roster.classesOf(DB.currentFY);
+  if(!src.length){toast('引き継ぐクラスがありません');return}
+  var made=0;
+  src.forEach(function(c){
+    if(Roster.classesOf(y).filter(function(x){return x.name===c.name}).length)return;
+    var rc=Roster.addClass(y,c.name,c.students.map(function(s){return {id:s.id,no:s.no,name:s.name}}));
+    DB.byClass[rc.id]=blank();made++;
+  });
+  DB.currentFY=y;
+  var list=Roster.classesOf(y);
+  DB.currentCid=list.length?list[0].id:DB.currentCid;
+  if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();
+  save();renderAll();
+  toast(made?(made+'クラスを'+y+'年度に作りました（名簿は同じ児童IDで引き継ぎ）'):(y+'年度に切りかえました'));
+}
+$('#newYear').onclick=newYear;
+$('#expBtn').onclick=function(){
+  var payload={app:'mwpro_gyomu03_v1',data:DB,roster:Roster.all()};
+  download('保護者対応Pro_'+today()+'.json',JSON.stringify(payload,null,1),'application/json');
+};
+$('#impFile').onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);
+      var d=(o&&o.data)?o.data:o;
+      if(!d||!d.byClass)throw 0;
+      var m=prompt('「置きかえ」＝1 ／「クラスとして追加」＝2 を入れてください','2');
+      if(m==='1'){
+        if(!confirm('いまのデータを、読みこんだ内容で置きかえます。よろしいですか？'))return;
+        if(o.roster){try{localStorage.setItem(Roster.KEY,JSON.stringify(o.roster))}catch(err){}Roster.reload()}
+        DB=normDB(d);save();renderAll();toast('置きかえました');
+      }else if(m==='2'){
+        var added=0;
+        Object.keys(d.byClass).forEach(function(cid){
+          var src=((o.roster&&o.roster.classes)||[]).filter(function(x){return x.id===cid})[0];
+          var fy=src?(Number(src.fy)||DB.currentFY):DB.currentFY;
+          var rc=Roster.addClass(fy,(src?src.name:'読みこみ')+'（読みこみ）',(src?src.students:[]).map(function(s){return {no:s.no,name:s.name}}));
+          var map={};
+          if(src)src.students.forEach(function(s,i){map[s.id]=rc.students[i]?rc.students[i].id:null});
+          var nc=normClass(JSON.parse(JSON.stringify(d.byClass[cid])));
+          nc.recs.forEach(function(x){x.sid=map[x.sid]||''});
+          DB.byClass[rc.id]=nc;added++;
+        });
+        save();renderAll();toast(added+'クラスを追加しました');
+      }
+    }catch(err){alert('ファイルを読めませんでした')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+function renderHead(){
+  var ys={};Roster.all().classes.forEach(function(c){ys[c.fy]=1});ys[Roster.curFY()]=1;ys[DB.currentFY]=1;
+  var arr=Object.keys(ys).map(Number).sort(function(a,b){return b-a});
+  $('#fySel').innerHTML=arr.map(function(y){return '<option value="'+y+'"'+(y===DB.currentFY?' selected':'')+'>'+y+'年度</option>'}).join('');
+  var list=Roster.classesOf(DB.currentFY);
+  $('#clsSel').innerHTML=list.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===DB.currentCid?' selected':'')+'>'+esc(c.name)+'</option>'}).join('');
+  $('#roFlag').style.display=isRO()?'':'none';
+  var dv=$('#delFy').value;
+  $('#delFy').innerHTML=arr.map(function(y){return '<option value="'+y+'">'+y+'年度</option>'}).join('');
+  if(dv)$('#delFy').value=dv;
+}
+$('#fySel').onchange=function(){
+  var y=+this.value;DB.currentFY=y;
+  var list=Roster.classesOf(y);
+  if(!list.length)list=[Roster.addClass(y,'1組',[])];
+  DB.currentCid=list[0].id;if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();
+  filt.child='';save();renderAll();
+};
+$('#clsSel').onchange=function(){DB.currentCid=this.value;if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();filt.child='';save();renderAll()};
+$('#rosterSave').onclick=function(){
+  if(guard())return;
+  var list=Roster.parseLines($('#rosterTxt').value);
+  if(list.length>60&&!confirm(list.length+'人になります。よろしいですか？'))return;
+  Roster.setStudents(DB.currentCid,list);
+  $('#rosterMsg').textContent=list.length+'人を保存しました（Pro版で共通）';
+  save();renderAll();
+};
+$('#rosterCommon').onclick=function(){
+  var t='';try{t=localStorage.getItem('sensei25_names')||''}catch(e){}
+  if(!t.trim()){toast('共通名簿が見つかりません');return}
+  $('#rosterTxt').value=t;toast('読み込みました。「名簿を保存」を押してください');
+};
+$('#clsRename').onclick=function(){
+  if(guard())return;
+  var n=$('#clsName').value.trim();if(!n)return;
+  var rc=Roster.get(DB.currentCid);if(rc){rc.name=n;Roster.persist()}
+  save();renderAll();toast('名前を変えました');
+};
+$('#clsAdd').onclick=function(){
+  if(guard())return;
+  if(Roster.classesOf(DB.currentFY).length>=MAXCLS){toast('1つの年度に'+MAXCLS+'クラスまでです');return}
+  var n=prompt('新しいクラスの名前','2組');if(!n)return;
+  var rc=Roster.addClass(DB.currentFY,n.trim(),[]);
+  DB.byClass[rc.id]=blank();DB.currentCid=rc.id;save();renderAll();
+};
+$('#clsDel').onclick=function(){
+  if(guard())return;
+  if(Roster.classesOf(DB.currentFY).length<=1){toast('この年度の最後のクラスは消せません');return}
+  var rc=Roster.get(DB.currentCid);
+  if(!confirm('「'+(rc?rc.name:'')+'」の対応記録を消します。名簿もPro版全体から消えます。よろしいですか？'))return;
+  if(!confirm('本当に消しますか？（元に戻せません。先にJSONで書き出すことをおすすめします）'))return;
+  var id=DB.currentCid;
+  delete DB.byClass[id];Roster.removeClass(id);
+  DB.currentCid=Roster.classesOf(DB.currentFY)[0].id;
+  if(!DB.byClass[DB.currentCid])DB.byClass[DB.currentCid]=blank();
+  save();renderAll();
+};
+function renderClsList(){
+  var list=Roster.classesOf(DB.currentFY);
+  $('#clsList').innerHTML='<table class="g"><tr><th class="l">クラス</th><th>人数</th><th>記録</th></tr>'+list.map(function(c){
+    var b=DB.byClass[c.id];
+    return '<tr'+(c.id===DB.currentCid?' style="font-weight:700"':'')+'><td class="l">'+esc(c.name)+'</td><td>'+c.students.length+'人</td><td>'+(b?b.recs.length:0)+'件</td></tr>';
+  }).join('')+'</table>';
+  var rc=Roster.get(DB.currentCid);
+  $('#clsName').value=rc?rc.name:'';
+}
+$('#delYear').onclick=function(){
+  var y=+$('#delFy').value||DB.currentFY;
+  if(!confirm(y+'年度の対応記録をすべて削除します。（名簿は残ります）よろしいですか？'))return;
+  if(!confirm('本当に削除しますか？　元に戻せません。先にJSONで書き出しましたか？'))return;
+  Roster.classesOf(y).forEach(function(c){DB.byClass[c.id]=blank()});
+  save();renderAll();toast(y+'年度のデータを削除しました');
+};
+
+/* ---------- テンプレ編集 ---------- */
+function renderTpl(){
+  var keep=$('#tplSel').value;
+  $('#tplSel').innerHTML=DB.tpls.map(function(t){return '<option value="'+esc(t.id)+'">'+esc(t.name)+'</option>'}).join('');
+  if(keep)$('#tplSel').value=keep;
+  $('#tplList').innerHTML=DB.tpls.map(function(t,i){
+    return '<div class="rec"><div class="row"><input value="'+esc(t.name)+'" data-ti="'+i+'" data-f="name" style="min-width:160px">'+
+      '<button class="btn s d" data-rmtpl="'+i+'">×</button></div>'+
+      '<label class="f" style="margin-top:6px">［事実］のひな形<textarea data-ti="'+i+'" data-f="fact" style="min-height:56px">'+esc(t.fact)+'</textarea></label>'+
+      '<label class="f">対応のひな形<textarea data-ti="'+i+'" data-f="resp" style="min-height:56px">'+esc(t.resp)+'</textarea></label>'+
+      '<label class="f">次にすることのひな形<input data-ti="'+i+'" data-f="next" value="'+esc(t.next)+'" style="width:100%"></label></div>';
+  }).join('');
+}
+$('#tplList').addEventListener('change',function(e){
+  var i=e.target.dataset.ti;if(i==null)return;
+  DB.tpls[+i][e.target.dataset.f]=e.target.value;save();renderTpl();
+});
+$('#tplList').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-rmtpl]');if(!b)return;
+  if(DB.tpls.length<=1){toast('テンプレは1つ以上必要です');return}
+  if(!confirm('テンプレ「'+DB.tpls[+b.dataset.rmtpl].name+'」を消しますか？'))return;
+  DB.tpls.splice(+b.dataset.rmtpl,1);save();renderAll();
+});
+$('#tplAdd').onclick=function(){
+  var n=$('#tplNew').value.trim();if(!n){toast('名前を入れてください');return}
+  DB.tpls.push({id:uid(),name:n,fact:'',resp:'',next:''});$('#tplNew').value='';save();renderAll();
+};
+
+/* ---------- タブ ---------- */
+$('#tabs').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id==='p-'+b.dataset.t)});
+  renderAll();
+});
+
+function renderAll(){
+  renderHead();renderMigrate();
+  var c0=$('#fChild').value;
+  $('#fChild').innerHTML=childOptions(true,null);
+  if(c0)$('#fChild').value=c0;
+  ['#tlChild','#hChild','#prChild'].forEach(function(s){
+    var k=$(s).value;$(s).innerHTML=childOptions(false,null);if(k)$(s).value=k;
+  });
+  renderList();renderTL();renderTpl();renderClsList();renderLinkOptions();
+  $('#rosterTxt').value=kids().map(function(s){return (s.no||'')+' '+s.name}).join('\n');
+  $('#pcIdle').value=DB.lock.idleSec;
+  $('#pcState').textContent=DB.lock.on?('ロックは有効です（'+DB.lock.idleSec+'秒でロック）'):'ロックは設定されていません';
+  var ro=isRO();
+  ['#save','#rosterSave','#clsRename','#clsAdd','#clsDel','#tplApply'].forEach(function(s){$(s).disabled=ro});
+}
+function askNewYear(){
+  var y=Roster.curFY();
+  if(DB.newYearAsked===y)return;
+  DB.newYearAsked=y;
+  if(Roster.classesOf(y).length){save();return}
+  if(confirm('新しい年度（'+y+'年度）を始めますか？\n「はい」で、いまのクラスの名簿を引き継いだクラスを作ります。前の年度の記録は読み取り専用で残ります。'))newYear();
+  save();
+}
+$('#fKind').innerHTML=KINDS.map(function(k){return '<option>'+esc(k)+'</option>'}).join('');
+$('#fcKind').innerHTML='<option value="">種別：すべて</option>'+KINDS.map(function(k){return '<option>'+esc(k)+'</option>'}).join('');
+load();
+save();  /* 初回（＝引き継ぎ直後）にすぐ書きこむ。無料版から読み直さないため */
+askNewYear();
+clearForm();
+renderAll();
+if(DB.lock.on)showLock();
+})();
+</script>
+<div class="note-link" style="max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-size:13px;line-height:1.8;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600">note「教室ノオト」</a>
+</div>
+</body>
+</html>
