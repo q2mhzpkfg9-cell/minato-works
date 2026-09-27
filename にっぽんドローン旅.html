@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>にっぽんドローン旅</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<style>
+  :root{
+    --glass: rgba(14,22,34,.72);
+    --line: rgba(255,255,255,.14);
+    --text: #eef4fa;
+    --sub: #a9bccd;
+    --accent: #4cc9ff;
+    --accent2: #ffd166;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0b1320;color:var(--text);
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;overflow:hidden}
+  #map{position:absolute;inset:0}
+  .panel{position:absolute;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+  button{font:inherit;color:inherit;cursor:pointer}
+
+  /* 左パネル */
+  #side{top:12px;left:12px;width:300px;max-height:calc(100% - 24px);display:flex;flex-direction:column;overflow:hidden}
+  #side header{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+  #side h1{margin:0;font-size:19px;letter-spacing:.06em}
+  #side h1 span{color:var(--accent)}
+  #side .lead{margin:4px 0 0;font-size:12px;color:var(--sub)}
+  #side .body{overflow:auto;padding:10px 12px 14px}
+  .sec{margin:10px 4px 6px;font-size:11px;color:var(--sub);letter-spacing:.12em}
+  #search{display:flex;gap:6px}
+  #search input{flex:1;min-width:0;padding:9px 10px;border-radius:9px;border:1px solid var(--line);
+    background:rgba(255,255,255,.07);color:var(--text);font:inherit;font-size:14px;outline:none}
+  #search input:focus{border-color:var(--accent)}
+  #search button{padding:0 12px;border-radius:9px;border:0;background:var(--accent);color:#04202e;font-weight:700}
+  #results{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+  #results button{text-align:left;padding:7px 9px;border:0;border-radius:7px;background:transparent;font-size:13px}
+  #results button:hover{background:rgba(255,255,255,.08)}
+  .tours{display:flex;flex-direction:column;gap:6px}
+  .tour{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:11px;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);text-align:left;transition:.15s}
+  .tour:hover{background:rgba(76,201,255,.12);border-color:rgba(76,201,255,.5)}
+  .tour .ic{font-size:22px;width:30px;text-align:center}
+  .tour b{display:block;font-size:14px}
+  .tour small{color:var(--sub);font-size:11.5px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 4px;font-size:13px}
+  .seg{display:flex;background:rgba(255,255,255,.06);border-radius:9px;padding:3px;gap:3px}
+  .seg button{border:0;background:transparent;padding:6px 9px;border-radius:7px;font-size:12.5px;color:var(--sub)}
+  .seg button.on{background:var(--accent);color:#04202e;font-weight:700}
+  input[type=range]{accent-color:var(--accent);width:120px}
+  label.chk{display:flex;align-items:center;gap:6px;cursor:pointer}
+  label.chk input{accent-color:var(--accent);width:16px;height:16px}
+  #toggleSide{display:none}
+
+  /* HUD */
+  #hud{top:12px;right:12px;padding:10px 14px;font-size:12.5px;min-width:190px}
+  #hud .big{font-size:22px;font-weight:700;letter-spacing:.02em}
+  #hud .k{color:var(--sub)}
+  #hud div{display:flex;justify-content:space-between;gap:12px;line-height:1.7}
+  #compass{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);position:relative;margin:4px auto 0}
+  #needle{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;font-weight:700}
+  #needle::before{content:"";position:absolute;left:50%;top:5px;width:0;height:0;margin-left:-5px;
+    border:5px solid transparent;border-bottom:14px solid #ff6b6b;border-top:0}
+
+  /* ツアー字幕 */
+  #caption{left:50%;bottom:22px;transform:translateX(-50%);width:min(560px,calc(100% - 24px));padding:12px 16px;display:none}
+  #caption .t{font-size:17px;font-weight:700}
+  #caption .d{font-size:13.5px;color:#d6e3ee;margin-top:3px;line-height:1.6}
+  #caption .bar{height:4px;background:rgba(255,255,255,.12);border-radius:3px;margin-top:9px;overflow:hidden}
+  #caption .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  #caption .ctl{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+  #caption .ctl button{border:1px solid var(--line);background:rgba(255,255,255,.08);border-radius:8px;padding:4px 10px;font-size:12px}
+
+  /* 操作パッド */
+  #pad{right:12px;bottom:34px;padding:10px;display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px}
+  #pad button{border:1px solid var(--line);background:rgba(255,255,255,.07);border-radius:11px;font-size:18px;
+    touch-action:none;user-select:none;-webkit-user-select:none}
+  #pad button:active,#pad button.on{background:var(--accent);color:#04202e}
+  #pad .lbl{font-size:10px;display:block;margin-top:-2px;opacity:.8}
+
+  /* ヘルプ */
+  #help{inset:0;margin:auto;width:min(460px,calc(100% - 24px));height:fit-content;padding:22px 24px;z-index:5}
+  #help h2{margin:0 0 6px;font-size:20px}
+  #help p{margin:0 0 12px;color:var(--sub);font-size:13.5px;line-height:1.7}
+  #help table{width:100%;border-collapse:collapse;font-size:13.5px}
+  #help td{padding:5px 4px;border-bottom:1px solid var(--line)}
+  #help kbd{display:inline-block;min-width:24px;padding:1px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.08);font-family:inherit;font-size:12px;text-align:center;margin-right:2px}
+  #help .go{margin-top:16px;width:100%;padding:11px;border:0;border-radius:10px;background:var(--accent);color:#04202e;font-weight:700;font-size:15px}
+  #helpBtn{position:absolute;top:0;right:0}
+
+  #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:14px;color:var(--sub)}
+  .maplibregl-ctrl-attrib{font-size:10px}
+
+  @media (max-width:760px){
+    #side{width:calc(100% - 24px);max-height:48%;}
+    #side.min .body{display:none}
+    #toggleSide{display:inline-block;float:right;border:1px solid var(--line);background:rgba(255,255,255,.08);border-radius:8px;padding:3px 9px;font-size:12px}
+    #hud{top:auto;bottom:34px;left:12px;right:auto;min-width:0;font-size:11px;padding:8px 10px}
+    #hud .big{font-size:17px}
+    #compass{display:none}
+    #pad{grid-template-columns:repeat(3,42px);grid-template-rows:repeat(3,42px)}
+    #caption{bottom:auto;top:12px}
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="loading">地形を読みこみ中…</div>
+
+<aside id="side" class="panel">
+  <header>
+    <button id="toggleSide">とじる</button>
+    <h1>にっぽん<span>ドローン</span>旅</h1>
+    <p class="lead">山と川を、空から立体で旅しよう</p>
+  </header>
+  <div class="body">
+    <div class="sec">場所をさがす</div>
+    <form id="search">
+      <input id="q" placeholder="例：富士山、四万十川、〇〇小学校" autocomplete="off">
+      <button type="submit">飛ぶ</button>
+    </form>
+    <div id="results"></div>
+
+    <div class="sec">おまかせフライト</div>
+    <div class="tours" id="tours"></div>
+
+    <div class="sec">見え方</div>
+    <div class="row"><span>地図</span>
+      <div class="seg" id="baseSeg">
+        <button data-b="photo" class="on">写真</button>
+        <button data-b="relief">高さの色</button>
+        <button data-b="std">地図</button>
+      </div>
+    </div>
+    <div class="row"><span>高さの強調 <b id="exVal">1.5</b>倍</span>
+      <input type="range" id="ex" min="1" max="3" step="0.1" value="1.5"></div>
+    <div class="row"><span>視点</span>
+      <div class="seg" id="viewSeg">
+        <button data-v="sky">上空</button>
+        <button data-v="drone" class="on">ドローン</button>
+        <button data-v="low">低空</button>
+      </div>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="cRiver" checked>川を光らせる</label>
+      <label class="chk"><input type="checkbox" id="cPeak" checked>山の名前</label>
+      <label class="chk"><input type="checkbox" id="cPlace" checked>地名</label>
+    </div>
+  </div>
+</aside>
+
+<div id="hud" class="panel">
+  <div><span class="k">地面の高さ</span><span class="big" id="hElev">—</span></div>
+  <div><span class="k">ドローンの高さ</span><span id="hAlt">—</span></div>
+  <div><span class="k">向き</span><span id="hDir">—</span></div>
+  <div id="compass"><div id="needle"></div></div>
+</div>
+
+<div id="caption" class="panel">
+  <div class="ctl"><button id="pauseBtn">一時停止</button><button id="stopBtn">おわる</button></div>
+  <div class="t" id="capT"></div>
+  <div class="d" id="capD"></div>
+  <div class="bar"><i id="capBar"></i></div>
+</div>
+
+<div id="pad" class="panel">
+  <button data-k="KeyE" title="上昇 (E / スペース)">⤒<span class="lbl">上へ</span></button>
+  <button data-k="KeyW" title="前へ (W)">▲<span class="lbl">前</span></button>
+  <button data-k="KeyQ" title="下降 (Q)">⤓<span class="lbl">下へ</span></button>
+  <button data-k="ArrowLeft" title="左を向く (←)">↺<span class="lbl">左向き</span></button>
+  <button id="helpBtn2" title="操作方法">？</button>
+  <button data-k="ArrowRight" title="右を向く (→)">↻<span class="lbl">右向き</span></button>
+  <button data-k="KeyA" title="左へ (A)">◀<span class="lbl">左</span></button>
+  <button data-k="KeyS" title="後ろへ (S)">▼<span class="lbl">後ろ</span></button>
+  <button data-k="KeyD" title="右へ (D)">▶<span class="lbl">右</span></button>
+</div>
+
+<div id="help" class="panel">
+  <h2>🚁 そうじゅう方法</h2>
+  <p>キーボードかマウス、右下のボタンでドローンを動かせます。左の「おまかせフライト」を押すと自動で飛びます。</p>
+  <table>
+    <tr><td><kbd>W</kbd><kbd>S</kbd></td><td>前へ ／ 後ろへ</td></tr>
+    <tr><td><kbd>A</kbd><kbd>D</kbd></td><td>左へ ／ 右へ（横にすべる）</td></tr>
+    <tr><td><kbd>←</kbd><kbd>→</kbd></td><td>左を向く ／ 右を向く</td></tr>
+    <tr><td><kbd>↑</kbd><kbd>↓</kbd></td><td>遠くを見る ／ 真下を見る</td></tr>
+    <tr><td><kbd>E</kbd><kbd>Space</kbd> ／ <kbd>Q</kbd></td><td>上昇 ／ 下降</td></tr>
+    <tr><td><kbd>Shift</kbd></td><td>おしながらで速く飛ぶ</td></tr>
+    <tr><td>マウス</td><td>左ドラッグで移動・右ドラッグで向き・ホイールで高さ</td></tr>
+  </table>
+  <button class="go" id="helpClose">飛びたつ！</button>
+</div>
+
+<script>
+/* ========= 地理院 標高PNG → Mapbox形式に変換するプロトコル ========= */
+const TILE = 256;
+const cvs = new OffscreenCanvas(TILE, TILE);
+const ctx = cvs.getContext('2d', { willReadFrequently: true });
+let flatTile = null;
+async function makeFlat(){
+  const img = ctx.createImageData(TILE, TILE);
+  // 標高0m = (0+10000)*10 = 100000 → R1 G134 B160
+  for(let i=0;i<img.data.length;i+=4){ img.data[i]=1; img.data[i+1]=134; img.data[i+2]=160; img.data[i+3]=255; }
+  ctx.putImageData(img,0,0);
+  flatTile = await (await cvs.convertToBlob({type:'image/png'})).arrayBuffer();
+}
+maplibregl.addProtocol('gsidem', async (params, abort) => {
+  if(!flatTile) await makeFlat();
+  const url = params.url.replace('gsidem://', '');
+  let res;
+  try { res = await fetch(url, { signal: abort.signal }); } catch(e){ if(abort.signal.aborted) throw e; return { data: flatTile.slice(0) }; }
+  if(!res.ok) return { data: flatTile.slice(0) };           // 海など：標高0
+  const bmp = await createImageBitmap(await res.blob());
+  ctx.clearRect(0,0,TILE,TILE);
+  ctx.drawImage(bmp,0,0);
+  const img = ctx.getImageData(0,0,TILE,TILE), d = img.data;
+  for(let i=0;i<d.length;i+=4){
+    const x = d[i]*65536 + d[i+1]*256 + d[i+2];
+    let h = x === 8388608 ? 0 : (x > 8388608 ? (x - 16777216) * 0.01 : x * 0.01);
+    const v = Math.round((h + 10000) * 10);
+    d[i] = (v >> 16) & 255; d[i+1] = (v >> 8) & 255; d[i+2] = v & 255; d[i+3] = 255;
+  }
+  ctx.putImageData(img,0,0);
+  return { data: await (await cvs.convertToBlob({type:'image/png'})).arrayBuffer() };
+});
+
+/* ========= スタイル ========= */
+const GSI = 'https://cyberjapandata.gsi.go.jp/xyz/';
+const DEM = ['gsidem://' + GSI + 'dem_png/{z}/{x}/{y}.png'];
+const nameJa = ['coalesce', ['get','name:ja'], ['get','name']];
+const gsiAttr = '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>';
+
+const style = {
+  version: 8,
+  glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+  sources: {
+    photo:  { type:'raster', tiles:[GSI+'seamlessphoto/{z}/{x}/{y}.jpg'], tileSize:256, maxzoom:18, attribution:gsiAttr },
+    relief: { type:'raster', tiles:[GSI+'relief/{z}/{x}/{y}.png'], tileSize:256, maxzoom:15, attribution:gsiAttr },
+    std:    { type:'raster', tiles:[GSI+'std/{z}/{x}/{y}.png'], tileSize:256, maxzoom:18, attribution:gsiAttr },
+    dem:    { type:'raster-dem', tiles:DEM, tileSize:256, maxzoom:14, encoding:'mapbox', attribution:gsiAttr },
+    demHs:  { type:'raster-dem', tiles:DEM, tileSize:256, maxzoom:14, encoding:'mapbox' },
+    omt:    { type:'vector', url:'https://tiles.openfreemap.org/planet' }
+  },
+  terrain: { source:'dem', exaggeration:1.5 },
+  sky: {
+    'sky-color':'#7fbef5', 'horizon-color':'#eaf3fb', 'fog-color':'#dbe7f2',
+    'sky-horizon-blend':0.6, 'horizon-fog-blend':0.7, 'fog-ground-blend':0.55,
+    'atmosphere-blend':['interpolate',['linear'],['zoom'],0,1,9,1,12,0]
+  },
+  layers: [
+    { id:'bg', type:'background', paint:{'background-color':'#1d3b55'} },
+    { id:'photo',  type:'raster', source:'photo' },
+    { id:'relief', type:'raster', source:'relief', layout:{visibility:'none'} },
+    { id:'std',    type:'raster', source:'std',    layout:{visibility:'none'} },
+    { id:'hs', type:'hillshade', source:'demHs',
+      paint:{'hillshade-exaggeration':0.35,'hillshade-shadow-color':'#0b1a2a','hillshade-highlight-color':'#fffbe8'} },
+    { id:'river-glow', type:'line', source:'omt', 'source-layer':'waterway',
+      filter:['in',['get','class'],['literal',['river','canal']]],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':'#7fe6ff','line-opacity':0.35,'line-blur':3,
+        'line-width':['interpolate',['exponential',1.5],['zoom'],6,3,10,6,14,16,17,34]} },
+    { id:'river', type:'line', source:'omt', 'source-layer':'waterway',
+      filter:['in',['get','class'],['literal',['river','canal']]],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':'#26b8ff','line-opacity':0.95,
+        'line-width':['interpolate',['exponential',1.5],['zoom'],6,1,10,2.2,14,5,17,12]} },
+    { id:'stream', type:'line', source:'omt', 'source-layer':'waterway', minzoom:12,
+      filter:['==',['get','class'],'stream'],
+      paint:{'line-color':'#5fcfff','line-opacity':0.7,'line-width':['interpolate',['linear'],['zoom'],12,0.6,16,2.5]} },
+    { id:'river-name', type:'symbol', source:'omt', 'source-layer':'waterway', minzoom:9,
+      filter:['all',['in',['get','class'],['literal',['river','canal']]],['has','name']],
+      layout:{'symbol-placement':'line','text-field':nameJa,'text-font':['Noto Sans Bold'],
+        'text-size':['interpolate',['linear'],['zoom'],9,12,14,16],'symbol-spacing':420,'text-letter-spacing':0.15},
+      paint:{'text-color':'#e6f8ff','text-halo-color':'#07507a','text-halo-width':2} },
+    { id:'place', type:'symbol', source:'omt', 'source-layer':'place',
+      filter:['in',['get','class'],['literal',['city','town','village']]],
+      layout:{'text-field':nameJa,'text-font':['Noto Sans Bold'],
+        'text-size':['match',['get','class'],'city',16,'town',13,11.5],'text-padding':6},
+      paint:{'text-color':'#ffffff','text-halo-color':'rgba(20,20,30,.85)','text-halo-width':1.6} },
+    { id:'peak', type:'symbol', source:'omt', 'source-layer':'mountain_peak',
+      filter:['has','name'],
+      layout:{'text-field':['case',['has','ele'],
+          ['format','▲ ',{},nameJa,{'font-scale':1},'\n',{},['concat',['to-string',['get','ele']],'m'],{'font-scale':0.8}],
+          ['concat','▲ ',nameJa]],
+        'text-font':['Noto Sans Bold'],'text-size':['interpolate',['linear'],['zoom'],8,11,14,15],
+        'text-anchor':'bottom','text-padding':8,'symbol-sort-key':['-',0,['coalesce',['get','ele'],0]]},
+      paint:{'text-color':'#ffe9a8','text-halo-color':'rgba(40,24,0,.9)','text-halo-width':1.8} }
+  ]
+};
+
+const map = new maplibregl.Map({
+  container:'map', style,
+  center:[138.7274, 35.2606], zoom:11.2, pitch:72, bearing:0, maxPitch:85,
+  localIdeographFontFamily:"'Hiragino Sans','Noto Sans JP',sans-serif",
+  attributionControl:{ compact:true }
+});
+map.keyboard.disable();
+const hideLoading = () => document.getElementById('loading')?.remove();
+map.on('load', hideLoading);
+setTimeout(hideLoading, 8000);
+
+/* ========= ツアー ========= */
+const TOURS = [
+  { ic:'🗻', name:'富士山をぐるっと一周', type:'orbit', center:[138.7274,35.3606], zoom:11.6, pitch:74, rate:10,
+    desc:'高さ3776m、日本でいちばん高い山。すそ野が広く、きれいな円すいの形をしています。' },
+  { ic:'🏞️', name:'信濃川を下る（日本一長い川）', type:'path', zoom:11.3, pitch:74, speed:2600, look:9000,
+    desc:'長さ367km。長野県では「千曲川」、新潟県に入ると「信濃川」と名前が変わり、日本海へ流れこみます。',
+    pts:[[138.73,35.90],[138.57,36.05],[138.48,36.25],[138.33,36.36],[138.25,36.40],[138.19,36.60],[138.27,36.72],
+         [138.37,36.86],[138.52,36.97],[138.65,37.02],[138.76,37.13],[138.79,37.30],[138.84,37.45],[138.95,37.63],[139.05,37.93]] },
+  { ic:'⛰️', name:'北アルプス縦走（日本の屋根）', type:'path', zoom:12.3, pitch:76, speed:650, look:3500,
+    desc:'白馬岳から槍ヶ岳・穂高岳へ。3000m級の山がつらなり「日本の屋根」とよばれます。',
+    pts:[[137.759,36.758],[137.753,36.690],[137.747,36.625],[137.662,36.600],[137.619,36.576],[137.544,36.469],
+         [137.600,36.400],[137.648,36.342],[137.648,36.289],[137.660,36.250],[137.554,36.106]] },
+  { ic:'🌊', name:'四万十川（日本最後の清流）', type:'path', zoom:12, pitch:74, speed:900, look:4000,
+    desc:'大きなダムがなく、くねくねと山の間を流れる川。沈下橋（ちんかばし）が有名です。',
+    pts:[[133.05,33.37],[133.13,33.22],[133.03,33.20],[132.97,33.20],[132.85,33.23],[132.79,33.18],[132.82,33.10],
+         [132.88,33.03],[132.93,32.99],[132.97,32.93]] },
+  { ic:'🌋', name:'阿蘇山のカルデラ', type:'orbit', center:[131.10,32.93], zoom:10.6, pitch:68, rate:8,
+    desc:'大昔の大噴火でできた巨大なくぼ地（カルデラ）。その中に町や田んぼがあります。' },
+  { ic:'🔥', name:'桜島（今も噴火する火山）', type:'orbit', center:[130.657,31.585], zoom:11.4, pitch:70, rate:10,
+    desc:'鹿児島市のすぐ近くにある活火山。1914年の噴火で、島だった桜島は大隅半島とつながりました。' },
+  { ic:'💧', name:'琵琶湖（日本一大きい湖）', type:'orbit', center:[136.08,35.25], zoom:9.4, pitch:62, rate:8,
+    desc:'滋賀県の面積の約6分の1をしめる湖。近畿地方の人々の「水がめ」です。' },
+  { ic:'🗾', name:'日本列島を北から南へ', type:'path', zoom:8.2, pitch:66, speed:17000, look:90000,
+    desc:'北海道から九州・桜島まで。日本は山が多く、平野は海ぞいに少しだけ…ということが見えてきます。',
+    pts:[[145.00,44.08],[143.00,43.60],[141.35,43.06],[140.73,41.77],[140.90,40.46],[140.44,38.14],[139.70,35.68],
+         [138.73,35.36],[136.90,35.18],[135.77,35.01],[133.54,35.37],[132.46,34.39],[131.10,32.88],[130.66,31.58]] }
+];
+
+const $ = id => document.getElementById(id);
+const toursEl = $('tours');
+TOURS.forEach((t,i) => {
+  const b = document.createElement('button');
+  b.className = 'tour';
+  b.innerHTML = `<span class="ic">${t.ic}</span><span><b>${t.name}</b><small>${t.type==='orbit'?'まわりを一周':'空から追いかける'}</small></span>`;
+  b.onclick = () => startTour(t);
+  toursEl.appendChild(b);
+});
+
+const R = 6371000, rad = Math.PI/180;
+function dist(a,b){
+  const dLat=(b[1]-a[1])*rad, dLng=(b[0]-a[0])*rad;
+  const s=Math.sin(dLat/2)**2+Math.cos(a[1]*rad)*Math.cos(b[1]*rad)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function brg(a,b){
+  const y=Math.sin((b[0]-a[0])*rad)*Math.cos(b[1]*rad);
+  const x=Math.cos(a[1]*rad)*Math.sin(b[1]*rad)-Math.sin(a[1]*rad)*Math.cos(b[1]*rad)*Math.cos((b[0]-a[0])*rad);
+  return Math.atan2(y,x)/rad;
+}
+function angDiff(a,b){ return ((b-a+540)%360)-180; }
+
+let tour = null, paused = false, tourToken = 0;
+function pointAt(t, d){
+  d = Math.max(0, Math.min(d, t.total));
+  let i = 1; while(i < t.cum.length-1 && t.cum[i] < d) i++;
+  const a=t.pts[i-1], b=t.pts[i], seg=t.cum[i]-t.cum[i-1]||1, f=(d-t.cum[i-1])/seg;
+  return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f];
+}
+function startTour(t){
+  stopTour(false);
+  const token = ++tourToken;
+  $('capT').textContent = t.ic + ' ' + t.name;
+  $('capD').textContent = t.desc;
+  $('capBar').style.width = '0';
+  $('caption').style.display = 'block';
+  paused = false; $('pauseBtn').textContent = '一時停止';
+  let run, start;
+  if(t.type === 'orbit'){
+    run = { ...t, ang: map.getBearing(), turned:0 };
+    start = { center:t.center, zoom:t.zoom, pitch:t.pitch, bearing:map.getBearing() };
+  } else {
+    const cum=[0]; for(let i=1;i<t.pts.length;i++) cum.push(cum[i-1]+dist(t.pts[i-1],t.pts[i]));
+    run = { ...t, cum, total:cum[cum.length-1], d:0, b:brg(t.pts[0], t.pts[1]) };
+    start = { center:t.pts[0], zoom:t.zoom, pitch:t.pitch, bearing:run.b };
+  }
+  map.flyTo({ ...start, duration:3500, essential:true });
+  map.once('moveend', () => { if(token === tourToken) tour = run; });
+  if(innerWidth <= 760) $('side').classList.add('min');
+}
+function stopTour(hide = true){
+  tour = null; tourToken++;
+  if(hide) $('caption').style.display = 'none';
+}
+$('stopBtn').onclick = () => stopTour();
+$('pauseBtn').onclick = () => { paused = !paused; $('pauseBtn').textContent = paused ? '再開' : '一時停止'; };
+
+function stepTour(dt){
+  if(paused) return;
+  if(tour.type === 'orbit'){
+    tour.ang += tour.rate*dt; tour.turned += tour.rate*dt;
+    $('capBar').style.width = Math.min(100, (tour.turned%360)/3.6) + '%';
+    map.jumpTo({ center:tour.center, bearing:tour.ang });
+  } else {
+    tour.d += tour.speed*dt;
+    const pos = pointAt(tour, tour.d);
+    const ahead = pointAt(tour, tour.d + tour.look);
+    if(tour.d < tour.total - 50) tour.b += angDiff(tour.b, brg(pos, ahead)) * Math.min(1, dt*1.2);
+    $('capBar').style.width = (tour.d/tour.total*100) + '%';
+    map.jumpTo({ center:pos, bearing:tour.b });
+    if(tour.d >= tour.total){ tour = null; $('capT').textContent += '（とうちゃく！）'; }
+  }
+}
+
+/* ========= ドローン操作 ========= */
+const keys = new Set();
+const DRONE_KEYS = ['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') return;
+  if(DRONE_KEYS.includes(e.code)){ e.preventDefault(); keys.add(e.code); if(tour) stopTour(); }
+  if(e.key === 'Shift') keys.add('Shift');
+});
+addEventListener('keyup', e => { keys.delete(e.code); if(e.key === 'Shift') keys.delete('Shift'); });
+addEventListener('blur', () => keys.clear());
+document.querySelectorAll('#pad button[data-k]').forEach(b => {
+  const k = b.dataset.k;
+  const on = e => { e.preventDefault(); keys.add(k); b.classList.add('on'); if(tour) stopTour(); };
+  const off = () => { keys.delete(k); b.classList.remove('on'); };
+  b.addEventListener('pointerdown', on);
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => b.addEventListener(ev, off));
+});
+['mousedown','touchstart','wheel'].forEach(ev => map.getCanvas().addEventListener(ev, () => { if(tour) stopTour(); }, {passive:true}));
+
+function stepDrone(dt){
+  const has = k => keys.has(k);
+  let z = map.getZoom(), b = map.getBearing(), p = map.getPitch();
+  const c = map.getCenter();
+  const fast = has('Shift') ? 3 : 1;
+  const mpp = 78271.517 * Math.cos(c.lat*rad) / 2**z;   // 1pxあたりのメートル
+  const v = mpp * 380 * fast * dt;
+  const fwd = (has('KeyW')?1:0) - (has('KeyS')?1:0);
+  const side = (has('KeyD')?1:0) - (has('KeyA')?1:0);
+  const bx = b*rad;
+  const east  = fwd*Math.sin(bx) + side*Math.cos(bx);
+  const north = fwd*Math.cos(bx) - side*Math.sin(bx);
+  const lat = c.lat + north*v/111320;
+  const lng = c.lng + east*v/(111320*Math.cos(c.lat*rad));
+  z += ((has('KeyQ')?1:0) - (has('KeyE')||has('Space')?1:0)) * 0.9 * fast * dt;
+  b += ((has('ArrowRight')?1:0) - (has('ArrowLeft')?1:0)) * 55 * dt;
+  p += ((has('ArrowUp')?1:0) - (has('ArrowDown')?1:0)) * 35 * dt;
+  map.jumpTo({ center:[lng,lat], zoom:Math.max(3, Math.min(17.5, z)), bearing:b, pitch:Math.max(0, Math.min(85, p)) });
+}
+
+/* ========= HUD ========= */
+const DIRS = ['北','北北東','北東','東北東','東','東南東','南東','南南東','南','南南西','南西','西南西','西','西北西','北西','北北西'];
+let hudT = 0;
+function updateHud(){
+  const c = map.getCenter();
+  const ex = map.getTerrain()?.exaggeration || 1;
+  const ge = map.queryTerrainElevation(c);
+  if(ge != null) $('hElev').textContent = Math.max(0, Math.round(ge/ex)).toLocaleString() + ' m';
+  try{
+    const t = map.transform;   // カメラ真下の地面からの高さ（強調ぶんを戻す）
+    const alt = (t.getCameraAltitude() - (map.queryTerrainElevation(t.getCameraLngLat()) || 0)) / ex;
+    $('hAlt').textContent = '地上 ' + (alt > 10000 ? (alt/1000).toFixed(0)+' km' : Math.round(alt).toLocaleString()+' m');
+  }catch(e){}
+  const b = (map.getBearing()+360)%360;
+  $('hDir').textContent = DIRS[Math.round(b/22.5)%16] + ' を見ている';
+  $('needle').style.transform = `rotate(${-b}deg)`;
+}
+
+let last = performance.now();
+function frame(t){
+  const dt = Math.min(0.1, (t-last)/1000); last = t;
+  if(tour) stepTour(dt);
+  else if([...keys].some(k => k !== 'Shift')) stepDrone(dt);
+  if(t - hudT > 150){ hudT = t; updateHud(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ========= 見え方 ========= */
+document.querySelectorAll('#baseSeg button').forEach(btn => btn.onclick = () => {
+  document.querySelectorAll('#baseSeg button').forEach(x => x.classList.toggle('on', x === btn));
+  ['photo','relief','std'].forEach(id => map.setLayoutProperty(id, 'visibility', id === btn.dataset.b ? 'visible' : 'none'));
+});
+$('ex').oninput = e => {
+  const v = +e.target.value; $('exVal').textContent = v.toFixed(1);
+  map.setTerrain({ source:'dem', exaggeration:v });
+};
+const VIEWS = { sky:{zoom:9.5,pitch:50}, drone:{zoom:12.5,pitch:72}, low:{zoom:14.8,pitch:82} };
+document.querySelectorAll('#viewSeg button').forEach(btn => btn.onclick = () => {
+  document.querySelectorAll('#viewSeg button').forEach(x => x.classList.toggle('on', x === btn));
+  if(tour && tour.type === 'path'){ map.easeTo({ ...VIEWS[btn.dataset.v], duration:1200 }); return; }
+  stopTour(); map.easeTo({ ...VIEWS[btn.dataset.v], duration:1500 });
+});
+const vis = (ids, on) => ids.forEach(id => map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
+$('cRiver').onchange = e => vis(['river-glow','river','stream','river-name'], e.target.checked);
+$('cPeak').onchange  = e => vis(['peak'], e.target.checked);
+$('cPlace').onchange = e => vis(['place'], e.target.checked);
+$('toggleSide').onclick = () => {
+  const s = $('side'); s.classList.toggle('min');
+  $('toggleSide').textContent = s.classList.contains('min') ? 'ひらく' : 'とじる';
+};
+
+/* ========= 場所さがし（地理院 地名検索） ========= */
+$('search').onsubmit = async e => {
+  e.preventDefault();
+  const q = $('q').value.trim(); if(!q) return;
+  const box = $('results'); box.innerHTML = '<small style="color:var(--sub);padding:6px">さがしています…</small>';
+  try{
+    const r = await fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(q));
+    const list = (await r.json()).slice(0, 8);
+    box.innerHTML = list.length ? '' : '<small style="color:var(--sub);padding:6px">見つかりませんでした</small>';
+    list.forEach(f => {
+      const b = document.createElement('button');
+      b.textContent = '📍 ' + f.properties.title;
+      b.onclick = () => {
+        stopTour();
+        map.flyTo({ center:f.geometry.coordinates, zoom:13, pitch:72, bearing:map.getBearing(), duration:4000, essential:true });
+        if(innerWidth <= 760) $('side').classList.add('min');
+      };
+      box.appendChild(b);
+    });
+  }catch(err){ box.innerHTML = '<small style="color:#ff9a9a;padding:6px">検索できませんでした（通信を確認）</small>'; }
+};
+
+/* ========= ヘルプ ========= */
+const closeHelp = () => { $('help').style.display = 'none'; try{ localStorage.setItem('droneHelpSeen','1'); }catch(e){} };
+$('helpClose').onclick = closeHelp;
+$('helpBtn2').onclick = () => { $('help').style.display = 'block'; };
+try{ if(localStorage.getItem('droneHelpSeen')) $('help').style.display = 'none'; }catch(e){}
+</script>
+</body>
+</html>
