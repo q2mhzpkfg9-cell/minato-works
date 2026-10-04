@@ -358,7 +358,7 @@ const APPS = [
    how:["45分の流れをブロックで並べる","時間配分が一目でわかる"], aim:"指導案の時間配分がいつも押してしまうとき。"},
   {n:"はつげんマップ", c:"jugyo", g:"授業中", p:"ブルーオーシャン10/02_はつげんマップ.html", th:"thumbs/25.jpg", t:"発言 記録 座席 評価 参加",
    how:["座席図の上で発言した子をタップ","回数が色で見える"], aim:"発言が一部の子にかたよっていないか確かめたいとき。"},
-  {n:"単元進度トラッカー", c:"jugyo", g:"授業準備", p:"ブルーオーシャン10/03_単元進度トラッカー.html", th:"thumbs/26.jpg", t:"単元 進度 進捗 計画 教科",
+  {n:"単元進度トラッカー", c:"jugyo", g:"授業準備", p:"ブルーオーシャン10/03_単元進度トラッカー.html", th:"thumbs/26.jpg", pro:"https://note.com/minato_smile2525/n/nd9aa17025e88", t:"単元 進度 進捗 計画 教科",
    how:["教科ごとに単元を登録","どこまで進んだかをチェック"], aim:"学期末に「この単元、間に合う？」と焦りたくないとき。"},
   {n:"こえのメーター", c:"jugyo", g:"授業中", p:"せんせいアプリ25/05_こえのメーター.html", th:"thumbs/27.jpg", t:"声 音量 静か マイク 学級",
    how:["マイクをオンにする","教室の声の大きさがメーターで見える"], aim:"「静かに」を言葉ではなく目で伝えたいとき。"},
@@ -573,7 +573,7 @@ function openInfo(i, tab){
         <a href="${esc(a.u || a.p)}">▶ ${kid ? "あそぶ" : "ひらく"}</a>
         <button data-close>とじる</button>
       </div>
-      ${a.pro ? `<a class="dlg-pro" href="${esc(a.pro)}" target="_blank" rel="noopener">⭐ 複数クラス対応・引き継ぎ機能つきの Pro版（500円）を note で見る</a>` : ""}
+      ${a.pro ? `<a class="dlg-pro" href="${esc(a.pro)}" target="_blank" rel="noopener">⭐ 複数クラス対応・引き継ぎ機能つきの Pro版を note で見る</a>` : ""}
       <div>
       </div>
     </div>`;
