@@ -77,6 +77,8 @@ button.on{background:#ffe9a8;border-color:#e0be55;}
 .blank{display:inline-block;border-bottom:0.35mm solid #333;min-width:9mm;height:6mm;line-height:6mm;
   text-align:center;vertical-align:-1.4mm;margin:0 0.8mm;color:#c0392b;font-size:4.2mm;}
 .a{visibility:hidden;}
+.mr{position:relative;display:inline-block;padding:0 1.6mm;margin-right:1mm;}
+.mr .a{position:absolute;left:0;right:0;top:50%;height:6mm;margin-top:-3mm;border:0.4mm solid #d33;border-radius:50%;}
 body.show-ans .a{visibility:visible;}
 
 /* 分数 */
@@ -167,6 +169,15 @@ body.show-ans .a{visibility:visible;}
   <div class="grp">
     <label>★チャレンジ</label>
     <input type="range" id="chalq" min="0" max="3" value="2"><span class="val" id="chalv">2</span>問
+  </div>
+  <div class="grp">
+    <label>九九</label>
+    <select id="dans">
+      <option value="2,5,3,4" selected>2・5・3・4のだん</option>
+      <option value="2,5">2・5のだん</option>
+      <option value="6,7,8,9">6・7・8・9のだん</option>
+      <option value="2,3,4,5,6,7,8,9">2〜9のだん ぜんぶ</option>
+    </select>
   </div>
   <div class="grp"><label><input type="checkbox" id="easy"> かんたんモード（裏面）</label></div>
   <div class="grp"><label>枚数</label><input type="number" id="count" value="10" min="1" max="60"></div>
@@ -348,8 +359,11 @@ function wariYokoQ(n){
   const body = a+' ÷ '+b+' ＝ '+B(q,8)+' あまり '+B(r,8);
   return yokoHTML(body, n, 'w2');
 }
+/* 2年 九九：ならった だんだけ使う（「九九」セレクト） */
+let DANS = [2,5,3,4];
+const dan = ()=> pick(DANS);
 function kukuQ(n){
-  const a=ri(2,9), b=ri(2,9);
+  const a=dan(), b=ri(2,9);
   return yokoHTML(a+' × '+b+' ＝ '+B(a*b,11), n, '', {kind:'array',a:a,b:b});
 }
 function g1Q(n, i){
@@ -579,6 +593,8 @@ const THEME_HINT = {
   tokei:'1時間＝60分　みじかいはり＝時　ながいはり＝分',
   nagasa:'1cm＝10mm　1m＝100cm',
   kasa:'1L＝10dL　1dL＝100mL　1L＝1000mL',
+  kakezan:'1つぶんの数 × いくつぶん ＝ ぜんぶの数',
+  kuku:'わからない ときは だんの 数を たして いこう（3のだんは 3ずつ ふえる）',
   jikan3:'1分＝60秒　1時間＝60分',
   nagasa3:'1km＝1000m',
   omosa3:'1kg＝1000g　1t＝1000kg'
@@ -652,6 +668,38 @@ const THEME = {
       ()=>{const n=ri(1,4), k=ri(1,9); return n+'L '+k+'dL ＝ '+B(n*10+k,11)+'dL';},
       ()=>{const a=ri(1,3),ad=ri(1,5),b=ri(1,2),bd=ri(1,4),t=(a*10+ad)+(b*10+bd);
            return a+'L'+ad+'dL ＋ '+b+'L'+bd+'dL ＝ '+B(Math.floor(t/10),8)+'L '+B(t%10,8)+'dL';}
+    ]},
+
+  kakezan:{label:'かけ算の 文しょうもんだい', sub:'しきと こたえ', maxQ:2, rest:'kuku',
+    // 教科書（日文2年下）の言い方にそろえる。a=1つ分の数（だん）、b=いくつ分
+    qs:[
+      [(a,b)=>a+'はこで 1セットの ティッシュの はこが '+b+'セット あります。ティッシュの はこは ぜんぶで 何はこ ありますか。','はこ'],
+      [(a,b)=>a+'本で 1パックの ペンが '+b+'パック あります。ペンは ぜんぶで 何本 ありますか。','本'],
+      [(a,b)=>a+'こ入りの けしゴムの パックが '+b+'つ あります。けしゴムは ぜんぶで 何こ ありますか。','こ'],
+      [(a,b)=>'1さらに '+a+'こずつ いちごが のって います。'+b+'さらでは、いちごは 何こに なりますか。','こ'],
+      [(a,b)=>'1そうに '+a+'人ずつ ボートに のって います。'+b+'そうでは、何人に なりますか。','人'],
+      [(a,b)=>'1人に '+a+'まいずつ 色紙を くばります。'+b+'人に くばるには、色紙は 何まい いりますか。','まい'],
+      [(a,b)=>'1本 '+a+'cmの テープの '+b+'本ぶんの 長さは 何cmですか。','cm']
+    ].map(w=>()=>{
+      const a=dan(), b=ri(2,9);
+      const fig = HINT ? '<div class="tiles">'+arraySVG(b,a)+'</div>' : '';
+      return w[0](a,b)+fig+
+        '<br>しき '+B(a,7)+' × '+B(b,7)+' ＝ '+B(a*b,9)+'　こたえ '+B(a*b,9)+w[1];
+    })},
+  kuku:{label:'九九 れんしゅう', sub:'すらすら いえるかな',
+    qs:[
+      ()=>{let h=''; for(let k=0;k<3;k++){const a=dan(),b=ri(1,9); h+=(k?'　':'')+a+'×'+b+'＝'+B(a*b,8);} return h;},
+      ()=>{let h=''; for(let k=0;k<3;k++){const a=dan(),b=ri(1,9); h+=(k?'　':'')+a+'×'+b+'＝'+B(a*b,8);} return h;},
+      ()=>{const a=dan(); const hide=shuffle([2,3,4,5,6,7,8]).slice(0,3);
+           let h=a+'のだん　'; for(let b=1;b<=9;b++) h+=(b>1?', ':'')+(hide.includes(b)?B(a*b,7):(a*b)); return h;},
+      ()=>{const a=dan(),b=ri(2,9); return a+' × □ ＝ '+(a*b)+'　□は '+B(b,8)+'　／　□ × '+b+' ＝ '+(a*b)+'　□は '+B(a,8);},
+      // 教科書：「○のだんの 九九の 答えに ○を つけましょう」
+      ()=>{const a=dan(); const yes=shuffle([1,2,3,4,5,6,7,8,9]).slice(0,3).map(b=>a*b);
+           const no=[]; while(no.length<3){const v=ri(a+1,a*9-1); if(v%a!==0 && !no.includes(v)) no.push(v);}
+           const nums=shuffle(yes.concat(no));
+           return a+'のだんの 答えに ○を つけましょう。　'+nums.map(v=>'<span class="mr">'+v+(v%a===0?'<span class="a"></span>':'')+'</span>').join('');},
+      // 教科書：「時計の 長い はりを よむ ときは、5のだんの 九九が つかえます」
+      ()=>{const n=ri(2,11); return '時計の 長い はりが '+n+'を さして いる とき、5×'+n+'で '+B(5*n,9)+'分';}
     ]},
 
   /* --- 3年 --- */
@@ -767,7 +815,7 @@ const THEME = {
 
 const GRADE_THEMES = {
   1:['tokei1','ikutsu','nagasa1'],
-  2:['tokei','nagasa','kasa'],
+  2:['kakezan','kuku','tokei','nagasa','kasa'],
   3:['jikan3','nagasa3','omosa3'],
   4:['kakudo','menseki','shosu4'],
   5:['taiseki','wariai','heikin'],
@@ -781,10 +829,13 @@ function themeSection(key, cnt){
     const f = t.fig(Math.min(left, t.figMax||1), idx);
     out += f.html; idx += f.count; left -= f.count;
   }
-  const pool = shuffle(t.qs.slice());
+  let pool = shuffle(t.qs.slice());
+  if(key==='kuku' && !DANS.includes(5)) pool = pool.filter(f=>!/時計/.test(f.toString()));
   let k=0;
   while(left>0){
-    out += '<div class="q"><span class="qn">('+idx+')</span> '+pool[k % pool.length]()+'</div>';
+    // maxQ をこえたぶんは rest のテーマ（例：文章題 → 九九）で埋める
+    const fn = (t.maxQ && k>=t.maxQ) ? pick(THEME[t.rest].qs.slice(0,2)) : pool[k % pool.length];
+    out += '<div class="q"><span class="qn">('+idx+')</span> '+fn()+'</div>';
     k++; idx++; left--;
   }
   const hb = (HINT && THEME_HINT[key]) ? '<div class="hintbar">ヒント　'+THEME_HINT[key]+'</div>' : '';
@@ -801,9 +852,10 @@ const CHALLENGE = {
   ],
   2:[
     ()=>{const b=ri(18,49),ans=ri(13,48); return '□ ＋ '+b+' ＝ '+(b+ans)+'　□は '+B(ans,11);},
-    ()=>{const a=ri(3,9),b=ri(3,9); return a+' × □ ＝ '+(a*b)+'　□は '+B(b,10);},
+    ()=>{const a=dan(),b=ri(3,9); return a+' × □ ＝ '+(a*b)+'　□は '+B(b,10);},
     ()=>{const a=ri(25,58),b=ri(14,39),c=ri(11,29); return a+' ＋ '+b+' － '+c+' ＝ '+B(a+b-c,11);},
-    ()=>{const h=ri(1,2),m=ri(1,5)*10; return h+'時間'+m+'分 ＝ '+B(h*60+m,12)+'分';}
+    ()=>{const h=ri(1,2),m=ri(1,5)*10; return h+'時間'+m+'分 ＝ '+B(h*60+m,12)+'分';},
+    ()=>{const a=dan(),b=ri(2,9); return a+' × '+b+' に なる もんだいを つくりましょう。<br><span class="blank" style="min-width:95%"></span>';}
   ],
   3:[
     ()=>{const a=ri(12,29),b=ri(4,8); return '□ × '+b+' ＝ '+(a*b)+'　□は '+B(a,11);},
@@ -844,7 +896,8 @@ function challengeHTML(grade, fn){
 const MSG = ['まいにち つづけよう！','ゆっくり ていねいに。','たんいを わすれずに！','見なおしまで できたら はなまる。','きのうの じぶんに かとう！'];
 function sheetHTML(no, grade, theme, cq, tq, chalN, hint){
   const total = cq+tq;
-  let h = '<div class="sheet'+((total>=8||hint)?' dense':'')+'">';
+  const dense = total>=8 || hint || (theme==='kakezan' && total+chalN>=7);
+  let h = '<div class="sheet'+(dense?' dense':'')+'">';
   h += '<div class="head"><span class="ttl">さんすう 5ふん</span>'+
        '<span class="no">'+grade+'年　'+THEME[theme].label+'</span>'+
        (hint?'<span class="easy">ヒントつき</span>':'')+
@@ -853,7 +906,9 @@ function sheetHTML(no, grade, theme, cq, tq, chalN, hint){
   h += themeSection(theme, tq);
   h += '<div class="memo"></div>';
   if(chalN>0){
-    const cpool = shuffle(CHALLENGE[grade].slice());
+    let cpool = shuffle(CHALLENGE[grade].slice());
+    // 文章題の紙は場所がないので「もんだいづくり」を外す
+    if(theme==='kakezan') cpool = cpool.filter(f=>!/つくりましょう/.test(f.toString()));
     for(let c=0;c<chalN;c++) h += challengeHTML(grade, cpool[c % cpool.length]);
   }
   h += '<div class="foot"><span class="msg">'+pick(MSG)+'</span><span class="score">できた　　／'+total+'</span></div>';
@@ -889,6 +944,8 @@ function build(){
   const n = Math.max(1, Math.min(60, parseInt($('count').value,10)||10));
   const layout = $('layout').value;
   const order = GRADE_THEMES[grade];
+  DANS = $('dans').value.split(',').map(Number);
+  $('dans').disabled = grade!==2;
 
   const fronts=[], backs=[];
   for(let i=0;i<n;i++){
@@ -929,7 +986,7 @@ function applyPageCSS(layout){
 }
 
 $('grade').addEventListener('change', ()=>{ fillThemeSelect(); build(); });
-['mode','count','layout','seed','easy'].forEach(id=> $(id).addEventListener('change', build));
+['mode','count','layout','seed','easy','dans'].forEach(id=> $(id).addEventListener('change', build));
 ['cq','tq','chalq'].forEach(id=> $(id).addEventListener('input', build));
 $('gen').addEventListener('click', ()=>{ $('seed').value=''; build(); });
 $('toggle').addEventListener('click', e=>{
