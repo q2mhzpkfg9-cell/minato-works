@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>戦国合戦3D</title>
+<style>
+:root{
+  --panel:rgba(22,24,30,.82); --line:rgba(255,255,255,.14); --ink:#f4f1ea; --sub:#b9b4a8;
+  --A:#2f6fe0; --B:#d8352f; --gold:#e3b54a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#aac3d8;color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif}
+#view{position:fixed;inset:0}
+#view canvas{display:block}
+.css2d{position:fixed;inset:0;pointer-events:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.panel{background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:14px}
+
+/* 上部バー */
+#top{position:fixed;left:12px;right:12px;top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;z-index:5}
+#top h1{margin:0 6px 0 2px;font:700 19px/1 "Hiragino Mincho ProN","Yu Mincho",serif;letter-spacing:.08em;white-space:nowrap}
+#top h1 small{font-size:11px;color:var(--gold);margin-left:6px;letter-spacing:0}
+.tabs{display:flex;gap:4px}
+.tabs button,.tb{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:14px;white-space:nowrap}
+.tabs button.on{background:var(--gold);color:#221a08;border-color:var(--gold);font-weight:700}
+.tb.on{background:#fff;color:#111}
+.sp{flex:1}
+.grp{display:flex;gap:4px;align-items:center}
+.grp .cap{font-size:11px;color:var(--sub);margin-right:2px}
+
+/* 左：兵力 */
+#left{position:fixed;left:12px;top:74px;width:300px;padding:12px 14px;z-index:4;max-height:calc(100vh - 290px);overflow:auto}
+#left h2{margin:0;font:700 20px/1.3 "Hiragino Mincho ProN","Yu Mincho",serif}
+#left .meta{font-size:12px;color:var(--sub);margin:3px 0 10px;line-height:1.5}
+.side{margin:8px 0 10px}
+.side .hd{display:flex;align-items:baseline;gap:6px}
+.side .dot{width:12px;height:12px;border-radius:3px;display:inline-block;transform:translateY(1px)}
+.side .nm{font-weight:700;font-size:15px}
+.side .tot{margin-left:auto;font:700 22px/1 "Hiragino Mincho ProN",serif}
+.side .tot small{font-size:12px;margin-left:2px}
+.bar{height:8px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;display:flex;margin:6px 0 4px}
+.bar i{display:block;height:100%}
+.side .st{font-size:12px;color:var(--sub);display:flex;gap:10px;flex-wrap:wrap}
+.school{font-size:12px;color:#e9dcc0;background:rgba(227,181,74,.12);border-radius:8px;padding:6px 8px;margin-top:4px;line-height:1.5}
+.note{font-size:11px;color:var(--sub);margin-top:8px;line-height:1.5}
+#leftToggle{display:none}
+
+/* 下：タイムライン */
+#bottom{position:fixed;left:12px;right:12px;bottom:10px;padding:10px 14px 12px;z-index:5}
+.chips{display:flex;gap:6px;align-items:stretch;overflow-x:auto;padding-bottom:4px}
+.chip{flex:1 0 118px;text-align:left;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px;line-height:1.35;position:relative}
+.chip b{display:block;font-size:13px}
+.chip.on{background:rgba(227,181,74,.22);border-color:var(--gold)}
+.chip.done{opacity:.72}
+.ctl{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+.ctl button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.08);font-size:16px}
+.ctl button#play{background:var(--gold);color:#221a08;border:none}
+#ptext{display:flex;gap:16px;margin-top:8px;align-items:flex-start}
+#ptext .pt{flex:1;min-width:0}
+#ptext h3{margin:0 0 3px;font:700 19px/1.3 "Hiragino Mincho ProN","Yu Mincho",serif}
+#ptext h3 span{font:500 13px sans-serif;color:var(--gold);margin-right:8px}
+#ptext p{margin:0;font-size:14.5px;line-height:1.7;color:#ece8de}
+#qbox{flex:0 0 300px}
+#qbtn{width:100%;background:rgba(255,255,255,.08);border:1px dashed rgba(227,181,74,.7);border-radius:10px;padding:8px;font-size:14px;color:var(--gold)}
+#q{display:none;background:#fbf5e6;color:#2b2210;border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.6;font-weight:600}
+#q.show{display:block}
+
+/* 部隊カード */
+#card{position:fixed;right:12px;top:74px;width:290px;padding:14px;z-index:6;display:none}
+#card.show{display:block}
+#card .x{position:absolute;right:8px;top:6px;background:none;border:none;font-size:20px;color:var(--sub)}
+#card h4{margin:0 0 2px;font:700 20px/1.3 "Hiragino Mincho ProN","Yu Mincho",serif}
+#card .sd{font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px}
+#card .n{font:700 26px/1.2 "Hiragino Mincho ProN",serif}
+#card .n small{font-size:13px}
+#card .row{font-size:13px;color:var(--sub);margin:4px 0}
+#card p{font-size:14px;line-height:1.65;margin:8px 0}
+#card .btns{display:flex;gap:6px;flex-wrap:wrap}
+#card .btns button{flex:1;background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:9px;padding:8px 6px;font-size:13px}
+
+/* 設定 */
+#set{position:fixed;right:12px;top:74px;width:300px;padding:14px;z-index:7;display:none;font-size:13px}
+#set.show{display:block}
+#set h4{margin:0 0 8px;font-size:15px}
+#set label{display:block;margin:10px 0 4px;color:var(--sub)}
+#set .seg{display:flex;gap:4px}
+#set .seg button{flex:1;background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:8px;padding:6px}
+#set .seg button.on{background:#fff;color:#111}
+#set input[type=range]{width:100%}
+#set input[type=number]{width:100px;background:#111;color:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 7px;font-size:14px}
+#set .hint{font-size:11px;color:var(--sub);line-height:1.5;margin-top:3px}
+
+/* ツールのヒント */
+#toolHint{position:fixed;left:50%;top:74px;transform:translateX(-50%);padding:8px 14px;z-index:6;font-size:14px;display:none}
+#toolHint.show{display:block}
+#toolHint button{margin-left:10px;background:#fff;color:#111;border:none;border-radius:7px;padding:4px 10px}
+
+/* 3Dラベル */
+.ul{pointer-events:auto;cursor:pointer;background:rgba(255,255,255,.92);color:#1b1b1b;border-radius:6px;padding:2px 7px 2px 6px;
+  font-size:12.5px;font-weight:700;white-space:nowrap;border-left:5px solid #888;box-shadow:0 1px 4px rgba(0,0,0,.35);line-height:1.35;transform:translateY(-4px)}
+.ul small{font-weight:500;color:#555;margin-left:4px}
+.ul.rout{opacity:.62}
+.ul.sel{outline:3px solid var(--gold)}
+.pl{color:#fff;font-size:12px;font-weight:700;text-shadow:0 0 3px #000,0 0 6px #000;white-space:nowrap;pointer-events:none}
+.pl.mt{color:#fff6d8}
+.pl.rv{color:#d7f0ff;font-weight:500;font-style:italic}
+.pl.ft{color:#ffe0b0}
+.al{background:rgba(0,0,0,.6);color:#fff;border-radius:5px;padding:1px 6px;font-size:12px;font-weight:700;white-space:nowrap}
+.ml{background:#ffe066;color:#222;border-radius:7px;padding:4px 8px;font-size:13px;font-weight:700;white-space:nowrap;text-align:center;line-height:1.4;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+.gl{background:#fff;color:#6b4a12;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:700;white-space:nowrap}
+#load{position:fixed;inset:0;display:grid;place-items:center;background:#1b1d22;z-index:20;font:600 18px "Hiragino Mincho ProN",serif;letter-spacing:.1em}
+
+@media (max-width:900px){
+  #left{width:260px;top:auto;bottom:250px;max-height:40vh}
+  #left.min .body{display:none}
+  #leftToggle{display:inline-block}
+  #qbox{flex-basis:200px}
+  #ptext p{font-size:13.5px}
+}
+@media (max-width:640px){
+  #top h1{font-size:16px}
+  #ptext{flex-direction:column}
+  #qbox{flex-basis:auto;width:100%}
+  #left{left:8px;right:8px;width:auto}
+  #card,#set{left:8px;right:8px;width:auto}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="load">戦場を用意しています…</div>
+<div id="view"></div>
+
+<div id="top" class="panel">
+  <h1>戦国合戦3D<small>兵数・地形をリアルに</small></h1>
+  <div class="tabs" id="tabs"></div>
+  <div class="sp"></div>
+  <div class="grp"><span class="cap">視点</span>
+    <button class="tb" data-v="diag">ななめ</button>
+    <button class="tb" data-v="top">真上</button>
+    <button class="tb" data-v="A" id="vA">A側</button>
+    <button class="tb" data-v="B" id="vB">B側</button>
+    <button class="tb" id="spin">⟳ 回転</button>
+  </div>
+  <div class="grp"><span class="cap">道具</span>
+    <button class="tb" data-t="measure">📏 距離</button>
+    <button class="tb" data-t="ground">🏫 運動場</button>
+  </div>
+  <button class="tb" id="setBtn">⚙ 設定</button>
+  <button class="tb" id="fs">⛶</button>
+</div>
+
+<div id="left" class="panel">
+  <div style="display:flex;align-items:center;gap:8px">
+    <h2 id="bName"></h2><span class="sp"></span><button class="tb" id="leftToggle">−</button>
+  </div>
+  <div class="body">
+    <div class="meta" id="bMeta"></div>
+    <div id="stats"></div>
+    <div class="note" id="scaleNote"></div>
+    <div class="note">※兵数・布陣は通説にもとづく目安です（諸説あり）。地形は学習用に単純化しています。</div>
+  </div>
+</div>
+
+<div id="card" class="panel"></div>
+
+<div id="set" class="panel">
+  <h4>表示の設定</h4>
+  <label>1体の人形 ＝ 何人？</label>
+  <div class="seg" id="ratioSeg"><button data-r="10">10人</button><button data-r="100">100人</button></div>
+  <div class="hint">10人にすると、実際の人の多さ（隊列の広さ）に近くなります。</div>
+  <label>人形の大きさ（見やすさ） <b id="figV"></b></label>
+  <input type="range" id="figR" min="2" max="14" step="1">
+  <div class="hint">本物の大きさ(×1)だと遠くからは見えません。</div>
+  <label>山の高さの強調 <b id="vexV"></b></label>
+  <input type="range" id="vexR" min="1" max="3" step="0.25">
+  <label>名前の表示</label>
+  <div class="seg" id="lblSeg"><button data-l="all">すべて</button><button data-l="key">主な武将</button><button data-l="none">なし</button></div>
+  <label>あなたの学校の全校児童数</label>
+  <input type="number" id="schoolN" min="10" max="3000" step="10"> 人
+  <div class="hint">兵の数を「学校いくつ分」で比べます。</div>
+</div>
+
+<div id="toolHint" class="panel"><span id="toolMsg"></span><button id="toolClear">消す</button><button id="toolEnd">終わる</button></div>
+
+<div id="bottom" class="panel">
+  <div style="display:flex;gap:10px;align-items:center">
+    <div class="ctl"><button id="prev" title="前へ（←）">◀</button><button id="play" title="再生（スペース）">▶</button><button id="next" title="次へ（→）">▶▶</button></div>
+    <div class="chips" id="chips" style="flex:1"></div>
+  </div>
+  <div id="ptext">
+    <div class="pt"><h3 id="pTitle"></h3><p id="pBody"></p></div>
+    <div id="qbox"><button id="qbtn">💬 発問を見る</button><div id="q"></div></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {CSS2DRenderer, CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* =====================================================================
+   合戦データ
+   座標はメートル（x:東 / y:北）。hills.h は平地からの高さ(m)。
+   兵数・位置は通説にもとづく概略（諸説あり）。
+   phases[].moves = その場面での部隊の変化 {x,y,n,s(状態),side}
+     s: ready=布陣 / fight=戦闘中 / sit=動かず / march=移動中 / rout=敗走
+   ===================================================================== */
+const BATTLES = {
+okehazama:{
+  name:"桶狭間の戦い", year:"1560年（永禄3年）5月19日", place:"尾張国 桶狭間（いまの愛知県名古屋市・豊明市）",
+  result:"織田信長の勝利。今川義元が討ち死にし、信長の名が全国に広まった。",
+  A:{name:"織田軍",lead:"織田信長"}, B:{name:"今川軍",lead:"今川義元"},
+  bounds:[-4200,4200,-1900,5300], rough:6,
+  hills:[
+    {x:0,y:0,h:48,rx:360,ry:300},{x:-1500,y:-500,h:30,rx:520,ry:400},{x:1200,y:800,h:36,rx:520,ry:420},
+    {x:-800,y:1100,h:24,rx:420,ry:520},{x:2500,y:-500,h:42,rx:720,ry:520},{x:-2500,y:-1300,h:38,rx:720,ry:420},
+    {x:800,y:-1300,h:30,rx:520,ry:420},{x:2300,y:2400,h:28,rx:620,ry:520},{x:600,y:4300,h:22,rx:900,ry:500},
+    {x:-3300,y:600,h:20,rx:240,ry:240},{x:-2700,y:900,h:16,rx:150,ry:150},{x:-3000,y:1500,h:20,rx:170,ry:170},
+    {x:-2900,y:3400,h:15,rx:200,ry:200},{x:-2400,y:3850,h:18,rx:180,ry:180},{x:3500,y:1500,h:26,rx:350,ry:300}
+  ],
+  rivers:[
+    {name:"扇川",w:24,pts:[[2600,3400],[900,3050],[-900,3000],[-1800,3000],[-3000,3150],[-4200,3000]]},
+    {name:"手越川",w:14,pts:[[2100,1500],[600,2050],[-900,2650],[-1800,2980]]},
+    {name:"大高川",w:18,pts:[[200,-1400],[-1200,-300],[-2300,450],[-3300,280],[-4200,200]]}
+  ],
+  roads:[
+    {name:"東海道",pts:[[-4200,3650],[-2900,3450],[-1800,3050],[0,2250],[2000,1750],[3500,1600],[4200,1500]]},
+    {name:"大高道",pts:[[-3300,600],[-1600,350],[0,-50],[1500,800],[3400,1450]]},
+    {name:"",pts:[[-2400,3850],[-2500,4700],[-2800,5300]]}
+  ],
+  places:[
+    {n:"桶狭間山",x:0,y:0,t:"mt"},{n:"大高城",x:-3300,y:600,t:"castle"},{n:"鳴海城",x:-2900,y:3400,t:"castle"},
+    {n:"丸根砦",x:-2700,y:900,t:"fort"},{n:"鷲津砦",x:-3000,y:1500,t:"fort"},{n:"善照寺砦",x:-2400,y:3850,t:"fort"},
+    {n:"中島砦",x:-1800,y:3000,t:"fort"},{n:"沓掛城",x:3500,y:1500,t:"castle"},
+    {n:"↑ 熱田・清洲城へ",x:-2700,y:5150,t:"town"},{n:"← 伊勢湾（海）",x:-4000,y:1900,t:"town"}
+  ],
+  units:[
+    {id:"nobunaga",name:"織田信長（本隊）",side:"A",n:2000,x:-2700,y:5250,key:1,desc:"清洲城から少ない兵で出陣した。途中で兵が集まり、約2,000人になったといわれる。"},
+    {id:"sakuma",name:"佐久間盛重（丸根砦）",side:"A",n:400,x:-2700,y:900,desc:"丸根砦を守ったが、松平元康に攻められて討ち死にした。"},
+    {id:"hidetoshi",name:"織田秀敏（鷲津砦）",side:"A",n:500,x:-3000,y:1500,desc:"鷲津砦を守ったが、朝比奈隊に攻められ落城。"},
+    {id:"zenshoji",name:"善照寺砦の兵",side:"A",n:500,x:-2400,y:3850,desc:"鳴海城を見張るための砦。信長はここで兵を集めた。"},
+    {id:"nakajima",name:"中島砦の兵",side:"A",n:300,x:-1800,y:3050,desc:"川の合流点の低い土地にある砦。"},
+    {id:"yoshimoto",name:"今川義元（本陣）",side:"B",n:5000,x:0,y:0,key:1,desc:"「海道一の弓取り」とよばれた駿河・遠江・三河の大名。桶狭間山で休けいしていた。"},
+    {id:"motoyasu",name:"松平元康（のちの徳川家康）",side:"B",n:2500,x:-2200,y:700,key:1,desc:"このとき19歳。今川方として丸根砦を攻め落とし、大高城に入った。"},
+    {id:"asahina",name:"朝比奈泰朝",side:"B",n:2000,x:-2500,y:1600,desc:"鷲津砦を攻め落とした。"},
+    {id:"udono",name:"鵜殿長照（大高城）",side:"B",n:1000,x:-3300,y:600,desc:"織田の砦に囲まれた大高城を守っていた。"},
+    {id:"okabe",name:"岡部元信（鳴海城）",side:"B",n:1500,x:-2900,y:3400,desc:"義元の死後も城を守り、義元の首と引きかえに城を明けわたした。"},
+    {id:"zenei",name:"今川の前衛部隊",side:"B",n:4000,x:-900,y:1300,desc:"本陣の前に出ていた部隊。"},
+    {id:"kutsukake",name:"沓掛城・後方の兵",side:"B",n:5000,x:3300,y:1350,desc:"後方にひかえていた部隊。"},
+    {id:"others",name:"各地の今川勢",side:"B",n:4000,x:1600,y:-300,desc:"本陣のまわりや街道ぞいに分かれていた部隊。"}
+  ],
+  phases:[
+    {t:"5月19日 夜明け",title:"丸根砦・鷲津砦への攻撃",
+     text:"今川義元は約2万5千の大軍で尾張に攻めこんだ。夜明け、松平元康（のちの徳川家康）が丸根砦を、朝比奈泰朝が鷲津砦を攻めた。知らせを聞いた信長は、清洲城からわずかな家来と飛び出した。",
+     q:"信長の兵と今川の兵は、何倍くらいちがうだろう？左の数字で比べてみよう。",
+     moves:{motoyasu:{x:-2550,y:820,s:"fight"},asahina:{x:-2800,y:1480,s:"fight"},sakuma:{s:"fight"},hidetoshi:{s:"fight"},nobunaga:{x:-2450,y:4700,s:"march"}},
+     arrows:[{f:"motoyasu",t:"sakuma"},{f:"asahina",t:"hidetoshi"},{f:[-2750,5250],t:[-2450,4750],side:"A",label:"清洲から"}]},
+    {t:"午前10時ごろ",title:"砦の陥落・信長は善照寺砦へ",
+     text:"丸根・鷲津の砦は落ち、守っていた武将は討ち死にした。信長は熱田神宮で戦勝を祈り、善照寺砦に入って兵を集めた。一方、義元は桶狭間山で休み、勝ちを喜んでいたといわれる。",
+     q:"このとき義元は、どんな気持ちだっただろう？",
+     moves:{sakuma:{n:40,s:"rout",x:-2350,y:1300},hidetoshi:{n:50,s:"rout",x:-2650,y:2050},motoyasu:{x:-3200,y:720,s:"ready"},asahina:{x:-2750,y:1550,s:"ready"},nobunaga:{x:-2250,y:3700,s:"ready"},yoshimoto:{s:"sit"}},
+     arrows:[{f:[-2450,4700],t:[-2280,3780],side:"A",label:"熱田から"}]},
+    {t:"正午〜午後1時ごろ",title:"中島砦へ・突然の豪雨",rain:1,fog:.55,
+     text:"信長は家来が止めるのも聞かず、低い土地にある中島砦へ進んだ。そのとき、石や氷を投げつけるような激しい雨がふりだした。雨で今川軍からは、信長軍の動きが見えにくくなった。",
+     q:"雨は、信長にとってどう役に立ったのだろう？",
+     moves:{nobunaga:{x:-1550,y:2800,s:"march"},zenei:{s:"sit"}},
+     arrows:[{f:[-2250,3700],t:[-1600,2850],side:"A"}]},
+    {t:"午後2時ごろ",title:"今川本陣への突撃",rain:.25,fog:.2,
+     text:"雨がやむと同時に、信長軍はいっせいに今川軍へ攻めかかった。不意をつかれた今川軍は乱れ、義元の本陣もくずれた。（信長がどの道を通ったかは、山を回りこんだ「迂回奇襲説」と、まっすぐ攻めた「正面攻撃説」があり、今もわかっていない）",
+     q:"2,000人で2万5千人に勝てたのはなぜだろう？（地形・天気・タイミング）",
+     moves:{nobunaga:{x:-280,y:330,s:"fight"},yoshimoto:{s:"fight"},zenei:{x:-300,y:1500,n:3200,s:"fight"}},
+     arrows:[{f:[-1550,2800],via:[-1300,900],t:"yoshimoto",side:"A",label:"迂回説"},{f:[-1450,2600],t:[-700,1500],side:"A",label:"正面説",dash:1}]},
+    {t:"午後2時すぎ",title:"今川義元 討ち死に",
+     text:"義元は織田方の毛利新介（良勝）に討ち取られた。大将を失った今川軍は引き上げた。大高城にいた松平元康は三河の岡崎にもどり、のちに信長と同盟を結ぶ。この勝利で、信長の名は全国に知られた。",
+     q:"このあと、家康（元康）はなぜ信長と手を組んだのだろう？",
+     moves:{yoshimoto:{x:900,y:-700,n:600,s:"rout"},zenei:{x:1800,y:1900,n:2200,s:"rout"},others:{x:3300,y:-500,n:3200,s:"rout"},kutsukake:{x:4000,y:1600,s:"rout"},motoyasu:{s:"sit"},nobunaga:{x:350,y:-250,s:"fight"},asahina:{x:-2400,y:-600,s:"rout"}}}
+  ]
+},
+
+nagashino:{
+  name:"長篠・設楽原の戦い", year:"1575年（天正3年）5月21日", place:"三河国 設楽原（いまの愛知県新城市）",
+  result:"織田・徳川連合軍の勝利。武田軍は多くの重臣を失い、力を落としていった。",
+  A:{name:"織田・徳川軍",lead:"織田信長・徳川家康"}, B:{name:"武田軍",lead:"武田勝頼"},
+  bounds:[-3000,5200,-2700,2600], rough:7,
+  hills:[
+    {x:-700,y:0,h:32,rx:360,ry:1900},{x:-1750,y:450,h:48,rx:320,ry:320},{x:-950,y:-950,h:36,rx:260,ry:260},
+    {x:950,y:200,h:36,rx:480,ry:1800},{x:3000,y:650,h:62,rx:360,ry:360},{x:3750,y:-1250,h:115,rx:470,ry:360},
+    {x:500,y:2750,h:210,rx:4200,ry:700},{x:0,y:-2850,h:190,rx:4200,ry:620},{x:3750,y:-300,h:26,rx:200,ry:200},
+    {x:-2700,y:0,h:90,rx:500,ry:2000},{x:5000,y:500,h:120,rx:500,ry:1500}
+  ],
+  rivers:[
+    {name:"連吾川",w:14,pts:[[160,2300],[60,1100],[0,0],[-60,-900],[0,-1750]]},
+    {name:"豊川（寒狭川）",w:40,pts:[[4700,1700],[3950,300],[3900,-450],[3200,-800],[2000,-1450],[500,-1800],[-3000,-1950]]},
+    {name:"大野川（宇連川）",w:30,pts:[[5200,-600],[4500,-500],[3900,-450]]}
+  ],
+  roads:[{name:"伊那街道",pts:[[-3000,350],[-1500,250],[0,120],[1500,0],[3400,-150],[5200,50]]}],
+  fences:[{name:"馬防柵",pts:[[-230,1600],[-190,700],[-240,0],[-200,-700],[-240,-1300]]}],
+  places:[
+    {n:"長篠城",x:3750,y:-300,t:"castle"},{n:"鳶ヶ巣山砦",x:3750,y:-1250,t:"fort"},{n:"茶臼山",x:-1750,y:450,t:"mt"},
+    {n:"高松山（弾正山）",x:-950,y:-950,t:"mt"},{n:"医王寺山",x:3000,y:650,t:"mt"},{n:"設楽原",x:-150,y:1900,t:"town"}
+  ],
+  units:[
+    {id:"nobunaga",name:"織田信長（本陣）",side:"A",n:10000,x:-1750,y:450,key:1,desc:"茶臼山に本陣をおいた。連合軍の総大将。"},
+    {id:"nobutada",name:"織田信忠",side:"A",n:4000,x:-1350,y:1000,desc:"信長の長男。"},
+    {id:"sakuma",name:"佐久間信盛",side:"A",n:3000,x:-650,y:1250,desc:"織田家の重臣。"},
+    {id:"hideyoshi",name:"羽柴秀吉",side:"A",n:3000,x:-650,y:720,key:1,desc:"のちの豊臣秀吉。"},
+    {id:"niwa",name:"丹羽長秀",side:"A",n:3000,x:-650,y:220,desc:"織田家の重臣。"},
+    {id:"takigawa",name:"滝川一益",side:"A",n:3000,x:-650,y:-280,desc:"織田家の重臣。"},
+    {id:"teppo",name:"鉄砲隊（柵の内側）",side:"A",n:3000,x:-360,y:300,key:1,desc:"柵のすぐ後ろにならんだ鉄砲隊。鉄砲の数は1,000丁とも3,000丁ともいわれる。"},
+    {id:"ieyasu",name:"徳川家康",side:"A",n:3000,x:-950,y:-950,key:1,desc:"高松山（弾正山）に陣をおいた。長篠城は徳川方の城。"},
+    {id:"okubo",name:"大久保忠世ら",side:"A",n:1000,x:-420,y:-850,desc:"徳川家の家臣。柵の前に出て戦った。"},
+    {id:"sakai",name:"酒井忠次（別働隊）",side:"A",n:4000,x:-1200,y:-1550,key:1,desc:"徳川家の重臣。夜のうちに山を大きく回りこみ、鳶ヶ巣山砦を奇襲した。"},
+    {id:"okudaira",name:"奥平信昌（長篠城）",side:"A",n:500,x:3750,y:-300,desc:"わずか500人で、武田の大軍から長篠城を守りぬいた。"},
+    {id:"katsuyori",name:"武田勝頼（本陣）",side:"B",n:3000,x:1600,y:250,key:1,desc:"武田信玄の子。父の死後、武田家をついだ。"},
+    {id:"baba",name:"馬場信春・真田信綱ら（右翼）",side:"B",n:3000,x:900,y:1150,key:1,desc:"信玄のころからの名将たち。多くが戦死した。"},
+    {id:"nobukado",name:"武田信廉・信豊ら（中央）",side:"B",n:3000,x:900,y:300,desc:"武田一族の部隊。"},
+    {id:"yamagata",name:"山県昌景・内藤昌秀ら（左翼）",side:"B",n:3000,x:900,y:-550,key:1,desc:"「赤備え」で知られる山県昌景は、この戦いで戦死した。"},
+    {id:"tobi",name:"武田信実（鳶ヶ巣山砦）",side:"B",n:1000,x:3750,y:-1250,desc:"長篠城を見はる砦を守っていた。"},
+    {id:"houi",name:"長篠城を囲む兵",side:"B",n:2000,x:3350,y:-50,s:"fight",desc:"長篠城を包囲していた部隊。"}
+  ],
+  phases:[
+    {t:"5月20日 夜",title:"両軍の布陣と別働隊",fog:.35,
+     text:"武田勝頼は長篠城を囲んでいたが、助けに来た織田・徳川連合軍と戦うため、設楽原に兵を進めた。連合軍は連吾川の西に馬防柵をつくり、その後ろに鉄砲隊をならべた。夜、酒井忠次の別働隊が山道を大きく回りこんだ。",
+     q:"織田・徳川軍は、なぜ川の手前に柵をつくったのだろう？",
+     moves:{sakai:{x:1500,y:-2250,s:"march"},okudaira:{s:"fight"}},
+     arrows:[{f:[-1150,-1650],via:[200,-2500],t:[1450,-2250],side:"A",label:"山道を回りこむ"}]},
+    {t:"5月21日 夜明け",title:"鳶ヶ巣山砦への奇襲",
+     text:"酒井隊が、長篠城を見はる鳶ヶ巣山砦を奇襲して落とし、長篠城は救われた。武田軍は、うしろ（にげ道）をおさえられる形になった。",
+     q:"うしろをとられた武田軍は、このあとどうすると思う？",
+     moves:{sakai:{x:3550,y:-1150,s:"fight"},tobi:{x:4400,y:-800,n:300,s:"rout"},houi:{x:4300,y:600,n:1100,s:"rout"}},
+     arrows:[{f:[1500,-2250],via:[3000,-1900],t:"tobi",side:"A"}]},
+    {t:"5月21日 朝〜昼",title:"柵へ向かう突撃",
+     text:"武田軍は何度も柵に向かって攻めかかったが、連吾川と柵にはばまれ、そこを鉄砲でねらい撃ちされた。（有名な「三段撃ち」は、後の時代の創作という説が有力）",
+     q:"武田の騎馬隊にとって、川と柵はどんなじゃまになっただろう？",
+     moves:{baba:{x:230,y:1050,s:"fight"},nobukado:{x:230,y:300,s:"fight"},yamagata:{x:230,y:-620,s:"fight"},katsuyori:{x:1250,y:200,s:"ready"},
+       teppo:{s:"fight"},sakuma:{x:-470,y:1150,s:"fight"},hideyoshi:{x:-470,y:720,s:"fight"},niwa:{s:"fight"},takigawa:{s:"fight"},okubo:{x:-160,y:-850,s:"fight"}},
+     arrows:[{f:"baba",t:"sakuma"},{f:"nobukado",t:"teppo"},{f:"yamagata",t:"okubo"},{f:"teppo",t:"nobukado"},{f:"hideyoshi",t:"baba"}]},
+    {t:"5月21日 午後",title:"武田軍の敗走",
+     text:"昼すぎ、武田軍はくずれて退却した。山県昌景・馬場信春・内藤昌秀など多くの重臣が戦死し、武田軍の死者は1万人ともいわれる（諸説）。武田氏はこのあと力を失い、7年後にほろびた。",
+     q:"この戦いで勝ち負けを分けたものは何だろう？（兵の数・地形・武器）",
+     moves:{baba:{x:2600,y:1500,n:1000,s:"rout"},nobukado:{x:2800,y:700,n:1200,s:"rout"},yamagata:{x:2700,y:-100,n:800,s:"rout"},katsuyori:{x:4300,y:1700,n:2000,s:"rout"},
+       sakuma:{x:700,y:1100,s:"fight"},hideyoshi:{x:700,y:600,s:"fight"},niwa:{x:600,y:100,s:"ready"},takigawa:{x:600,y:-350,s:"ready"},okubo:{x:650,y:-750,s:"fight"},teppo:{s:"ready"}},
+     arrows:[{f:"sakuma",t:"baba"},{f:"hideyoshi",t:"nobukado"},{f:[1300,200],t:[4100,1550],side:"B",label:"退却"}]}
+  ]
+},
+
+sekigahara:{
+  name:"関ヶ原の戦い", year:"1600年（慶長5年）9月15日", place:"美濃国 関ヶ原（いまの岐阜県関ケ原町）",
+  result:"東軍の勝利。徳川家康が天下の実権をにぎり、1603年に江戸幕府を開いた。",
+  A:{name:"東軍",lead:"徳川家康"}, B:{name:"西軍",lead:"石田三成（総大将は毛利輝元）"},
+  bounds:[-3300,6300,-3200,3300], rough:8,
+  hills:[
+    {x:-1500,y:3500,h:360,rx:3200,ry:950},{x:-1800,y:1150,h:72,rx:300,ry:300},{x:-2050,y:-100,h:52,rx:450,ry:520},
+    {x:-3400,y:0,h:230,rx:700,ry:3200},{x:-1400,y:-2300,h:175,rx:560,ry:500},{x:1500,y:-3450,h:260,rx:3600,ry:820},
+    {x:4500,y:-1750,h:300,rx:1150,ry:950},{x:2550,y:-350,h:36,rx:260,ry:220},{x:-950,y:1350,h:24,rx:180,ry:180},
+    {x:-2750,y:1850,h:120,rx:500,ry:600},{x:5200,y:2800,h:200,rx:1800,ry:700}
+  ],
+  rivers:[
+    {name:"藤古川",w:26,pts:[[-2600,3100],[-2400,1500],[-2500,0],[-2250,-1200],[-1950,-2600]]},
+    {name:"相川",w:18,pts:[[-900,2700],[-300,1300],[700,350],[2000,-150],[3500,300],[5000,600],[6300,700]]}
+  ],
+  roads:[
+    {name:"中山道",pts:[[-3300,-350],[-2300,-280],[-1000,-60],[0,0],[1500,-150],[2550,-600],[3500,-350],[6300,-150]]},
+    {name:"北国街道",pts:[[0,0],[-800,700],[-1500,1500],[-2300,2700]]},
+    {name:"伊勢街道",pts:[[0,0],[300,-1200],[700,-3200]]}
+  ],
+  places:[
+    {n:"関ヶ原",x:0,y:0,t:"town"},{n:"笹尾山",x:-1800,y:1150,t:"mt"},{n:"天満山",x:-2050,y:-100,t:"mt"},
+    {n:"松尾山",x:-1400,y:-2300,t:"mt"},{n:"南宮山",x:4500,y:-1750,t:"mt"},{n:"桃配山",x:2550,y:-350,t:"mt"},
+    {n:"伊吹山（北）↑",x:-1500,y:3000,t:"mt"},{n:"垂井・大垣城へ →",x:5800,y:-300,t:"town"}
+  ],
+  units:[
+    {id:"ieyasu",name:"徳川家康（本陣）",side:"A",n:30000,x:2550,y:-350,key:1,desc:"東軍の総大将。はじめは桃配山に本陣をおき、戦いのとちゅうで前に進めた。"},
+    {id:"fukushima",name:"福島正則",side:"A",n:6000,x:-700,y:-450,key:1,desc:"東軍の先鋒（いちばん前）。宇喜多隊とはげしく戦った。"},
+    {id:"kuroda",name:"黒田長政",side:"A",n:5400,x:-800,y:1150,key:1,desc:"石田隊をめざして北側から攻めた。西軍の武将たちに寝返りをはたらきかけていた。"},
+    {id:"hosokawa",name:"細川忠興",side:"A",n:5000,x:-650,y:850,desc:"妻は細川ガラシャ。石田隊と戦った。"},
+    {id:"kato",name:"加藤嘉明",side:"A",n:3000,x:-550,y:550,desc:"賤ヶ岳の七本槍の一人。"},
+    {id:"tanaka",name:"田中吉政",side:"A",n:3000,x:-450,y:1200,desc:"戦いのあと、にげた石田三成をとらえた。"},
+    {id:"tsutsui",name:"筒井定次",side:"A",n:2850,x:-400,y:750,desc:""},
+    {id:"ii",name:"井伊直政",side:"A",n:3600,x:-250,y:-50,key:1,desc:"「井伊の赤備え」。松平忠吉とともに抜けがけして戦いを始めた。"},
+    {id:"tadayoshi",name:"松平忠吉",side:"A",n:3000,x:-100,y:80,desc:"家康の四男。"},
+    {id:"honda",name:"本多忠勝",side:"A",n:500,x:150,y:300,desc:"徳川四天王の一人。生涯57回戦って一度も傷を負わなかったといわれる。"},
+    {id:"todo",name:"藤堂高虎",side:"A",n:2500,x:-650,y:-1000,desc:"大谷隊と戦った。"},
+    {id:"kyogoku",name:"京極高知",side:"A",n:3000,x:-450,y:-1250,desc:""},
+    {id:"terasawa",name:"寺沢広高",side:"A",n:2400,x:-450,y:-750,desc:""},
+    {id:"asano",name:"浅野幸長",side:"A",n:6500,x:3200,y:-750,desc:"南宮山の毛利軍にそなえた。"},
+    {id:"ikeda",name:"池田輝政",side:"A",n:4500,x:3750,y:-650,desc:"南宮山の毛利軍にそなえた。"},
+    {id:"yamauchi",name:"山内一豊",side:"A",n:2000,x:2900,y:-1000,desc:"南宮山の毛利軍にそなえた。のちの土佐藩主。"},
+    {id:"ishida",name:"石田三成",side:"B",n:6000,x:-1800,y:1150,key:1,desc:"西軍を実際にまとめた中心人物。笹尾山に陣をかまえた。"},
+    {id:"shimazu",name:"島津義弘",side:"B",n:1500,x:-1350,y:700,key:1,desc:"戦いにほとんど加わらず、最後に敵の中を正面突破して退却した（島津の退き口）。"},
+    {id:"konishi",name:"小西行長",side:"B",n:4000,x:-1600,y:250,desc:"キリシタン大名。"},
+    {id:"ukita",name:"宇喜多秀家",side:"B",n:17000,x:-1500,y:-400,key:1,desc:"西軍でいちばん大きい部隊。福島隊と激しく戦った。"},
+    {id:"otani",name:"大谷吉継ら",side:"B",n:4100,x:-1750,y:-1100,key:1,desc:"石田三成の友。病気の体で戦い、小早川の寝返りにそなえていた。"},
+    {id:"wakisaka",name:"脇坂安治ら4隊",side:"B",n:4200,x:-1250,y:-1550,desc:"脇坂・朽木・小川・赤座の4隊。小早川に続いて寝返った。"},
+    {id:"kobayakawa",name:"小早川秀秋",side:"B",n:15600,x:-1400,y:-2250,key:1,desc:"秀吉の妻の甥。松尾山に陣どり、正午ごろ東軍に寝返った。"},
+    {id:"mori",name:"毛利秀元",side:"B",n:15000,x:4500,y:-1700,key:1,desc:"南宮山の上に陣どったが、前の吉川隊が動かず、一度も戦えなかった。"},
+    {id:"kikkawa",name:"吉川広家",side:"B",n:3000,x:3750,y:-1150,desc:"ひそかに東軍と通じており、毛利隊の前で道をふさいだ。"},
+    {id:"ankokuji",name:"安国寺恵瓊",side:"B",n:1800,x:5000,y:-850,desc:""},
+    {id:"natsuka",name:"長束正家",side:"B",n:1500,x:5450,y:-1300,desc:""},
+    {id:"chosokabe",name:"長宗我部盛親",side:"B",n:6600,x:5900,y:-750,desc:"土佐の大名。戦わないまま退却した。"}
+  ],
+  phases:[
+    {t:"9月15日 早朝",title:"霧の中の布陣",fog:.9,
+     text:"夜のうちに両軍が関ヶ原に集まった。朝は深い霧で、すぐ近くの敵も見えなかった。西軍は笹尾山・天満山・松尾山・南宮山など、まわりの山に陣どり、盆地に入った東軍を囲むような形になった。",
+     q:"地図で見ると、有利なのは東軍と西軍のどちらだろう？それはなぜ？"},
+    {t:"午前8時ごろ",title:"戦いの始まり",fog:.45,
+     text:"霧が晴れはじめたころ、井伊直政と松平忠吉が抜けがけして宇喜多隊に鉄砲を撃ちかけ、戦いが始まった。先鋒の福島正則も、宇喜多隊にいっせいに攻めかかった。",
+     q:"井伊直政（家康の家臣）が一番に戦いを始めたのは、なぜだろう？",
+     moves:{ii:{x:-1050,y:-250,s:"fight"},tadayoshi:{x:-1000,y:-80,s:"fight"},fukushima:{x:-1100,y:-620,s:"fight"},ukita:{x:-1450,y:-450,s:"fight"}},
+     arrows:[{f:"ii",t:"ukita"},{f:"fukushima",t:"ukita"},{f:"ukita",t:"fukushima"}]},
+    {t:"午前10時ごろ",title:"一進一退の激戦",fog:.1,
+     text:"石田隊・大谷隊は、数の少なさをものともせず、よく戦った。家康は本陣を前に進めた（陣場野）。石田三成はのろしを上げて味方に合図を送ったが、島津・小早川・南宮山の毛利らは動かなかった。毛利隊の前にいた吉川広家が、道をふさいでいたのだ。",
+     q:"西軍のうち、実際に戦っているのは何人くらい？（左の「戦闘中」を見てみよう）",
+     moves:{kuroda:{x:-1450,y:1150,s:"fight"},tanaka:{x:-1400,y:1400,s:"fight"},hosokawa:{x:-1350,y:900,s:"fight"},kato:{x:-1250,y:560,s:"fight"},
+       tsutsui:{x:-1200,y:330,s:"fight"},ishida:{s:"fight"},konishi:{x:-1550,y:250,s:"fight"},todo:{x:-1400,y:-1050,s:"fight"},
+       kyogoku:{x:-1350,y:-1280,s:"fight"},otani:{x:-1650,y:-1080,s:"fight"},terasawa:{x:-1150,y:-760,s:"fight"},ieyasu:{x:-250,y:450,s:"ready"},
+       shimazu:{s:"sit"},kobayakawa:{s:"sit"},mori:{s:"sit"},kikkawa:{s:"sit"},ankokuji:{s:"sit"},natsuka:{s:"sit"},chosokabe:{s:"sit"},wakisaka:{s:"sit"}},
+     arrows:[{f:"kuroda",t:"ishida"},{f:"hosokawa",t:"ishida"},{f:"kato",t:"konishi"},{f:"todo",t:"otani"},{f:"ishida",t:"kuroda"},
+       {f:[2450,-300],t:[-150,420],side:"A",label:"家康、本陣を前へ"}]},
+    {t:"正午ごろ",title:"小早川秀秋の寝返り",
+     text:"迷っていた小早川秀秋が、ついに東軍に寝返り、松尾山をかけ下りて大谷隊を攻めた。大谷隊は一度は押し返したが、脇坂ら4隊も寝返ったため、くずれた。（家康が松尾山に鉄砲を撃ちかけてせかした「問鉄砲」の話は、後の時代の創作ともいわれる）",
+     q:"もし小早川が寝返らなかったら、戦いはどうなっていただろう？",
+     moves:{kobayakawa:{x:-1550,y:-1550,side:"A",s:"fight"},wakisaka:{x:-1800,y:-1400,side:"A",s:"fight"},otani:{s:"fight"}},
+     arrows:[{f:[-1400,-2150],t:"otani",side:"A",label:"寝返り！"},{f:"wakisaka",t:"otani"}]},
+    {t:"午後2時ごろ",title:"西軍の総くずれ",
+     text:"大谷吉継は自害し、小西・宇喜多・石田の隊はくずれて伊吹山の方へにげた。取り残された島津義弘は、なんと前にいる敵の中を突っ切って退却した（島津の退き口）。戦いはわずか半日ほどで、東軍の勝利に終わった。",
+     q:"この戦いのあと、家康はどうなっていくだろう？",
+     moves:{otani:{x:-2700,y:-1100,n:300,s:"rout"},ukita:{x:-3000,y:-600,n:8000,s:"rout"},konishi:{x:-2800,y:650,n:1800,s:"rout"},ishida:{x:-2500,y:2400,n:2400,s:"rout"},
+       shimazu:{x:1400,y:-1900,n:300,s:"rout"},mori:{x:6100,y:-1500,s:"rout"},ankokuji:{x:6100,y:-450,s:"rout"},natsuka:{x:6100,y:-1900,s:"rout"},chosokabe:{x:6150,y:-900,s:"rout"},
+       fukushima:{x:-1900,y:-450,s:"ready"},ii:{x:200,y:-900,n:3000,s:"fight"},kuroda:{x:-1900,y:1350,s:"ready"},hosokawa:{x:-1750,y:900,s:"ready"},
+       tanaka:{x:-2100,y:1800,s:"fight"},kato:{x:-1650,y:450,s:"ready"},tsutsui:{x:-1500,y:150,s:"ready"},kobayakawa:{x:-2050,y:-1250,s:"ready"},
+       wakisaka:{x:-2150,y:-900,s:"ready"},todo:{x:-1900,y:-1000,s:"ready"},kyogoku:{x:-1700,y:-1350,s:"ready"},terasawa:{x:-1600,y:-700,s:"ready"},tadayoshi:{x:-300,y:-700,s:"fight"}},
+     arrows:[{f:[-1250,650],via:[-200,-200],t:[1300,-1850],side:"B",label:"島津の退き口"},{f:[-1700,1100],t:[-2400,2250],side:"B",label:"石田、伊吹山へ"}]}
+  ]
+}
+};
+const ORDER = ["okehazama","nagashino","sekigahara"];
+const STATE = {ready:"布陣・待機",fight:"戦闘中",sit:"動かず（様子見）",march:"移動中",rout:"敗走・退却"};
+const ICON = {ready:"",fight:"⚔️",sit:"💤",march:"➡️",rout:"🏃"};
+const COL = {A:new THREE.Color("#2f6fe0"),B:new THREE.Color("#d8352f")};
+
+/* ===== 設定（端末に保存） ===== */
+const S = {key:"sekigahara",phase:0,ratio:10,fig:6,vex:1.5,labels:"key",school:400,tool:null,sel:null,spin:false,playing:false};
+try{ Object.assign(S, JSON.parse(localStorage.getItem("sengoku3d")||"{}")); }catch(e){}
+S.tool=null;S.sel=null;S.spin=false;S.playing=false;S.phase=0;
+const qs = new URLSearchParams(location.search);
+if(BATTLES[qs.get("b")]) S.key = qs.get("b");
+const save = ()=>{ try{ localStorage.setItem("sengoku3d", JSON.stringify({key:S.key,ratio:S.ratio,fig:S.fig,vex:S.vex,labels:S.labels,school:S.school})); }catch(e){} };
+
+/* ===== three.js 基本 ===== */
+const $ = id=>document.getElementById(id);
+const view = $("view");
+const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+view.appendChild(renderer.domElement);
+const css = new CSS2DRenderer(); css.setSize(innerWidth,innerHeight); css.domElement.className="css2d"; document.body.appendChild(css.domElement);
+const scene = new THREE.Scene();
+const SKY = new THREE.Color("#aac7df");
+scene.background = SKY.clone();
+scene.fog = new THREE.FogExp2(0xc9d3dc, 0);
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 10, 80000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = 1.48; controls.minDistance = 120;
+scene.add(new THREE.HemisphereLight(0xeef4ff, 0x5a4a30, 1.05));
+const sun = new THREE.DirectionalLight(0xfff3dd, 1.5); sun.position.set(-3000,5000,2500); scene.add(sun);
+
+/* ===== 地形 ===== */
+let B, H, world, terrain, figMesh, arrowsG, toolG, rain;
+function distSeg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=t<0?0:t>1?1:t;const x=ax+t*dx-px,y=ay+t*dy-py;return Math.sqrt(x*x+y*y);}
+function distPoly(x,y,p){let d=1e9;for(let i=0;i<p.length-1;i++){const e=distSeg(x,y,p[i][0],p[i][1],p[i+1][0],p[i+1][1]);if(e<d)d=e;}return d;}
+function makeH(b){
+  const hills=b.hills, rv=b.rivers.map(r=>({p:r.sm||r.pts,W:r.w*2.4,D:Math.max(5,r.w*.25)})), R=b.rough;
+  return (x,y)=>{
+    let h=0;
+    for(const k of hills){const dx=(x-k.x)/k.rx,dy=(y-k.y)/k.ry,q=dx*dx+dy*dy;if(q<9)h+=k.h*Math.exp(-q);}
+    h+=R*(Math.sin(x/410+1.3)*Math.cos(y/330)+.6*Math.sin((x-y)/190)+.35*Math.sin((x+2*y)/97));
+    for(const r of rv){const d=distPoly(x,y,r.p);if(d<r.W){const t=1-d/r.W;h-=r.D*t*t;}}
+    return h;
+  };
+}
+function smooth(pts,step=20){
+  if(pts.length<3){const o=[];for(let i=0;i<pts.length-1;i++){const[a,b]=[pts[i],pts[i+1]];const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/step));for(let k=0;k<n;k++)o.push([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);}o.push(pts[pts.length-1]);return o;}
+  const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],0,p[1])),false,"centripetal");
+  return c.getSpacedPoints(Math.max(8,Math.ceil(c.getLength()/step))).map(v=>[v.x,v.z]);
+}
+const gy = (x,y)=>H(x,y)*S.vex;
+const V = (x,y,off=0)=>new THREE.Vector3(x,gy(x,y)+off,-y);
+
+function buildTerrain(){
+  const [x0,x1,y0,y1]=B.bounds, W=x1-x0, D=y1-y0, seg=Math.round(Math.max(W,D)/28);
+  const sx=Math.round(seg*W/Math.max(W,D)), sy=Math.round(seg*D/Math.max(W,D));
+  const g=new THREE.PlaneGeometry(W,D,sx,sy); g.rotateX(-Math.PI/2); g.translate((x0+x1)/2,0,-(y0+y1)/2);
+  const pos=g.attributes.position, col=new Float32Array(pos.count*3), c=new THREE.Color();
+  const cPad=new THREE.Color("#c3cc7f"),cPad2=new THREE.Color("#a9bd6a"),cLow=new THREE.Color("#8db35a"),cMid=new THREE.Color("#5d8c44"),cHi=new THREE.Color("#3e6b39"),cTop=new THREE.Color("#56644a"),cRiv=new THREE.Color("#7c8f73");
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=-pos.getZ(i), h=H(x,y);
+    pos.setY(i,h*S.vex);
+    const cl=v=>v<0?0:v>1?1:v;
+    c.copy(cPad).lerp(cPad2,.5+.5*Math.sin(x/260+Math.sin(y/170))*Math.cos(y/230));
+    c.lerp(cLow,cl((h-6)/14)); c.lerp(cMid,cl((h-18)/25)); c.lerp(cHi,cl((h-45)/60)); c.lerp(cTop,cl((h-140)/200));
+    if(h<-1) c.lerp(cRiv,Math.min(1,-h/6));
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+  }
+  g.setAttribute("color",new THREE.BufferAttribute(col,3)); g.computeVertexNormals();
+  terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  world.add(terrain);
+  // 端の外側（遠景）
+  const base=new THREE.Mesh(new THREE.PlaneGeometry(W*6,D*6),new THREE.MeshLambertMaterial({color:0x6f8f58}));
+  base.rotation.x=-Math.PI/2; base.position.set((x0+x1)/2,-30,-(y0+y1)/2); world.add(base);
+}
+function ribbon(pts,w,color,off,opt={}){
+  const P=smooth(pts), pos=[], idx=[];
+  for(let i=0;i<P.length;i++){
+    const [x,y]=P[i],a=P[Math.max(0,i-1)],b=P[Math.min(P.length-1,i+1)];
+    const l=Math.hypot(b[0]-a[0],b[1]-a[1])||1, nx=-(b[1]-a[1])/l*w/2, ny=(b[0]-a[0])/l*w/2;
+    for(const s of [1,-1]){const px=x+nx*s,py=y+ny*s;pos.push(px,(opt.flatY??gy(px,py))+off,-py);}
+    if(i<P.length-1){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}
+  }
+  const g=new THREE.BufferGeometry(); g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3)); g.setIndex(idx);
+  const m=new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:!!opt.opacity,opacity:opt.opacity??1,depthTest:opt.depthTest??true,polygonOffset:true,polygonOffsetFactor:-2});
+  const mesh=new THREE.Mesh(g,m); if(opt.depthTest===false) mesh.renderOrder=10; return mesh;
+}
+function label(html,cls,pos){const d=document.createElement("div");d.className=cls;d.innerHTML=html;const o=new CSS2DObject(d);o.position.copy(pos);return o;}
+
+function buildMap(){
+  for(const r of B.rivers){
+    world.add(ribbon(r.sm,r.w,0x4f95c9,1.2));
+    const m=r.sm[Math.floor(r.sm.length*.45)]; const o=label(r.name,"pl rv",V(m[0],m[1],8)); o.userData.place=1; world.add(o);
+  }
+  for(const r of B.roads||[]) world.add(ribbon(r.pts,9,0xd9c9a0,.8));
+  for(const f of B.fences||[]){
+    const P=smooth(f.pts,6), pos=[], idx=[], HT=14;
+    P.forEach(([x,y],i)=>{const g0=gy(x,y);pos.push(x,g0,-y,x,g0+HT,-y);if(i<P.length-1){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}});
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+    world.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0x6b4a2b,side:THREE.DoubleSide})));
+    // 杭
+    const posts=new THREE.InstancedMesh(new THREE.BoxGeometry(3,22,3),new THREE.MeshLambertMaterial({color:0x4a321c}),Math.ceil(P.length/3));
+    const mm=new THREE.Matrix4(); let k=0;
+    for(let i=0;i<P.length;i+=3){const[x,y]=P[i];mm.makeTranslation(x,gy(x,y)+11,-y);posts.setMatrixAt(k++,mm);} posts.count=k; world.add(posts);
+    const o=label("🪵 "+f.name+"（約2km）","pl ft",V(f.pts[0][0],f.pts[0][1],40)); o.userData.place=1; world.add(o);
+  }
+  for(const p of B.places){
+    const pos=V(p.x,p.y);
+    if(p.t==="castle"||p.t==="fort"){
+      const s=p.t==="castle"?1:.7, gr=new THREE.Group();
+      const base=new THREE.Mesh(new THREE.BoxGeometry(70*s,22*s,70*s),new THREE.MeshLambertMaterial({color:p.t==="castle"?0xe9e3d3:0x8a6a45}));
+      base.position.y=11*s; gr.add(base);
+      if(p.t==="castle"){const roof=new THREE.Mesh(new THREE.ConeGeometry(55,34,4),new THREE.MeshLambertMaterial({color:0x3c4148}));roof.position.y=39;roof.rotation.y=Math.PI/4;gr.add(roof);}
+      gr.position.copy(pos); world.add(gr);
+    }
+    const o=label((p.t==="mt"?"▲ ":p.t==="castle"?"🏯 ":p.t==="fort"?"⛩ ":"")+p.n,"pl "+(p.t==="mt"?"mt":""),pos.clone().add(new THREE.Vector3(0,p.t==="castle"?75:p.t==="fort"?45:25,0)));
+    o.userData.place=1; world.add(o);
+  }
+}
+
+/* ===== 部隊と人形 ===== */
+let figGeo;
+{ const body=new THREE.ConeGeometry(.3,1.25,6); body.translate(0,.62,0);
+  const head=new THREE.SphereGeometry(.2,6,4); head.translate(0,1.45,0);
+  const yari=new THREE.CylinderGeometry(.035,.035,3.4,4); yari.translate(.32,1.6,0);
+  figGeo=mergeGeometries([body.toNonIndexed(),head.toNonIndexed(),yari.toNonIndexed()]); }
+function rnd(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return()=>(s=s*16807%2147483647)/2147483647;}
+
+function computeStates(){
+  const base={}; B.units.forEach(u=>base[u.id]={x:u.x,y:u.y,n:u.n,s:u.s||"ready",side:u.side});
+  let cur=base; B.base=base;
+  B.states=B.phases.map(p=>{const nx={};for(const id in cur)nx[id]={...cur[id],...(p.moves?.[id]||{})};cur=nx;return nx;});
+  for(const st of [B.base,...B.states]) for(const id in st){
+    const a=st[id]; let best=null,bd=1e18;
+    for(const jd in st){const b=st[jd];if(b.side===a.side||b.s==="rout")continue;const d=(b.x-a.x)**2+(b.y-a.y)**2;if(d<bd){bd=d;best=b;}}
+    a.ang=best?Math.atan2(best.y-a.y,best.x-a.x):0; if(a.s==="rout")a.ang+=Math.PI;
+  }
+}
+function buildUnits(){
+  let total=0;
+  B.units.forEach((u,i)=>{
+    const maxN=Math.max(u.n,...B.states.map(s=>s[u.id].n));
+    u.maxF=Math.ceil(maxN/S.ratio); u.start=total; total+=u.maxF;
+    const r=rnd(1000+i*7919); u.jit=new Float32Array(u.maxF*3); for(let k=0;k<u.jit.length;k++)u.jit[k]=r();
+    u.basePos=new Float32Array(u.maxF*3); u.F=0;
+    u.cur={...B.base[u.id]};
+    // 旗（のぼり）
+    const g=new THREE.Group();
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.2,80,5),new THREE.MeshLambertMaterial({color:0x3a2a1a})); pole.position.y=40; g.add(pole);
+    u.flagMat=new THREE.MeshLambertMaterial({color:COL[u.side],side:THREE.DoubleSide});
+    const flag=new THREE.Mesh(new THREE.PlaneGeometry(22,46),u.flagMat); flag.position.set(11,54,0); g.add(flag);
+    u.flag=g; world.add(g);
+    const d=document.createElement("div"); d.className="ul"; d.onclick=e=>{e.stopPropagation();showUnit(u.id);};
+    u.lbl=d; u.lblObj=new CSS2DObject(d); u.lblObj.position.set(0,88,0); g.add(u.lblObj);
+  });
+  figMesh=new THREE.InstancedMesh(figGeo,new THREE.MeshLambertMaterial({color:0xffffff}),Math.max(1,total));
+  figMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); figMesh.frustumCulled=false;
+  figMesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1,total)*3),3);
+  world.add(figMesh);
+  B.units.forEach(u=>{layout(u);paint(u);updLabel(u);});
+  figMesh.instanceMatrix.needsUpdate=true; figMesh.instanceColor.needsUpdate=true;
+}
+function layout(u){
+  const c=u.cur, F=Math.min(u.maxF,Math.ceil(c.n/S.ratio)), sp=Math.sqrt(S.ratio*4)*(c.s==="rout"?2.3:1);
+  const cols=Math.max(1,Math.round(Math.sqrt(F*2.2))), rows=Math.ceil(F/cols);
+  const fx=Math.cos(c.ang), fy=Math.sin(c.ang), rx=fy, ry=-fx; // 前方と右
+  const sc=c.s==="rout"?1.6:.35;
+  for(let i=0;i<F;i++){
+    const col=i%cols,row=Math.floor(i/cols);
+    const lx=(col-(cols-1)/2+(u.jit[i*3]-.5)*sc)*sp, ly=(-(row-(rows-1)/2)+(u.jit[i*3+1]-.5)*sc)*sp;
+    const x=c.x+rx*lx+fx*ly, y=c.y+ry*lx+fy*ly;
+    u.basePos[i*3]=x; u.basePos[i*3+1]=gy(x,y); u.basePos[i*3+2]=-y;
+  }
+  u.F=F; u.flag.position.copy(V(c.x,c.y)); u.flag.rotation.y=c.ang;
+  write(u,0);
+}
+function write(u,t){
+  const a=figMesh.instanceMatrix.array, s=S.fig, fight=u.cur.s==="fight", march=u.cur.s==="march";
+  const fx=Math.cos(u.cur.ang), fy=Math.sin(u.cur.ang), amp=Math.sqrt(S.ratio*4)*.35;
+  for(let i=0;i<u.maxF;i++){
+    const o=(u.start+i)*16;
+    if(i>=u.F){a.fill(0,o,o+16);a[o+15]=1;continue;}
+    let x=u.basePos[i*3],y=u.basePos[i*3+1],z=u.basePos[i*3+2];
+    if(fight){const w=Math.sin(t*4+u.jit[i*3+2]*20)*amp;x+=fx*w;z-=fy*w;}
+    if(march){y+=Math.abs(Math.sin(t*6+u.jit[i*3+2]*20))*s*.25;}
+    a[o]=s;a[o+1]=0;a[o+2]=0;a[o+3]=0;a[o+4]=0;a[o+5]=s;a[o+6]=0;a[o+7]=0;a[o+8]=0;a[o+9]=0;a[o+10]=s;a[o+11]=0;a[o+12]=x;a[o+13]=y;a[o+14]=z;a[o+15]=1;
+  }
+}
+const GRAY=new THREE.Color("#9aa0a8"), PALE=new THREE.Color("#e8edf2");
+function unitColor(c){const k=COL[c.side].clone();if(c.s==="rout")k.lerp(GRAY,.6);else if(c.s==="sit")k.lerp(PALE,.4);return k;}
+function paint(u){
+  const k=unitColor(u.cur), a=figMesh.instanceColor.array;
+  for(let i=0;i<u.maxF;i++){const v=.82+u.jit[i*3+2]*.3,o=(u.start+i)*3;a[o]=k.r*v;a[o+1]=k.g*v;a[o+2]=k.b*v;}
+  u.flagMat.color.copy(k); u.lbl.style.borderLeftColor="#"+k.getHexString();
+}
+function updLabel(u){
+  const c=u.cur, show=S.labels==="all"||(S.labels==="key"&&u.key)||S.sel===u.id;
+  u.lblObj.visible=!!show;
+  u.lbl.className="ul"+(c.s==="rout"?" rout":"")+(S.sel===u.id?" sel":"");
+  u.lbl.innerHTML=`${ICON[c.s]?ICON[c.s]+" ":""}${u.name}<small>${Math.round(c.n).toLocaleString()}人</small>`;
+}
+
+/* ===== 矢印 ===== */
+function stateAt(i){return i<0?B.base:B.states[i];}
+function buildArrows(i){
+  if(arrowsG){world.remove(arrowsG);dispose(arrowsG);}
+  arrowsG=new THREE.Group(); world.add(arrowsG);
+  const p=B.phases[i], st=stateAt(i);
+  for(const a of p.arrows||[]){
+    const P=v=>typeof v==="string"?[st[v].x,st[v].y]:v;
+    let f=P(a.f), t=P(a.t); const side=a.side||st[a.f]?.side||"A";
+    const d=Math.hypot(t[0]-f[0],t[1]-f[1]); if(d<50)continue;
+    if(typeof a.f==="string"){const k=Math.min(90,d*.2);f=[f[0]+(t[0]-f[0])/d*k,f[1]+(t[1]-f[1])/d*k];}
+    if(typeof a.t==="string"){const k=Math.min(160,d*.25);t=[t[0]-(t[0]-f[0])/d*k,t[1]-(t[1]-f[1])/d*k];}
+    const pts=a.via?[f,a.via,t]:[f,[(f[0]+t[0])/2,(f[1]+t[1])/2],t];
+    const P2=smooth(pts,15); const L=P2.length, e=P2[L-1], e0=P2[Math.max(0,L-6)];
+    const col=COL[side].clone().lerp(new THREE.Color("#ffffff"),.15);
+    const body=P2.slice(0,Math.max(2,L-4));
+    const r=ribbon(body,a.dash?22:34,col,14,{opacity:a.dash?.55:.9,depthTest:false}); arrowsG.add(r);
+    const ang=Math.atan2(e[1]-e0[1],e[0]-e0[0]), hw=70, hl=110;
+    const tip=V(e[0],e[1],14), bl=[e[0]-Math.cos(ang)*hl-Math.sin(ang)*hw, e[1]-Math.sin(ang)*hl+Math.cos(ang)*hw], br=[e[0]-Math.cos(ang)*hl+Math.sin(ang)*hw, e[1]-Math.sin(ang)*hl-Math.cos(ang)*hw];
+    const g=new THREE.BufferGeometry().setFromPoints([tip,V(bl[0],bl[1],14),V(br[0],br[1],14)]);
+    const head=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:col,side:THREE.DoubleSide,depthTest:false,transparent:true,opacity:.95})); head.renderOrder=10; arrowsG.add(head);
+    if(a.label){const m=P2[Math.floor(L*.5)];arrowsG.add(label(a.label,"al",V(m[0],m[1],50)));}
+  }
+}
+
+/* ===== 天気 ===== */
+function buildRain(){
+  const N=5000, g=new THREE.BufferGeometry(), p=new Float32Array(N*6);
+  g.setAttribute("position",new THREE.BufferAttribute(p,3));
+  rain=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xcfe0ee,transparent:true,opacity:.5}));
+  rain.frustumCulled=false; rain.visible=false; rain.userData.seed=Array.from({length:N},()=>[Math.random(),Math.random(),Math.random()]);
+  scene.add(rain);
+}
+function weather(i){
+  const p=B.phases[i]||{}; const fog=p.fog||0, r=p.rain||0;
+  S.fogT=fog; S.rainT=r;
+}
+
+/* ===== 画面 ===== */
+function dispose(o){o.traverse(c=>{if(c.isCSS2DObject)c.element.remove();c.geometry?.dispose();if(c.material)[].concat(c.material).forEach(m=>m.dispose());});o.removeFromParent();}
+function build(keepPhase){
+  const ph=keepPhase?S.phase:0;
+  if(world){dispose(world);} world=new THREE.Group(); scene.add(world); arrowsG=null;
+  B=BATTLES[S.key]; B.rivers.forEach(r=>r.sm=smooth(r.pts,25)); H=makeH(B);
+  computeStates(); buildTerrain(); buildMap(); buildUnits();
+  toolG=new THREE.Group(); world.add(toolG); measurePts=[];
+  const [x0,x1,y0,y1]=B.bounds; B.span=Math.max(x1-x0,y1-y0); B.cx=(x0+x1)/2; B.cy=(y0+y1)/2;
+  controls.maxDistance=B.span*2.2;
+  renderStatic();
+  if(keepPhase){ S.phase=ph; B.units.forEach(u=>{u.cur={...stateAt(ph)[u.id]};layout(u);paint(u);updLabel(u);}); buildArrows(ph); weather(ph); renderPhase(); }
+  else { goPhase(0); }
+  figMesh.instanceMatrix.needsUpdate=true; figMesh.instanceColor.needsUpdate=true;
+}
+function renderStatic(){
+  $("tabs").innerHTML=ORDER.map(k=>`<button data-k="${k}" class="${k===S.key?"on":""}">${BATTLES[k].name.replace("の戦い","")}</button>`).join("");
+  $("bName").textContent=B.name;
+  $("bMeta").innerHTML=`${B.year}<br>${B.place}<br><span style="color:#e9dcc0">結果：${B.result}</span>`;
+  $("vA").textContent=B.A.name.replace("軍","")+"側から"; $("vB").textContent=B.B.name.replace("軍","")+"側から";
+  $("chips").innerHTML=B.phases.map((p,i)=>`<button class="chip" data-i="${i}"><span style="color:var(--gold)">${i+1}. ${p.t}</span><b>${p.title}</b></button>`).join("");
+  $("scaleNote").innerHTML=`人形1体＝<b>${S.ratio}人</b>（1人あたり約4㎡の隊列の広さで配置）。人形は見やすく<b>${S.fig}倍</b>、山の高さは<b>${S.vex}倍</b>で表示。`;
+}
+function renderPhase(){
+  const p=B.phases[S.phase];
+  document.querySelectorAll(".chip").forEach((c,i)=>{c.classList.toggle("on",i===S.phase);c.classList.toggle("done",i<S.phase);});
+  $("pTitle").innerHTML=`<span>${p.t}</span>${p.title}`; $("pBody").textContent=p.text;
+  $("q").textContent=p.q||""; $("q").classList.remove("show"); $("qbtn").style.display="";
+  renderStats();
+}
+function renderStats(){
+  const st=stateAt(S.phase), sum={A:{t:0,fight:0,sit:0,rout:0,ready:0,march:0},B:{t:0,fight:0,sit:0,rout:0,ready:0,march:0}};
+  for(const id in st){const a=st[id];sum[a.side].t+=a.n;sum[a.side][a.s]+=a.n;}
+  const f=n=>Math.round(n).toLocaleString();
+  const row=s=>{const x=sum[s],c=COL[s].getStyle();
+    const w=k=>x.t?(x[k]/x.t*100):0;
+    return `<div class="side"><div class="hd"><span class="dot" style="background:${c}"></span><span class="nm">${B[s].name}</span><span class="tot">${f(x.t)}<small>人</small></span></div>
+      <div style="font-size:11px;color:var(--sub)">大将：${B[s].lead}</div>
+      <div class="bar"><i style="width:${w("fight")}%;background:${c}"></i><i style="width:${w("ready")+w("march")}%;background:${c};opacity:.5"></i><i style="width:${w("sit")}%;background:#cbd5e1"></i><i style="width:${w("rout")}%;background:#6b7280"></i></div>
+      <div class="st"><span>⚔️戦闘中 ${f(x.fight)}</span><span>🚩待機・移動 ${f(x.ready+x.march)}</span><span>💤動かず ${f(x.sit)}</span><span>🏃敗走 ${f(x.rout)}</span></div></div>`;};
+  const a=sum.A.t,b=sum.B.t, sc=Math.max(1,+S.school||400);
+  $("stats").innerHTML=row("A")+row("B")+
+   `<div class="school">🏫 全校${sc.toLocaleString()}人の学校でいうと…<br>${B.A.name} <b>${(a/sc).toFixed(a/sc<10?1:0)}校分</b>／${B.B.name} <b>${(b/sc).toFixed(b/sc<10?1:0)}校分</b><br>兵力の差は <b>${(Math.max(a,b)/Math.max(1,Math.min(a,b))).toFixed(1)}倍</b></div>`;
+}
+
+/* ===== 場面の移動 ===== */
+let tween=null;
+function goPhase(i,instant){
+  i=Math.max(0,Math.min(B.phases.length-1,i)); S.phase=i; const st=stateAt(i);
+  B.units.forEach(u=>{u.from={...u.cur};u.to={...st[u.id]};
+    let d=u.to.ang-u.from.ang; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI; u.to.ang=u.from.ang+d;
+    u.cur.s=u.to.s; paint(u); updLabel(u);});
+  tween={t0:performance.now(),dur:instant?1:2400};
+  buildArrows(i); weather(i); renderPhase(); if(S.sel)showUnit(S.sel,true);
+  figMesh.instanceColor.needsUpdate=true;
+}
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+
+/* ===== 視点 ===== */
+let camTw=null;
+function flyTo(pos,tgt,dur=1300){camTw={p0:camera.position.clone(),t0:controls.target.clone(),p1:pos,t1:tgt,s:performance.now(),d:dur};}
+function centroid(side){const st=stateAt(S.phase);let x=0,y=0,n=0;for(const id in st){const a=st[id];if(a.side!==side||a.s==="rout")continue;x+=a.x*a.n;y+=a.y*a.n;n+=a.n;}return n?[x/n,y/n]:[B.cx,B.cy];}
+function setView(v,instant){
+  const c=V(B.cx,B.cy), sp=B.span; let pos;
+  if(v==="top") pos=new THREE.Vector3(B.cx,sp*1.15,-B.cy+1);
+  else if(v==="diag") pos=new THREE.Vector3(B.cx-sp*.05,sp*.48,-B.cy+sp*.72);
+  else { const a=centroid(v), b=centroid(v==="A"?"B":"A"); let dx=a[0]-b[0],dy=a[1]-b[1]; const l=Math.hypot(dx,dy)||1;
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2; pos=V(mx+dx/l*sp*.45,my+dy/l*sp*.45,sp*.2); c.copy(V(mx,my)); }
+  // 左の兵力パネルに隠れないよう、見る中心を少し左へずらす（＝戦場が画面の右寄りに映る）
+  if(v!=="top"&&innerWidth>900){const f=c.clone().sub(pos);const r=new THREE.Vector3(f.z,0,-f.x).normalize().multiplyScalar(sp*.1);pos.add(r);c.add(r);}
+  if(instant){camera.position.copy(pos);controls.target.copy(c);}else flyTo(pos,c);
+  document.querySelectorAll("[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+}
+function viewFromUnit(id){
+  const u=B.units.find(x=>x.id===id), c=u.cur, dx=Math.cos(c.ang), dy=Math.sin(c.ang);
+  const pos=V(c.x-dx*180,c.y-dy*180,90), tgt=V(c.x+dx*1600,c.y+dy*1600,0);
+  flyTo(pos,tgt); document.querySelectorAll("[data-v]").forEach(b=>b.classList.remove("on"));
+}
+
+/* ===== 部隊カード ===== */
+function showUnit(id,keep){
+  const u=B.units.find(x=>x.id===id); if(!u)return;
+  const prev=S.sel; S.sel=id; if(prev&&prev!==id){const p=B.units.find(x=>x.id===prev);p&&updLabel(p);} updLabel(u);
+  const st=stateAt(S.phase)[id], sd=B[st.side], col=COL[st.side].getStyle(), sc=Math.max(1,+S.school||400);
+  const turned=st.side!==u.side;
+  $("card").innerHTML=`<button class="x" id="cx">×</button>
+    <span class="sd" style="background:${col}">${sd.name}${turned?"（寝返り）":""}</span>
+    <h4>${u.name}</h4>
+    <div class="n">約${Math.round(st.n).toLocaleString()}<small>人</small>${st.n<u.n?`<small style="color:#aaa">（はじめ ${u.n.toLocaleString()}人）</small>`:""}</div>
+    <div class="row">いまの様子：<b style="color:#fff">${ICON[st.s]} ${STATE[st.s]}</b></div>
+    <div class="row">🏫 全校${sc}人の学校 <b style="color:#fff">${(st.n/sc).toFixed(1)}校分</b>／人形 ${Math.ceil(st.n/S.ratio).toLocaleString()}体</div>
+    ${u.desc?`<p>${u.desc}</p>`:""}
+    <div class="btns"><button id="cView">👀 この陣から見る</button><button id="cFly">🔍 近づく</button></div>`;
+  $("card").classList.add("show"); $("set").classList.remove("show");
+  $("cx").onclick=hideUnit; $("cView").onclick=()=>viewFromUnit(id);
+  $("cFly").onclick=()=>{const c=u.cur;flyTo(V(c.x+250,c.y-900,650),V(c.x,c.y));};
+}
+function hideUnit(){const p=S.sel;S.sel=null;$("card").classList.remove("show");const u=B?.units.find(x=>x.id===p);u&&updLabel(u);}
+
+/* ===== 道具：距離・運動場 ===== */
+let measurePts=[];
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
+function groundHit(e){
+  const r=renderer.domElement.getBoundingClientRect(); mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(mouse,camera); const h=ray.intersectObject(terrain)[0]; return h?[h.point.x,-h.point.z]:null;
+}
+function setTool(t){
+  S.tool=S.tool===t?null:t; measurePts=[];
+  document.querySelectorAll("[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===S.tool));
+  $("toolHint").classList.toggle("show",!!S.tool);
+  $("toolMsg").textContent=S.tool==="measure"?"📏 2か所をクリックすると、距離と歩く時間がわかります":S.tool==="ground"?"🏫 クリックした場所に、学校の運動場（100m×60m）を置きます":"";
+}
+function marker(x,y){const m=new THREE.Mesh(new THREE.SphereGeometry(14,10,8),new THREE.MeshBasicMaterial({color:0xffe066,depthTest:false}));m.renderOrder=11;m.position.copy(V(x,y,10));toolG.add(m);}
+function onGroundClick(p){
+  if(S.tool==="measure"){
+    if(measurePts.length>=2)measurePts=[];
+    measurePts.push(p); marker(p[0],p[1]);
+    if(measurePts.length===2){
+      const [a,b]=measurePts, d=Math.hypot(b[0]-a[0],b[1]-a[1]);
+      toolG.add(ribbon([a,b],10,0xffe066,10,{depthTest:false,opacity:.95}));
+      const km=d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m";
+      toolG.add(label(`${km}<br><span style="font-weight:500">歩いて約${Math.max(1,Math.round(d/4000*60))}分／走って約${Math.max(1,Math.round(d/10000*60))}分</span>`,"ml",V((a[0]+b[0])/2,(a[1]+b[1])/2,70)));
+    }
+  } else if(S.tool==="ground"){
+    const [x,y]=p, g=new THREE.PlaneGeometry(100,60,10,6); g.rotateX(-Math.PI/2);
+    const pos=g.attributes.position; for(let i=0;i<pos.count;i++){const px=x+pos.getX(i),py=y-pos.getZ(i);pos.setXYZ(i,px,gy(px,py)+2.5,-py);}
+    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xe0c28a,transparent:true,opacity:.92,polygonOffset:true,polygonOffsetFactor:-4}));
+    toolG.add(m);
+    const e=new THREE.LineSegments(new THREE.EdgesGeometry(g,1),new THREE.LineBasicMaterial({color:0xffffff})); toolG.add(e);
+    toolG.add(label("🏫 運動場 100m×60m","gl",V(x,y,40)));
+  }
+}
+function nearestUnit(p){
+  let best=null,bd=1e18;
+  for(const u of B.units){const c=u.cur;const d=Math.hypot(c.x-p[0],c.y-p[1]);const r=Math.max(90,Math.sqrt(c.n*4)*.9);if(d<r&&d<bd){bd=d;best=u;}}
+  return best;
+}
+
+/* ===== イベント ===== */
+$("tabs").onclick=e=>{const k=e.target.closest("button")?.dataset.k;if(!k||k===S.key)return;S.key=k;save();hideUnit();stopPlay();build();setView("diag");};
+$("chips").onclick=e=>{const i=e.target.closest(".chip")?.dataset.i;if(i!=null){stopPlay();goPhase(+i);}};
+$("prev").onclick=()=>{stopPlay();goPhase(S.phase-1);};
+$("next").onclick=()=>{stopPlay();goPhase(S.phase+1);};
+let playTimer=null;
+function stopPlay(){S.playing=false;clearInterval(playTimer);$("play").textContent="▶";}
+$("play").onclick=()=>{
+  if(S.playing)return stopPlay();
+  S.playing=true;$("play").textContent="❚❚";
+  if(S.phase>=B.phases.length-1)goPhase(0);
+  playTimer=setInterval(()=>{if(S.phase>=B.phases.length-1)return stopPlay();goPhase(S.phase+1);},7000);
+};
+$("qbtn").onclick=()=>{$("q").classList.add("show");$("qbtn").style.display="none";};
+document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>setView(b.dataset.v));
+$("spin").onclick=()=>{S.spin=!S.spin;controls.autoRotate=S.spin;controls.autoRotateSpeed=.6;$("spin").classList.toggle("on",S.spin);};
+document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>setTool(b.dataset.t));
+$("toolClear").onclick=()=>{[...toolG.children].forEach(dispose);measurePts=[];};
+$("toolEnd").onclick=()=>setTool(S.tool);
+$("fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+$("leftToggle").onclick=()=>{$("left").classList.toggle("min");$("leftToggle").textContent=$("left").classList.contains("min")?"＋":"−";};
+$("setBtn").onclick=()=>{$("set").classList.toggle("show");$("card").classList.remove("show");};
+function syncSet(){
+  document.querySelectorAll("#ratioSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===S.ratio));
+  document.querySelectorAll("#lblSeg button").forEach(b=>b.classList.toggle("on",b.dataset.l===S.labels));
+  $("figR").value=S.fig;$("figV").textContent="×"+S.fig;$("vexR").value=S.vex;$("vexV").textContent="×"+S.vex;$("schoolN").value=S.school;
+}
+$("ratioSeg").onclick=e=>{const r=+e.target.dataset.r;if(!r||r===S.ratio)return;S.ratio=r;save();syncSet();build(true);};
+$("lblSeg").onclick=e=>{const l=e.target.dataset.l;if(!l)return;S.labels=l;save();syncSet();B.units.forEach(updLabel);applyPlaceLabels();};
+$("figR").oninput=()=>{S.fig=+$("figR").value;save();syncSet();B.units.forEach(u=>write(u,0));figMesh.instanceMatrix.needsUpdate=true;renderStatic();renderPhase();};
+$("vexR").onchange=()=>{S.vex=+$("vexR").value;save();syncSet();build(true);};
+$("vexR").oninput=()=>{$("vexV").textContent="×"+$("vexR").value;};
+$("schoolN").oninput=()=>{S.school=Math.max(1,+$("schoolN").value||400);save();renderStats();if(S.sel)showUnit(S.sel,true);};
+function applyPlaceLabels(){world.traverse(o=>{if(o.userData.place)o.visible=S.labels!=="none";});}
+
+let down=null;
+renderer.domElement.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY,t:performance.now()};if(S.spin){S.spin=false;controls.autoRotate=false;$("spin").classList.remove("on");}});
+renderer.domElement.addEventListener("pointerup",e=>{
+  if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>6||performance.now()-down.t>500)return;
+  const p=groundHit(e); if(!p)return;
+  if(S.tool)return onGroundClick(p);
+  const u=nearestUnit(p); if(u)showUnit(u.id); else hideUnit();
+});
+addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT")return;
+  if(e.key==="ArrowRight"){stopPlay();goPhase(S.phase+1);}
+  else if(e.key==="ArrowLeft"){stopPlay();goPhase(S.phase-1);}
+  else if(e.key===" "){e.preventDefault();$("play").click();}
+  else if(e.key==="Escape"){hideUnit();setTool(null);$("set").classList.remove("show");}
+});
+function fitTop(){const h=$("top").offsetHeight+18;["left","card","set"].forEach(id=>{if(innerWidth>900||id!=="left")$(id).style.top=h+"px";});$("toolHint").style.top=h+"px";}
+fitTop();
+addEventListener("resize",()=>{fitTop();camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);css.setSize(innerWidth,innerHeight);});
+
+/* ===== ループ ===== */
+function loop(now){
+  requestAnimationFrame(loop); const t=now/1000;
+  if(tween){
+    const k=Math.min(1,(now-tween.t0)/tween.dur), e=ease(k);
+    for(const u of B.units){
+      const f=u.from,to=u.to;
+      const moved=f.x!==to.x||f.y!==to.y||f.n!==to.n||f.ang!==to.ang;
+      if(!moved&&k<1)continue;
+      u.cur.x=f.x+(to.x-f.x)*e;u.cur.y=f.y+(to.y-f.y)*e;u.cur.n=f.n+(to.n-f.n)*e;u.cur.ang=f.ang+(to.ang-f.ang)*e;
+      if(u.cur.side!==to.side&&e>.5){u.cur.side=to.side;paint(u);figMesh.instanceColor.needsUpdate=true;}
+      layout(u);
+      if(k===1)updLabel(u);
+    }
+    figMesh.instanceMatrix.needsUpdate=true;
+    if(k===1)tween=null;
+  }
+  let dirty=false;
+  for(const u of B.units)if(u.cur.s==="fight"||u.cur.s==="march"){write(u,t);dirty=true;}
+  if(dirty)figMesh.instanceMatrix.needsUpdate=true;
+  // 霧・雨
+  const fogNow=scene.fog.density, fogT=(S.fogT||0)*1.35e-4/Math.max(.6,B.span/9000);
+  scene.fog.density+= (fogT-fogNow)*.05;
+  const rainK=S.rainT||0; S.rainNow=(S.rainNow||0)+(rainK-(S.rainNow||0))*.05;
+  scene.background.copy(SKY).lerp(new THREE.Color("#7d8791"),Math.min(1,S.rainNow*.9)).lerp(new THREE.Color("#d5dbe0"),Math.min(1,(S.fogT||0)*.7*(1-S.rainNow)));
+  scene.fog.color.copy(scene.background);
+  if(S.rainNow>.02){
+    rain.visible=true; rain.material.opacity=.55*S.rainNow;
+    const a=rain.geometry.attributes.position.array, c=controls.target, R=Math.min(2500,camera.position.distanceTo(c)*.8), seed=rain.userData.seed;
+    for(let i=0;i<seed.length;i++){const s=seed[i];const x=c.x+(s[0]-.5)*R*2,z=c.z+(s[1]-.5)*R*2;const y=c.y+((s[2]*900-t*700)%900+900)%900;const L=40;
+      a[i*6]=x;a[i*6+1]=y;a[i*6+2]=z;a[i*6+3]=x+6;a[i*6+4]=y-L;a[i*6+5]=z;}
+    rain.geometry.attributes.position.needsUpdate=true;
+  } else rain.visible=false;
+  if(camTw){const k=Math.min(1,(now-camTw.s)/camTw.d),e=ease(k);camera.position.lerpVectors(camTw.p0,camTw.p1,e);controls.target.lerpVectors(camTw.t0,camTw.t1,e);if(k===1)camTw=null;}
+  controls.update(); renderer.render(scene,camera); css.render(scene,camera);
+}
+
+/* ===== 開始 ===== */
+buildRain(); syncSet(); build(); setView("diag",true);
+applyPlaceLabels();
+if(qs.get("p")){ goPhase((+qs.get("p")||1)-1,true); }
+if(qs.get("v")) setView(qs.get("v"),true);
+$("load").remove();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

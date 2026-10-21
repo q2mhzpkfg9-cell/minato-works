@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>みんなで出場ローテ｜出場時間を公平にする交代表</title>
+<meta name="description" content="少年サッカー（5・7・8・11人制）など少年スポーツのコーチ向け。全員の出場時間がほぼ同じになる交代表を自動でつくり、試合中は次の交代を大きく表示します。">
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--ink:#2a2a2a;--sub:#6b6b6b;--line:#e3dccd;--green:#2e7d4f;--orange:#d9822b;--red:#c0392b;--r:14px;
+--gk:#f4d35e;--df:#bcd4ee;--mf:#c7e5c9;--fw:#f6c4b8;--bench:#eeeae2}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+a{color:var(--navy)}
+header{background:var(--navy);color:#fff;padding:10px 16px 12px}
+header a.back{color:#fff;text-decoration:none;font-size:14px;opacity:.9}
+header h1{margin:4px 0 0;font-size:22px;letter-spacing:.04em}
+header p{margin:2px 0 0;font-size:13px;opacity:.85}
+main{max-width:1100px;margin:0 auto;padding:14px 12px 120px}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{font-size:18px;margin:0 0 10px;color:var(--navy)}
+.card h3{font-size:16px;margin:12px 0 6px;color:var(--navy)}
+.note{font-size:13px;color:var(--sub)}
+.privacy{background:#eef3f8;border-radius:10px;padding:8px 12px;font-size:13px;color:var(--navy);margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:8px 16px;border-radius:12px;border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:16px}
+.btn.main{background:var(--navy);color:#fff}
+.btn.big{min-height:64px;font-size:20px;width:100%}
+.btn.warn{border-color:var(--red);color:var(--red)}
+.btn.small{min-height:40px;font-size:14px;padding:6px 12px}
+.btn:disabled{opacity:.4}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label.f{display:block;font-size:14px;font-weight:700;color:var(--navy)}
+label.f select,label.f input{display:block;width:100%;margin-top:4px;min-height:48px;border:2px solid var(--line);border-radius:12px;padding:6px 10px;background:#fff;font-size:17px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.seg button{flex:1;min-width:64px;min-height:52px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:700;font-size:17px}
+.seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+/* 選手 */
+.pl{display:grid;grid-template-columns:64px 1fr;gap:8px;border:2px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;background:#fff}
+.pl.absent{opacity:.55;background:#f3f0ea}
+.pl input.num{width:64px;min-height:48px;text-align:center;border:2px solid var(--line);border-radius:10px;font-size:18px;font-weight:700}
+.pl input.name{width:100%;min-height:48px;border:2px solid var(--line);border-radius:10px;padding:4px 10px;font-size:18px}
+.pl .opts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:44px;min-width:56px;padding:4px 10px;border-radius:22px;border:2px solid var(--line);background:#fff;font-weight:700;font-size:15px}
+.chip.gk.on{background:var(--gk);border-color:#c9a400}
+.chip.pref{background:#e3f3e6;border-color:var(--green);color:var(--green)}
+.chip.ng{background:#fbe5e2;border-color:var(--red);color:var(--red);text-decoration:line-through}
+.chip.abs.on{background:#555;border-color:#555;color:#fff}
+.chip.del{border-color:transparent;color:var(--sub);margin-left:auto}
+.count{font-size:16px;font-weight:700;color:var(--navy)}
+textarea{width:100%;min-height:110px;border:2px solid var(--line);border-radius:12px;padding:8px;font-size:16px}
+/* 交代表 */
+.sum{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.sum div{background:var(--bg);border-radius:10px;padding:6px 12px;font-size:14px}
+.sum b{font-size:20px;color:var(--navy)}
+.ok{color:var(--green);font-weight:700}.ng-t{color:var(--red);font-weight:700}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--line)}
+table.plan{border-collapse:collapse;width:100%;min-width:520px;background:#fff}
+table.plan th,table.plan td{border:1px solid var(--line);text-align:center;padding:0;font-size:14px}
+table.plan th{background:var(--navy);color:#fff;font-weight:700;padding:4px 2px;font-size:12px;line-height:1.3}
+table.plan th.pname,table.plan td.pname{text-align:left;padding:4px 8px;white-space:nowrap;position:sticky;left:0;z-index:1}
+table.plan td.pname{background:#fff;font-weight:700}
+table.plan th.pname{background:var(--navy)}
+table.plan td.c{min-width:46px;height:46px;font-weight:700;cursor:pointer;user-select:none}
+td.c.GK{background:var(--gk)}td.c.DF{background:var(--df)}td.c.MF{background:var(--mf)}td.c.FW{background:var(--fw)}td.c.B{background:var(--bench);color:#9a9488;font-weight:400}
+td.c.sel{outline:4px solid var(--navy);outline-offset:-4px}
+td.c.cand{box-shadow:inset 0 0 0 2px #7a9cc6}
+td.c.bad{box-shadow:inset 0 0 0 3px var(--red)}
+td.tot{font-weight:700;min-width:72px;padding:2px 6px}
+.bar{height:6px;background:var(--bench);border-radius:3px;margin-top:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--navy)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:8px 0}
+.legend span{padding:2px 8px;border-radius:6px}
+.flow{list-style:none;padding:0;margin:0}
+.flow li{border-bottom:1px dashed var(--line);padding:6px 0;font-size:15px}
+.flow .t{display:inline-block;min-width:96px;font-weight:700;color:var(--navy)}
+.in{color:var(--green);font-weight:700}.out{color:var(--orange);font-weight:700}
+.warnbox{background:#fff4e5;border:2px solid var(--orange);border-radius:12px;padding:8px 12px;font-size:14px;margin-bottom:10px}
+/* 試合中 */
+.live-top{background:var(--navy);color:#fff;border-radius:var(--r);padding:14px;text-align:center;margin-bottom:14px}
+.live-top .lbl{font-size:16px;opacity:.9}
+.live-top .clock{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.live-top .rem{font-size:22px;font-weight:700;margin-top:4px}
+.live-top.alert{animation:flash 1s infinite}
+@keyframes flash{50%{background:var(--orange)}}
+.swap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.swap .box{border-radius:var(--r);padding:12px;background:#fff;border:3px solid}
+.swap .box.inb{border-color:var(--green)}.swap .box.outb{border-color:var(--orange)}
+.swap h3{margin:0 0 6px;font-size:18px}
+.swap .inb h3{color:var(--green)}.swap .outb h3{color:var(--orange)}
+.swap .nm{font-size:24px;font-weight:800;line-height:1.35}
+.swap .nm small{font-size:15px;font-weight:700;color:var(--sub);margin-left:4px}
+.onfield{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.onfield div{border-radius:10px;padding:8px;font-size:18px;font-weight:700;text-align:center}
+.livebtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.livebtns .btn{min-height:72px;font-size:21px}
+.livebtns .next{grid-column:1/-1;background:var(--green);border-color:var(--green);color:#fff}
+/* シーズン */
+table.season{border-collapse:collapse;width:100%}
+table.season th,table.season td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;font-size:15px}
+table.season th{color:var(--navy);font-size:13px}
+.badge{display:inline-block;background:var(--green);color:#fff;border-radius:8px;padding:0 8px;font-size:12px;margin-left:4px}
+/* ナビ */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{border:0;background:#fff;min-height:64px;font-size:13px;font-weight:700;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav.tabs button .ic{font-size:22px;line-height:1}
+nav.tabs button.on{color:var(--navy);background:#eef3f8;box-shadow:inset 0 3px 0 var(--navy)}
+footer{text-align:center;font-size:13px;color:var(--sub);padding:16px 12px 100px}
+footer a{color:var(--sub)}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:24px;font-size:15px;z-index:50;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:.95}
+.hide{display:none!important}
+#printArea{display:none}
+@media (min-width:900px){.livebtns{grid-template-columns:1fr 1fr 2fr}.livebtns .next{grid-column:auto}}
+@media print{
+ @page{size:A4 portrait;margin:10mm}
+ body{background:#fff}
+ header,main,nav,footer,.toast{display:none!important}
+ #printArea{display:block!important;font-size:12pt;color:#000}
+ #printArea h1{font-size:18pt;margin:0 0 4pt}
+ #printArea .meta{font-size:11pt;margin-bottom:6pt}
+ #printArea table{border-collapse:collapse;width:100%}
+ #printArea th,#printArea td{border:1px solid #444;text-align:center;padding:3pt 2pt;font-size:12pt}
+ #printArea th{background:#ddd!important;font-size:10pt}
+ #printArea td.n{text-align:left;font-weight:700;white-space:nowrap}
+ #printArea td.GK{background:#f4d35e!important}#printArea td.DF{background:#bcd4ee!important}#printArea td.MF{background:#c7e5c9!important}#printArea td.FW{background:#f6c4b8!important}
+ #printArea td.B{color:#999}
+ #printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ #printArea ol{margin:8pt 0 0;padding-left:0;list-style:none}
+ #printArea li{border-bottom:1px dashed #999;padding:3pt 0;font-size:13pt}
+ #printArea li b{display:inline-block;min-width:80pt}
+}
+</style>
+</head>
+<body>
+<header>
+ <a class="back" href="../index.html">← MINATO WORKS</a>
+ <h1>みんなで出場ローテ</h1>
+ <p>出場時間を全員で公平にする交代表（少年サッカー5・7・8・11人制ほか）</p>
+</header>
+
+<main id="app">
+ <!-- 選手 -->
+ <section id="tab-players">
+  <div class="privacy">🔒 名簿と記録はこの端末（ブラウザ）の中だけに保存されます。外部には送信しません。</div>
+  <div class="card">
+   <h2>選手の登録</h2>
+   <p class="note">背番号・名前を入れ、GKができる子は「GK可」。DF/MF/FWはタップで「◎出たい」→「×出られない」→「ふつう」と切り替わります（任意）。当日休みの子は「欠席」に。</p>
+   <div class="row" style="margin-bottom:10px"><span class="count" id="pcount"></span></div>
+   <div id="plist"></div>
+   <div class="row">
+    <button class="btn main" id="addP">＋ 選手を追加</button>
+    <button class="btn small" id="allPresent">全員出席にする</button>
+   </div>
+   <h3>まとめて追加</h3>
+   <p class="note">1行に1人。「10 たろう」のように先頭に背番号を書けます。</p>
+   <textarea id="bulk" placeholder="1 そうた&#10;2 はると&#10;3 ゆい"></textarea>
+   <div class="row" style="margin-top:8px">
+    <button class="btn" id="bulkAdd">まとめて追加</button>
+    <button class="btn small" id="sample">見本の10人を入れる</button>
+   </div>
+  </div>
+ </section>
+
+ <!-- 設定 -->
+ <section id="tab-setup" class="hide">
+  <div class="card">
+   <h2>試合の設定</h2>
+   <label class="f">人数制（GKを含む）</label>
+   <div class="seg" id="segFmt"></div>
+   <div class="grid2" style="margin-top:12px">
+    <label class="f">試合時間（分・合計）<input type="number" id="sMin" min="5" max="120" inputmode="numeric"></label>
+    <label class="f">ピリオド数（前後半なら2）<select id="sPer"><option value="1">1</option><option value="2">2（前半・後半）</option><option value="3">3</option><option value="4">4</option></select></label>
+    <label class="f">交代の区切り（分ごと）<input type="number" id="sBlk" min="1" max="60" inputmode="numeric"></label>
+    <label class="f">GKの交代<select id="sGk"><option value="period">ピリオドごとに交代（おすすめ）</option><option value="block">区切りごとに交代</option></select></label>
+   </div>
+   <p class="note" id="blkInfo" style="margin-top:8px"></p>
+  </div>
+  <div class="card">
+   <h2>この試合のメモ（任意）</h2>
+   <div class="grid2">
+    <label class="f">日付<input type="date" id="mDate"></label>
+    <label class="f">相手・大会名<input type="text" id="mOpp" placeholder="例：〇〇SC（練習試合）"></label>
+   </div>
+  </div>
+  <button class="btn big main" id="goMake">交代表をつくる →</button>
+ </section>
+
+ <!-- 交代表 -->
+ <section id="tab-plan" class="hide">
+  <div class="card">
+   <h2>交代表</h2>
+   <div class="row" style="margin-bottom:10px">
+    <button class="btn main" id="make">交代表をつくる</button>
+    <button class="btn" id="remake">別の案にする</button>
+    <button class="btn small" id="print">🖨 印刷（A4）</button>
+   </div>
+   <div id="planMsg"></div>
+   <div id="planBody"></div>
+  </div>
+ </section>
+
+ <!-- 試合中 -->
+ <section id="tab-live" class="hide">
+  <div id="liveBody"></div>
+ </section>
+
+ <!-- シーズン -->
+ <section id="tab-season" class="hide">
+  <div class="card">
+   <h2>シーズンの出場時間</h2>
+   <p class="note">出場率＝出場した分 ÷ 出席した試合の時間。出場率が低い子ほど、次の交代表で「多めに出る側」に回ります。</p>
+   <div id="seasonBody"></div>
+  </div>
+  <div class="card">
+   <h2>記録した試合</h2>
+   <div id="gameList"></div>
+  </div>
+  <div class="card">
+   <h2>データの保存・引っこし</h2>
+   <p class="note">JSONファイルに書き出すと、別の端末やほかのコーチに渡せます（名簿が入るので扱いに注意）。</p>
+   <div class="row">
+    <button class="btn" id="exp">JSONを書き出す</button>
+    <button class="btn" id="impBtn">JSONを読み込む</button>
+    <input type="file" id="imp" accept="application/json,.json" class="hide">
+    <button class="btn small warn" id="wipe">すべて消す</button>
+   </div>
+  </div>
+ </section>
+</main>
+
+<div id="printArea"></div>
+
+<footer>
+ 元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a>
+</footer>
+
+<nav class="tabs" id="tabs">
+ <button data-t="players" class="on"><span class="ic">👟</span>選手</button>
+ <button data-t="setup"><span class="ic">⚙️</span>設定</button>
+ <button data-t="plan"><span class="ic">📋</span>交代表</button>
+ <button data-t="live"><span class="ic">⏱</span>試合中</button>
+ <button data-t="season"><span class="ic">📈</span>シーズン</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 交代表ロジック（画面に依存しない部分） ===== */
+var MWRota=(function(){
+ 'use strict';
+ var POS=['DF','MF','FW'];
+ var FORMS={5:['DF','MF','MF','FW'],7:['DF','DF','MF','MF','MF','FW'],8:['DF','DF','DF','MF','MF','MF','FW'],11:['DF','DF','DF','DF','MF','MF','MF','MF','FW','FW']};
+ function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+ function buildBlocks(set){
+  var per=Math.max(1,Math.round(+set.per||1)),min=Math.max(1,+set.min||40),blk=Math.max(1,+set.blk||5);
+  var perLen=min/per,out=[];
+  for(var p=0;p<per;p++){
+   var arr=[],t=0;
+   while(perLen-t>1e-6){var len=Math.min(blk,perLen-t);arr.push({p:p,ps:t,len:len});t+=len;}
+   if(arr.length>1&&arr[arr.length-1].len<=blk/2){var l=arr.pop();arr[arr.length-1].len+=l.len;}
+   arr.forEach(function(x){x.len=Math.round(x.len*100)/100;x.ps=Math.round(x.ps*100)/100;out.push(x);});
+  }
+  return out;
+ }
+ function seasonRates(players,games){
+  var r={},sum=0,n=0;
+  players.forEach(function(p){
+   var m=0,pos=0;
+   (games||[]).forEach(function(g){if(g.present&&g.present.indexOf(p.id)>=0){m+=(g.mins[p.id]||0);pos+=g.len;}});
+   if(pos>0){r[p.id]=m/pos;sum+=r[p.id];n++;}
+  });
+  var avg=n?sum/n:0.5;
+  players.forEach(function(p){if(r[p.id]==null)r[p.id]=avg;});
+  return r;
+ }
+ function prefOf(p,s){return (p.pref&&p.pref[s])||0;}
+ function assignPos(ids,slots,prevPos,byId,rnd){
+  var left={};slots.forEach(function(s){left[s]=(left[s]||0)+1;});
+  function cost(id,s){var p=byId[id],c=0,pr=prefOf(p,s);if(pr===-1)c+=100;if(pr===1)c-=3;if(prevPos[id]===s)c-=1;return c;}
+  function cons(id){var p=byId[id],k=0;POS.forEach(function(s){if(prefOf(p,s)!==0)k++;});return k;}
+  var order=ids.slice().sort(function(a,b){return cons(b)-cons(a);});
+  var res={};
+  order.forEach(function(id){
+   var best=null,bc=1e9;
+   Object.keys(left).forEach(function(s){if(left[s]>0){var c=cost(id,s)+rnd()*0.1;if(c<bc){bc=c;best=s;}}});
+   res[id]=best;left[best]--;
+  });
+  // 入れ替えで改善できるなら入れ替える
+  for(var loop=0;loop<3;loop++){
+   var changed=false;
+   for(var i=0;i<ids.length;i++)for(var j=i+1;j<ids.length;j++){
+    var a=ids[i],b=ids[j];if(res[a]===res[b])continue;
+    var now=cost(a,res[a])+cost(b,res[b]),sw=cost(a,res[b])+cost(b,res[a]);
+    if(sw<now-0.5){var t=res[a];res[a]=res[b];res[b]=t;changed=true;}
+   }
+   if(!changed)break;
+  }
+  return res;
+ }
+ function generatePlan(players,set,games,seed){
+  var pres=players.filter(function(p){return !p.absent;});
+  var blocks=buildBlocks(set);
+  var fmt=FORMS[set.fmt]?+set.fmt:8;
+  var fs=Math.min(fmt,pres.length);
+  var slots=FORMS[fmt].slice(0,Math.max(0,fs-1));
+  var rnd=mulberry(seed||7);
+  var jit={},byId={};pres.forEach(function(p){jit[p.id]=rnd();byId[p.id]=p;});
+  var sr=seasonRates(players,games||[]);
+  // 1) GKを先に決める（連続しすぎないように）
+  var gkT={},gks=[],prevGk=null;
+  blocks.forEach(function(b,i){
+   if(!pres.length){gks.push(null);return;}
+   if(set.gkMode!=='block'&&i>0&&blocks[i-1].p===b.p){gks.push(gks[i-1]);gkT[gks[i]]+=b.len;return;}
+   var c=pres.filter(function(p){return p.gk;});if(!c.length)c=pres.slice();
+   var c2=c.filter(function(p){return p.id!==prevGk;});if(c2.length)c=c2;
+   c.sort(function(a,b2){return (gkT[a.id]||0)-(gkT[b2.id]||0)||(sr[b2.id]-sr[a.id])||jit[a.id]-jit[b2.id];});
+   var g=c[0].id;gks.push(g);gkT[g]=(gkT[g]||0)+b.len;prevGk=g;
+  });
+  // 2) 目標の出場時間（全員同じ）からGKの分を引いた「フィールドの持ち時間」を決め、
+  //    予定より遅れている子から順に入れる（比例配分）
+  var totalLen=0,maxLen=0;blocks.forEach(function(b){totalLen+=b.len;if(b.len>maxLen)maxLen=b.len;});
+  var target=pres.length?totalLen*fs/pres.length:0;
+  var srAvg=0;pres.forEach(function(p){srAvg+=sr[p.id];});srAvg=pres.length?srAvg/pres.length:0;
+  var quota={},avail={},seen={},played={};
+  pres.forEach(function(p){
+   var gkMin=0,av=0;blocks.forEach(function(b,i){if(gks[i]===p.id)gkMin+=b.len;else av+=b.len;});
+   // シーズンで出場率が低い子は少しだけ多め（最大 区切りの0.4ぶん）
+   var bonus=Math.max(-0.4*maxLen,Math.min(0.4*maxLen,(srAvg-sr[p.id])*4*maxLen));
+   quota[p.id]=Math.max(0,target-gkMin+bonus);avail[p.id]=av;seen[p.id]=0;played[p.id]=0;
+  });
+  var out=[],prevPos={};
+  blocks.forEach(function(b,i){
+   var g=gks[i];
+   var prevField=i>0?out[i-1].pos:{};
+   var c=pres.filter(function(p){return p.id!==g;});
+   var lag={};c.forEach(function(p){lag[p.id]=(avail[p.id]?quota[p.id]*(seen[p.id]+b.len)/avail[p.id]:0)-played[p.id];});
+   c.sort(function(a,b2){
+    var d=lag[b2.id]-lag[a.id];
+    if(Math.abs(d)>1e-6)return d;
+    var ca=prevField[a.id]?0:1,cb=prevField[b2.id]?0:1;
+    if(ca!==cb)return ca-cb;
+    return jit[a.id]-jit[b2.id];
+   });
+   c.forEach(function(p){seen[p.id]+=b.len;});
+   var field=c.slice(0,slots.length).map(function(p){return p.id;});
+   var bench=c.slice(slots.length).map(function(p){return p.id;});
+   var pos=assignPos(field,slots,prevPos,byId,rnd);
+   if(g)pos[g]='GK';
+   Object.keys(pos).forEach(function(id){if(id!==g)played[id]+=b.len;prevPos[id]=pos[id];});
+   out.push({p:b.p,ps:b.ps,len:b.len,pos:pos,bench:bench});
+  });
+  return {ids:pres.map(function(p){return p.id;}),fmt:fmt,per:Math.max(1,Math.round(+set.per||1)),min:+set.min,blocks:out,made:Date.now()};
+ }
+ function totals(plan){
+  var t={};plan.ids.forEach(function(id){t[id]=0;});
+  plan.blocks.forEach(function(b){Object.keys(b.pos).forEach(function(id){t[id]=(t[id]||0)+b.len;});});
+  return t;
+ }
+ function changes(a,b){
+  var ins=[],outs=[],moves=[];
+  Object.keys(b.pos).forEach(function(id){if(!a.pos[id])ins.push(id);else if(a.pos[id]!==b.pos[id])moves.push(id);});
+  Object.keys(a.pos).forEach(function(id){if(!b.pos[id])outs.push(id);});
+  return {ins:ins,outs:outs,moves:moves};
+ }
+ return {POS:POS,FORMS:FORMS,buildBlocks:buildBlocks,generatePlan:generatePlan,totals:totals,changes:changes,seasonRates:seasonRates};
+})();
+
+/* ===== 画面 ===== */
+(function(){
+ 'use strict';
+ if(!document.getElementById('app'))return;
+ var KEY='mw_sports_02_data';
+ var R=MWRota;
+ function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+ function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+ function $(id){return document.getElementById(id);}
+ function defState(){return {players:[],set:{fmt:8,min:40,per:2,blk:5,gkMode:'period'},meta:{date:today(),opp:''},plan:null,seed:1,live:null,games:[],tab:'players'};}
+ var S=defState();
+ try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&Array.isArray(o.players))S=Object.assign(defState(),o);}}catch(e){}
+ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('保存できませんでした（容量やプライベートモードを確認）');}}
+ function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show');},2200);}
+ function byId(id){for(var i=0;i<S.players.length;i++)if(S.players[i].id===id)return S.players[i];return null;}
+ function pname(id){var p=byId(id);if(!p)return '（削除済み）';return (p.num!==''&&p.num!=null?p.num+' ':'')+(p.name||'名前なし');}
+ function fmtMin(m){var r=Math.round(m*10)/10;return (r%1===0?r:r.toFixed(1))+'分';}
+ function perName(p,n){if(n===2)return p===0?'前半':'後半';if(n===1)return '';return '第'+(p+1)+'P';}
+ function blkLabel(b,n){var e=Math.round((b.ps+b.len)*10)/10;return (perName(b.p,n)+' '+fmtNum(b.ps)+'〜'+fmtNum(e)+'分').trim();}
+ function fmtNum(x){var r=Math.round(x*10)/10;return r%1===0?String(r):r.toFixed(1);}
+
+ /* --- タブ --- */
+ function showTab(t){
+  S.tab=t;save();
+  ['players','setup','plan','live','season'].forEach(function(k){$('tab-'+k).classList.toggle('hide',k!==t);});
+  Array.prototype.forEach.call(document.querySelectorAll('#tabs button'),function(b){b.classList.toggle('on',b.dataset.t===t);});
+  render();window.scrollTo(0,0);
+ }
+ $('tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(b)showTab(b.dataset.t);});
+
+ /* --- 選手 --- */
+ function newPlayer(num,name){return {id:uid(),num:num==null?'':num,name:name||'',gk:false,pref:{DF:0,MF:0,FW:0},absent:false};}
+ function renderPlayers(){
+  var pres=S.players.filter(function(p){return !p.absent;}).length;
+  $('pcount').textContent='登録 '+S.players.length+'人／出席 '+pres+'人（'+S.set.fmt+'人制）'+(pres<S.set.fmt&&S.players.length?' ※人数が足りません':'');
+  var h=S.players.map(function(p){
+   var chips=R.POS.map(function(s){var v=(p.pref||{})[s]||0;return '<button class="chip '+(v===1?'pref':v===-1?'ng':'')+'" data-act="pref" data-s="'+s+'">'+(v===1?'◎':v===-1?'×':'')+s+'</button>';}).join('');
+   return '<div class="pl'+(p.absent?' absent':'')+'" data-id="'+p.id+'">'+
+    '<input class="num" data-f="num" value="'+esc(p.num)+'" placeholder="番" inputmode="numeric" aria-label="背番号">'+
+    '<input class="name" data-f="name" value="'+esc(p.name)+'" placeholder="名前" aria-label="名前">'+
+    '<div class="opts"><button class="chip gk'+(p.gk?' on':'')+'" data-act="gk">🧤GK'+(p.gk?'可':'？')+'</button>'+chips+
+    '<button class="chip abs'+(p.absent?' on':'')+'" data-act="abs">'+(p.absent?'欠席':'出席')+'</button>'+
+    '<button class="chip del" data-act="del" aria-label="削除">🗑</button></div></div>';
+  }).join('');
+  $('plist').innerHTML=h||'<p class="note">まだ選手がいません。下のボタンから追加してください。</p>';
+ }
+ $('plist').addEventListener('input',function(e){
+  var el=e.target,card=el.closest('.pl');if(!card||!el.dataset.f)return;
+  var p=byId(card.dataset.id);if(!p)return;p[el.dataset.f]=el.value;save();
+ });
+ $('plist').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;var card=b.closest('.pl');var p=byId(card.dataset.id);if(!p)return;
+  var a=b.dataset.act;
+  if(a==='gk')p.gk=!p.gk;
+  else if(a==='abs')p.absent=!p.absent;
+  else if(a==='pref'){p.pref=p.pref||{};var v=p.pref[b.dataset.s]||0;p.pref[b.dataset.s]=v===0?1:v===1?-1:0;}
+  else if(a==='del'){if(!confirm(pname(p.id)+' を名簿から消しますか？（シーズン記録の数字は残ります）'))return;S.players=S.players.filter(function(x){return x.id!==p.id;});}
+  save();renderPlayers();
+ });
+ $('addP').onclick=function(){var n=S.players.length+1;S.players.push(newPlayer('',''));save();renderPlayers();var ins=document.querySelectorAll('#plist input.name');if(ins.length)ins[ins.length-1].focus();};
+ $('allPresent').onclick=function(){S.players.forEach(function(p){p.absent=false;});save();renderPlayers();};
+ function addLines(lines){
+  var c=0;lines.forEach(function(l){l=l.trim();if(!l)return;var m=l.match(/^([0-9０-９]{1,3})[\s　.、:：]*(.*)$/);
+   if(m){var num=m[1].replace(/[０-９]/g,function(d){return String.fromCharCode(d.charCodeAt(0)-0xFEE0);});S.players.push(newPlayer(num,m[2].trim()));}else S.players.push(newPlayer('',l));c++;});
+  save();renderPlayers();toast(c+'人を追加しました');
+ }
+ $('bulkAdd').onclick=function(){addLines($('bulk').value.split(/\r?\n/));$('bulk').value='';};
+ $('sample').onclick=function(){
+  var names=['そうた','はると','ゆい','れん','みお','たいが','ひなた','こうき','さくら','りく'];
+  var start=S.players.length;
+  names.forEach(function(n,i){var p=newPlayer(String(start+i+1),n);if(i===0||i===4)p.gk=true;S.players.push(p);});
+  S.players[start+2].pref={DF:0,MF:1,FW:0};S.players[start+5].pref={DF:-1,MF:0,FW:1};
+  save();renderPlayers();toast('見本の10人を入れました');
+ };
+
+ /* --- 設定 --- */
+ function renderSetup(){
+  $('segFmt').innerHTML=[5,7,8,11].map(function(n){return '<button data-n="'+n+'" class="'+(S.set.fmt===n?'on':'')+'">'+n+'人制'+(n===8?'<br><small>U-12</small>':'')+'</button>';}).join('');
+  $('sMin').value=S.set.min;$('sPer').value=S.set.per;$('sBlk').value=S.set.blk;$('sGk').value=S.set.gkMode;
+  $('mDate').value=S.meta.date||today();$('mOpp').value=S.meta.opp||'';
+  var bl=R.buildBlocks(S.set);
+  $('blkInfo').textContent='→ 1ピリオド '+fmtNum(S.set.min/S.set.per)+'分 × '+S.set.per+'、区切りは全部で '+bl.length+' 回（'+bl.map(function(b){return fmtNum(b.len);}).join('・')+'分）';
+ }
+ $('segFmt').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.set.fmt=+b.dataset.n;save();renderSetup();});
+ function numIn(id,key,lo,hi){$(id).addEventListener('change',function(){var v=Math.round(+this.value);if(!(v>=lo))v=lo;if(v>hi)v=hi;S.set[key]=v;save();renderSetup();});}
+ numIn('sMin','min',5,120);numIn('sBlk','blk',1,60);
+ $('sPer').onchange=function(){S.set.per=+this.value;save();renderSetup();};
+ $('sGk').onchange=function(){S.set.gkMode=this.value;save();};
+ $('mDate').onchange=function(){S.meta.date=this.value;save();};
+ $('mOpp').oninput=function(){S.meta.opp=this.value;save();};
+ $('goMake').onclick=function(){if(makePlan(false))showTab('plan');};
+
+ /* --- 交代表 --- */
+ var sel=null;
+ function makePlan(newSeed){
+  var pres=S.players.filter(function(p){return !p.absent;});
+  if(pres.length<2){toast('出席の選手を2人以上登録してください');showTab('players');return false;}
+  if(newSeed)S.seed=(S.seed||1)+1;
+  S.plan=R.generatePlan(S.players,S.set,S.games,S.seed);S.live=null;sel=null;save();toast('交代表をつくりました');return true;
+ }
+ $('make').onclick=function(){makePlan(false);render();};
+ $('remake').onclick=function(){makePlan(true);render();};
+ function planStale(){
+  if(!S.plan)return false;
+  var pres=S.players.filter(function(p){return !p.absent;}).map(function(p){return p.id;}).sort().join(',');
+  return pres!==S.plan.ids.slice().sort().join(',')||S.plan.fmt!==S.set.fmt;
+ }
+ function cellRole(b,id){return b.pos[id]||'B';}
+ function isBad(b,id){var r=b.pos[id];if(!r)return false;var p=byId(id);if(!p)return false;if(r==='GK')return !p.gk&&S.players.some(function(x){return x.gk&&!x.absent;});return ((p.pref||{})[r]||0)===-1;}
+ function renderPlan(){
+  var msg='',body='';
+  if(!S.plan){$('planMsg').innerHTML='<p class="note">「交代表をつくる」を押すと、出席の選手で全員の出場時間がほぼ同じになる表を自動でつくります。</p>';$('planBody').innerHTML='';return;}
+  if(planStale())msg+='<div class="warnbox">名簿（欠席）か人数制が変わっています。「交代表をつくる」でつくり直してください。</div>';
+  var P=S.plan,t=R.totals(P),vals=P.ids.map(function(id){return t[id];});
+  var mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals),maxLen=Math.max.apply(null,P.blocks.map(function(b){return b.len;}));
+  var diff=Math.round((mx-mn)*10)/10;
+  var gkCnt=S.players.filter(function(p){return p.gk&&!p.absent;}).length;
+  if(!gkCnt)msg+='<div class="warnbox">GK可の選手がいないので、全員の中から順番にGKを入れています。</div>';
+  else if(diff>maxLen+1e-6&&gkCnt<=P.per)msg+='<div class="warnbox">GK可の選手が'+gkCnt+'人なので、GKの子の出場が長くなっています。「GK可」を増やすか、設定で「区切りごとに交代」にすると差が小さくなります。</div>';
+  else if(diff>maxLen+1e-6)msg+='<div class="warnbox">区切りの長さがそろっていないため、差が少し出ています。試合時間が割り切れる区切り（例：20分なら5分・10分）にすると公平になります。</div>';
+  body+='<div class="sum"><div>いちばん多い <b>'+fmtMin(mx)+'</b></div><div>いちばん少ない <b>'+fmtMin(mn)+'</b></div><div>差 <b>'+fmtMin(diff)+'</b> '+(diff<=maxLen+1e-6?'<span class="ok">✓ 1区切り以内</span>':'<span class="ng-t">△ 差が大きめ</span>')+'</div></div>';
+  body+='<p class="note">✋ 手で入れ替え：同じ列（区切り）のマスを2つ続けてタップすると、その2人の役割（ポジション・ベンチ）が入れ替わります。赤枠は「×出られない」ポジションです。</p>';
+  body+='<div class="legend"><span style="background:var(--gk)">GK</span><span style="background:var(--df)">DF</span><span style="background:var(--mf)">MF</span><span style="background:var(--fw)">FW</span><span style="background:var(--bench)">ベ＝ベンチ</span></div>';
+  body+='<div class="tblwrap"><table class="plan"><thead><tr><th class="pname">選手</th>';
+  P.blocks.forEach(function(b){body+='<th>'+esc(perName(b.p,P.per))+'<br>'+fmtNum(b.ps)+'〜'+fmtNum(b.ps+b.len)+'</th>';});
+  body+='<th>出場</th></tr></thead><tbody>';
+  P.ids.forEach(function(id){
+   body+='<tr><td class="pname">'+esc(pname(id))+'</td>';
+   P.blocks.forEach(function(b,bi){
+    var r=cellRole(b,id),cls='c '+r;
+    if(sel&&sel.bi===bi){if(sel.id===id)cls+=' sel';else cls+=' cand';}
+    if(isBad(b,id))cls+=' bad';
+    body+='<td class="'+cls+'" data-bi="'+bi+'" data-id="'+id+'">'+(r==='B'?'ベ':r)+'</td>';
+   });
+   body+='<td class="tot">'+fmtMin(t[id])+'<div class="bar"><i style="width:'+Math.round(t[id]/(P.min||1)*100)+'%"></i></div></td></tr>';
+  });
+  body+='</tbody></table></div>';
+  body+='<h3>交代の流れ</h3><ul class="flow">'+flowItems(P).map(function(x){return '<li><span class="t">'+esc(x.t)+'</span>'+x.h+'</li>';}).join('')+'</ul>';
+  body+='<div class="row" style="margin-top:14px"><button class="btn main" id="toLive">⏱ 試合中モードへ</button><button class="btn" id="record">この試合をシーズン記録に追加</button></div>';
+  $('planMsg').innerHTML=msg;$('planBody').innerHTML=body;
+  $('toLive').onclick=function(){showTab('live');};
+  $('record').onclick=recordGame;
+ }
+ function flowItems(P){
+  var arr=[];
+  P.blocks.forEach(function(b,i){
+   if(i===0){arr.push({t:'先発',h:Object.keys(b.pos).map(function(id){return esc(pname(id))+'('+b.pos[id]+')';}).join('、')});return;}
+   var c=R.changes(P.blocks[i-1],b),parts=[];
+   if(c.ins.length)parts.push('<span class="in">IN</span> '+c.ins.map(function(id){return esc(pname(id))+'('+b.pos[id]+')';}).join('、'));
+   if(c.outs.length)parts.push('<span class="out">OUT</span> '+c.outs.map(function(id){return esc(pname(id));}).join('、'));
+   if(c.moves.length)parts.push('移動 '+c.moves.map(function(id){return esc(pname(id))+' '+P.blocks[i-1].pos[id]+'→'+b.pos[id];}).join('、'));
+   arr.push({t:blkLabel(b,P.per),h:parts.join('　')||'交代なし'});
+  });
+  return arr;
+ }
+ $('planBody').addEventListener('click',function(e){
+  var td=e.target.closest('td.c');if(!td||!S.plan)return;
+  var bi=+td.dataset.bi,id=td.dataset.id;
+  if(!sel||sel.bi!==bi){sel={bi:bi,id:id};renderPlan();return;}
+  if(sel.id===id){sel=null;renderPlan();return;}
+  var b=S.plan.blocks[bi],a=sel.id,ra=b.pos[a],rb=b.pos[id];
+  if(!ra&&!rb){sel={bi:bi,id:id};renderPlan();return;}
+  if(ra&&rb){b.pos[a]=rb;b.pos[id]=ra;}
+  else{var f=ra?a:id,bn=ra?id:a,role=b.pos[f];delete b.pos[f];b.pos[bn]=role;b.bench=b.bench.filter(function(x){return x!==bn;});b.bench.push(f);}
+  sel=null;save();renderPlan();toast('入れ替えました');
+ });
+ function recordGame(){
+  if(!S.plan)return;
+  if(!confirm('この交代表の出場時間を、シーズン記録に追加しますか？\n（'+(S.meta.date||'')+' '+(S.meta.opp||'')+'）'))return;
+  var t=R.totals(S.plan),mins={};S.plan.ids.forEach(function(id){mins[id]=Math.round(t[id]*10)/10;});
+  S.games.push({id:uid(),date:S.meta.date||today(),opp:S.meta.opp||'',fmt:S.plan.fmt,len:S.plan.min,present:S.plan.ids.slice(),mins:mins});
+  save();toast('シーズン記録に追加しました');
+ }
+
+ /* --- 印刷 --- */
+ $('print').onclick=function(){
+  if(!S.plan){toast('先に交代表をつくってください');return;}
+  var P=S.plan,t=R.totals(P);
+  var h='<h1>交代表　'+esc(S.meta.date||'')+' '+esc(S.meta.opp||'')+'</h1><div class="meta">'+P.fmt+'人制・'+P.min+'分（'+P.per+'ピリオド）・区切り '+P.blocks.length+'回　｜　みんなで出場ローテ</div>';
+  h+='<table><thead><tr><th>選手</th>';P.blocks.forEach(function(b){h+='<th>'+esc(perName(b.p,P.per))+'<br>'+fmtNum(b.ps)+'〜'+fmtNum(b.ps+b.len)+'</th>';});h+='<th>出場</th></tr></thead><tbody>';
+  P.ids.forEach(function(id){h+='<tr><td class="n">'+esc(pname(id))+'</td>';P.blocks.forEach(function(b){var r=b.pos[id]||'B';h+='<td class="'+r+'">'+(r==='B'?'－':r)+'</td>';});h+='<td>'+fmtMin(t[id])+'</td></tr>';});
+  h+='</tbody></table><ol>'+flowItems(P).map(function(x){return '<li><b>'+esc(x.t)+'</b> '+x.h+'</li>';}).join('')+'</ol>';
+  $('printArea').innerHTML=h;window.print();
+ };
+
+ /* --- 試合中 --- */
+ var wake=null,tick=null;
+ function L(){if(!S.live)S.live={bi:0,run:false,t0:0,acc:0,alerted:-1};return S.live;}
+ function elapsed(){var l=L();return l.acc+(l.run?(Date.now()-l.t0)/1000:0);}
+ function mmss(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+ function renderLive(){
+  var el=$('liveBody');
+  if(!S.plan){el.innerHTML='<div class="card"><p>まだ交代表がありません。</p><button class="btn main big" id="lvMake">交代表をつくる</button></div>';$('lvMake').onclick=function(){showTab('setup');};return;}
+  var P=S.plan,l=L();if(l.bi>=P.blocks.length)l.bi=P.blocks.length-1;
+  var b=P.blocks[l.bi],nx=P.blocks[l.bi+1];
+  var h='<div class="live-top" id="lvTop"><div class="lbl">いま：'+esc(blkLabel(b,P.per))+'（'+(l.bi+1)+'/'+P.blocks.length+'）</div><div class="clock" id="lvClock">00:00</div><div class="rem" id="lvRem"></div></div>';
+  h+='<div class="livebtns"><button class="btn" id="lvRun">'+(l.run?'⏸ ストップ':'▶ スタート')+'</button><button class="btn" id="lvBack"'+(l.bi===0?' disabled':'')+'>◀ 1つ戻る</button>'+
+   (nx?'<button class="btn next" id="lvNext">✅ 交代した → 次の区切りへ</button>':'<button class="btn next" id="lvEnd">🏁 試合終了（記録する）</button>')+'</div>';
+  if(nx){
+   var c=R.changes(b,nx);var halfNote=nx.p!==b.p?'<p class="note" style="margin:0 0 8px">※ この区切りのあとはピリオドの切りかえ（休けい）です。</p>':'';
+   h+=halfNote+'<div class="swap"><div class="box inb"><h3>次に入る</h3>'+(c.ins.length?c.ins.map(function(id){return '<div class="nm">'+esc(pname(id))+'<small>'+nx.pos[id]+'</small></div>';}).join(''):'<div class="note">なし</div>')+'</div>'+
+    '<div class="box outb"><h3>次に出る</h3>'+(c.outs.length?c.outs.map(function(id){return '<div class="nm">'+esc(pname(id))+'</div>';}).join(''):'<div class="note">なし</div>')+'</div></div>';
+   if(c.moves.length)h+='<div class="card"><b>ポジション移動：</b>'+c.moves.map(function(id){return esc(pname(id))+' '+b.pos[id]+'→'+nx.pos[id];}).join('、')+'</div>';
+  }else h+='<div class="card"><b>最後の区切りです。</b>終わったら「試合終了」でシーズン記録に追加できます。</div>';
+  var order={GK:0,DF:1,MF:2,FW:3};
+  var on=Object.keys(b.pos).sort(function(a,c2){return order[b.pos[a]]-order[b.pos[c2]];});
+  h+='<div class="card"><h2>いまのメンバー（'+on.length+'人）</h2><div class="onfield">'+on.map(function(id){return '<div style="background:var(--'+b.pos[id].toLowerCase()+')">'+b.pos[id]+'<br>'+esc(pname(id))+'</div>';}).join('')+'</div>';
+  h+='<h3>ベンチ</h3><p>'+(b.bench.length?b.bench.map(function(id){return esc(pname(id));}).join('、'):'なし')+'</p>';
+  h+='<button class="btn small" id="lvReset">時計を0にもどす</button></div>';
+  el.innerHTML=h;
+  $('lvRun').onclick=function(){var l2=L();if(l2.run){l2.acc=elapsed();l2.run=false;releaseWake();}else{l2.t0=Date.now();l2.run=true;askWake();}save();renderLive();};
+  $('lvBack').onclick=function(){var l2=L();if(l2.bi>0){var prevP=P.blocks[l2.bi].p;l2.bi--;if(P.blocks[l2.bi].p!==prevP){l2.acc=P.blocks[l2.bi].ps*60;l2.run=false;}}save();renderLive();};
+  if($('lvNext'))$('lvNext').onclick=function(){var l2=L();var cur=P.blocks[l2.bi];l2.bi++;if(P.blocks[l2.bi].p!==cur.p){l2.acc=0;l2.run=false;toast('ピリオド終了。次はスタートで時計が動きます');}save();renderLive();};
+  if($('lvEnd'))$('lvEnd').onclick=function(){var l2=L();l2.acc=elapsed();l2.run=false;releaseWake();save();recordGame();renderLive();};
+  $('lvReset').onclick=function(){if(!confirm('時計を0にもどしますか？'))return;var l2=L();l2.acc=0;l2.t0=Date.now();save();updClock();};
+  updClock();
+ }
+ function updClock(){
+  if(S.tab!=='live'||!S.plan||!$('lvClock'))return;
+  var P=S.plan,l=L(),b=P.blocks[l.bi],e=elapsed();
+  $('lvClock').textContent=mmss(e);
+  var rem=(b.ps+b.len)*60-e;
+  var top=$('lvTop');
+  if(rem<=0){$('lvRem').textContent=P.blocks[l.bi+1]?'⚠ 交代の時間です！':'⚠ 時間です';top.classList.add('alert');
+   if(l.alerted!==l.bi){l.alerted=l.bi;save();try{if(navigator.vibrate)navigator.vibrate([300,150,300]);}catch(err){}}}
+  else{$('lvRem').textContent=(P.blocks[l.bi+1]?'次の交代まで ':'終了まで ')+mmss(rem);top.classList.remove('alert');}
+ }
+ function askWake(){try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(function(w){wake=w;}).catch(function(){});}catch(e){}}
+ function releaseWake(){try{if(wake){wake.release();wake=null;}}catch(e){}}
+ tick=setInterval(updClock,500);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden&&S.live&&S.live.run)askWake();});
+
+ /* --- シーズン --- */
+ function renderSeason(){
+  var rates=R.seasonRates(S.players,S.games);
+  if(!S.games.length){$('seasonBody').innerHTML='<p class="note">まだ記録がありません。交代表の「この試合をシーズン記録に追加」で記録できます。</p>';}
+  else{
+   var rows=S.players.map(function(p){var m=0,pos=0,n=0;S.games.forEach(function(g){if(g.present.indexOf(p.id)>=0){n++;m+=g.mins[p.id]||0;pos+=g.len;}});return {p:p,m:m,pos:pos,n:n,r:pos?m/pos:null};});
+   var rs=rows.filter(function(x){return x.r!=null;}).map(function(x){return x.r;});var avg=rs.length?rs.reduce(function(a,b){return a+b;},0)/rs.length:0;
+   rows.sort(function(a,b){return (a.r==null?2:a.r)-(b.r==null?2:b.r);});
+   $('seasonBody').innerHTML='<p>チーム平均の出場率：<b>'+Math.round(avg*100)+'%</b></p><div class="tblwrap" style="border:0"><table class="season"><thead><tr><th>選手</th><th>出席</th><th>出場</th><th>出場率</th></tr></thead><tbody>'+
+    rows.map(function(x){return '<tr><td><b>'+esc(pname(x.p.id))+'</b>'+(x.r!=null&&x.r<avg-0.03?'<span class="badge">次は優先</span>':'')+'</td><td>'+x.n+'試合</td><td>'+fmtMin(x.m)+'</td><td>'+(x.r==null?'－':Math.round(x.r*100)+'%')+'<div class="bar"><i style="width:'+(x.r==null?0:Math.round(x.r*100))+'%"></i></div></td></tr>';}).join('')+'</tbody></table></div>';
+  }
+  $('gameList').innerHTML=S.games.length?S.games.slice().reverse().map(function(g){return '<div class="row" style="border-bottom:1px solid var(--line);padding:6px 0"><span style="flex:1"><b>'+esc(g.date)+'</b> '+esc(g.opp||'')+'　'+g.fmt+'人制・'+g.len+'分・'+g.present.length+'人</span><button class="btn small warn" data-del="'+g.id+'">消す</button></div>';}).join(''):'<p class="note">なし</p>';
+ }
+ $('gameList').addEventListener('click',function(e){var b=e.target.closest('button[data-del]');if(!b)return;if(!confirm('この試合の記録を消しますか？'))return;S.games=S.games.filter(function(g){return g.id!==b.dataset.del;});save();renderSeason();});
+
+ /* --- JSON --- */
+ $('exp').onclick=function(){
+  var data=JSON.stringify({app:'みんなで出場ローテ',ver:1,exported:new Date().toISOString(),players:S.players,set:S.set,meta:S.meta,plan:S.plan,games:S.games},null,1);
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='出場ローテ_'+today()+'.json';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+ };
+ $('impBtn').onclick=function(){$('imp').click();};
+ $('imp').onchange=function(){
+  var f=this.files&&this.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){try{var o=JSON.parse(rd.result);if(!o||!Array.isArray(o.players))throw 0;
+    if(!confirm('読み込むと、いまの名簿・記録が置きかわります。よろしいですか？'))return;
+    var n=defState();n.players=o.players;if(o.set)n.set=Object.assign(n.set,o.set);if(o.meta)n.meta=o.meta;n.plan=o.plan||null;n.games=Array.isArray(o.games)?o.games:[];n.tab='players';S=n;save();showTab('players');toast('読み込みました');
+   }catch(e){alert('このファイルは読み込めませんでした。');}};
+  rd.readAsText(f);this.value='';
+ };
+ $('wipe').onclick=function(){if(!confirm('名簿・交代表・シーズン記録をすべて消します。元にもどせません。よろしいですか？'))return;S=defState();save();showTab('players');};
+
+ function render(){
+  if(S.tab==='players')renderPlayers();
+  else if(S.tab==='setup')renderSetup();
+  else if(S.tab==='plan')renderPlan();
+  else if(S.tab==='live')renderLive();
+  else if(S.tab==='season')renderSeason();
+ }
+ showTab(S.tab||'players');
+})();
+</script>
+</body>
+</html>

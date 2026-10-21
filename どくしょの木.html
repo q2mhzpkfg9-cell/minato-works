@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>どくしょの木</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--sub:#6b7280;--line:#e6dfd0;--leaf:#5fa36b;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--navy);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","BIZ UDPGothic","Meiryo",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:980px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.top a{color:var(--navy);text-decoration:none;font-size:13px;opacity:.75}
+h1{font-size:28px;margin:6px 0 2px;letter-spacing:.08em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.btn{background:#fff;border:2px solid var(--navy);border-radius:12px;padding:10px 16px;font-size:16px;font-weight:700}
+.btn.pri{background:var(--navy);color:#fff}
+.btn.big{font-size:20px;padding:14px 22px;border-radius:16px}
+.btn.sm{font-size:13px;padding:6px 10px;border-width:1px}
+.btn.danger{border-color:#c0392b;color:#c0392b}
+.muted{color:var(--sub);font-size:13px}
+.hide{display:none!important}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=text],input[type=date],textarea{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px;font-size:18px;background:#fffdf8}
+textarea{min-height:80px;resize:vertical;line-height:1.6}
+label.f{display:block;font-weight:700;margin:16px 0 6px;font-size:16px}
+footer{margin-top:30px;text-align:center;font-size:12px;color:var(--sub);line-height:1.8}
+footer a{color:var(--sub)}
+
+/* なまえ */
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:14px}
+.nm{background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 8px;font-size:18px;font-weight:700;text-align:center}
+.nm small{display:block;font-size:12px;color:var(--sub);font-weight:400;margin-top:4px}
+.nm:hover{border-color:var(--navy)}
+
+/* ホーム */
+.home{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+@media(max-width:760px){.home{grid-template-columns:1fr}}
+@media(max-width:520px){h1{font-size:22px}.tabs button{font-size:14px;padding:10px 2px}.btn.big{font-size:18px}}
+.treebox{background:linear-gradient(#e9f4fb,#f7fbf3 70%,#efe6cf 70%);border:1px solid var(--line);border-radius:var(--r);position:relative;overflow:hidden}
+.treebox svg{display:block;width:100%;height:auto}
+.count{position:absolute;left:14px;top:12px;background:rgba(255,255,255,.9);border-radius:12px;padding:6px 12px;font-weight:700}
+.count b{font-size:28px}
+.stage{position:absolute;right:12px;top:12px;background:rgba(255,255,255,.9);border-radius:12px;padding:6px 12px;font-size:14px;font-weight:700}
+.next{text-align:center;font-weight:700;margin:10px 0 0;font-size:16px}
+.tabs{display:flex;gap:6px;margin:14px 0 10px}
+.tabs button{flex:1;background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 4px;font-size:16px;font-weight:700}
+.tabs button.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px}
+.legend div{display:flex;align-items:center;gap:6px}
+.dot{width:14px;height:14px;border-radius:50% 0 50% 0;flex:0 0 auto}
+.gbar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#eee;margin:8px 0}
+.hint{background:#fff7e0;border:1px dashed #e0b84a;border-radius:12px;padding:10px 12px;font-size:14px;margin-top:10px;line-height:1.6}
+
+/* ほんだな */
+.shelf{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;padding:12px 12px 0;background:#fff;border:1px solid var(--line);border-radius:var(--r);min-height:120px;border-bottom:10px solid #b98b5b}
+.spine{width:38px;border-radius:4px 4px 0 0;writing-mode:vertical-rl;font-size:13px;font-weight:700;color:#fff;padding:8px 0;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;border:0;text-shadow:0 1px 2px rgba(0,0,0,.3);letter-spacing:.05em}
+.list{display:grid;gap:8px;margin-top:12px}
+.li{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:left;width:100%}
+.li .t{font-weight:700}
+.li .d{font-size:12px;color:var(--sub)}
+
+/* きろく */
+.genres{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.genres button,.feels button{background:#fff;border:3px solid var(--line);border-radius:14px;padding:12px 6px;font-size:16px;font-weight:700}
+.genres button span{font-size:26px;display:block}
+.genres button.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,#fff)}
+.feels{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.feels button span{font-size:28px;display:block}
+.feels button.on{border-color:#e0a030;background:#fff4d6}
+.stars button{background:none;border:0;font-size:40px;color:#ddd;padding:0 4px}
+.stars button.on{color:#f0b429}
+
+/* モーダル */
+.modal{position:fixed;inset:0;background:rgba(31,58,95,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:12px}
+.sheet{background:var(--bg);border-radius:18px;width:100%;max-width:680px;max-height:94vh;overflow:auto;padding:18px}
+.sheet-h{display:flex;justify-content:space-between;align-items:center}
+.sheet-h h3{margin:0;font-size:22px}
+.x{background:none;border:0;font-size:28px;color:var(--sub)}
+.toast{position:fixed;left:50%;top:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 22px;border-radius:999px;font-size:18px;font-weight:700;z-index:99;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+.newleaf{animation:pop .8s ease-out;transform-box:fill-box;transform-origin:center}
+
+/* せんせい */
+table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:middle}
+th{background:#f1ece0;font-size:12px;white-space:nowrap}
+td:first-child,td:nth-child(2){white-space:nowrap}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:640px){.tgrid{grid-template-columns:1fr}}
+td .gbar{margin:0;height:12px;min-width:120px}
+code.box{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px;word-break:break-all;max-height:120px;overflow:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a href="index.html">← MINATO WORKS</a>
+    <span class="muted">きろくは この たんまつの なかだけに ほぞんされます</span>
+  </div>
+
+  <!-- なまえをえらぶ -->
+  <section id="vPick">
+    <h1>🌳 どくしょの木</h1>
+    <p style="font-size:18px;margin:6px 0 0">本を 1さつ よむと、木に はっぱが 1まい ふえるよ。</p>
+    <div class="card" style="margin-top:16px">
+      <div style="font-weight:700;font-size:18px">じぶんの なまえを えらんでね</div>
+      <div class="names" id="names"></div>
+      <div class="row" style="margin-top:14px">
+        <input type="text" id="newName" placeholder="なまえを いれる" style="max-width:260px">
+        <button class="btn" id="addName">＋ ついか</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end">
+      <button class="btn sm" id="toTeacher">せんせい用の がめん</button>
+    </div>
+  </section>
+
+  <!-- こどもホーム -->
+  <section id="vHome" class="hide">
+    <div class="row" style="justify-content:space-between">
+      <h1 id="hName"></h1>
+      <button class="btn sm" id="back">なまえを かえる</button>
+    </div>
+    <div class="tabs" id="tabs">
+      <button data-v="tree" class="on">🌳 き</button>
+      <button data-v="shelf">📚 ほんだな</button>
+      <button data-v="send">✉ おくる</button>
+    </div>
+
+    <div id="tTree" class="home">
+      <div>
+        <div class="treebox"><svg id="tree" viewBox="0 0 400 360"></svg>
+          <div class="count"><b id="cnt">0</b> さつ</div><div class="stage" id="stage"></div></div>
+        <p class="next" id="next"></p>
+      </div>
+      <div>
+        <button class="btn pri big" style="width:100%" id="rec">📖 よんだ本を きろくする</button>
+        <div class="card" style="margin-top:12px">
+          <div style="font-weight:700">はっぱの いろ ＝ 本の しゅるい</div>
+          <div class="gbar" id="myBar"></div>
+          <div class="legend" id="legend"></div>
+          <div class="hint" id="hint"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tShelf" class="hide">
+      <div class="shelf" id="shelf"></div>
+      <div class="list" id="blist"></div>
+    </div>
+
+    <div id="tSend" class="hide">
+      <div class="card">
+        <p style="font-size:16px;line-height:1.8;margin-top:0">じぶんの タブレットで きろくした ときは、この「きろくコード」を コピーして、せんせいに おくってね（Teams や クラスルームなど）。</p>
+        <button class="btn pri" id="copyCode">コードを コピーする</button>
+        <code class="box" id="code" style="margin-top:10px"></code>
+      </div>
+    </div>
+  </section>
+
+  <!-- せんせい -->
+  <section id="vTeacher" class="hide">
+    <div class="row" style="justify-content:space-between">
+      <h1 style="font-size:24px">せんせい用：クラスの読書</h1>
+      <button class="btn sm" id="tBack">← 子どもの画面へ</button>
+    </div>
+    <div class="row" style="margin:6px 0 12px">
+      <span class="muted" id="tSum"></span>
+    </div>
+    <div class="card" style="overflow-x:auto;padding:0">
+      <table><thead><tr><th>名前</th><th>冊数</th><th>ジャンルのかたより</th><th>最近読んだ本</th><th></th></tr></thead><tbody id="tBody"></tbody></table>
+    </div>
+    <div class="tgrid">
+      <div class="card">
+        <div style="font-weight:700">名簿をまとめて登録</div>
+        <p class="muted">1行に1人ずつ貼りつけてください（すでにある名前はとばします）。</p>
+        <textarea id="roster" placeholder="あおき はると&#10;いのうえ さくら"></textarea>
+        <button class="btn" id="rosterAdd" style="margin-top:8px">登録する</button>
+      </div>
+      <div class="card">
+        <div style="font-weight:700">子どもの端末から集める</div>
+        <p class="muted">子どもが送った「きろくコード」を貼りつけます。いくつ続けて貼ってもOK。同じ子は新しい記録で上書きします。</p>
+        <textarea id="codes" placeholder="DOKUSHO1:..."></textarea>
+        <button class="btn" id="codesAdd" style="margin-top:8px">取りこむ</button>
+      </div>
+      <div class="card">
+        <div style="font-weight:700">書き出し</div>
+        <p class="muted">Excelで開ける形（CSV）。1冊1行です。</p>
+        <button class="btn" id="csv">CSVで書き出す</button>
+      </div>
+      <div class="card">
+        <div style="font-weight:700">年度がわりに</div>
+        <p class="muted">この端末の記録をすべて消します。先にCSVを書き出してください。</p>
+        <button class="btn danger" id="wipe">すべて削除</button>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:12px">名前と読書記録はこの端末のブラウザにだけ保存され、外部には送信されません。</p>
+  </section>
+
+  <footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+</div>
+<div class="toast" id="toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+const KEY='mw_dokusho_v1';
+let DB={kids:[]};
+try{const s=localStorage.getItem(KEY);if(s)DB=JSON.parse(s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2000);}
+
+const GENRES=[
+  {id:'mono',name:'ものがたり',ico:'🧚',c:'#e8836b'},
+  {id:'mukashi',name:'むかしばなし',ico:'👹',c:'#e0a93a'},
+  {id:'zukan',name:'ずかん・かがく',ico:'🔬',c:'#4f9d5d'},
+  {id:'denki',name:'でんき（人の はなし）',ico:'👤',c:'#8e6cc4'},
+  {id:'rekishi',name:'れきし・しゃかい',ico:'🏯',c:'#a0714f'},
+  {id:'shi',name:'し・ことば',ico:'🎵',c:'#3f8fd2'},
+  {id:'hoka',name:'そのほか',ico:'✨',c:'#8a96a3'},
+];
+const G=id=>GENRES.find(g=>g.id===id)||GENRES[6];
+const FEELS=[['omoshiroi','😆','おもしろい'],['kando','😢','かんどう'],['bikkuri','😲','びっくり'],['dokidoki','💓','どきどき'],['naruhodo','💡','なるほど'],['kowai','😱','こわい']];
+const STAGES=[[0,'たね'],[1,'め'],[5,'わかぎ'],[10,'大きな木'],[20,'花の木'],[30,'みのりの木'],[50,'でんせつの木']];
+const stageOf=n=>{let s=STAGES[0];for(const x of STAGES)if(n>=x[0])s=x;return s;};
+
+let me=null; // いまの子
+const kid=id=>DB.kids.find(k=>k.id===id);
+
+/* ===== なまえ ===== */
+function show(v){['vPick','vHome','vTeacher'].forEach(x=>$('#'+x).classList.toggle('hide',x!==v));window.scrollTo(0,0);}
+function renderNames(){
+  $('#names').innerHTML=DB.kids.length?DB.kids.map(k=>`<button class="nm" data-id="${k.id}">${esc(k.name)}<small>🍃 ${k.books.length}さつ</small></button>`).join('')
+    :'<p class="muted" style="grid-column:1/-1">まだ だれも いません。下で なまえを ついか してね。</p>';
+  $('#names').querySelectorAll('.nm').forEach(b=>b.onclick=()=>openKid(b.dataset.id));
+}
+$('#addName').onclick=()=>{const n=$('#newName').value.trim();if(!n)return;
+  if(DB.kids.some(k=>k.name===n)){toast('その なまえは もう あるよ');return;}
+  const k={id:uid(),name:n,books:[]};DB.kids.push(k);save();$('#newName').value='';renderNames();openKid(k.id);};
+$('#newName').onkeydown=e=>{if(e.key==='Enter')$('#addName').click();};
+$('#back').onclick=()=>{me=null;renderNames();show('vPick');};
+
+function openKid(id){me=kid(id);$('#hName').textContent='🌳 '+me.name+' さんの 木';tab('tree');show('vHome');}
+
+/* ===== タブ ===== */
+$('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.v);};
+function tab(v){
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
+  $('#tTree').classList.toggle('hide',v!=='tree');$('#tShelf').classList.toggle('hide',v!=='shelf');$('#tSend').classList.toggle('hide',v!=='send');
+  if(v==='tree')renderTree();if(v==='shelf')renderShelf();if(v==='send')renderSend();
+}
+
+/* ===== 木 ===== */
+function rnd(seed){let x=Math.sin(seed*999.7)*10000;return x-Math.floor(x);}
+function leafPath(x,y,s,rot){return `<path d="M0 0 C ${6*s} ${-8*s}, ${16*s} ${-8*s}, ${20*s} 0 C ${16*s} ${8*s}, ${6*s} ${8*s}, 0 0Z" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(0)})"`;}
+function renderTree(newIdx=-1){
+  const bs=me.books;const n=bs.length;const st=stageOf(n);
+  $('#cnt').textContent=n;$('#stage').textContent=st[1];
+  const nx=STAGES.find(x=>x[0]>n);
+  $('#next').textContent=nx?`あと ${nx[0]-n}さつ で「${nx[1]}」に なるよ！`:'すごい！ でんせつの木に なったよ！';
+  let svg='<ellipse cx="200" cy="330" rx="150" ry="16" fill="#d9c79f" opacity=".6"/>';
+  if(n===0){
+    svg+='<ellipse cx="200" cy="318" rx="10" ry="7" fill="#8a5a3b"/><text x="200" y="200" text-anchor="middle" font-size="20" fill="#1f3a5f" font-weight="700">1さつ よむと め が でるよ</text>';
+  }else if(n<5){
+    svg+=`<path d="M200 322 C 200 300, 198 ${300-n*10}, 200 ${290-n*12}" stroke="#6b8f3a" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    bs.forEach((b,i)=>{const y=300-i*14;const side=i%2?1:-1;
+      svg+=leafPath(200,y,1.4,side>0?-20:200)+` fill="${G(b.g).c}" class="${i===newIdx?'newleaf':''}"/>`;});
+  }else{
+    const k=Math.min(1,.45+n*.02); // 木の大きさ
+    const top=320-200*k, tw=10+18*k;
+    svg+=`<path d="M${200-tw} 322 Q ${200-tw*.4} ${(322+top)/2} ${200-6} ${top+30} L ${200+6} ${top+30} Q ${200+tw*.4} ${(322+top)/2} ${200+tw} 322 Z" fill="#8a5a3b"/>`;
+    svg+=`<path d="M200 ${top+70} Q 170 ${top+50} 150 ${top+30}" stroke="#8a5a3b" stroke-width="${6*k}" fill="none"/><path d="M200 ${top+60} Q 232 ${top+40} 252 ${top+22}" stroke="#8a5a3b" stroke-width="${6*k}" fill="none"/>`;
+    const cx=200,cy=top+10,rx=150*k,ry=105*k;
+    svg+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#a9d18e" opacity=".5"/>`;
+    const shown=Math.min(n,160);const s=Math.max(.9,2.1-n*.012);
+    for(let i=0;i<shown;i++){
+      const b=bs[n-shown+i];const a=i*2.39996;const r=Math.sqrt((i+.5)/shown)*.92;
+      const x=cx+Math.cos(a)*rx*r-8, y=cy+Math.sin(a)*ry*r;
+      svg+=leafPath(x,y,s,rnd(i)*360)+` fill="${G(b.g).c}" stroke="#fff" stroke-width=".6" class="${(n-shown+i)===newIdx?'newleaf':''}"/>`;
+    }
+    if(n>=20){const fl=Math.floor((n-15)/5);for(let i=0;i<fl&&i<14;i++){const a=i*2.1+1,r=.3+rnd(i+50)*.6;
+      svg+=`<g transform="translate(${(cx+Math.cos(a)*rx*r).toFixed(1)} ${(cy+Math.sin(a)*ry*r).toFixed(1)})">${[0,72,144,216,288].map(d=>`<circle r="4" cx="${(5*Math.cos(d*Math.PI/180)).toFixed(1)}" cy="${(5*Math.sin(d*Math.PI/180)).toFixed(1)}" fill="#ffd1e0"/>`).join('')}<circle r="3" fill="#f7c948"/></g>`;}}
+    if(n>=30){const fr=Math.floor((n-25)/5);for(let i=0;i<fr&&i<12;i++){const a=i*2.7+.4,r=.4+rnd(i+90)*.5;
+      svg+=`<circle cx="${(cx+Math.cos(a)*rx*r).toFixed(1)}" cy="${(cy+Math.sin(a)*ry*r+6).toFixed(1)}" r="7" fill="#e5533d" stroke="#fff" stroke-width="1.5"/>`;}}
+    if(n>=50)svg+=`<text x="${cx}" y="${cy-ry-6}" text-anchor="middle" font-size="26">👑</text>`;
+  }
+  $('#tree').innerHTML=svg;
+  // しゅるい
+  const cnt={};bs.forEach(b=>cnt[b.g]=(cnt[b.g]||0)+1);
+  $('#myBar').innerHTML=n?GENRES.filter(g=>cnt[g.id]).map(g=>`<div style="flex:${cnt[g.id]};background:${g.c}" title="${g.name}"></div>`).join(''):'';
+  $('#legend').innerHTML=GENRES.map(g=>`<div><span class="dot" style="background:${g.c}"></span>${g.name} <b>${cnt[g.id]||0}</b></div>`).join('');
+  const yet=GENRES.filter(g=>g.id!=='hoka'&&!cnt[g.id]);
+  $('#hint').innerHTML=n===0?'💡 さいしょの 1さつを きろく してみよう！'
+    :yet.length?`💡 まだ よんでいない しゅるい：<b>${yet.map(g=>g.ico+g.name).join('、')}</b><br>いろんな いろの はっぱを ふやしてみよう！`
+    :'🌈 ぜんぶの しゅるいを よんだよ！ すばらしい！';
+}
+
+/* ===== きろく ===== */
+$('#rec').onclick=()=>openRec();
+function openRec(idx=-1){
+  const b=idx>=0?me.books[idx]:{t:'',a:'',g:'',f:[],s:0,c:'',d:today()};
+  const st={g:b.g,f:[...b.f],s:b.s};
+  sheet(idx>=0?'きろくを なおす':'📖 よんだ本を きろくする',`
+    <label class="f">本の なまえ</label><input type="text" id="rT" value="${esc(b.t)}" placeholder="れい：はらぺこあおむし">
+    <label class="f">かいた 人（わかれば）</label><input type="text" id="rA" value="${esc(b.a)}">
+    <label class="f">どんな 本？</label>
+    <div class="genres" id="rG">${GENRES.map(g=>`<button data-g="${g.id}" style="--c:${g.c}" class="${st.g===g.id?'on':''}"><span>${g.ico}</span>${g.name}</button>`).join('')}</div>
+    <label class="f">よんで どうだった？（いくつでも）</label>
+    <div class="feels" id="rF">${FEELS.map(f=>`<button data-f="${f[0]}" class="${st.f.includes(f[0])?'on':''}"><span>${f[1]}</span>${f[2]}</button>`).join('')}</div>
+    <label class="f">おすすめ</label>
+    <div class="stars" id="rS">${[1,2,3].map(i=>`<button data-s="${i}" class="${i<=st.s?'on':''}">★</button>`).join('')}</div>
+    <label class="f">ひとこと（かかなくても いいよ）</label><textarea id="rC" placeholder="いちばん すきな ところは…">${esc(b.c)}</textarea>
+    <label class="f">よんだ 日</label><input type="date" id="rD" value="${b.d}" style="max-width:220px">
+    <div class="row" style="margin-top:18px;justify-content:space-between">
+      ${idx>=0?'<button class="btn danger" id="rDel">けす</button>':'<span></span>'}
+      <button class="btn pri big" id="rOk">${idx>=0?'なおす':'🍃 きろくする'}</button>
+    </div>`);
+  const r=$('#modalRoot');
+  r.querySelectorAll('#rG button').forEach(x=>x.onclick=()=>{st.g=x.dataset.g;r.querySelectorAll('#rG button').forEach(y=>y.classList.toggle('on',y===x));});
+  r.querySelectorAll('#rF button').forEach(x=>x.onclick=()=>{const f=x.dataset.f;st.f=st.f.includes(f)?st.f.filter(y=>y!==f):[...st.f,f];x.classList.toggle('on');});
+  r.querySelectorAll('#rS button').forEach(x=>x.onclick=()=>{st.s=+x.dataset.s===st.s?0:+x.dataset.s;r.querySelectorAll('#rS button').forEach(y=>y.classList.toggle('on',+y.dataset.s<=st.s));});
+  $('#rOk').onclick=()=>{
+    const t=$('#rT').value.trim();if(!t){toast('本の なまえを かいてね');return;}
+    if(!st.g){toast('どんな 本か えらんでね');return;}
+    const nb={t,a:$('#rA').value.trim(),g:st.g,f:st.f,s:st.s,c:$('#rC').value.trim(),d:$('#rD').value||today()};
+    if(idx>=0){me.books[idx]=nb;save();closeSheet();toast('なおしたよ');tab($('#tShelf').classList.contains('hide')?'tree':'shelf');return;}
+    const before=stageOf(me.books.length)[1];
+    me.books.push(nb);me.u=Date.now();save();closeSheet();tab('tree');renderTree(me.books.length-1);
+    const after=stageOf(me.books.length)[1];
+    toast(before!==after?`🎉「${after}」に なったよ！`:`🍃 はっぱが ふえたよ！（${me.books.length}さつ）`);
+  };
+  const del=$('#rDel');if(del)del.onclick=()=>{if(!confirm('この きろくを けしますか？'))return;me.books.splice(idx,1);me.u=Date.now();save();closeSheet();tab('shelf');};
+}
+
+/* ===== ほんだな ===== */
+function renderShelf(){
+  const bs=me.books;
+  $('#shelf').innerHTML=bs.length?bs.map((b,i)=>`<button class="spine" data-i="${i}" style="background:${G(b.g).c};height:${90+(b.t.length%5)*10}px">${esc(b.t.slice(0,10))}</button>`).join('')
+    :'<p class="muted" style="align-self:center;width:100%;text-align:center">まだ 本が ないよ</p>';
+  const fe=k=>(FEELS.find(f=>f[0]===k)||[])[1]||'';
+  $('#blist').innerHTML=bs.map((b,i)=>({b,i})).reverse().map(({b,i})=>`<button class="li" data-i="${i}">
+    <span class="dot" style="background:${G(b.g).c};width:18px;height:18px"></span>
+    <div style="flex:1"><div class="t">${esc(b.t)} <span style="color:#f0b429">${'★'.repeat(b.s)}</span> ${b.f.map(fe).join('')}</div>
+    <div class="d">${b.d.replace(/-/g,'/')}　${G(b.g).name}${b.c?'　「'+esc(b.c)+'」':''}</div></div></button>`).join('');
+  document.querySelectorAll('#shelf .spine,#blist .li').forEach(x=>x.onclick=()=>openRec(+x.dataset.i));
+}
+
+/* ===== コード ===== */
+const enc=o=>'DOKUSHO1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/^DOKUSHO1:/,'')))));
+function renderSend(){$('#code').textContent=enc({id:me.id,name:me.name,books:me.books,u:me.u||Date.now()});}
+$('#copyCode').onclick=async()=>{const t=$('#code').textContent;
+  try{await navigator.clipboard.writeText(t);}catch(e){const r=document.createRange();r.selectNodeContents($('#code'));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy');}
+  toast('コピーしたよ！');};
+
+/* ===== せんせい ===== */
+$('#toTeacher').onclick=()=>{renderTeacher();show('vTeacher');};
+$('#tBack').onclick=()=>{renderNames();show('vPick');};
+function renderTeacher(){
+  const ks=DB.kids;const tot=ks.reduce((a,k)=>a+k.books.length,0);
+  $('#tSum').textContent=`${ks.length}人 ／ 合計 ${tot}冊 ／ 1人あたり ${ks.length?(tot/ks.length).toFixed(1):0}冊`;
+  $('#tBody').innerHTML=ks.length?ks.map(k=>{
+    const cnt={};k.books.forEach(b=>cnt[b.g]=(cnt[b.g]||0)+1);
+    const last=[...k.books].sort((a,b)=>b.d.localeCompare(a.d))[0];
+    const kinds=Object.keys(cnt).length;
+    return `<tr><td><b>${esc(k.name)}</b></td><td><b>${k.books.length}</b></td>
+      <td><div class="gbar">${GENRES.filter(g=>cnt[g.id]).map(g=>`<div style="flex:${cnt[g.id]};background:${g.c}" title="${g.name} ${cnt[g.id]}"></div>`).join('')}</div><span class="muted">${kinds}種類</span></td>
+      <td>${last?esc(last.t)+'<br><span class="muted">'+last.d.replace(/-/g,'/')+'</span>':'<span class="muted">—</span>'}</td>
+      <td><button class="btn sm danger" data-del="${k.id}">削除</button></td></tr>`;}).join('')
+    :'<tr><td colspan="5" class="muted">まだ登録がありません。右下の名簿登録か、子どもの画面で名前を追加してください。</td></tr>';
+  $('#tBody').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const k=kid(b.dataset.del);
+    if(!confirm(k.name+' さんの記録を削除しますか？'))return;DB.kids=DB.kids.filter(x=>x!==k);save();renderTeacher();});
+}
+$('#rosterAdd').onclick=()=>{let n=0;$('#roster').value.split(/\n/).map(s=>s.trim()).filter(Boolean).forEach(nm=>{
+  if(!DB.kids.some(k=>k.name===nm)){DB.kids.push({id:uid(),name:nm,books:[]});n++;}});save();$('#roster').value='';renderTeacher();toast(n+'人 登録しました');};
+$('#codesAdd').onclick=()=>{
+  const parts=$('#codes').value.match(/DOKUSHO1:[A-Za-z0-9+/=]+/g)||[];let ok=0,ng=0;
+  parts.forEach(p=>{try{const o=dec(p);if(!o.name||!Array.isArray(o.books))throw 0;
+    const ex=DB.kids.find(k=>k.id===o.id)||DB.kids.find(k=>k.name===o.name);
+    if(ex){if((o.u||0)>=(ex.u||0)){ex.books=o.books;ex.u=o.u;}}else DB.kids.push({id:o.id||uid(),name:o.name,books:o.books,u:o.u});ok++;}catch(e){ng++;}});
+  save();renderTeacher();$('#codes').value='';toast(`${ok}人分 取りこみました${ng?'（読めないコード '+ng+'件）':''}`);
+};
+$('#csv').onclick=()=>{
+  const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+  const L=[['名前','読んだ日','書名','作者','ジャンル','きもち','おすすめ','ひとこと'].map(q).join(',')];
+  DB.kids.forEach(k=>k.books.forEach(b=>L.push([k.name,b.d,b.t,b.a,G(b.g).name,b.f.map(f=>(FEELS.find(x=>x[0]===f)||[])[2]).join(' '),b.s,b.c].map(q).join(','))));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+L.join('\r\n')],{type:'text/csv'}));a.download='どくしょの木_'+today()+'.csv';a.click();
+};
+$('#wipe').onclick=()=>{if(confirm('すべての子の記録を削除します。元に戻せません。よろしいですか？')){DB={kids:[]};save();renderTeacher();}};
+
+/* ===== モーダル ===== */
+function sheet(title,html){
+  $('#modalRoot').innerHTML=`<div class="modal"><div class="sheet"><div class="sheet-h"><h3>${title}</h3><button class="x">✕</button></div>${html}</div></div>`;
+  const m=$('#modalRoot .modal');m.onclick=e=>{if(e.target===m)closeSheet();};m.querySelector('.x').onclick=closeSheet;
+}
+function closeSheet(){$('#modalRoot').innerHTML='';}
+
+renderNames();
+</script>
+</body>
+</html>

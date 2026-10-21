@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>当番公平わりふり｜お茶当番・配車を自動でかたよりなく</title>
+<script>
+/* Pro版の案内リンク（公開先が決まったら差し替える） */
+const PRO_URL = "https://note.com/minato_smile2525";
+</script>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2f527f;--line:#e2d9c6;--sub:#6b6457;--tea:#3f8f6b;--car:#d07a2d;--warn:#b5402f;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:#2a2a2a;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+a{color:var(--navy)}
+header{background:var(--navy);color:#fff;padding:10px 16px}
+header .back{color:#fff;text-decoration:none;font-size:14px;opacity:.9}
+header h1{margin:4px 0 0;font-size:22px;letter-spacing:.04em}
+header p{margin:2px 0 0;font-size:13px;opacity:.85}
+.wrap{max-width:980px;margin:0 auto;padding:12px 12px 40px}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+nav.tabs button{flex:1 0 auto;min-width:76px;border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:999px;padding:9px 12px;font-size:15px;font-weight:700;cursor:pointer}
+nav.tabs button.on{background:var(--navy);color:#fff}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{margin:0 0 8px;font-size:18px;color:var(--navy)}
+.card h3{margin:10px 0 6px;font-size:15px;color:var(--navy)}
+.note{font-size:13px;color:var(--sub)}
+.privacy{background:#eef3f9;border-left:4px solid var(--navy);padding:8px 10px;border-radius:8px;font-size:13px}
+.btn{display:inline-block;border:none;border-radius:12px;padding:11px 16px;font-size:15px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff;min-height:44px}
+.btn.sub{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.btn.warn{background:#fff;color:var(--warn);border:2px solid var(--warn)}
+.btn.big{font-size:18px;padding:14px 20px;width:100%}
+.btn.sm{padding:6px 10px;font-size:13px;min-height:34px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+label.f{display:block;margin:8px 0 4px;font-weight:700;font-size:14px}
+input[type=text],input[type=number],input[type=date],select,textarea{font-size:16px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;width:100%;font-family:inherit}
+input[type=number]{width:90px}
+.chk{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1.5px solid var(--line);border-radius:10px;margin:3px 4px 3px 0;font-size:15px;cursor:pointer;background:#fff;user-select:none}
+.chk input{width:18px;height:18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:#f1ece0;border-radius:999px;padding:4px 10px;font-size:13px}
+.chip button{border:none;background:none;color:var(--warn);font-size:14px;cursor:pointer;padding:0 0 0 4px}
+.badge{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;color:#fff}
+.b-tea{background:var(--tea)}.b-car{background:var(--car)}.b-type{background:var(--navy2)}.b-gray{background:#9a927f}
+.list .item{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:#fff}
+.item .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.item .name{font-weight:700;font-size:16px}
+.ev .date{font-weight:700;font-size:17px;color:var(--navy)}
+.ev.past{opacity:.6}
+.slot{display:flex;align-items:center;gap:6px;margin:5px 0}
+.slot .lab{min-width:58px;font-size:13px;font-weight:700}
+.slot select{flex:1;padding:7px 8px;font-size:15px}
+.warnline{color:var(--warn);font-weight:700;font-size:13px}
+.okline{color:var(--tea);font-weight:700;font-size:13px}
+.bars .b{display:grid;grid-template-columns:96px 1fr 44px;gap:8px;align-items:center;margin:6px 0;font-size:14px}
+.bars .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.bars .track{background:#f1ece0;border-radius:8px;height:22px;display:flex;overflow:hidden}
+.bars .seg{height:100%}
+.bars .num{text-align:right;font-weight:700}
+.legend{display:flex;gap:14px;font-size:13px;margin:4px 0 8px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+th{background:#f1ece0}
+td.l{text-align:left}
+.hi{background:#fff4e5}.lo{background:#eaf6ef}
+.tblwrap{overflow-x:auto}
+textarea.out{min-height:220px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:center;z-index:30}
+.modal.show{display:flex}
+.modal .sheet{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
+@media(min-width:700px){.modal{align-items:center}.modal .sheet{border-radius:18px}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.how ol{margin:4px 0;padding-left:22px}
+footer{text-align:center;font-size:12px;color:var(--sub);padding:20px 12px 30px}
+.hidden{display:none!important}
+.proband{flex:1 0 100%;display:flex;align-items:center;gap:8px;background:#fbf3e3;border:1.5px solid #ead7ae;border-radius:10px;padding:7px 10px;margin:8px 0 0;font-size:13px;line-height:1.5}
+.proband a{font-weight:700;color:#8a6118;white-space:nowrap}
+.proband .x{margin-left:auto;border:none;background:none;color:#a08a50;font-size:16px;cursor:pointer;padding:0 2px}
+.prolink{border:none;background:none;color:var(--sub);font-size:13px;text-decoration:underline;cursor:pointer;padding:6px 2px;font-family:inherit}
+#printArea{display:none}
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  body{background:#fff}
+  header,nav,.wrap,footer,.toast,.modal{display:none!important}
+  #printArea{display:block;color:#000}
+  #printArea h1{font-size:18pt;margin:0 0 4mm}
+  #printArea p{font-size:9pt;margin:0 0 3mm}
+  #printArea table{font-size:10pt}
+  #printArea th,#printArea td{border:1px solid #555;padding:2mm}
+  #printArea tr{page-break-inside:avoid}
+}
+@media(min-width:1400px){body{font-size:18px}.wrap{max-width:1200px}}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">← MINATO WORKS</a>
+  <h1>当番公平わりふり</h1>
+  <p>お茶当番・車出しを「これまでの回数」で自動にわりふり。言い出しにくい不公平を、数字で解決。</p>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" id="tabs">
+    <button data-t="table" class="on">当番表</button>
+    <button data-t="fam">家庭</button>
+    <button data-t="ev">予定</button>
+    <button data-t="count">回数</button>
+    <button data-t="share">共有</button>
+  </nav>
+
+  <!-- 当番表 -->
+  <section id="t-table">
+    <div class="card">
+      <h2>公平にわりふる</h2>
+      <p class="note">これまでの回数が少ない家庭から順に、できない日をさけて自動で入れます。車のない家庭はお茶当番などで回数をそろえます。手で入れた人はそのまま残ります。</p>
+      <button class="btn big" id="btnAssign">公平にわりふる（空いている枠だけ）</button>
+      <div class="row" style="margin-top:8px">
+        <button class="btn warn sm" id="btnRedo">今日以降をぜんぶやり直す</button>
+        <label class="chk"><input type="checkbox" id="showPast">終わった予定も表示</label>
+      </div>
+      <div id="assignMsg" class="note" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <h2>当番表</h2>
+      <p class="note">名前の欄を押すと、手で入れかえられます（かっこ内は今の合計回数）。</p>
+      <div id="tableList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- 家庭 -->
+  <section id="t-fam" class="hidden">
+    <div class="card">
+      <div class="privacy">名簿はこの端末（ブラウザ）の中だけに保存されます。どこにも送られません。引きつぎは「共有」タブのファイル書き出しで行えます。</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="btnAddFam">＋ 家庭を追加</button>
+        <button class="btn sub sm" id="btnSample">見本データを入れる</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>家庭の一覧 <span class="note" id="famCount"></span></h2>
+      <div id="famList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- 予定 -->
+  <section id="t-ev" class="hidden">
+    <div class="card">
+      <div class="row">
+        <button class="btn" id="btnAddEv">＋ 予定を追加</button>
+        <button class="btn sub sm" id="btnAddWeekly">毎週の練習をまとめて追加</button>
+        <button class="prolink" id="proRole" type="button">＋ 当番の種類を追加（審判・受付など）</button>
+      </div>
+      <p class="note">配車は「乗る子どもの人数」を入れると、乗れる人数から必要な台数を自動で決めます。</p>
+    </div>
+    <div class="card">
+      <h2>予定の一覧</h2>
+      <div id="evList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- 回数 -->
+  <section id="t-count" class="hidden">
+    <div class="card">
+      <h2>家庭ごとの合計回数</h2>
+      <div class="legend"><span style="--c:var(--tea)">お茶</span><span style="--c:var(--car)">配車</span><span style="--c:#b9b0a0">アプリ前の回数</span></div>
+      <div id="bars" class="bars"></div>
+      <p class="note" id="countSummary"></p>
+    </div>
+    <div class="card">
+      <h2>くわしい表</h2>
+      <div class="tblwrap"><table id="countTable"></table></div>
+      <p class="note">オレンジ＝多い家庭、みどり＝少ない家庭。<span id="weightNote"></span></p>
+    </div>
+    <div class="card">
+      <h2>数え方の設定</h2>
+      <label class="chk"><input type="checkbox" id="setEnsei">遠征の当番は2回分として数える（負担が大きいため）</label>
+      <label class="chk"><input type="checkbox" id="setPastOnly">終わった予定だけ数える（予定ぶんは数えない）</label>
+      <label class="f" for="setTeam">チーム名（当番表の見出しに使います）</label>
+      <input type="text" id="setTeam" placeholder="例：みなとスポーツ少年団">
+      <button class="prolink" id="proTeam" type="button">＋ 別のチーム・学年も管理する</button>
+    </div>
+  </section>
+
+  <!-- 共有 -->
+  <section id="t-share" class="hidden">
+    <div class="card">
+      <h2>LINEに貼る</h2>
+      <div class="row">
+        <label class="f" style="margin:0">期間</label>
+        <select id="shareRange" style="width:auto">
+          <option value="next4">これから4週間</option>
+          <option value="month">今月</option>
+          <option value="nextmonth">来月</option>
+          <option value="future">今日以降ぜんぶ</option>
+          <option value="all">ぜんぶ</option>
+        </select>
+        <label class="chk"><input type="checkbox" id="shareCount" checked>回数の一覧もつける</label>
+      </div>
+      <textarea class="out" id="shareText" readonly style="margin-top:8px"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnCopy">コピーする</button>
+        <button class="btn sub" id="btnPrint">印刷する（A4）</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>係の引きつぎ（ファイル）</h2>
+      <p class="note">家庭・予定・当番・設定をまとめて1つのファイル（JSON）にします。次の係の人はそのファイルを読みこむだけで続きができます。</p>
+      <div class="row">
+        <button class="btn" id="btnExport">ファイルに書き出す</button>
+        <label class="btn sub" for="fileImport" style="display:inline-flex;align-items:center">ファイルを読みこむ</label>
+        <input type="file" id="fileImport" accept=".json,application/json" class="hidden">
+      </div>
+      <p class="note">読みこむと、いまの端末のデータは置きかわります。</p>
+      <button class="prolink" id="proYear" type="button">年度を切りかえる（回数の持ち越し・引き継ぎメモ）</button>
+      <h3>ぜんぶ消す</h3>
+      <button class="btn warn sm" id="btnReset">この端末のデータをすべて消す</button>
+    </div>
+    <div class="card how">
+      <h2>使い方</h2>
+      <ol>
+        <li>「家庭」で、車の有無・乗れる人数・できない曜日や日をとうろく</li>
+        <li>「予定」で練習・試合・遠征と、お茶の人数・配車（乗る子の人数）を入れる</li>
+        <li>「当番表」で「公平にわりふる」を押す。都合が合わなければ手で入れかえ</li>
+        <li>「共有」からLINEに貼る・印刷する。「回数」で偏りがないか確認</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<div id="printArea"></div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525" target="_blank" rel="noopener">https://note.com/minato_smile2525</a></footer>
+
+<script>
+(function(){
+'use strict';
+var KEY='mw_sports_01_data';
+var WD=['日','月','火','水','木','金','土'];
+var TYPES=['練習','試合','遠征','その他'];
+var S=load();
+
+function blank(){return {fams:[],evs:[],set:{ensei2:false,pastOnly:false,team:''}};}
+function load(){
+  try{var t=localStorage.getItem(KEY);if(t){var d=JSON.parse(t);return norm(d);}}catch(e){}
+  return blank();
+}
+function norm(d){
+  var b=blank();
+  if(!d||typeof d!=='object')return b;
+  b.fams=Array.isArray(d.fams)?d.fams:[];
+  b.evs=Array.isArray(d.evs)?d.evs:[];
+  b.set=Object.assign(b.set,d.set||{});
+  b.fams.forEach(function(f){f.ngW=f.ngW||[];f.ngD=f.ngD||[];f.base=+f.base||0;f.seats=+f.seats||0;if(f.canTea===undefined)f.canTea=true;if(f.canCar===undefined)f.canCar=!!f.car;});
+  b.evs.forEach(function(e){e.tea=e.tea||[];e.car=e.car||[];e.teaN=+e.teaN||0;e.kids=+e.kids||0;e.carN=+e.carN||0;});
+  return b;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('保存できませんでした');}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function $(id){return document.getElementById(id);}
+function todayStr(){var d=new Date();return ymd(d);}
+function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function pd(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2]);}
+function md(s){var d=pd(s);return (d.getMonth()+1)+'/'+d.getDate()+'('+WD[d.getDay()]+')';}
+function fam(id){for(var i=0;i<S.fams.length;i++)if(S.fams[i].id===id)return S.fams[i];return null;}
+function fname(id){var f=fam(id);return f?f.name:'（削除された家庭）';}
+function sortEvs(){S.evs.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.time||'')<(b.time||'')?-1:1;});}
+var toastT;
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},1800);}
+
+/* ---------- 回数 ---------- */
+function weight(e){return (S.set.ensei2&&e.type==='遠征')?2:1;}
+function counts(excludeIds){
+  var c={},t=todayStr();
+  S.fams.forEach(function(f){c[f.id]={tea:0,car:0,base:f.base||0,total:f.base||0,last:''};});
+  S.evs.forEach(function(e){
+    if(excludeIds&&excludeIds[e.id])return;
+    if(S.set.pastOnly&&e.date>t)return;
+    var w=weight(e);
+    e.tea.forEach(function(id){if(id&&c[id]){c[id].tea+=w;c[id].total+=w;if(e.date>c[id].last)c[id].last=e.date;}});
+    e.car.forEach(function(id){if(id&&c[id]){c[id].car+=w;c[id].total+=w;if(e.date>c[id].last)c[id].last=e.date;}});
+  });
+  return c;
+}
+function isNG(f,date){
+  if(f.ngD.indexOf(date)>=0)return true;
+  if(f.ngW.indexOf(pd(date).getDay())>=0)return true;
+  return false;
+}
+function avgSeats(){
+  var cs=S.fams.filter(function(f){return f.car&&f.canCar&&f.seats>0;});
+  if(!cs.length)return 4;
+  return cs.reduce(function(s,f){return s+f.seats;},0)/cs.length;
+}
+function needCars(e){
+  if(e.kids>0)return Math.ceil(e.kids/avgSeats());
+  return e.carN||0;
+}
+function seatsOf(e){return e.car.reduce(function(s,id){var f=fam(id);return s+(f?f.seats:0);},0);}
+
+/* ---------- 自動わりふり ---------- */
+function assign(redo){
+  var t=todayStr();
+  if(!S.fams.length){toast('先に家庭をとうろくしてください');return;}
+  sortEvs();
+  var targets=S.evs.filter(function(e){return e.date>=t;});
+  if(!targets.length){toast('今日以降の予定がありません');return;}
+  var c=counts(null);
+  if(redo){
+    // やり直す分を回数から引く
+    var ex={};targets.forEach(function(e){ex[e.id]=1;});
+    c=counts(ex);
+    targets.forEach(function(e){e.tea=[];e.car=[];});
+  }
+  var shortage=[],filled=0;
+  // 1回目：配車（車のある家庭だけ・制約が強い）→ 2回目：お茶（回数の少ない家庭でそろえる）
+  ['car','tea'].forEach(function(phase){
+  targets.forEach(function(e){
+    var w=weight(e);
+    var used={};
+    e.tea=e.tea.filter(Boolean);e.car=e.car.filter(Boolean);
+    e.tea.concat(e.car).forEach(function(id){used[id]=1;});
+    function pick(cands,key){
+      cands.sort(function(a,b){
+        var A=c[a.id],B=c[b.id];
+        if(A.total!==B.total)return A.total-B.total;
+        if(A[key]!==B[key])return A[key]-B[key];
+        if(A.last!==B.last)return A.last<B.last?-1:1;
+        return Math.random()-.5;
+      });
+      return cands[0]||null;
+    }
+    function add(f,key){used[f.id]=1;e[key].push(f.id);c[f.id][key]+=w;c[f.id].total+=w;c[f.id].last=e.date;filled++;}
+    if(phase==='car'){
+    var carOK=function(f){return f.car&&f.canCar&&!used[f.id]&&!isNG(f,e.date);};
+    if(e.kids>0){
+      var guard=0;
+      while(seatsOf(e)<e.kids&&guard++<50){
+        var f=pick(S.fams.filter(carOK),'car');
+        if(!f){shortage.push(md(e.date)+' 配車（あと'+(e.kids-seatsOf(e))+'人分）');break;}
+        add(f,'car');
+      }
+    }else{
+      while(e.car.length<(e.carN||0)){
+        var f2=pick(S.fams.filter(carOK),'car');
+        if(!f2){shortage.push(md(e.date)+' 配車（あと'+((e.carN||0)-e.car.length)+'台）');break;}
+        add(f2,'car');
+      }
+    }
+    }else{
+    var teaOK=function(f){return f.canTea&&!used[f.id]&&!isNG(f,e.date);};
+    while(e.tea.length<(e.teaN||0)){
+      var g=pick(S.fams.filter(teaOK),'tea');
+      if(!g){shortage.push(md(e.date)+' お茶（あと'+((e.teaN||0)-e.tea.length)+'人）');break;}
+      add(g,'tea');
+    }
+    }
+  });
+  });
+  save();renderAll();
+  var msg='わりふりました（'+filled+'枠）。';
+  if(shortage.length)msg+='<br><span class="warnline">人が足りない枠：'+esc(shortage.join('、'))+'</span>';
+  $('assignMsg').innerHTML=msg;
+  toast(redo?'今日以降をやり直しました':'空いている枠をうめました');
+}
+
+/* ---------- 当番表 ---------- */
+function famOptions(sel,key,e){
+  var c=counts(null),h='<option value="">（空き）</option>';
+  S.fams.forEach(function(f){
+    var ok=key==='car'?(f.car&&f.canCar):f.canTea;
+    var ng=isNG(f,e.date);
+    if(!ok&&f.id!==sel)return;
+    h+='<option value="'+f.id+'"'+(f.id===sel?' selected':'')+'>'+esc(f.name)+'（'+c[f.id].total+'）'+(ng?' ※NG日':'')+(key==='car'?' '+f.seats+'人乗り':'')+'</option>';
+  });
+  return h;
+}
+function evStatus(e){
+  var m=[];
+  var tf=e.tea.filter(Boolean).length;
+  if(tf<e.teaN)m.push('お茶 あと'+(e.teaN-tf)+'人');
+  if(e.kids>0){var s=seatsOf(e);if(s<e.kids)m.push('配車 あと'+(e.kids-s)+'人分');}
+  else{var cf=e.car.filter(Boolean).length;if(cf<e.carN)m.push('配車 あと'+(e.carN-cf)+'台');}
+  var ngs=[];
+  e.tea.concat(e.car).forEach(function(id){var f=fam(id);if(f&&isNG(f,e.date))ngs.push(f.name);});
+  if(ngs.length)m.push(ngs.join('・')+'はNG日');
+  return m;
+}
+function renderTable(){
+  sortEvs();
+  var t=todayStr(),showPast=$('showPast').checked,h='';
+  var list=S.evs.filter(function(e){return showPast||e.date>=t;});
+  if(!list.length){h='<p class="note">予定がありません。「予定」タブから追加してください。</p>';}
+  list.forEach(function(e){
+    var slotsTea=Math.max(e.teaN,e.tea.length),slotsCar=Math.max(e.kids>0?Math.max(e.car.length+ (seatsOf(e)<e.kids?1:0),needCars(e)):e.carN,e.car.length);
+    h+='<div class="item ev'+(e.date<t?' past':'')+'"><div class="top"><div><span class="date">'+md(e.date)+'</span> '+(e.time?esc(e.time)+' ':'')+
+      '<span class="badge b-type">'+esc(e.type)+'</span><div class="note">'+esc([e.title,e.place].filter(Boolean).join(' ／ '))+'</div></div></div>';
+    for(var i=0;i<slotsTea;i++)h+='<div class="slot"><span class="lab"><span class="badge b-tea">お茶</span></span><select data-e="'+e.id+'" data-k="tea" data-i="'+i+'">'+famOptions(e.tea[i]||'','tea',e)+'</select></div>';
+    for(var j=0;j<slotsCar;j++)h+='<div class="slot"><span class="lab"><span class="badge b-car">配車</span></span><select data-e="'+e.id+'" data-k="car" data-i="'+j+'">'+famOptions(e.car[j]||'','car',e)+'</select></div>';
+    if(e.kids>0)h+='<div class="note">乗る子ども '+e.kids+'人 ／ 乗れる席 '+seatsOf(e)+'人分</div>';
+    var st=evStatus(e);
+    if(e.teaN||e.carN||e.kids)h+=st.length?'<div class="warnline">⚠ '+esc(st.join('、'))+'</div>':'<div class="okline">✓ そろっています</div>';
+    h+='</div>';
+  });
+  $('tableList').innerHTML=h;
+}
+$('tableList').addEventListener('change',function(ev){
+  var s=ev.target;if(s.tagName!=='SELECT')return;
+  var e=S.evs.filter(function(x){return x.id===s.dataset.e;})[0];if(!e)return;
+  var k=s.dataset.k,i=+s.dataset.i,v=s.value;
+  if(v){var other=k==='tea'?'car':'tea';if(e[k].indexOf(v)>=0&&e[k].indexOf(v)!==i||e[other].indexOf(v)>=0){toast('同じ日に同じ家庭が2つ入っています');}}
+  e[k][i]=v;
+  for(var j=0;j<i;j++)if(e[k][j]===undefined)e[k][j]='';
+  while(e[k].length&&!e[k][e[k].length-1])e[k].pop();
+  save();renderAll();toast('入れかえました');
+});
+
+/* ---------- 家庭 ---------- */
+function renderFams(){
+  var c=counts(null),h='';
+  $('famCount').textContent=S.fams.length?'（'+S.fams.length+'家庭）':'';
+  if(!S.fams.length)h='<p class="note">まだ家庭がありません。「＋ 家庭を追加」か「見本データを入れる」でためせます。</p>';
+  S.fams.forEach(function(f){
+    var tags=[];
+    tags.push(f.car?'<span class="badge b-car">車あり '+f.seats+'人乗り</span>':'<span class="badge b-gray">車なし</span>');
+    if(!f.canTea)tags.push('<span class="badge b-gray">お茶× </span>');
+    if(f.car&&!f.canCar)tags.push('<span class="badge b-gray">配車×</span>');
+    var ng=[];if(f.ngW.length)ng.push(f.ngW.slice().sort().map(function(w){return WD[w];}).join('・')+'曜');
+    if(f.ngD.length)ng.push(f.ngD.length+'日');
+    h+='<div class="item"><div class="top"><div><div class="name">'+esc(f.name)+'</div><div>'+tags.join(' ')+'</div>'+
+      '<div class="note">できない日：'+(ng.length?esc(ng.join('、')):'なし')+' ／ 合計 '+c[f.id].total+'回'+(f.memo?' ／ '+esc(f.memo):'')+'</div></div>'+
+      '<button class="btn sub sm" data-edit="'+f.id+'">編集</button></div></div>';
+  });
+  $('famList').innerHTML=h;
+}
+$('famList').addEventListener('click',function(e){var b=e.target.closest('[data-edit]');if(b)famForm(fam(b.dataset.edit));});
+$('btnAddFam').onclick=function(){famForm(null);};
+
+function famForm(f){
+  var isNew=!f;
+  f=f?JSON.parse(JSON.stringify(f)):{id:uid(),name:'',car:true,seats:4,canTea:true,canCar:true,ngW:[],ngD:[],base:0,memo:''};
+  var h='<h2 style="margin-top:0;color:var(--navy)">'+(isNew?'家庭を追加':'家庭を編集')+'</h2>'+
+  '<label class="f">家庭の名前（子どもの名前でOK）</label><input type="text" id="fName" value="'+esc(f.name)+'" placeholder="例：たろう（山田）">'+
+  '<label class="f">車</label><label class="chk"><input type="radio" name="fCar" value="1"'+(f.car?' checked':'')+'>車あり</label><label class="chk"><input type="radio" name="fCar" value="0"'+(!f.car?' checked':'')+'>車なし</label>'+
+  '<div id="seatBox"><label class="f">乗れる子どもの人数（自分の子もふくむ）</label><input type="number" id="fSeats" min="1" max="9" value="'+(f.seats||4)+'"></div>'+
+  '<label class="f">できる当番</label><label class="chk"><input type="checkbox" id="fTea"'+(f.canTea?' checked':'')+'>お茶当番</label><label class="chk" id="carChk"><input type="checkbox" id="fCanCar"'+(f.canCar?' checked':'')+'>配車</label>'+
+  '<label class="f">できない曜日</label><div>'+WD.map(function(w,i){return '<label class="chk"><input type="checkbox" class="fW" value="'+i+'"'+(f.ngW.indexOf(i)>=0?' checked':'')+'>'+w+'</label>';}).join('')+'</div>'+
+  '<label class="f">できない日付</label><div class="row"><input type="date" id="fDate" style="flex:1"><button class="btn sub sm" id="fDateAdd" type="button">追加</button></div><div class="chips" id="fDates"></div>'+
+  '<label class="f">アプリを使う前の当番回数（あれば）</label><input type="number" id="fBase" min="0" value="'+(f.base||0)+'">'+
+  '<label class="f">メモ</label><input type="text" id="fMemo" value="'+esc(f.memo||'')+'" placeholder="例：土曜午前は仕事">'+
+  '<div class="row" style="margin-top:14px"><button class="btn" id="fSave">保存</button><button class="btn sub" id="fCancel">やめる</button>'+(isNew?'':'<button class="btn warn sm" id="fDel" style="margin-left:auto">この家庭を消す</button>')+'</div>';
+  openModal(h);
+  function drawDates(){$('fDates').innerHTML=f.ngD.sort().map(function(d){return '<span class="chip">'+md(d)+'<button data-d="'+d+'" type="button">×</button></span>';}).join('')||'<span class="note">なし</span>';}
+  function carVis(){var on=document.querySelector('input[name=fCar]:checked').value==='1';$('seatBox').classList.toggle('hidden',!on);$('carChk').classList.toggle('hidden',!on);}
+  drawDates();carVis();
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=fCar]'),function(r){r.onchange=carVis;});
+  $('fDateAdd').onclick=function(){var v=$('fDate').value;if(v&&f.ngD.indexOf(v)<0){f.ngD.push(v);drawDates();}};
+  $('fDates').onclick=function(e){var b=e.target.closest('[data-d]');if(b){f.ngD=f.ngD.filter(function(x){return x!==b.dataset.d;});drawDates();}};
+  $('fCancel').onclick=closeModal;
+  if(!isNew)$('fDel').onclick=function(){
+    if(!confirm(f.name+' を消しますか？（当番表からも外れます）'))return;
+    S.fams=S.fams.filter(function(x){return x.id!==f.id;});
+    S.evs.forEach(function(e){e.tea=e.tea.filter(function(x){return x!==f.id;});e.car=e.car.filter(function(x){return x!==f.id;});});
+    save();closeModal();renderAll();toast('消しました');
+  };
+  $('fSave').onclick=function(){
+    var n=$('fName').value.trim();if(!n){toast('名前を入れてください');return;}
+    f.name=n;f.car=document.querySelector('input[name=fCar]:checked').value==='1';
+    f.seats=f.car?Math.max(1,+$('fSeats').value||1):0;
+    f.canTea=$('fTea').checked;f.canCar=f.car&&$('fCanCar').checked;
+    f.ngW=Array.prototype.filter.call(document.querySelectorAll('.fW'),function(x){return x.checked;}).map(function(x){return +x.value;});
+    f.base=Math.max(0,+$('fBase').value||0);f.memo=$('fMemo').value.trim();
+    if(!f.canTea&&!f.canCar&&!confirm('どの当番もできない設定です。このまま保存しますか？'))return;
+    var proCare=!f.canTea&&!f.canCar;
+    var i=S.fams.findIndex(function(x){return x.id===f.id;});
+    if(i>=0)S.fams[i]=f;else S.fams.push(f);
+    save();closeModal();renderAll();toast('保存しました');
+    if(proCare)showPro('役員・兄弟在籍などの「回数を半分に」「この期間はお休み」','famList',true);
+  };
+}
+
+/* ---------- 予定 ---------- */
+function renderEvs(){
+  sortEvs();
+  var t=todayStr(),h='';
+  if(!S.evs.length)h='<p class="note">まだ予定がありません。</p>';
+  S.evs.forEach(function(e){
+    var need=[];
+    if(e.teaN)need.push('お茶'+e.teaN+'人');
+    if(e.kids)need.push('配車：子ども'+e.kids+'人（約'+needCars(e)+'台）');else if(e.carN)need.push('配車'+e.carN+'台');
+    h+='<div class="item ev'+(e.date<t?' past':'')+'"><div class="top"><div><span class="date">'+md(e.date)+'</span> '+(e.time?esc(e.time)+' ':'')+'<span class="badge b-type">'+esc(e.type)+'</span>'+
+      '<div class="note">'+esc([e.title,e.place].filter(Boolean).join(' ／ '))+'</div><div>'+esc(need.join('、')||'当番なし')+'</div></div>'+
+      '<button class="btn sub sm" data-edit="'+e.id+'">編集</button></div></div>';
+  });
+  $('evList').innerHTML=h;
+}
+$('evList').addEventListener('click',function(ev){var b=ev.target.closest('[data-edit]');if(b)evForm(S.evs.filter(function(x){return x.id===b.dataset.edit;})[0]);});
+$('btnAddEv').onclick=function(){evForm(null);};
+
+function evForm(e){
+  var isNew=!e;
+  var last=S.evs[S.evs.length-1];
+  e=e?JSON.parse(JSON.stringify(e)):{id:uid(),date:todayStr(),time:'',type:'練習',title:'',place:'',teaN:last?last.teaN:2,kids:0,carN:0,tea:[],car:[]};
+  var mode=e.kids>0?'kids':'cars';
+  var h='<h2 style="margin-top:0;color:var(--navy)">'+(isNew?'予定を追加':'予定を編集')+'</h2>'+
+  '<div class="grid2"><div><label class="f">日付</label><input type="date" id="eDate" value="'+esc(e.date)+'"></div><div><label class="f">時間（任意）</label><input type="text" id="eTime" value="'+esc(e.time||'')+'" placeholder="例：8:30〜"></div></div>'+
+  '<label class="f">種類</label><div>'+TYPES.map(function(t){return '<label class="chk"><input type="radio" name="eType" value="'+t+'"'+(e.type===t?' checked':'')+'>'+t+'</label>';}).join('')+'</div>'+
+  '<div class="grid2"><div><label class="f">名前（任意）</label><input type="text" id="eTitle" value="'+esc(e.title||'')+'" placeholder="例：市大会1回戦"></div><div><label class="f">場所（任意）</label><input type="text" id="ePlace" value="'+esc(e.place||'')+'" placeholder="例：中央グラウンド"></div></div>'+
+  '<label class="f">お茶当番の人数</label><input type="number" id="eTea" min="0" max="20" value="'+e.teaN+'">'+
+  '<label class="f">配車</label><label class="chk"><input type="radio" name="eMode" value="kids"'+(mode==='kids'?' checked':'')+'>乗る子どもの人数で決める</label><label class="chk"><input type="radio" name="eMode" value="cars"'+(mode==='cars'?' checked':'')+'>台数で決める</label>'+
+  '<div id="kidsBox" class="row" style="margin-top:6px"><input type="number" id="eKids" min="0" max="99" value="'+(e.kids||0)+'"> 人 <span class="note" id="kidsCalc"></span></div>'+
+  '<div id="carsBox" class="row" style="margin-top:6px"><input type="number" id="eCars" min="0" max="30" value="'+(e.carN||0)+'"> 台</div>'+
+  '<div class="row" style="margin-top:14px"><button class="btn" id="eSave">保存</button><button class="btn sub" id="eCancel">やめる</button>'+(isNew?'':'<button class="btn warn sm" id="eDel" style="margin-left:auto">この予定を消す</button>')+'</div>';
+  openModal(h);
+  function vis(){var m=document.querySelector('input[name=eMode]:checked').value;$('kidsBox').classList.toggle('hidden',m!=='kids');$('carsBox').classList.toggle('hidden',m!=='cars');calc();}
+  function calc(){var k=+$('eKids').value||0;$('kidsCalc').textContent=k?'→ 約'+Math.ceil(k/avgSeats())+'台（平均'+(Math.round(avgSeats()*10)/10)+'人乗りで計算）':'';}
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=eMode]'),function(r){r.onchange=vis;});
+  $('eKids').oninput=calc;vis();
+  $('eCancel').onclick=closeModal;
+  if(!isNew)$('eDel').onclick=function(){if(!confirm('この予定を消しますか？'))return;S.evs=S.evs.filter(function(x){return x.id!==e.id;});save();closeModal();renderAll();toast('消しました');};
+  $('eSave').onclick=function(){
+    var d=$('eDate').value;if(!d){toast('日付を入れてください');return;}
+    e.date=d;e.time=$('eTime').value.trim();e.type=document.querySelector('input[name=eType]:checked').value;
+    e.title=$('eTitle').value.trim();e.place=$('ePlace').value.trim();
+    e.teaN=Math.max(0,+$('eTea').value||0);
+    var m=document.querySelector('input[name=eMode]:checked').value;
+    if(m==='kids'){e.kids=Math.max(0,+$('eKids').value||0);e.carN=0;}else{e.carN=Math.max(0,+$('eCars').value||0);e.kids=0;}
+    var i=S.evs.findIndex(function(x){return x.id===e.id;});
+    if(i>=0)S.evs[i]=e;else S.evs.push(e);
+    save();closeModal();renderAll();toast('保存しました');
+  };
+}
+
+$('btnAddWeekly').onclick=function(){
+  var h='<h2 style="margin-top:0;color:var(--navy)">毎週の練習をまとめて追加</h2>'+
+  '<label class="f">曜日</label><div>'+WD.map(function(w,i){return '<label class="chk"><input type="checkbox" class="wW" value="'+i+'"'+(i===6||i===0?' checked':'')+'>'+w+'</label>';}).join('')+'</div>'+
+  '<div class="grid2"><div><label class="f">はじめの日</label><input type="date" id="wFrom" value="'+todayStr()+'"></div><div><label class="f">おわりの日</label><input type="date" id="wTo" value="'+ymd(new Date(Date.now()+27*864e5))+'"></div></div>'+
+  '<label class="f">時間（任意）</label><input type="text" id="wTime" placeholder="例：9:00〜12:00">'+
+  '<label class="f">お茶当番の人数</label><input type="number" id="wTea" min="0" value="2">'+
+  '<label class="f">配車の台数（練習で不要なら0）</label><input type="number" id="wCars" min="0" value="0">'+
+  '<div class="row" style="margin-top:14px"><button class="btn" id="wSave">追加する</button><button class="btn sub" id="wCancel">やめる</button></div>';
+  openModal(h);
+  $('wCancel').onclick=closeModal;
+  $('wSave').onclick=function(){
+    var ws=Array.prototype.filter.call(document.querySelectorAll('.wW'),function(x){return x.checked;}).map(function(x){return +x.value;});
+    var a=$('wFrom').value,b=$('wTo').value;if(!ws.length||!a||!b||a>b){toast('曜日と期間を確かめてください');return;}
+    var d=pd(a),end=pd(b),n=0;
+    while(d<=end&&n<200){
+      if(ws.indexOf(d.getDay())>=0){var ds=ymd(d);
+        if(!S.evs.some(function(x){return x.date===ds&&x.type==='練習';})){S.evs.push({id:uid(),date:ds,time:$('wTime').value.trim(),type:'練習',title:'',place:'',teaN:Math.max(0,+$('wTea').value||0),kids:0,carN:Math.max(0,+$('wCars').value||0),tea:[],car:[]});n++;}}
+      d.setDate(d.getDate()+1);
+    }
+    save();closeModal();renderAll();toast(n+'件の練習を追加しました');
+  };
+};
+
+/* ---------- 回数 ---------- */
+function renderCount(){
+  var c=counts(null),fs=S.fams.slice();
+  $('setEnsei').checked=!!S.set.ensei2;$('setPastOnly').checked=!!S.set.pastOnly;$('setTeam').value=S.set.team||'';
+  $('weightNote').textContent=S.set.ensei2?'遠征は2回分で数えています。':'';
+  if(!fs.length){$('bars').innerHTML='<p class="note">家庭をとうろくすると表示されます。</p>';$('countTable').innerHTML='';$('countSummary').textContent='';return;}
+  fs.sort(function(a,b){return c[b.id].total-c[a.id].total;});
+  var max=Math.max.apply(null,fs.map(function(f){return c[f.id].total;}))||1;
+  var tots=fs.map(function(f){return c[f.id].total;}),mx=Math.max.apply(null,tots),mn=Math.min.apply(null,tots);
+  var avg=tots.reduce(function(s,x){return s+x;},0)/tots.length;
+  $('bars').innerHTML=fs.map(function(f){var x=c[f.id];
+    return '<div class="b"><div class="nm">'+esc(f.name)+'</div><div class="track">'+
+      '<div class="seg" style="width:'+(x.base/max*100)+'%;background:#b9b0a0"></div>'+
+      '<div class="seg" style="width:'+(x.tea/max*100)+'%;background:var(--tea)"></div>'+
+      '<div class="seg" style="width:'+(x.car/max*100)+'%;background:var(--car)"></div></div><div class="num">'+x.total+'</div></div>';}).join('');
+  $('countSummary').textContent='いちばん多い '+mx+'回 ／ いちばん少ない '+mn+'回 ／ 差 '+(mx-mn)+'回 ／ 平均 '+(Math.round(avg*10)/10)+'回'+(mx-mn<=1?'　→ ほぼ公平です':'');
+  var h='<tr><th>家庭</th><th>車</th><th>お茶</th><th>配車</th><th>前の回数</th><th>合計</th><th>最後の当番</th></tr>';
+  fs.forEach(function(f){var x=c[f.id];var cls=(mx!==mn&&x.total===mx)?'hi':(mx!==mn&&x.total===mn)?'lo':'';
+    h+='<tr class="'+cls+'"><td class="l">'+esc(f.name)+'</td><td>'+(f.car?f.seats+'人':'なし')+'</td><td>'+x.tea+'</td><td>'+x.car+'</td><td>'+x.base+'</td><td><b>'+x.total+'</b></td><td>'+(x.last?md(x.last):'―')+'</td></tr>';});
+  $('countTable').innerHTML=h;
+}
+$('setEnsei').onchange=function(){S.set.ensei2=this.checked;save();renderAll();};
+$('setPastOnly').onchange=function(){S.set.pastOnly=this.checked;save();renderAll();};
+$('setTeam').oninput=function(){S.set.team=this.value;save();renderShare();};
+
+/* ---------- 共有 ---------- */
+function rangeEvs(){
+  sortEvs();
+  var r=$('shareRange').value,t=todayStr(),now=new Date(),a='0000',b='9999';
+  if(r==='next4'){a=t;b=ymd(new Date(now.getTime()+27*864e5));}
+  else if(r==='month'){a=ymd(new Date(now.getFullYear(),now.getMonth(),1));b=ymd(new Date(now.getFullYear(),now.getMonth()+1,0));}
+  else if(r==='nextmonth'){a=ymd(new Date(now.getFullYear(),now.getMonth()+1,1));b=ymd(new Date(now.getFullYear(),now.getMonth()+2,0));}
+  else if(r==='future'){a=t;}
+  return S.evs.filter(function(e){return e.date>=a&&e.date<=b;});
+}
+function names(ids,withSeats){return ids.filter(Boolean).map(function(id){var f=fam(id);return f?(f.name+(withSeats&&f.seats?'('+f.seats+'人)':'')):'';}).filter(Boolean).join('、');}
+function shareText(){
+  var evs=rangeEvs(),L=[];
+  L.push('【当番表】'+(S.set.team||''));
+  if(!evs.length)L.push('（この期間の予定はありません）');
+  evs.forEach(function(e){
+    L.push('');
+    L.push('■'+md(e.date)+(e.time?' '+e.time:'')+' '+e.type+(e.title?'「'+e.title+'」':'')+(e.place?' @'+e.place:''));
+    if(e.teaN||e.tea.length)L.push('　お茶：'+(names(e.tea)||'未定'));
+    if(e.kids||e.carN||e.car.length)L.push('　配車：'+(names(e.car,true)||'未定')+(e.kids?'（子ども'+e.kids+'人）':''));
+  });
+  if($('shareCount').checked&&S.fams.length){
+    var c=counts(null);L.push('');L.push('— これまでの回数 —');
+    S.fams.slice().sort(function(a,b){return c[a.id].total-c[b.id].total;}).forEach(function(f){L.push(f.name+' '+c[f.id].total+'回');});
+  }
+  L.push('');L.push('※回数の少ないご家庭から自動でわりふっています。都合が悪い日は係まで。');
+  return L.join('\n');
+}
+function renderShare(){$('shareText').value=shareText();}
+$('shareRange').onchange=renderShare;$('shareCount').onchange=renderShare;
+$('btnCopy').onclick=function(){
+  var txt=$('shareText').value;
+  function fb(){var ta=$('shareText');ta.removeAttribute('readonly');ta.select();try{document.execCommand('copy');toast('コピーしました');}catch(e){toast('長押しでコピーしてください');}ta.setAttribute('readonly','');}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(function(){toast('コピーしました。LINEに貼りつけてください');},fb);}else fb();
+};
+$('btnPrint').onclick=function(){
+  var evs=rangeEvs(),c=counts(null);
+  var h='<h1>当番表 '+esc(S.set.team||'')+'</h1><p>作成日 '+md(todayStr())+'　※回数の少ない家庭から自動でわりふっています</p>'+
+    '<table><tr><th style="width:18%">日付</th><th style="width:22%">予定</th><th>お茶</th><th>配車</th></tr>';
+  evs.forEach(function(e){h+='<tr><td>'+md(e.date)+(e.time?'<br>'+esc(e.time):'')+'</td><td class="l">'+esc(e.type)+(e.title?'<br>'+esc(e.title):'')+(e.place?'<br>'+esc(e.place):'')+'</td><td class="l">'+esc(names(e.tea)||((e.teaN)?'未定':'―'))+'</td><td class="l">'+esc(names(e.car,true)||((e.kids||e.carN)?'未定':'―'))+'</td></tr>';});
+  if(!evs.length)h+='<tr><td colspan="4">この期間の予定はありません</td></tr>';
+  h+='</table>';
+  if(S.fams.length){h+='<h1 style="font-size:13pt;margin-top:6mm">これまでの回数</h1><table><tr><th>家庭</th><th>お茶</th><th>配車</th><th>合計</th></tr>';
+    S.fams.forEach(function(f){var x=c[f.id];h+='<tr><td class="l">'+esc(f.name)+'</td><td>'+x.tea+'</td><td>'+x.car+'</td><td>'+x.total+'</td></tr>';});h+='</table>';}
+  $('printArea').innerHTML=h;
+  setTimeout(function(){window.print();},50);
+};
+$('btnExport').onclick=function(){
+  var data=JSON.stringify({app:'当番公平わりふり',ver:1,saved:new Date().toISOString(),data:S},null,1);
+  var blob=new Blob([data],{type:'application/json'});var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='当番データ_'+todayStr()+'.json';document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);toast('書き出しました');
+};
+$('fileImport').onchange=function(){
+  var file=this.files[0];if(!file)return;var r=new FileReader();
+  r.onload=function(){
+    try{var j=JSON.parse(r.result);var d=j.data||j;if(!Array.isArray(d.fams)||!Array.isArray(d.evs))throw 0;
+      if(S.fams.length&&d.set&&d.set.team&&d.set.team!==S.set.team)showPro('2つ目のチーム（「'+d.set.team+'」）を置きかえずに並べて使うこと','btnExport');
+      if(!confirm('家庭'+d.fams.length+'件・予定'+d.evs.length+'件を読みこみます。いまのデータは置きかわります。よろしいですか？'))return;
+      S=norm(d);save();renderAll();toast('読みこみました');}
+    catch(e){alert('このファイルは読みこめませんでした。');}
+  };
+  r.readAsText(file);this.value='';
+};
+$('btnReset').onclick=function(){if(!confirm('この端末の家庭・予定・当番をすべて消します。元にもどせません。よろしいですか？'))return;S=blank();save();renderAll();toast('消しました');showPro('年度がわりに回数を「持ち越す」か「リセット」かを選ぶこと','btnReset');};
+
+/* ---------- 見本 ---------- */
+$('btnSample').onclick=function(){
+  if(S.fams.length&&!confirm('見本の家庭と予定を追加します。よろしいですか？'))return;
+  var F=[['たろう',1,5,[],1],['はると',1,4,[3],1],['ゆい',0,0,[6],1],['そうた',1,7,[],1],['ひなた',0,0,[],1],['けんと',1,4,[0],1],['りく',1,4,[],0],['めい',0,0,[],1]];
+  F.forEach(function(x){S.fams.push({id:uid(),name:x[0],car:!!x[1],seats:x[2],canTea:!!x[4],canCar:!!x[1],ngW:x[3],ngD:[],base:0,memo:''});});
+  var d=new Date();d.setDate(d.getDate()+((6-d.getDay()+7)%7||7));
+  for(var i=0;i<4;i++){
+    var sat=ymd(d);S.evs.push({id:uid(),date:sat,time:'9:00〜12:00',type:'練習',title:'',place:'小学校グラウンド',teaN:2,kids:0,carN:0,tea:[],car:[]});
+    var sun=new Date(d);sun.setDate(sun.getDate()+1);
+    if(i===1)S.evs.push({id:uid(),date:ymd(sun),time:'8:00集合',type:'試合',title:'市大会1回戦',place:'市民球場',teaN:2,kids:12,carN:0,tea:[],car:[]});
+    if(i===3)S.evs.push({id:uid(),date:ymd(sun),time:'7:00集合',type:'遠征',title:'交流戦',place:'となり町運動公園',teaN:1,kids:14,carN:0,tea:[],car:[]});
+    d.setDate(d.getDate()+7);
+  }
+  if(!S.set.team)S.set.team='みなとスポーツ少年団';
+  save();renderAll();toast('見本を入れました。「当番表」でわりふってみてください');
+};
+
+/* ---------- Pro版の案内（無料版の限界に当たったときだけ、小さく出す） ---------- */
+function showPro(what,anchorId,before){
+  var old=document.getElementById('proBand');if(old)old.remove();
+  var a=$(anchorId);if(!a)return;
+  var d=document.createElement('div');d.id='proBand';d.className='proband';
+  d.innerHTML='<span>💡 '+esc(what)+'は、Pro版でできます。</span><a href="'+esc(PRO_URL)+'" target="_blank" rel="noopener">Pro版を見る →</a><button class="x" type="button" aria-label="閉じる">✕</button>';
+  d.querySelector('.x').onclick=function(){d.remove();};
+  if(before)a.parentNode.insertBefore(d,a);else a.parentNode.insertBefore(d,a.nextSibling);
+}
+$('proTeam').onclick=function(){showPro('低学年／高学年・兄弟チームなど、複数チームの切り替え','proTeam');};
+$('proRole').onclick=function(){showPro('審判・グラウンド整備・受付・写真係など、当番の種類を自由に追加（人数と重みも設定）','proRole');};
+$('proYear').onclick=function(){showPro('年度を締めて回数を持ち越す／リセットする・次の係への引き継ぎメモづくり','proYear');};
+
+/* ---------- 共通 ---------- */
+function openModal(h){$('sheet').innerHTML=h;$('modal').classList.add('show');}
+function closeModal(){$('modal').classList.remove('show');$('sheet').innerHTML='';}
+$('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+$('btnAssign').onclick=function(){assign(false);};
+$('btnRedo').onclick=function(){if(confirm('今日以降の当番をいったん全部消して、公平にわりふり直します。手で入れた人も消えます。よろしいですか？'))assign(true);};
+$('showPast').onchange=renderTable;
+$('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});
+  ['table','fam','ev','count','share'].forEach(function(t){$('t-'+t).classList.toggle('hidden',t!==b.dataset.t);});
+  try{localStorage.setItem('mw_sports_01_tab',b.dataset.t);}catch(err){}
+  renderAll();window.scrollTo(0,0);
+});
+function renderAll(){renderTable();renderFams();renderEvs();renderCount();renderShare();}
+renderAll();
+try{var lt=localStorage.getItem('mw_sports_01_tab');if(lt){var tb=document.querySelector('#tabs [data-t="'+lt+'"]');if(tb&&lt!=='table')tb.click();}}catch(e){}
+})();
+</script>
+</body>
+</html>

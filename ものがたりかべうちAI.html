@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ものがたり かべうちAI</title>
+<style>
+  :root{
+    --bg:#f2f0f7; --card:#fffefb; --ink:#2d2a36; --sub:#6c6578;
+    --line:#e2ddea; --accent:#7a62c9; --accent-d:#5d47a8;
+    --amber:#f5e9cf; --amber-b:#e6d2a3; --memo:#eef6ee; --memo-b:#c9dfc8;
+    --good:#5c8a5a; --sky:#4f80a8;
+    --shadow:0 6px 22px rgba(60,45,90,.10);
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.7;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:16px 16px 90px}
+  header.app{display:flex; align-items:center; gap:10px; padding:14px 4px 10px}
+  header.app .logo{font-size:1.5rem}
+  header.app h1{font-size:1.15rem; margin:0; letter-spacing:.02em}
+  header.app .sub{font-size:.72rem; color:var(--sub); margin-top:2px}
+
+  .roles{display:flex; gap:8px; margin:6px 0 18px; background:#e6e1ef; padding:5px; border-radius:999px}
+  .roles button{
+    flex:1; border:0; background:transparent; padding:10px 8px; border-radius:999px;
+    font-family:inherit; font-size:.92rem; font-weight:700; color:var(--sub); cursor:pointer; transition:.15s;
+  }
+  .roles button.on{background:var(--card); color:var(--ink); box-shadow:var(--shadow)}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+    padding:18px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .card h2{font-size:1rem; margin:0 0 4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .card .hint{font-size:.78rem; color:var(--sub); margin:0 0 14px}
+  .card h2 .badge{font-size:.66rem; background:var(--accent); color:#fff; padding:2px 8px; border-radius:999px; font-weight:700}
+
+  label.field{display:block; font-size:.82rem; font-weight:700; color:var(--sub); margin:14px 0 6px}
+  input[type=text], textarea, select{
+    width:100%; font-family:inherit; font-size:1rem; color:var(--ink);
+    background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:11px 12px;
+  }
+  textarea{resize:vertical; line-height:1.8}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--accent)}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{border:1.5px solid var(--line); background:#fff; border-radius:999px; padding:7px 13px;
+    font-size:.85rem; cursor:pointer; font-family:inherit; color:var(--ink); transition:.12s;}
+  .chip.on{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700}
+
+  input[type=range]{width:100%; accent-color:var(--accent)}
+  .rangewrap{display:flex; justify-content:space-between; font-size:.72rem; color:var(--sub)}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:0; background:var(--accent); color:#fff; font-family:inherit; font-weight:800;
+    font-size:1.02rem; padding:14px 20px; border-radius:14px; cursor:pointer; width:100%;
+    box-shadow:0 4px 14px rgba(122,98,201,.35); transition:.12s;}
+  .btn:hover{background:var(--accent-d)}
+  .btn:disabled{opacity:.5; cursor:default; box-shadow:none}
+  .btn.ghost{background:#fff; color:var(--ink); border:1.5px solid var(--line); box-shadow:none}
+  .btn.small{width:auto; padding:9px 14px; font-size:.85rem}
+  .btn.sub2{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none;margin-top:10px}
+  .toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+  /* ---- 先生：編集リスト ---- */
+  .blk{border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px; background:#fdfcff}
+  .blk-head{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+  .blk-type{font-size:.72rem; font-weight:800; color:#fff; background:var(--accent); padding:3px 9px; border-radius:999px; white-space:nowrap}
+  .blk-head .sp{flex:1}
+  .blk-head button{border:0;background:#eeeaf5;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:.9rem;color:var(--sub)}
+  .blk-head button:hover{background:#e2dcee}
+  .blk label.mini{font-size:.72rem;color:var(--sub);font-weight:700;margin:8px 0 4px;display:block}
+  .char-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .char-row input{flex:1}
+  .del{border:0; background:#eeeaf5; width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1rem; color:var(--sub); flex:none}
+  .addbtn{margin-top:8px; border:1.5px dashed var(--line); background:transparent; width:100%; padding:10px; border-radius:12px; cursor:pointer; font-family:inherit; color:var(--sub); font-weight:700}
+  .note{font-size:.74rem; color:var(--sub); background:#f4f1f8; border-radius:10px; padding:10px 12px; margin-top:10px}
+
+  .aims{display:flex; flex-direction:column; gap:8px; margin-top:4px}
+  .aim{display:flex; gap:8px; align-items:center}
+  .aim input{flex:1}
+  .preset{background:#f4f1f8; border:1px solid var(--line); border-radius:12px; padding:12px; margin:0 0 12px}
+  .preset-head{font-size:.8rem; font-weight:800; color:var(--accent-d); margin-bottom:9px}
+  .preset-head span{font-weight:700; color:var(--sub); font-size:.74rem; margin-left:6px}
+  .preset .chip{font-size:.8rem; padding:6px 12px; text-align:left; line-height:1.3}
+  .preset .chip.used{background:var(--accent); border-color:var(--accent); color:#fff}
+  .preset .chip small{display:block; font-size:.66rem; opacity:.75; font-weight:700; margin-top:1px}
+  .preset-note{font-size:.72rem; color:var(--sub); margin-top:9px}
+
+  /* ---- こども ---- */
+  .steps{display:flex;gap:6px;margin:4px 0 14px}
+  .steps button{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 6px;font-family:inherit;font-weight:800;font-size:.95rem;color:var(--sub);cursor:pointer}
+  .steps button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .grade-sel{display:flex;gap:4px;background:#ece8f3;padding:4px;border-radius:999px}
+  .grade-sel button{border:0;background:transparent;border-radius:999px;padding:6px 11px;font-family:inherit;font-size:.8rem;font-weight:700;color:var(--sub);cursor:pointer}
+  .grade-sel button.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+
+  .aims-show{display:flex; flex-wrap:wrap; gap:7px; margin:8px 0}
+  .aims-show .head{width:100%;font-size:.76rem;color:var(--sub);font-weight:700}
+  .aims-show .tag{background:#efebf6; color:var(--sub); font-size:.78rem; padding:5px 11px; border-radius:999px}
+  .aims-show .tag b{color:var(--accent-d)}
+  .odai{background:linear-gradient(135deg,#f3eefe,#fdf4ea);border:1px solid #e3d9f5;border-radius:14px;padding:12px 14px;margin-bottom:12px}
+  .odai .lab{font-size:.72rem;color:var(--sub);font-weight:700}
+  .odai .t{font-size:1.05rem;font-weight:800;color:var(--accent-d)}
+  .odai .d{font-size:.85rem;color:var(--ink);margin-top:2px;white-space:pre-wrap}
+
+  .mihon{background:#fff8ec;border:1px solid #f0dcbf;border-radius:14px;padding:14px;margin-bottom:14px}
+  .mihon summary{cursor:pointer;font-weight:800;color:#b4692f;font-size:.95rem;list-style:none}
+  .mihon summary::-webkit-details-marker{display:none}
+  .mihon summary::before{content:"▶ ";font-size:.8rem}
+  .mihon[open] summary::before{content:"▼ "}
+  .mihon .m-body{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+  .m-lab{font-size:.74rem;color:var(--sub);font-weight:700;margin-bottom:4px}
+  .m-box{background:var(--amber);border:1px solid var(--amber-b);border-radius:8px;padding:9px 11px;font-size:.92rem;white-space:pre-wrap;color:#4a3f2c}
+
+  .chars{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;background:#f7f5fb;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:16px}
+  .chars .c-lab{font-size:.76rem;color:var(--sub);font-weight:700;margin-bottom:4px}
+  .chars input{background:#fff;padding:9px 10px}
+  .chars-head{grid-column:1/-1;font-weight:800;font-size:.9rem}
+
+  .part{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;background:#fff;position:relative}
+  .part .p-num{display:inline-block;background:var(--accent);color:#fff;font-weight:800;font-size:.8rem;border-radius:999px;padding:3px 11px}
+  .part .p-q{font-size:.86rem;color:var(--sub);margin:6px 0 8px}
+  .part textarea{background:var(--amber);border-color:var(--amber-b)}
+  .part textarea.memo{background:var(--memo);border-color:var(--memo-b)}
+  .part textarea::placeholder{color:#a99c80}
+  .part .p-memo{font-size:.82rem;background:var(--memo);border:1px dashed var(--memo-b);border-radius:8px;padding:6px 10px;margin:6px 0 8px;color:#3f5a3e;white-space:pre-wrap}
+  .flowline{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:.78rem;color:var(--sub);margin:-4px 0 12px}
+  .flowline span.f{background:#efebf6;border-radius:999px;padding:3px 10px;font-weight:700}
+  .count{font-size:.74rem;color:var(--sub);text-align:right;margin-top:4px}
+
+  .fb{display:none}
+  .fb.show{display:block; animation:rise .3s ease}
+  @keyframes rise{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .fb .praise{background:#eef4ec; border-left:4px solid var(--good); padding:12px 14px; border-radius:0 12px 12px 0; margin-bottom:12px}
+  .fb .block{margin:14px 0}
+  .fb .block h3{font-size:.9rem; margin:0 0 8px; display:flex; align-items:center; gap:7px}
+  .fb .advice{background:#f6f2fc; border:1px solid #e3daf3; border-radius:12px; padding:12px 14px; margin-bottom:9px}
+  .fb .advice .aim-label{font-size:.72rem; color:var(--accent-d); font-weight:800; display:block; margin-bottom:3px}
+  .fb .q{background:#fffaf0;border:1px solid #f0dfbd;border-radius:12px;padding:10px 14px;margin-bottom:8px}
+  .fb .next{background:#eef2f6; border-left:4px solid var(--sky); padding:12px 14px; border-radius:0 12px 12px 0}
+  .fb ruby rt{font-size:.55em;color:var(--sub);font-weight:400}
+  .loading{display:none; text-align:center; padding:24px; color:var(--sub)}
+  .loading.show{display:block}
+  .dot{display:inline-block; animation:blink 1.2s infinite}
+  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.2}30%{opacity:1}}
+
+  .showteacher{background:linear-gradient(135deg,#f1ebff,#ffe9d6);border:2px solid #d6c6f2;border-radius:14px;padding:16px;text-align:center;margin-bottom:14px;animation:pop .4s ease}
+  .showteacher .big{font-size:1.15rem;font-weight:800;color:var(--accent-d)}
+  .showteacher .sub{font-size:.8rem;color:var(--sub);margin-top:4px}
+  .showteacher .btn{margin-top:10px}
+  @keyframes pop{0%{transform:scale(.9);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+
+  /* 原稿用紙（縦書き）モーダル */
+  .genko-modal{position:fixed;inset:0;background:rgba(35,28,50,.55);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+  .genko-modal.show{display:flex}
+  .genko-card{background:var(--card);border-radius:16px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
+  .genko-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .genko-head h3{margin:0;font-size:1rem}
+  .genko-head .x{border:0;background:#eeeaf5;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:1rem;color:var(--sub)}
+  .genko-scroll{overflow:auto;padding:18px;background:#fbfaf5}
+  .genko-grid{display:flex;flex-direction:row-reverse;justify-content:flex-start;width:max-content;margin:0 auto}
+  .genko-col{display:flex;flex-direction:column}
+  .genko-cell{width:30px;height:30px;border:.5px solid #d8ceb8;display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;color:#3a3226;background:#fffdf7}
+  .genko-cell.blank{color:transparent}
+  .genko-cell.hang{flex-direction:column;font-size:13px;line-height:1.02}
+  .genko-cell.hang span{display:block}
+  @media print{
+    body>*:not(#genkoModal){display:none !important}
+    #genkoModal{position:static;display:block !important;background:#fff;padding:0}
+    #genkoModal .genko-card{box-shadow:none;max-height:none;border-radius:0}
+    #genkoModal .genko-head{display:none}
+  }
+  .hidden{display:none !important}
+  .flash{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:11px 20px; border-radius:999px; font-size:.86rem; opacity:0; transition:.25s; pointer-events:none; z-index:9}
+  .flash.show{opacity:1; transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <div class="logo">📚</div>
+    <div>
+      <h1>ものがたり かべうちAI</h1>
+      <div class="sub">組み立てて、書いて、見てもらう。先生の「ねらい」にそって物語づくりを伴走</div>
+    </div>
+  </header>
+
+  <div class="roles">
+    <button id="roleChild" class="on" onclick="setRole('child')">🧒 こどもがつかう</button>
+    <button id="roleTeacher" onclick="setRole('teacher')">🍎 先生がつくる</button>
+  </div>
+
+  <!-- ================= 先生モード ================= -->
+  <section id="teacherView" class="hidden">
+    <div class="card">
+      <h2>🍎 先生のせってい<span class="badge">先生設定</span></h2>
+      <p class="hint">ここで決めたお題・組み立て・ねらいが、そのまま子どもの画面とAIの助言の軸になります。</p>
+
+      <label class="field">先生の名前（〇〇先生 と表示されます）</label>
+      <input type="text" id="teacherName" placeholder="例：みなと">
+
+      <label class="field">お題（物語のテーマ）</label>
+      <input type="text" id="odaiTitle" placeholder="例：ふしぎな とびら">
+      <label class="field">お題の説明（子どもに見せる）</label>
+      <textarea id="odaiDesc" rows="2" placeholder="例：とびらを開けると、そこは…？ あなたの考えた ふしぎな世界の物語を書こう。"></textarea>
+
+      <label class="field">はじめに表示する学年（子どもは画面で切りかえられます）</label>
+      <div class="chips" id="gradeChips">
+        <button class="chip" data-g="low">低学年 1・2年</button>
+        <button class="chip on" data-g="mid">中学年 3・4年</button>
+        <button class="chip" data-g="high">高学年 5・6年</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧑‍🎨 人物・せっていカード</h2>
+      <p class="hint">組み立ての前に子どもが決める項目です（全学年共通）。右の欄は先生の見本です。</p>
+      <div id="charList"></div>
+      <button class="addbtn" onclick="addCharRow()">＋ 項目を追加</button>
+    </div>
+
+    <div class="card">
+      <h2>🧩 組み立ての型 <span class="badge" id="structGradeBadge">中学年</span></h2>
+      <p class="hint">上でえらんだ学年の型を編集しています。学年ごとに別の型を持てます（低＝はじめ・なか・おわり／中＝4場面／高＝起承転結 が初期値）。</p>
+      <div id="partList"></div>
+      <button class="addbtn" onclick="addPart()">＋ 場面を追加</button>
+      <div class="toolbar" style="margin-top:8px">
+        <button class="btn small ghost" onclick="resetStruct()">この学年の型を初期値にもどす</button>
+      </div>
+      <div class="note">「問いかけ」は子どもが組み立てるときのヒントとして表示されます。「見本」を書くと、子どもの画面に「〇〇先生の見本」として出ます。</div>
+    </div>
+
+    <div class="card">
+      <h2>🎯 今回みてほしい「観点・ねらい」</h2>
+      <p class="hint">AIはこれを中心に助言します。</p>
+      <div class="preset">
+        <div class="preset-head">📚 学習指導要領〔B 書くこと〕・物語をつくる活動から<span id="presetGradeLabel"></span></div>
+        <div class="chips" id="aimPresets"></div>
+        <div class="preset-note">タップで観点に追加／もう一度で外す。<b>〈 〉</b>内は指導事項（ア題材／イ構成／ウ記述／エ推敲）です。</div>
+      </div>
+      <div class="aims" id="aimList"></div>
+      <button class="addbtn" onclick="addAim('')">＋ 観点を追加（自由入力）</button>
+    </div>
+
+    <div class="card">
+      <h2>🗣 助言のトーンと ひとこと</h2>
+      <label class="field">助言のトーン</label>
+      <input type="range" id="tone" min="0" max="2" step="1" value="1">
+      <div class="rangewrap"><span>とにかく優しく褒める</span><span>バランス</span><span>しっかり直す</span></div>
+
+      <label class="field">先生から子どもへのひとこと（AIの語り口に反映）</label>
+      <input type="text" id="teacherVoice" placeholder="例：自由に想像して、自分だけの世界をつくろう！">
+
+      <label class="field">
+        <input type="checkbox" id="showAims" checked style="width:auto;vertical-align:middle;margin-right:6px">
+        子どもの画面に「今回のねらい」を表示する
+      </label>
+      <label class="field">
+        <input type="checkbox" id="showMihon" checked style="width:auto;vertical-align:middle;margin-right:6px">
+        子どもの画面に「先生の見本」を表示する
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>💾 保存 / 子どもへの配布</h2>
+      <p class="hint">設定はこの端末にだけ保存されます。子どもの端末には「配布用リンク」を送ってください（開くだけで同じ設定になります）。</p>
+      <div class="toolbar">
+        <button class="btn small" onclick="saveSettings()">この端末に保存</button>
+        <button class="btn small ghost" onclick="makeCode()">配布用リンクを発行</button>
+        <button class="btn small ghost" onclick="loadCodePrompt()">あいことばで読み込む</button>
+      </div>
+      <div id="codeBox" class="hidden" style="margin-top:12px">
+        <label class="field">🔗 配布用リンク（これを子どもに送る。開くだけで先生の設定になります）</label>
+        <textarea id="linkOut" rows="3" readonly onclick="this.select()"></textarea>
+        <div class="toolbar" style="margin-top:6px"><button class="btn small" onclick="copyLink()">リンクをコピー</button></div>
+        <label class="field">あいことば（リンクが使えないとき用）</label>
+        <textarea id="codeOut" rows="3" readonly onclick="this.select()"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= こどもモード ================= -->
+  <section id="childView">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <h2 id="childHead">📚 ものがたりを つくろう</h2>
+        <div class="grade-sel" id="childGrade">
+          <button data-g="low">1・2年</button>
+          <button data-g="mid">3・4年</button>
+          <button data-g="high">5・6年</button>
+        </div>
+      </div>
+
+      <div id="odaiShow"></div>
+      <div id="aimsShow" class="aims-show"></div>
+
+      <div class="steps">
+        <button id="step1Btn" class="on" onclick="setStep(1)">① くみたてる</button>
+        <button id="step2Btn" onclick="setStep(2)">② かく</button>
+      </div>
+
+      <!-- ① 組み立て -->
+      <div id="step1">
+        <p class="hint" id="hint1"></p>
+        <div id="mihonWrap1"></div>
+        <div class="chars" id="charsBox"></div>
+        <div class="flowline" id="flowline"></div>
+        <div id="memoParts"></div>
+        <button class="btn" id="askBtn1" onclick="ask('kumitate')">🔍 くみたてを みてもらう</button>
+      </div>
+
+      <!-- ② 書く -->
+      <div id="step2" class="hidden">
+        <p class="hint" id="hint2"></p>
+        <div id="mihonWrap2"></div>
+        <label class="field" id="titleLab">おはなしの だいめい</label>
+        <input type="text" id="storyTitle" placeholder="だいめい" oninput="saveDraft()">
+        <div id="storyParts" style="margin-top:14px"></div>
+        <div class="count" id="totalCount"></div>
+        <button class="btn" id="askBtn2" onclick="ask('story')" style="margin-top:12px">🔍 ものがたりを みてもらう</button>
+        <button class="btn sub2" onclick="openGenko()">📄 げんこう用紙で見る（たてがき）</button>
+      </div>
+      <div class="toolbar" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn small ghost" onclick="clearDraft()">🗑 あたらしく書く（けす）</button>
+      </div>
+    </div>
+
+    <div class="loading card" id="loading">
+      <span>よんでいます</span><span class="dot">・</span><span class="dot">・</span><span class="dot">・</span>
+    </div>
+
+    <div class="card fb" id="feedback">
+      <h2 id="fbTitle">💬 先生AIからの おへんじ</h2>
+      <div id="fbBody"></div>
+      <div class="note">※ これはAIのアドバイスです。さいごは自分で考えて、なおすかどうか決めよう。</div>
+    </div>
+  </section>
+</div>
+
+<div class="genko-modal" id="genkoModal" onclick="if(event.target===this)closeGenko()">
+  <div class="genko-card">
+    <div class="genko-head">
+      <h3 id="genkoTitle">📄 げんこう用紙</h3>
+      <div style="display:flex;gap:8px">
+        <button class="x" title="いんさつ" onclick="window.print()">🖨</button>
+        <button class="x" title="とじる" onclick="closeGenko()">✕</button>
+      </div>
+    </div>
+    <div class="genko-scroll"><div class="genko-grid" id="genkoGrid"></div></div>
+  </div>
+</div>
+<div class="flash" id="flash"></div>
+
+<script>
+/* ===================================================================
+   既定の型（学年別）
+=================================================================== */
+const KEY = "monogatari_kabeuchi_v1";
+const DRAFT_KEY = "monogatari_draft_v1";
+let uid = 1;
+const P = (label,q,example)=>({id:uid++, label, q, example});
+function defaultStructures(){
+  return {
+    low:[
+      P("はじめ","だれが、どこに いたかな？","うさぎの ミミは、もりの 小さな いえに すんでいました。"),
+      P("なか","どんな ことが おきたかな？ どう したかな？","ある日、ミミは ひかる とびらを 見つけました。あけると、そこは おかしの くにでした。"),
+      P("おわり","さいごは どう なったかな？ どんな きもち？","ミミは おみやげの クッキーを もって かえりました。「また いきたいな。」"),
+    ],
+    mid:[
+      P("はじめ（人物と場所）","主人公はだれ？ どこで、どんなふうに くらしている？","ゆうたは、おばあちゃんの家の古い物おきが気になっていました。"),
+      P("できごと（事件がおこる）","ある日、どんなことが おきた？","ある日、物おきのおくに小さな青いとびらを見つけました。あけると、海の中の町につながっていました。"),
+      P("山場（いちばん もりあがる）","主人公は どうやって のりこえた？ 気持ちは どう かわった？","帰り道がわからなくなり、ゆうたは泣きそうになります。でも、町の魚たちといっしょに、光る貝の道をさがしました。"),
+      P("おわり（そのあと）","さいごは どうなった？ 主人公は どう かわった？","家にもどったゆうたは、こわがりだった自分が少しだけ強くなった気がしました。"),
+    ],
+    high:[
+      P("起（はじまり）","登場人物・時・場所は？ 読み手を引きこむ書き出しは？","その夏、町の図書館には、閉館後にだけ開く本だながあった。"),
+      P("承（出来事が動き出す）","何が起こり、主人公はどう動く？","本の好きな美月は、そのたなの一冊を開き、物語の中へすいこまれてしまう。"),
+      P("転（思いがけない変化）","予想外の出来事は？ 主人公の心はどう揺れる？","物語の結末が書かれていないと知った美月は、自分で続きを書かなければ帰れないと気づく。"),
+      P("結（結末）","どう決着する？ 主人公は何を得て、どう変わった？","ペンを取った美月は、はじめて「書く側」に立つ楽しさを知り、現実の世界へもどってきた。"),
+    ],
+  };
+}
+function defaultSettings(){
+  return {
+    teacherName:"みなと", grade:"mid",
+    odaiTitle:"ふしぎな とびら",
+    odaiDesc:"とびらを開けると、そこは…？ あなたが考えた ふしぎな世界の物語を書こう。",
+    chars:[
+      {key:"name",  label:"主人公の なまえ", example:"ゆうた"},
+      {key:"trait", label:"どんな子？（せいかく・とくちょう）", example:"こわがりだけど、やさしい"},
+      {key:"place", label:"ばしょ・とき", example:"おばあちゃんの家の物おき・夏休み"},
+      {key:"mono",  label:"とくべつな もの・ふしぎ", example:"青い小さな とびら"},
+    ],
+    structures: defaultStructures(),
+    aims:["「はじめ・できごと・山場・おわり」の 組み立てが あるか","会話文や 気持ちを表す 言葉で 人物を えがけているか"],
+    tone:1, teacherVoice:"", showAims:true, showMihon:true
+  };
+}
+let settings = defaultSettings();
+let role = "child";
+let grade = "mid";        // 子ども画面の学年
+let step = 1;
+let draft = {chars:{}, title:"", low:{memo:{},story:{}}, mid:{memo:{},story:{}}, high:{memo:{},story:{}}};
+
+/* 学年ごとの画面のことば */
+const UI = {
+  low:{ head:"📚 おはなしを つくろう", s1:"① くみたてる", s2:"② かく",
+    hint1:"だれが でてくる？ どんな おはなし？ まずは みじかく メモしよう。",
+    hint2:"メモを 見ながら、おはなしを 書こう。かいわは 「 」で かこもう。",
+    memoPh:"みじかく メモ", storyPh:"ここに 書こう", title:"おはなしの だいめい",
+    ask1:"くみたてを みてもらう", ask2:"おはなしを みてもらう", chars:"🧑‍🎨 でてくる 人・ばしょ" },
+  mid:{ head:"📚 ものがたりを つくろう", s1:"① 組み立てる", s2:"② 書く",
+    hint1:"人物と場所を決めて、場面ごとに「何が起こるか」をメモしよう。",
+    hint2:"組み立てメモを見ながら、場面ごとに物語を書こう。会話や気持ちの言葉を入れると生き生きするよ。",
+    memoPh:"かんたんにメモ（文でなくてOK）", storyPh:"ここに書こう", title:"物語の題名",
+    ask1:"組み立てを みてもらう", ask2:"物語を みてもらう", chars:"🧑‍🎨 人物・せってい" },
+  high:{ head:"📚 物語を創作しよう", s1:"① 構成する", s2:"② 書く",
+    hint1:"人物設定を決め、起承転結それぞれで起こることを構想メモにしよう。",
+    hint2:"構想メモをもとに書こう。情景描写・会話・心情の変化で、読み手を物語の世界へ引きこもう。",
+    memoPh:"構想メモ", storyPh:"本文", title:"題名",
+    ask1:"構成を 見てもらう", ask2:"物語を 見てもらう", chars:"🧑‍🎨 人物設定" },
+};
+const GRADE_LABEL = {low:"低学年 1・2年", mid:"中学年 3・4年", high:"高学年 5・6年"};
+const GRADE_SHORT = {low:"低学年", mid:"中学年", high:"高学年"};
+const MIN_LEN = {low:100, mid:250, high:400}; // 「先生に見せよう」の目安字数
+
+/* ===================================================================
+   ユーティリティ
+=================================================================== */
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// 「漢字（かな）」の（かな）を、漢字の上のルビに変換（HTMLエスケープ後に実行）
+function rubyify(s){
+  return escapeHtml(s).replace(/([一-龠々〆ヶ]+)（([ぁ-ゖァ-ヶゝゞ゛゜ー]+)）/g,'<ruby>$1<rt>$2</rt></ruby>');
+}
+let flashTimer;
+function flash(msg){
+  const f=document.getElementById('flash'); f.textContent=msg; f.classList.add('show');
+  clearTimeout(flashTimer); flashTimer=setTimeout(()=>f.classList.remove('show'),1800);
+}
+function fixUid(){
+  let mx=0; Object.values(settings.structures).forEach(arr=>arr.forEach(p=>{ if(typeof p.id!=='number')p.id=++mx; mx=Math.max(mx,p.id); }));
+  uid=mx+1;
+}
+
+/* ===================================================================
+   先生：観点
+=================================================================== */
+function addAim(val){
+  const list=document.getElementById('aimList');
+  const row=document.createElement('div'); row.className='aim';
+  row.innerHTML='<input type="text" placeholder="見てほしいポイント"><button class="del" title="消す">✕</button>';
+  row.querySelector('input').value = val||'';
+  row.querySelector('.del').onclick=()=>{ row.remove(); renderAimPresets(); };
+  list.appendChild(row);
+}
+function readAims(){ return [...document.querySelectorAll('#aimList input')].map(i=>i.value.trim()).filter(Boolean); }
+
+/* 学習指導要領〔B 書くこと〕の指導事項＋物語をつくる言語活動 に対応した観点 */
+const AIM_PRESETS = {
+  low:[
+    {t:"そうぞうした ことを たのしく かけているか", r:"ア 題材"},
+    {t:"はじめ・なか・おわりが つながっているか", r:"イ 構成"},
+    {t:"だれが なにを したかが わかるか", r:"ウ 記述"},
+    {t:"「 」で かいわを かけているか", r:"ウ 記述"},
+    {t:"ようすを あらわす ことば（きらきら・ふわふわ）を つかえているか", r:"ウ 記述"},
+    {t:"よみかえして 字や 点（、）丸（。）を なおせるか", r:"エ 推敲"},
+  ],
+  mid:[
+    {t:"登場人物の せいかくや 場面の ようすを 決められているか", r:"ア 題材"},
+    {t:"「はじめ・できごと・山場・おわり」の 組み立てが あるか", r:"イ 構成"},
+    {t:"場面ごとに 段落を 分けて 書けているか", r:"イ 構成"},
+    {t:"会話文や 気持ちを表す 言葉で 人物を えがけているか", r:"ウ 記述"},
+    {t:"山場で 人物の 気持ちが 変わっているか", r:"ウ 記述"},
+    {t:"読み返して 文の つながりを 整えているか", r:"エ 推敲"},
+  ],
+  high:[
+    {t:"起承転結を 意識して 構成できているか", r:"イ 構成"},
+    {t:"「転」に 思いがけない 展開が あるか", r:"イ 構成"},
+    {t:"人物の 心情の変化を 行動や 会話で 表しているか", r:"ウ 記述"},
+    {t:"情景描写や 比喩で 場面を えがけているか", r:"ウ 記述"},
+    {t:"読み手を 引きこむ 書き出し・結末に なっているか", r:"ウ 記述"},
+    {t:"視点（だれの目で語るか）が ぶれていないか", r:"エ 推敲"},
+  ],
+};
+function renderAimPresets(){
+  const g = settings.grade || "mid";
+  document.getElementById('presetGradeLabel').textContent = "／" + (GRADE_LABEL[g]||"");
+  const box = document.getElementById('aimPresets');
+  const current = readAims();
+  box.innerHTML = (AIM_PRESETS[g]||[]).map(p=>{
+    const used = current.includes(p.t);
+    return '<button type="button" class="chip'+(used?' used':'')+'" data-aim="'+escapeHtml(p.t)+'">'
+      + escapeHtml(p.t) + '<small>〈'+escapeHtml(p.r)+'〉</small></button>';
+  }).join('');
+  box.querySelectorAll('.chip').forEach(c=>{
+    c.onclick=()=>{
+      const val=c.dataset.aim;
+      if(readAims().includes(val)){
+        document.querySelectorAll('#aimList input').forEach(i=>{ if(i.value.trim()===val) i.closest('.aim').remove(); });
+      } else {
+        // 空の行があればそこに入れる
+        const empty=[...document.querySelectorAll('#aimList input')].find(i=>!i.value.trim());
+        if(empty) empty.value=val; else addAim(val);
+      }
+      renderAimPresets();
+    };
+  });
+}
+
+/* ===================================================================
+   先生：人物カードの項目
+=================================================================== */
+function addCharRow(c){
+  c=c||{key:'c'+Date.now().toString(36), label:'', example:''};
+  const row=document.createElement('div'); row.className='char-row'; row.dataset.key=c.key;
+  row.innerHTML='<input type="text" class="c-label" placeholder="項目名（例：あいぼう）"><input type="text" class="c-ex" placeholder="見本"><button class="del" title="消す">✕</button>';
+  row.querySelector('.c-label').value=c.label||'';
+  row.querySelector('.c-ex').value=c.example||'';
+  row.querySelector('.del').onclick=()=>row.remove();
+  document.getElementById('charList').appendChild(row);
+}
+function readChars(){
+  return [...document.querySelectorAll('#charList .char-row')].map(r=>({
+    key:r.dataset.key, label:r.querySelector('.c-label').value.trim(), example:r.querySelector('.c-ex').value.trim()
+  })).filter(c=>c.label);
+}
+
+/* ===================================================================
+   先生：組み立ての型（学年別）
+=================================================================== */
+function curParts(){ return settings.structures[settings.grade]; }
+function renderPartEditors(){
+  document.getElementById('structGradeBadge').textContent=GRADE_SHORT[settings.grade];
+  const box=document.getElementById('partList'); box.innerHTML='';
+  curParts().forEach((p,idx)=>{
+    const el=document.createElement('div'); el.className='blk'; el.dataset.id=p.id;
+    el.innerHTML='<div class="blk-head"><span class="blk-type">場面 '+(idx+1)+'</span><span class="sp"></span>'
+      +'<button title="上へ" onclick="movePart('+idx+',-1)">▲</button>'
+      +'<button title="下へ" onclick="movePart('+idx+',1)">▼</button>'
+      +'<button title="消す" onclick="delPart('+idx+')">✕</button></div>'
+      +'<label class="mini">場面の名前</label><input type="text" class="p-label">'
+      +'<label class="mini">問いかけ（子どもへのヒント）</label><input type="text" class="p-q">'
+      +'<label class="mini">🍎 見本</label><textarea class="p-ex" rows="2"></textarea>';
+    el.querySelector('.p-label').value=p.label||'';
+    el.querySelector('.p-q').value=p.q||'';
+    el.querySelector('.p-ex').value=p.example||'';
+    box.appendChild(el);
+  });
+}
+function collectParts(){
+  document.querySelectorAll('#partList .blk').forEach(el=>{
+    const p=curParts().find(x=>x.id==el.dataset.id); if(!p)return;
+    p.label=el.querySelector('.p-label').value;
+    p.q=el.querySelector('.p-q').value;
+    p.example=el.querySelector('.p-ex').value;
+  });
+}
+function addPart(){ collectParts(); curParts().push({id:uid++, label:'', q:'', example:''}); renderPartEditors(); }
+function delPart(idx){ collectParts(); if(curParts().length<=1){flash("場面は1つ以上必要です");return;} curParts().splice(idx,1); renderPartEditors(); }
+function movePart(idx,dir){
+  collectParts(); const a=curParts(), j=idx+dir; if(j<0||j>=a.length)return;
+  [a[idx],a[j]]=[a[j],a[idx]]; renderPartEditors();
+}
+function resetStruct(){
+  if(!confirm(GRADE_SHORT[settings.grade]+"の型を初期値にもどしますか？"))return;
+  settings.structures[settings.grade]=defaultStructures()[settings.grade]; fixUid(); renderPartEditors();
+}
+
+/* ===================================================================
+   先生UI 反映・収集
+=================================================================== */
+function fillTeacherUI(){
+  document.getElementById('teacherName').value=settings.teacherName||'';
+  document.getElementById('odaiTitle').value=settings.odaiTitle||'';
+  document.getElementById('odaiDesc').value=settings.odaiDesc||'';
+  document.querySelectorAll('#gradeChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.g===settings.grade));
+  document.getElementById('charList').innerHTML=''; settings.chars.forEach(addCharRow);
+  const al=document.getElementById('aimList'); al.innerHTML='';
+  (settings.aims.length?settings.aims:['']).forEach(a=>addAim(a));
+  renderAimPresets();
+  document.getElementById('tone').value=settings.tone;
+  document.getElementById('teacherVoice').value=settings.teacherVoice||'';
+  document.getElementById('showAims').checked=settings.showAims;
+  document.getElementById('showMihon').checked=settings.showMihon;
+  renderPartEditors();
+}
+document.getElementById('gradeChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b)return;
+  collectParts();
+  settings.grade=b.dataset.g;
+  document.querySelectorAll('#gradeChips .chip').forEach(c=>c.classList.toggle('on',c===b));
+  renderAimPresets(); renderPartEditors();
+});
+function collectFromTeacherUI(){
+  settings.teacherName=document.getElementById('teacherName').value.trim()||"先生";
+  settings.odaiTitle=document.getElementById('odaiTitle').value.trim();
+  settings.odaiDesc=document.getElementById('odaiDesc').value.trim();
+  settings.chars=readChars();
+  settings.aims=readAims();
+  settings.tone=+document.getElementById('tone').value;
+  settings.teacherVoice=document.getElementById('teacherVoice').value.trim();
+  settings.showAims=document.getElementById('showAims').checked;
+  settings.showMihon=document.getElementById('showMihon').checked;
+  collectParts();
+}
+
+/* ===================================================================
+   保存・あいことば
+=================================================================== */
+function applyLoaded(d){
+  settings=Object.assign(defaultSettings(),d);
+  settings.structures=Object.assign(defaultStructures(),d.structures||{});
+  fixUid();
+}
+function saveSettings(){ collectFromTeacherUI(); localStorage.setItem(KEY,JSON.stringify(settings)); grade=settings.grade; flash("この端末に保存しました"); renderChild(); }
+function makeCode(){
+  collectFromTeacherUI();
+  const code="MONO1-"+btoa(unescape(encodeURIComponent(JSON.stringify(settings))));
+  document.getElementById('codeBox').classList.remove('hidden');
+  document.getElementById('codeOut').value=code;
+  document.getElementById('linkOut').value=location.origin+location.pathname+'?code='+encodeURIComponent(code);
+  localStorage.setItem(KEY,JSON.stringify(settings));
+  flash("配布用リンクを発行しました");
+}
+function copyLink(){
+  const t=document.getElementById('linkOut');
+  (navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>flash("コピーしました"),()=>{t.select();document.execCommand('copy');flash("コピーしました");});
+}
+function loadCode(code){
+  try{
+    const data=JSON.parse(decodeURIComponent(escape(atob(code.trim().replace(/^MONO1-/,'').replace(/ /g,'+')))));
+    applyLoaded(data);
+    localStorage.setItem(KEY,JSON.stringify(settings));
+    grade=settings.grade;
+    fillTeacherUI(); renderChild(); flash("あいことばを読み込みました");
+  }catch(e){ flash("あいことばが正しくありません"); }
+}
+function loadCodePrompt(){ const c=prompt("あいことばを貼りつけてください"); if(c) loadCode(c); }
+function loadSaved(){
+  try{ const raw=localStorage.getItem(KEY); if(raw) applyLoaded(JSON.parse(raw)); }catch(e){}
+  try{ const d=localStorage.getItem(DRAFT_KEY); if(d) draft=Object.assign(draft,JSON.parse(d)); }catch(e){}
+  grade=draft.grade||settings.grade;
+}
+
+/* ===================================================================
+   役割・学年・ステップ切り替え
+=================================================================== */
+function setRole(r){
+  if(role==='teacher' && r==='child') collectFromTeacherUI();
+  role=r;
+  document.getElementById('roleChild').classList.toggle('on',r==='child');
+  document.getElementById('roleTeacher').classList.toggle('on',r==='teacher');
+  document.getElementById('childView').classList.toggle('hidden',r!=='child');
+  document.getElementById('teacherView').classList.toggle('hidden',r!=='teacher');
+  if(r==='teacher') fillTeacherUI(); else renderChild();
+}
+document.getElementById('childGrade').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  saveDraft(); grade=b.dataset.g; draft.grade=grade; saveDraft(); renderChild();
+});
+function setStep(n){
+  saveDraft(); step=n;
+  document.getElementById('step1Btn').classList.toggle('on',n===1);
+  document.getElementById('step2Btn').classList.toggle('on',n===2);
+  document.getElementById('step1').classList.toggle('hidden',n!==1);
+  document.getElementById('step2').classList.toggle('hidden',n!==2);
+  if(n===2) renderStoryParts();
+  document.getElementById('feedback').classList.remove('show');
+}
+
+/* ===================================================================
+   こども：描画
+=================================================================== */
+function parts(){ return settings.structures[grade]||[]; }
+function gd(){ return draft[grade]||(draft[grade]={memo:{},story:{}}); }
+
+function renderChild(){
+  const u=UI[grade], name=settings.teacherName||"先生";
+  document.querySelectorAll('#childGrade button').forEach(b=>b.classList.toggle('on',b.dataset.g===grade));
+  document.getElementById('childHead').textContent=u.head;
+  document.getElementById('step1Btn').textContent=u.s1;
+  document.getElementById('step2Btn').textContent=u.s2;
+  document.getElementById('hint1').textContent=u.hint1;
+  document.getElementById('hint2').textContent=u.hint2;
+  document.getElementById('titleLab').textContent=u.title;
+  document.getElementById('askBtn1').textContent="🔍 "+name+"先生に "+u.ask1;
+  document.getElementById('askBtn2').textContent="🔍 "+name+"先生に "+u.ask2;
+  document.getElementById('fbTitle').textContent="💬 "+name+"先生からの おへんじ";
+  document.getElementById('storyTitle').value=draft.title||'';
+
+  // お題
+  const od=document.getElementById('odaiShow');
+  od.innerHTML = settings.odaiTitle
+    ? '<div class="odai"><div class="lab">こんかいの おだい</div><div class="t">🚪 '+escapeHtml(settings.odaiTitle)+'</div>'
+      +(settings.odaiDesc?'<div class="d">'+escapeHtml(settings.odaiDesc)+'</div>':'')+'</div>' : '';
+  // ねらい
+  const show=document.getElementById('aimsShow');
+  show.innerHTML = (settings.showAims && settings.aims.length)
+    ? '<div class="head">今回みてもらうポイント</div>'+settings.aims.map(a=>'<span class="tag">🎯 <b>'+escapeHtml(a)+'</b></span>').join('') : '';
+
+  renderMihon();
+
+  // 人物カード
+  const cb=document.getElementById('charsBox');
+  cb.innerHTML='<div class="chars-head">'+u.chars+'</div>'+settings.chars.map(c=>
+    '<div><div class="c-lab">'+escapeHtml(c.label)+'</div><input type="text" data-key="'+escapeHtml(c.key)+'" placeholder="'+escapeHtml(c.example?('れい：'+c.example):'')+'"></div>').join('');
+  cb.querySelectorAll('input').forEach(i=>{ i.value=draft.chars[i.dataset.key]||''; i.oninput=saveDraft; });
+
+  // 流れ
+  document.getElementById('flowline').innerHTML=parts().map((p,i)=>(i?'→':'')+'<span class="f">'+escapeHtml(p.label)+'</span>').join('');
+
+  // 組み立てメモ
+  const mp=document.getElementById('memoParts'); mp.innerHTML='';
+  parts().forEach((p,i)=>{
+    const el=document.createElement('div'); el.className='part';
+    el.innerHTML='<span class="p-num">'+(i+1)+'　'+escapeHtml(p.label)+'</span>'
+      +(p.q?'<div class="p-q">💭 '+escapeHtml(p.q)+'</div>':'')
+      +'<textarea class="memo" rows="2" data-id="'+p.id+'" placeholder="'+escapeHtml(u.memoPh)+'"></textarea>';
+    const ta=el.querySelector('textarea'); ta.value=gd().memo[p.id]||''; ta.oninput=saveDraft;
+    mp.appendChild(el);
+  });
+  document.getElementById('storyParts').innerHTML=''; // 前の学年の本文欄が下書きに混ざらないように
+  setStep(step);
+}
+function renderStoryParts(){
+  const u=UI[grade];
+  const sp=document.getElementById('storyParts'); sp.innerHTML='';
+  parts().forEach((p,i)=>{
+    const memo=(gd().memo[p.id]||'').trim();
+    const el=document.createElement('div'); el.className='part';
+    el.innerHTML='<span class="p-num">'+(i+1)+'　'+escapeHtml(p.label)+'</span>'
+      +(memo?'<div class="p-memo">📌 メモ：'+escapeHtml(memo)+'</div>':'<div class="p-q">💭 '+escapeHtml(p.q||'')+'</div>')
+      +'<textarea rows="4" data-id="'+p.id+'" placeholder="'+escapeHtml(u.storyPh)+'"></textarea>';
+    const ta=el.querySelector('textarea'); ta.value=gd().story[p.id]||''; ta.oninput=()=>{saveDraft(); updateCount();};
+    sp.appendChild(el);
+  });
+  updateCount();
+}
+function updateCount(){
+  const n=Array.from(storyText()).filter(c=>c!=='\n').length;
+  document.getElementById('totalCount').textContent='いま '+n+' 字（めやす '+MIN_LEN[grade]+' 字〜）';
+}
+function renderMihon(){
+  const name=settings.teacherName||"先生";
+  const has=parts().some(p=>(p.example||'').trim()) || settings.chars.some(c=>c.example);
+  let html='';
+  if(settings.showMihon && has){
+    const ch=settings.chars.filter(c=>c.example).map(c=>'<div><span class="m-lab">'+escapeHtml(c.label)+'：</span>'+escapeHtml(c.example)+'</div>').join('');
+    const ps=parts().filter(p=>(p.example||'').trim()).map(p=>'<div><div class="m-lab">'+escapeHtml(p.label)+'</div><div class="m-box">'+escapeHtml(p.example)+'</div></div>').join('');
+    html='<details class="mihon"><summary>🍎 '+escapeHtml(name)+'先生の見本</summary><div class="m-body">'+(ch?'<div class="m-box" style="background:#fff">'+ch+'</div>':'')+ps+'</div></details>';
+  }
+  document.getElementById('mihonWrap1').innerHTML=html;
+  document.getElementById('mihonWrap2').innerHTML=html;
+}
+
+/* ===================================================================
+   下書き（この端末に自動保存）
+=================================================================== */
+function saveDraft(){
+  document.querySelectorAll('#charsBox input').forEach(i=>draft.chars[i.dataset.key]=i.value);
+  document.querySelectorAll('#memoParts textarea').forEach(t=>gd().memo[t.dataset.id]=t.value);
+  document.querySelectorAll('#storyParts textarea').forEach(t=>gd().story[t.dataset.id]=t.value);
+  draft.title=document.getElementById('storyTitle').value;
+  draft.grade=grade;
+  try{ localStorage.setItem(DRAFT_KEY,JSON.stringify(draft)); }catch(e){}
+}
+function clearDraft(){
+  if(!confirm("書いたものを ぜんぶ けして、あたらしく はじめますか？"))return;
+  draft={chars:{}, title:"", grade, low:{memo:{},story:{}}, mid:{memo:{},story:{}}, high:{memo:{},story:{}}};
+  try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+  document.getElementById('feedback').classList.remove('show');
+  step=1; renderChild(); flash("あたらしく はじめよう！");
+}
+function storyText(){ return parts().map(p=>(gd().story[p.id]||'').trim()).filter(Boolean).join('\n'); }
+
+/* ===================================================================
+   ★★★ AIの差し込み口 ★★★
+   いまはモック。本物のAIにつなぐときは、この askAI() の中を
+   fetch('/api/story', ...) に置き換えるだけ（作文かべうちAIと同じ方式）。
+   payload.mode = 'kumitate'（組み立て） | 'story'（書いた物語）
+   返り値 {praise, advices:[{aim,msg}], questions:[...], next, ready}
+=================================================================== */
+async function askAI(payload){
+  // const res = await fetch('/api/story',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  // return await res.json();
+  await new Promise(r=>setTimeout(r,900));
+  return payload.mode==='kumitate' ? mockKumitate(payload) : mockStory(payload);
+}
+
+/* --- モック用の判定ことば --- */
+const RE_TROUBLE=/こま|ピンチ|たいへん|大変|まいご|迷子|けんか|なくし|なくな|こわ|ところが|とつぜん|突然|しかし|でも|ふさが|とじこめ|閉じこめ|ぬけ出せ|帰れな|かえれな|だめ|失敗|しっぱい/;
+const RE_CHANGE=/なかよく|仲よく|できるように|わかった|分かった|かわった|変わった|気づ|きづ|ほっと|よかった|うれし|強く|つよく|もどっ|戻っ|かえっ|帰っ|知った|しった|学んだ/;
+const RE_FEEL=/うれし|たのし|楽し|かなし|悲し|さびし|寂し|こわ|怖|びっくり|おどろ|驚|どきどき|ドキドキ|わくわく|ワクワク|くやし|悔し|ほっと|あんしん|安心|しんぱい|心配|はずかし|気持ち|きもち|思った|おもった|感じ/;
+const RE_ONOMATO=/([ぁ-んァ-ヶー]{2})\1/;
+const RE_LINK=/ある日|すると|ところが|そのとき|その時|それから|そして|やがて|とうとう|ついに|しかし|けれど/;
+const RE_SIMILE=/まるで|ような|ように|みたいな|みたいに/;
+// 低学年は ひらがな多めの言い方を選ぶ
+function M(g,low,other){ return g==='low'?low:other; }
+
+function mockKumitate(p){
+  const g=p.grade, memos=p.parts, filled=memos.filter(x=>x.memo.trim()).length;
+  const nameKey=(p.chars.find(c=>c.key==='name')||{});
+  const advices=[], questions=[];
+  let praise;
+  if(filled===memos.length) praise=M(g,"ぜんぶの ばめんが メモできたね！おはなしの みちすじが 見えてきたよ。","すべての場面がメモできたね！物語の道すじが見えてきたよ。");
+  else if(filled>0) praise=M(g,"メモが 書きはじめられたね。そのちょうし！","メモが書きはじめられたね。その調子！");
+  else praise=M(g,"どんな おはなしに しようかな？ ひとつずつ きめていこう。","どんな物語にしようかな？ 一つずつ決めていこう。");
+
+  if(!(nameKey.value||'').trim()) advices.push({aim:M(g,'でてくる 人','人物'), msg:M(g,"しゅじんこうの なまえを きめよう。なまえが あると、おはなしが うごきだすよ。","主人公の名前を決めよう。名前があると、物語が動き出すよ。")});
+  p.chars.filter(c=>c.key!=='name' && !c.value.trim()).slice(0,1).forEach(c=>
+    questions.push(M(g,"「"+c.label+"」は どうする？","「"+c.label+"」はどうする？ 決めると場面が想像しやすくなるよ。")));
+  memos.filter(x=>!x.memo.trim()).slice(0,2).forEach(x=>advices.push({aim:x.label, msg:M(g,"まだ からっぽだよ。ひとことで いいから メモしてみよう。","まだ空いているよ。ひとことでいいからメモしてみよう。")}));
+
+  // 山場（いちばん「事件」が起こりそうな場面＝後ろから2番目）
+  if(memos.length>=3){
+    const peak=memos[memos.length-2];
+    if(peak.memo.trim()){
+      if(RE_TROUBLE.test(peak.memo)) advices.push({aim:peak.label, msg:M(g,"こまった ことが おきて、ドキドキするね！ どうやって のりこえるかが たのしみ。","困ったことや事件があって、読む人がドキドキする山場になっているね。")});
+      else advices.push({aim:peak.label, msg:M(g,"ここで「こまった こと」が おきると、もっと もりあがるよ。","ここに「困ったこと・思いがけないこと」を入れると、ぐっと盛り上がるよ。")});
+      questions.push(M(g,"そのとき しゅじんこうは どんな きもちだった？","そのとき主人公は、どんな気持ちだったと思う？"));
+    }
+  }
+  // おわり
+  const last=memos[memos.length-1];
+  if(last && last.memo.trim()){
+    if(RE_CHANGE.test(last.memo)) advices.push({aim:last.label, msg:M(g,"さいごに しゅじんこうが かわったことが わかるね。すてき！","最後に主人公の変化が見えるね。読み終わった人の心に残るよ。")});
+    else advices.push({aim:last.label, msg:M(g,"さいごに しゅじんこうの きもちや、かわったことを ひとこと たそう。","はじめと比べて主人公がどう変わったか、ひとこと足すとまとまるよ。")});
+  }
+  (p.aims||[]).forEach(a=>advices.push({aim:a, msg:checkAimKumitate(a,p)}));
+
+  const ready = filled===memos.length && (nameKey.value||'').trim();
+  const next = ready ? M(g,"くみたては ばっちり！ ②かく に すすもう。","組み立てはばっちり！「② 書く」に進もう。")
+                     : M(g,"からっぽの ところを うめたら、もう いちど 見てもらおう。","空いているところを埋めたら、もう一度見てもらおう。");
+  return {praise, advices, questions, next, ready, voice:p.teacherVoice, name:p.teacherName};
+}
+function checkAimKumitate(a,p){
+  const all=p.parts.map(x=>x.memo).join('');
+  if(/組み立て|構成|起承転結|はじめ|つなが/.test(a)) return p.parts.every(x=>x.memo.trim())?"どの場面にもメモがあって、流れがつながっているよ。":"まだメモのない場面があるよ。全部の場面がそろうと流れが見えるよ。";
+  if(/転|思いがけない|展開/.test(a)) return RE_TROUBLE.test(all)?"思いがけない出来事が入っているね。":"「まさか！」と思うような出来事を一つ考えてみよう。";
+  if(/気持ち|心情|変わ/.test(a)) return RE_CHANGE.test(all)||RE_FEEL.test(all)?"気持ちの変化がメモに入っているね。":"はじめと最後で、主人公の気持ちがどう変わるかメモしておこう。";
+  if(/せいかく|人物|ようす|設定/.test(a)) return p.chars.filter(c=>c.value.trim()).length>=2?"人物や場所がしっかり決まっているね。":"人物カードをもう少し埋めると、書くときに迷わないよ。";
+  return "書くときに、このポイントを意識してみよう。";
+}
+
+function mockStory(p){
+  const g=p.grade, t=p.storyText, len=Array.from(t.replace(/\n/g,'')).length;
+  const filled=p.parts.filter(x=>x.story.trim()).length;
+  const advices=[], questions=[];
+  const talk=(t.match(/「[^」]+」/g)||[]).length;
+  let praise;
+  if(filled===p.parts.length && len>=MIN_LEN[g]) praise=M(g,"さいごまで 書けたね！ "+len+"字も 書けて すごい。","最後まで書き切れたね！ "+len+"字の物語になっているよ。");
+  else if(len>0) praise=M(g,"おはなしが うごきだしたね。つづきが たのしみ！","物語が動き出したね。続きが楽しみ！");
+  else praise="まずは書いてみよう。";
+  if(talk>0) praise+=M(g," 「 」の かいわが あって、こえが きこえてきそう。"," 会話文があって、人物の声が聞こえてくるようだよ。");
+
+  p.parts.filter(x=>!x.story.trim()).slice(0,2).forEach(x=>advices.push({aim:x.label, msg:M(g,"まだ 書いていないよ。メモを 見ながら 書いてみよう。","まだ書いていないよ。組み立てメモを見ながら書いてみよう。")}));
+  if(!talk) advices.push({aim:M(g,'かいわ','会話文'), msg:M(g,"「 」で しゅじんこうの ことばを 一つ 入れてみよう。","「 」で人物のせりふを一つ入れると、場面が生き生きするよ。")});
+  if(!RE_FEEL.test(t)) advices.push({aim:M(g,'きもち','気持ち'), msg:M(g,"そのとき どんな きもちだったかな？ 「どきどき」「うれしい」などを 入れよう。","山場で主人公がどう感じたか、気持ちの言葉や表情を書き足してみよう。")});
+  if(g!=='high' && !RE_ONOMATO.test(t)) advices.push({aim:M(g,'ようす','様子'), msg:M(g,"「きらきら」「ふわふわ」みたいな ようすの ことばを つかってみよう。","「きらきら」「ざわざわ」など様子を表す言葉で、場面が目にうかぶよ。")});
+  if(g==='high' && !RE_SIMILE.test(t)) advices.push({aim:'情景描写', msg:"「まるで〜のような」などの比喩や、光・音・においの描写で場面をえがいてみよう。"});
+  if(g!=='low' && !RE_LINK.test(t)) advices.push({aim:'場面のつなぎ', msg:"「ある日」「すると」「ところが」などで場面をつなぐと、流れがはっきりするよ。"});
+  const longS=t.split(/[。！？\n]/).find(s=>Array.from(s).length>(g==='low'?40:70));
+  if(longS) advices.push({aim:M(g,'文の ながさ','文の長さ'), msg:M(g,"ながい 文が あるよ。「。」で くぎってみよう。","長い文があるよ。「。」で区切ると読みやすくなるよ。")});
+  const nm=(p.chars.find(c=>c.key==='name')||{}).value||'';
+  if(nm.trim() && !t.includes(nm.trim())) advices.push({aim:M(g,'しゅじんこう','主人公'), msg:M(g,"きめた なまえ「"+nm+"」が でてこないよ。","決めた主人公「"+nm+"」の名前が本文に出てこないよ。")});
+  (p.aims||[]).forEach(a=>advices.push({aim:a, msg:checkAimStory(a,t,p)}));
+
+  questions.push(M(g,"よむ人に いちばん つたえたい ところは どこ？","読む人に、いちばん心に残ってほしい場面はどこ？"));
+  if(p.title.trim()==='') questions.push(M(g,"だいめいは どうする？","題名はどうする？ 中身が気になる題名を考えてみよう。"));
+
+  const ready = filled===p.parts.length && len>=MIN_LEN[g];
+  const next = ready ? M(g,"こえに 出して よみかえしてみよう。へんな ところが 見つかるかも。","声に出して読み返し、言葉や「、。」を整えよう。")
+                     : M(g,"まずは ぜんぶの ばめんを 書こう。めやすは "+MIN_LEN[g]+"字。","まずは全部の場面を書き切ろう。目安は"+MIN_LEN[g]+"字。");
+  return {praise, advices:advices.slice(0,6), questions, next, ready, voice:p.teacherVoice, name:p.teacherName};
+}
+function checkAimStory(a,t,p){
+  if(/段落|組み立て|構成|起承転結|つなが/.test(a)) return p.parts.every(x=>x.story.trim())?"場面ごとに分かれていて、組み立てが見えるよ。":"書いていない場面があるよ。全部そろえよう。";
+  if(/会話|かいわ/.test(a)) return /「[^」]+」/.test(t)?"会話文が使えているね。だれのせりふか分かるかも確かめよう。":"せりふを「 」で一つ入れてみよう。";
+  if(/気持ち|心情|変わ/.test(a)) return RE_FEEL.test(t)?"気持ちの言葉が入っているね。行動や表情でも表せるとさらに良いよ。":"気持ちの言葉がまだ見つからないよ。山場に一つ入れてみよう。";
+  if(/ようす|様子|情景|比喩|たとえ/.test(a)) return (RE_ONOMATO.test(t)||RE_SIMILE.test(t))?"様子を表す言葉が使えているね。場面が目にうかぶよ。":"様子を表す言葉やたとえを一つ入れてみよう。";
+  if(/転|思いがけない|展開|山場/.test(a)) return RE_TROUBLE.test(t)?"ハラハラする出来事が書けているね。":"山場に「困ったこと」を入れると盛り上がるよ。";
+  if(/段落|組み立て|構成|起承転結|はじめ|つなが/.test(a)) return p.parts.every(x=>x.story.trim())?"場面ごとに分かれていて、組み立てが見えるよ。":"書いていない場面があるよ。全部そろえよう。";
+  if(/視点/.test(a)) return "「わたしは」「〇〇は」が途中で入れかわっていないか読み返そう。";
+  if(/書き出し|結末/.test(a)) return "書き出しの一文を、会話や音から始めると読み手を引きこめるよ。";
+  if(/読み返|推敲|点|丸/.test(a)) return "声に出して読み返すと、「、。」の位置や言葉のまちがいが見つかるよ。";
+  return "このポイントで、もう一度読み返してみよう。";
+}
+
+/* ===================================================================
+   こども：みてもらう
+=================================================================== */
+async function ask(mode){
+  saveDraft();
+  const ps=parts().map(p=>({label:p.label, q:p.q, example:p.example, memo:gd().memo[p.id]||'', story:gd().story[p.id]||''}));
+  if(mode==='kumitate' && !ps.some(x=>x.memo.trim()) && !Object.values(draft.chars).some(v=>(v||'').trim())){ flash("まずは なにか メモしてみよう"); return; }
+  if(mode==='story' && !storyText().trim()){ flash("まずは なにか 書いてみよう"); return; }
+  const btn=document.getElementById(mode==='kumitate'?'askBtn1':'askBtn2'); btn.disabled=true;
+  document.getElementById('feedback').classList.remove('show');
+  document.getElementById('loading').classList.add('show');
+
+  const payload={
+    mode, grade,
+    teacherName:settings.teacherName, odaiTitle:settings.odaiTitle, odaiDesc:settings.odaiDesc,
+    aims:settings.aims, tone:settings.tone, teacherVoice:settings.teacherVoice,
+    chars:settings.chars.map(c=>({key:c.key, label:c.label, example:c.example, value:draft.chars[c.key]||''})),
+    parts:ps,                     // 場面ごとの 型・見本・メモ・本文
+    title:draft.title||'', storyText:storyText()
+  };
+  let fb;
+  try{ fb=await askAI(payload); }
+  catch(e){ fb={praise:"いまは つながらないみたい。すこし まってから もういちど おしてね。", advices:[], questions:[], next:""}; }
+  document.getElementById('loading').classList.remove('show');
+  renderFeedback(fb, mode); btn.disabled=false;
+}
+function renderFeedback(fb, mode){
+  let html='';
+  if(fb.ready){
+    html+= mode==='kumitate'
+      ? '<div class="showteacher"><div class="big">🎉 くみたて OK！</div><div class="sub">メモを見ながら、物語を書いてみよう。</div><button class="btn small" onclick="setStep(2);window.scrollTo({top:0,behavior:\'smooth\'})">✏️ ② かく に すすむ</button></div>'
+      : '<div class="showteacher"><div class="big">🎉 いいね！先生に見せに行こう！</div><div class="sub">げんこう用紙で見て、読み返してから見せよう。</div></div>';
+  }
+  html+='<div class="praise">🌸 '+rubyify(fb.praise)+'</div>';
+  if(fb.advices && fb.advices.length){
+    html+='<div class="block"><h3>🎯 '+(mode==='kumitate'?'くみたての アドバイス':'書いた物語への アドバイス')+'</h3>';
+    fb.advices.forEach(a=>{ html+='<div class="advice"><span class="aim-label">'+rubyify(a.aim)+'</span>'+rubyify(a.msg)+'</div>'; });
+    html+='</div>';
+  }
+  if(fb.questions && fb.questions.length){
+    html+='<div class="block"><h3>❓ かんがえてみよう</h3>'+fb.questions.map(q=>'<div class="q">'+rubyify(q)+'</div>').join('')+'</div>';
+  }
+  if(fb.next) html+='<div class="next">👣 つぎの一歩：'+rubyify(fb.next)+'</div>';
+  if(fb.voice) html+='<div class="note" style="margin-top:12px">🍎 '+escapeHtml(fb.name||'先生')+'先生から：'+escapeHtml(fb.voice)+'</div>';
+  document.getElementById('fbBody').innerHTML=html;
+  const box=document.getElementById('feedback'); box.classList.add('show');
+  box.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+/* ===================================================================
+   原稿用紙（縦書き）表示
+=================================================================== */
+const GENKO_ROWS = 20;
+function openGenko(){
+  saveDraft();
+  const paras=parts().map(p=>(gd().story[p.id]||'').trim()).filter(Boolean)
+    .flatMap(s=>s.split(/\n+/).map(x=>x.trim()).filter(Boolean));
+  const title=(draft.title||'').trim();
+  document.getElementById('genkoTitle').textContent='📄 '+(title||'げんこう用紙');
+  const grid=document.getElementById('genkoGrid');
+  if(!paras.length){
+    grid.innerHTML='<div style="padding:20px;color:var(--sub)">まだ何も書かれていません。</div>';
+  }else{
+    const HEAD_NG=new Set(Array.from("、。，．・？！」』）｝〕〉》】ぁぃぅぇぉっゃゅょゎゝゞ゛゜ー"));
+    const TAIL_NG=new Set(Array.from("「『（｛〔〈《【"));
+    const columns=[];
+    if(title){ columns.push(['','',''].concat(Array.from(title)).slice(0,GENKO_ROWS)); columns.push([]); } // 題名は3マス下げ＋1行あける
+    paras.forEach(par=>{
+      const chars=Array.from(par);
+      let col=[''];
+      for(const ch of chars){
+        if(col.length>=GENKO_ROWS){
+          if(HEAD_NG.has(ch)){ col[col.length-1]+=ch; continue; }
+          columns.push(col); col=[];
+        }
+        if(col.length===GENKO_ROWS-1 && TAIL_NG.has(ch)){ columns.push(col); col=[]; }
+        col.push(ch);
+      }
+      columns.push(col);
+    });
+    grid.innerHTML=columns.map(col=>{
+      let cells='';
+      for(let i=0;i<GENKO_ROWS;i++){
+        const s=col[i]||'';
+        if(!s) cells+='<div class="genko-cell blank">　</div>';
+        else if(Array.from(s).length===1) cells+='<div class="genko-cell">'+escapeHtml(s)+'</div>';
+        else cells+='<div class="genko-cell hang">'+Array.from(s).map(c=>'<span>'+escapeHtml(c)+'</span>').join('')+'</div>';
+      }
+      return '<div class="genko-col">'+cells+'</div>';
+    }).join('');
+  }
+  document.getElementById('genkoModal').classList.add('show');
+}
+function closeGenko(){ document.getElementById('genkoModal').classList.remove('show'); }
+
+/* ===================================================================
+   起動
+=================================================================== */
+loadSaved();
+fillTeacherUI();
+renderChild();
+const urlCode=new URLSearchParams(location.search).get('code');
+if(urlCode) loadCode(urlCode);
+</script>
+<!-- note-link:start -->
+<div class="note-link" style="flex:0 0 100%;width:100%;box-sizing:border-box;max-width:720px;margin:40px auto 24px;padding:16px 18px 4px;text-align:center;font-family:system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;color:inherit;opacity:.75;border-top:1px solid rgba(128,128,128,.28)">
+このアプリは、教室で困ったことから作っています。<br>
+<a href="https://note.com/minato_smile2525" target="_blank" rel="noopener" style="color:#2f8f8d;font-weight:600;text-decoration:underline;text-underline-offset:3px">note「教室ノオト」</a>
+</div>
+<!-- note-link:end -->
+</body>
+</html>

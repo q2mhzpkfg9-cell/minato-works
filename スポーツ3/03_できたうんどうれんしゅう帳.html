@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>できた！うんどうれんしゅう帳｜さかあがり・かけっこ・なわとびを家で練習</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--navy:#1f3a5f;--navy2:#2f527f;--line:#e2d9c6;--sub:#6b6457;--warn:#b5402f;--r:14px;
+--saka:#e0782f;--kake:#3c9a5a;--nawa:#3a74bd}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:#2a2a2a;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+a{color:var(--navy)}
+button{font-family:inherit}
+header{background:var(--navy);color:#fff;padding:10px 16px}
+header .back{color:#fff;text-decoration:none;font-size:14px;opacity:.9}
+header h1{margin:4px 0 0;font-size:24px;letter-spacing:.04em}
+header p{margin:2px 0 0;font-size:14px;opacity:.85}
+.wrap{max-width:980px;margin:0 auto;padding:12px 12px 40px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.kid{font-size:20px;line-height:1.75}
+.kid h2,.card h2{margin:0 0 8px;font-size:22px;color:var(--navy)}
+.small{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text]{font-size:20px;padding:8px 12px;border:2px solid var(--line);border-radius:10px;width:12em;max-width:100%}
+.btn{border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:999px;padding:10px 18px;font-size:18px;font-weight:700;cursor:pointer;min-height:48px}
+.btn.main{background:var(--navy);color:#fff}
+.btn.sm{font-size:14px;padding:6px 12px;min-height:36px}
+.sports{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.sport{display:block;border:none;text-align:left;background:#fff;border-radius:var(--r);padding:12px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:8px solid var(--c);color:inherit;width:100%}
+.sport .nm{font-size:26px;font-weight:800;color:var(--c)}
+.sport .ds{font-size:17px}
+.bar{height:12px;background:#eee6d6;border-radius:99px;overflow:hidden;margin:6px 0 2px}
+.bar i{display:block;height:100%;background:var(--c);border-radius:99px}
+.fig{width:100%;max-width:220px;aspect-ratio:1/1;display:block;margin:0 auto;background:#fbf8f1;border-radius:12px}
+.hero{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.hero .fig{max-width:150px;margin:0}
+.calm{background:#fff8e1;border-left:6px solid #e6b84a;border-radius:10px;padding:10px 14px;font-size:19px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:3px solid var(--line);background:#fff;border-radius:16px;padding:10px 14px;font-size:19px;cursor:pointer;text-align:left;min-height:52px;color:#2a2a2a;flex:1 1 280px}
+.chip[aria-pressed=true]{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);font-weight:700}
+.chip[aria-pressed=true]::before{content:"✔ ";color:var(--c)}
+.reco{margin-top:12px;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--c) 10%,#fff);font-size:19px}
+.reco a{font-weight:700;color:var(--c)}
+.menu{list-style:none;padding:0;margin:0;font-size:20px}
+.menu li{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:2px dashed var(--line)}
+.menu li b.min{background:var(--c);color:#fff;border-radius:10px;padding:2px 10px;font-size:17px;white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.step{background:#fff;border-radius:var(--r);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);position:relative;border:3px solid transparent}
+.step.isreco{border-color:var(--c)}
+.step .no{display:inline-block;background:var(--c);color:#fff;border-radius:99px;padding:0 12px;font-weight:800;font-size:16px}
+.step .badge{position:absolute;top:10px;right:10px;background:#e6b84a;color:#fff;font-weight:800;border-radius:8px;padding:0 8px;font-size:14px}
+.step h3{margin:6px 0;font-size:22px;color:var(--navy)}
+.step ul{margin:6px 0;padding-left:1.2em;font-size:19px;line-height:1.7}
+.step .mn{font-size:17px;color:var(--sub)}
+.step .ptip{font-size:14px;background:#f3efe6;border-radius:10px;padding:8px 10px;margin-top:8px;color:#3a3a3a}
+.step .ptip b{color:var(--navy)}
+.sticker{display:flex;align-items:center;gap:10px;margin-top:10px}
+.sbtn{flex:1;border:3px dashed var(--c);background:#fff;color:var(--c);border-radius:14px;font-size:19px;font-weight:800;padding:10px;cursor:pointer;min-height:56px}
+.sbtn.s1{border-style:solid}
+.sbtn.s2{background:var(--c);color:#fff;border-style:solid}
+.seal{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;flex:0 0 56px;color:#ccc;border:3px dashed #ddd}
+.seal.s1{color:var(--c);border:3px solid var(--c)}
+.seal.s2{color:#fff;background:var(--c);border:3px solid var(--c);animation:pop .4s}
+@keyframes pop{0%{transform:scale(.3) rotate(-30deg)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.parent{background:#fff;border-radius:var(--r);padding:16px;margin:12px 0;border:2px solid var(--navy);font-size:15px;line-height:1.75}
+.parent h2{font-size:18px;color:var(--navy);margin:0 0 6px}
+.parent h3{font-size:16px;margin:12px 0 4px;color:var(--navy)}
+.parent ul{margin:4px 0;padding-left:1.3em}
+.safe{background:#fdf0ee;border-left:6px solid var(--warn);border-radius:10px;padding:8px 12px;margin-top:10px}
+.safe h3{color:var(--warn)}
+.tabs{display:flex;gap:8px;overflow-x:auto;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+.tabs button{flex:1 0 auto;border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:999px;padding:8px 14px;font-size:17px;font-weight:800;cursor:pointer;min-height:46px}
+.tabs button.on{background:var(--navy);color:#fff}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .h{text-align:center;font-weight:700;font-size:15px;color:var(--sub)}
+.cal .d{aspect-ratio:1/1;min-height:40px;border-radius:10px;background:#faf7f0;border:2px solid transparent;font-size:15px;padding:2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:#2a2a2a}
+.cal .d.today{border-color:var(--navy)}
+.cal .d.sel{background:#e9eef6}
+.cal .d.has{background:#fff4dc}
+.cal .d .st{font-size:22px;line-height:1}
+.cal .d .dots{display:flex;gap:2px;margin-top:auto;margin-bottom:2px}
+.cal .d .dots i{width:9px;height:9px;border-radius:50%}
+.cal .e{visibility:hidden}
+.daypanel{margin-top:10px;padding:10px;background:#faf7f0;border-radius:12px;font-size:18px}
+.daypanel .tg{border:3px solid var(--c);background:#fff;color:var(--c);border-radius:12px;padding:8px 12px;font-size:18px;font-weight:800;cursor:pointer;margin:4px}
+.daypanel .tg.on{background:var(--c);color:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) scale(.8);background:var(--navy);color:#fff;padding:12px 22px;border-radius:999px;font-size:20px;font-weight:800;opacity:0;transition:.25s;pointer-events:none;z-index:20;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) scale(1)}
+.shoe{display:flex;gap:12px;align-items:center;background:#eef6f0;border-radius:12px;padding:10px 12px;font-size:19px}
+.shoe svg{flex:0 0 90px}
+footer{text-align:center;font-size:13px;color:var(--sub);padding:20px 12px 30px}
+.stripes{animation:slide .6s linear infinite}
+@keyframes slide{from{transform:translateX(0)}to{transform:translateX(-40px)}}
+.paused .stripes{animation-play-state:paused}
+.animctl{text-align:right}
+@media (max-width:480px){header h1{font-size:21px}.kid{font-size:18px}.chip{font-size:17px}.step ul{font-size:18px}}
+@media (min-width:1400px){.wrap{max-width:1200px}.kid{font-size:23px}.step ul{font-size:21px}}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">← MINATO WORKS</a>
+  <h1>できた！うんどうれんしゅう帳</h1>
+  <p>さかあがり・かけっこ・なわとびを、おうちや こうえんで 1日5ふん。</p>
+</header>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+<footer>元小学校教員がつくった教室のためのアプリ ／ note「教室ノオト」 <a href="https://note.com/minato_smile2525">https://note.com/minato_smile2525</a></footer>
+
+<script>
+'use strict';
+/* ========== 保存 ========== */
+const KEY='mw_sports_03_data';
+function load(){try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);return Object.assign({name:'',checks:{},stickers:{},cal:{}},o);}}catch(e){}return {name:'',checks:{},stickers:{},cal:{}};}
+let D=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}}
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ========== 人形アニメ ========== */
+function P(x,y,t,a1,f1,a2,f2,l1,s1,l2,s2,r){return {x,y,t,a1,f1,a2,f2,l1,s1,l2,s2,r:(r===undefined?null:r)};}
+const KEYS=['x','y','t','a1','f1','a2','f2','l1','s1','l2','s2','r'];
+function dr(a){const r=a*Math.PI/180;return [Math.sin(r),Math.cos(r)];}
+function joints(p){
+  const td=dr(180-p.t),pv=[p.x,p.y];
+  const n=[p.x+td[0]*50,p.y+td[1]*50],h=[n[0]+td[0]*13,n[1]+td[1]*13];
+  const limb=(o,a,b,u,v)=>{const d1=dr(a),m=[o[0]+d1[0]*u,o[1]+d1[1]*u],d2=dr(b);return [o,m,[m[0]+d2[0]*v,m[1]+d2[1]*v]];};
+  return {pv,n,h,td,arm1:limb(n,p.a1,p.f1,26,24),arm2:limb(n,p.a2,p.f2,26,24),leg1:limb(pv,p.l1,p.s1,34,34),leg2:limb(pv,p.l2,p.s2,34,34)};
+}
+const pl=(pts,c,w)=>`<polyline points="${pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="${w||7}" stroke-linecap="round" stroke-linejoin="round"/>`;
+function drawFig(p,view){
+  const j=joints(p),M='#1f3a5f',B=view==='front'?'#1f3a5f':'#86a3c9';
+  let rope='',ropeFront=false;
+  if(p.r!==null&&p.r!==undefined){
+    const a=j.arm1[2],b=j.arm2[2],cy=(a[1]+b[1])/2+p.r;
+    rope=`<path d="M${b[0].toFixed(1)},${b[1].toFixed(1)} C${(b[0]-28).toFixed(1)},${cy.toFixed(1)} ${(a[0]+28).toFixed(1)},${cy.toFixed(1)} ${a[0].toFixed(1)},${a[1].toFixed(1)}" fill="none" stroke="#e0782f" stroke-width="3.5" stroke-linecap="round"/>`;
+    ropeFront=p.r>20;
+  }
+  let s=ropeFront?'':rope;
+  s+=pl(j.arm2,B)+pl(j.leg2,B)+pl([j.pv,j.n],M,9)+pl(j.leg1,M)+pl(j.arm1,M);
+  s+=`<circle cx="${j.h[0].toFixed(1)}" cy="${j.h[1].toFixed(1)}" r="11" fill="#ffe2c6" stroke="${M}" stroke-width="3"/>`;
+  if(view==='front'){
+    s+=`<circle cx="${(j.h[0]-4).toFixed(1)}" cy="${(j.h[1]-1).toFixed(1)}" r="1.6" fill="${M}"/><circle cx="${(j.h[0]+4).toFixed(1)}" cy="${(j.h[1]-1).toFixed(1)}" r="1.6" fill="${M}"/><path d="M${(j.h[0]-3.5).toFixed(1)},${(j.h[1]+4).toFixed(1)} q3.5,3 7,0" fill="none" stroke="${M}" stroke-width="1.6" stroke-linecap="round"/>`;
+  }else{
+    const fw=[-j.td[1],j.td[0]];// 前向き
+    const ex=j.h[0]+fw[0]*5+j.td[0]*2,ey=j.h[1]+fw[1]*5+j.td[1]*2;
+    s+=`<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="1.8" fill="${M}"/>`;
+  }
+  if(ropeFront)s+=rope;
+  return {svg:s,j};
+}
+const GROUND='<line x1="6" y1="182" x2="194" y2="182" stroke="#c9bda4" stroke-width="3" stroke-linecap="round"/>';
+const barBg=(x,y)=>`<line x1="${x}" y1="${y}" x2="${x}" y2="182" stroke="#b9b2a5" stroke-width="5"/>`;
+const barFg=(x,y)=>`<circle cx="${x}" cy="${y}" r="5.5" fill="#8a8f98" stroke="#5c6168" stroke-width="2"/>`;
+const STRIPES='<g class="stripes">'+Array.from({length:7},(_,i)=>`<line x1="${i*40}" y1="190" x2="${i*40+18}" y2="190" stroke="#c9bda4" stroke-width="3" stroke-linecap="round"/>`).join('')+'</g>';
+const label=(x,y,t,c)=>`<text x="${x}" y="${y}" font-size="13" font-weight="700" fill="${c||'#1f3a5f'}" text-anchor="middle">${t}</text>`;
+
+/* さかあがり用ポーズ */
+const KR1=P(95,112,0,-10,96,-12,94,10,0,-15,-10),
+      KR2=P(105,104,-25,60,25,55,30,-5,-5,150,165),
+      KR3=P(113,84,-110,106,106,102,104,170,175,165,170),
+      KR4=P(111,89,10,-6,-8,-8,-10,-8,-4,-4,0);
+/* なわとび（正面） */
+const J=(y,r)=>P(100,y,0,30,15,-30,-15,6,2,-6,-2,r);
+const X=(y,r)=>P(100,y,0,-12,-40,12,40,6,2,-6,-2,r);
+const CL=y=>P(100,y,0,35,-35,-35,35,6,2,-6,-2);
+const RUNA=x=>P(x,108,15,-45,40,45,135,70,10,-30,-45),RUNB=x=>P(x,108,15,45,135,-45,40,-30,-45,70,10);
+
+const ANIMS={
+  futon:{view:'side',bg:barBg(100,88),fg:()=>barFg(100,88),frames:[[P(97,86,168,-50,-60,-40,-50,-12,-6,-6,-2),900],[P(97,86,168,50,60,40,50,-12,-6,-6,-2),900]]},
+  tsubame:{view:'side',bg:barBg(104,96),fg:()=>barFg(104,96),frames:[[P(100,100,8,-4,-6,-8,-8,-6,-3,-2,0),1000],[P(100,100,14,-10,-12,-12,-14,-10,-5,-6,-2),1000]]},
+  dango:{view:'side',bg:barBg(100,60),fg:()=>barFg(100,60)+label(160,40,'1・2・3…'),frames:[[P(95,115,-4,53,217,50,214,110,0,105,-5),1200],[P(95,119,-4,48,207,45,204,105,0,100,-5),1200]]},
+  buta:{view:'side',bg:barBg(100,70),fg:()=>barFg(100,70),frames:[[P(120,100,-90,114,163,110,160,-146,-30,-150,-35),1100],[P(120,105,-90,112,166,108,163,-142,-26,-146,-31),1100]]},
+  keri:{view:'side',bg:barBg(115,85),fg:()=>barFg(115,85)+'<path d="M150,60 l0,-30 m-7,9 l7,-9 l7,9" fill="none" stroke="#e0782f" stroke-width="3" stroke-linecap="round"/>'+label(150,76,'そら！','#e0782f'),frames:[[KR1,800],[KR2,700]]},
+  towel:{view:'side',bg:barBg(115,85),fg:j=>`<path d="M115,85 L${(j.pv[0]-6).toFixed(1)},${(j.pv[1]+2).toFixed(1)}" stroke="#f2b134" stroke-width="7" stroke-linecap="round" opacity=".85"/>`+barFg(115,85)+label(40,30,'おとなと','#b5402f'),frames:[[KR1,700],[KR2,500],[KR3,600],[KR4,1000]]},
+  hojo:{view:'side',bg:barBg(115,85),fg:j=>`<path d="M${(j.pv[0]+16).toFixed(1)},${(j.pv[1]+30).toFixed(1)} l-14,-10" stroke="#d9a07a" stroke-width="9" stroke-linecap="round"/>`+barFg(115,85)+label(160,140,'ささえる手','#a0623a'),frames:[[KR1,700],[KR2,500],[KR3,600],[KR4,1000]]},
+  sakaagari:{view:'side',bg:barBg(115,85),fg:()=>barFg(115,85),frames:[[KR1,700],[KR2,500],[KR3,600],[KR4,1000]]},
+  start:{view:'side',bg:'<line x1="122" y1="182" x2="122" y2="150" stroke="#fff" stroke-width="0"/>',fg:()=>'',frames:[[P(100,113,5,0,5,-5,0,10,0,-12,-4),1000],[P(100,120,35,-45,-15,40,85,30,-5,-25,-25),1200],[P(122,114,30,50,120,-50,-20,75,5,-35,-15),500]],labels:['いちについて','よーい','ドン！']},
+  udefuri:{view:'side',bg:'',fg:()=>'',frames:[[P(100,112,4,40,130,-40,50,3,0,-3,0),450],[P(100,112,4,-40,50,40,130,3,0,-3,0),450]]},
+  momo:{view:'side',bg:'',fg:()=>'',frames:[[P(100,110,3,-40,50,40,130,90,0,0,0),350],[P(100,110,3,40,130,-40,50,0,0,90,0),350]]},
+  run:{view:'side',bg:STRIPES,fg:()=>'',frames:[[RUNA(100),300],[RUNB(100),300]]},
+  goal:{view:'side',bg:'<line x1="140" y1="182" x2="140" y2="110" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>'+label(140,104,'ゴール','#c0392b')+'<path d="M150,150 h35 m-8,-6 l8,6 l-8,6" fill="none" stroke="#e0782f" stroke-width="3" stroke-linecap="round"/>',fg:()=>'',frames:[[RUNA(30),220],[RUNB(60),220],[RUNA(90),220],[RUNB(120),220],[RUNA(150),220],[RUNB(180),0]]},
+  mae:{view:'side',bg:STRIPES+'<path d="M118,50 h62" stroke="#e0782f" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M174,44 l8,6 l-8,6" fill="none" stroke="#e0782f" stroke-width="2.5"/>'+label(160,40,'まえ！','#e0782f'),fg:()=>'',frames:[[RUNA(100),300],[RUNB(100),300]]},
+  nagasa:{view:'front',bg:'<path d="M100,182 L80,96 M100,182 L120,96" stroke="#e0782f" stroke-width="3" fill="none"/><rect x="76" y="74" width="8" height="24" rx="3" fill="#3a74bd"/><rect x="116" y="74" width="8" height="24" rx="3" fill="#3a74bd"/>'+label(160,80,'わきの下','#3a74bd')+'<path d="M140,78 h-14" stroke="#3a74bd" stroke-width="2"/>',fg:()=>'',frames:[[P(100,112,0,22,10,-22,-10,4,0,-4,0),1200],[P(100,112,0,22,10,-22,-10,4,0,-4,0),1200]]},
+  nashi:{view:'front',bg:'',fg:()=>label(160,40,'トン・トン'),frames:[[P(100,112,0,30,15,-30,-15,6,2,-6,-2),260],[P(100,102,0,32,20,-32,-20,6,2,-6,-2),260]]},
+  maetobi:{view:'front',bg:'',fg:()=>'',frames:[[J(112,-117),230],[J(106,0),170],[J(100,120),170],[J(106,0),230]]},
+  aya:{view:'front',bg:'',fg:()=>'',frames:[[J(112,-117),230],[J(106,0),170],[J(100,120),170],[J(106,0),230],[X(112,-117),230],[X(106,0),170],[X(100,120),170],[X(106,0),230]]},
+  kosa:{view:'front',bg:'',fg:()=>'',frames:[[X(112,-117),230],[X(106,0),170],[X(100,120),170],[X(106,0),230]]},
+  clap:{view:'front',bg:'',fg:()=>label(160,40,'パン・パン'),frames:[[J(112),260],[CL(98),120],[J(92),120],[CL(96),120],[J(112),260]]},
+  niju:{view:'front',bg:'',fg:()=>label(158,40,'ヒュンヒュン'),frames:[[J(112,-117),230],[J(98,120),120],[J(90,-117),120],[J(98,120),120],[J(112,-117),280]]},
+  stand:{view:'side',bg:'',fg:()=>'',frames:[[P(100,112,0,5,10,-5,0,3,0,-3,0),1000],[P(100,112,0,5,10,-5,0,3,0,-3,0),1000]]}
+};
+const ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+function lerp(a,b,u){const o={};KEYS.forEach(k=>{if(k==='r'){if(a.r===null&&b.r===null)o.r=null;else{const ra=a.r===null?b.r:a.r,rb=b.r===null?a.r:b.r;o.r=ra+(rb-ra)*u;}}else o[k]=a[k]+(b[k]-a[k])*u;});return o;}
+function poseAt(an,t){
+  const fr=an.frames,tot=fr.reduce((s,f)=>s+f[1],0);let τ=t%tot,i=0;
+  while(i<fr.length&&τ>=fr[i][1]){τ-=fr[i][1];i++;}
+  if(i>=fr.length)i=fr.length-1;
+  const u=fr[i][1]?ease(τ/fr[i][1]):0;
+  return {p:lerp(fr[i][0],fr[(i+1)%fr.length][0],u),i};
+}
+function svgFor(key,t){
+  const an=ANIMS[key]||ANIMS.stand,{p,i}=poseAt(an,t||0),f=drawFig(p,an.view);
+  let lab=an.labels?`<text x="100" y="24" font-size="17" font-weight="800" fill="#e0782f" text-anchor="middle">${an.labels[i]}</text>`:'';
+  return GROUND+an.bg+f.svg+an.fg(f.j)+lab;
+}
+function figHTML(key,cls){return `<svg class="fig ${cls||''}" viewBox="0 0 200 200" data-anim="${key}" role="img" aria-label="うごきの え">${svgFor(key,0)}</svg>`;}
+let paused=false;try{paused=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+const t0=performance.now();
+function tick(now){
+  if(!paused&&!document.hidden){
+    document.querySelectorAll('svg[data-anim]').forEach(el=>{
+      const r=el.getBoundingClientRect();
+      if(r.bottom<0||r.top>innerHeight)return;
+      el.innerHTML=svgFor(el.dataset.anim,now-t0);
+    });
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ========== 種目データ ========== */
+const SPORTS=[
+{id:'saka',nm:'さかあがり',c:'var(--saka)',hex:'#e0782f',icon:'sakaagari',ds:'てつぼうで くるりん！',
+ calm:'さかあがりは、3・4ねんせいごろに れんしゅうする わざだよ。いま できなくても だいじょうぶ。ふとんほし や ブタのまるやき で「くるん」の かんかくを そだてよう。',
+ checks:[
+  {id:'c1',t:'てつぼうに ぶらさがるのが こわい',s:['futon','buta']},
+  {id:'c2',t:'うでが のびて、からだが てつぼうから はなれる',s:['dango','towel']},
+  {id:'c3',t:'あしを まえに けってしまう（うえに あがらない）',s:['keri']},
+  {id:'c4',t:'おへそが てつぼうから はなれる',s:['tsubame','towel']},
+  {id:'c5',t:'あごが あがって、あたまから うしろに たおれる',s:['keri','dango']},
+  {id:'c6',t:'あと すこしで まわれそう！',s:['hojo','hitori']}
+ ],
+ steps:[
+  {id:'futon',t:'ふとんほし',a:'futon',k:['てつぼうに おなかを のせて、からだを だらーん。','うでを ぶらぶら ゆらしてみよう。','おきるときは てつぼうを にぎって ゆっくり。'],m:'10びょう × 3かい',p:'逆さになる感覚・お腹で鉄棒を感じる遊び。怖がる子はここから。頭が下がるので必ずそばで。'},
+  {id:'tsubame',t:'つばめ',a:'tsubame',k:['てつぼうに とびのって、うでを ピン！','おへそを てつぼうに くっつけるよ。','あしは そろえて、まっすぐ。'],m:'10びょう × 3かい',p:'腕で体を支え、鉄棒とお腹を近づける感覚づくり。逆上がりの最後の姿勢でもあります。'},
+  {id:'dango',t:'だんごむし',a:'dango',k:['てつぼうを にぎって、ひじを まげる。','あごを てつぼうの うえに。','ひざを おなかに ひきつけて、10 かぞえよう。'],m:'5〜10びょう × 3かい',p:'逆上がりで一番大事な「腕を曲げて体を鉄棒に引きつける力」を育てます。最初は3秒でも十分。'},
+  {id:'buta',t:'ブタのまるやき',a:'buta',k:['てと ひざを てつぼうに かけて、ぶらさがる。','おしりを さげずに、からだを ちぢめよう。','10 かぞえたら、あしから おりる。'],m:'10びょう × 2かい',p:'ぶら下がる力と恐怖心の軽減に。降りるときは足→手の順で、大人が背中を支えると安心です。'},
+  {id:'keri',t:'けりあげ れんしゅう',a:'keri',k:['てつぼうを にぎって、ひじを まげる。','ふみこんで、うしろの あしを「そら」に むかって けりあげる。','めは おへそを みるよ。'],m:'5かい × 2セット',p:'前に蹴るのではなく上（空）に。踏み込み足は鉄棒の真下〜少し前。回り切らなくてよいので、蹴り上げだけ繰り返します。'},
+  {id:'towel',t:'タオルで さかあがり（かならず おとなと）',a:'towel',k:['おとなに タオルを こしに まわしてもらう。','タオルの はしを、てつぼうと いっしょに にぎる。','けりあげて、くるりん！'],m:'3〜5かい',p:'タオル（または柔らかい帯）を腰の後ろに回し、両端を鉄棒と一緒に握らせます。体が鉄棒から離れないので回りやすくなります。必ず大人がそばにつき、首にはかけない・結ばないこと。'},
+  {id:'hojo',t:'おてつだい さかあがり',a:'hojo',k:['おとなに よこに たってもらう。','けりあげたら、おしりを ささえて もらって くるりん。','すこしずつ ささえを かるく していこう。'],m:'3〜5かい',p:'子どもの横に立ち、蹴り上げに合わせて太もも裏〜お尻を支えて鉄棒へ引き寄せます。投げ上げず、回転を少し手伝うイメージで。'},
+  {id:'hitori',t:'ひとりで さかあがり',a:'sakaagari',k:['ひじを まげて、おへそを てつぼうへ。','そらに むかって けりあげる！','つばめで ピタッと とまれたら できあがり。'],m:'3かい',p:'できた日は大いに喜び、その日はそこで終わりにするくらいでOK。翌日もう一度できれば定着です。'}
+ ],
+ tips:['鉄棒の高さは<b>胸〜肩くらい</b>が目安。低すぎると足が引っかかり、高すぎると蹴り上げにくくなります。公園では高さの違う鉄棒から選びましょう。','できない理由で一番多いのは「腕が伸びて体が鉄棒から離れる」こと。だんごむしで肘を曲げて引きつける力を育てます。','蹴り足は「前」ではなく「上（空）」へ。目線はおへそ（鉄棒）に向けると、あごが上がって頭から倒れるのを防げます。','握りは順手（手の甲が上）で、親指を下から回してしっかり。','回る感覚がまだない子には、ふとんほし・ブタの丸焼きなど“遊び”を十分に。','1日5分程度で切り上げ、手のひらが痛くなる前にやめます。'],
+ safe:['必ず大人がそばで見守ってください。鉄棒の下や周りに硬い物・人がいないか確認します。','鉄棒がぐらつかないか、濡れていないか（雨の後は滑ります）を確認。','タオル補助は必ず大人と一緒に。タオルを首にかけない、結ばない、手に巻き付けない。','手にまめや痛みがあるとき、疲れているときは休みます。'],
+ note:'逆上がりは、学習指導要領解説で中学年（3・4年）の鉄棒運動の技として例示されています（補助逆上がりから段階的に）。低学年は、ふとんほし・ブタの丸焼きなどの「鉄棒を使った運動遊び」で感覚を育てる時期です。低学年でできなくても心配はいりません。'
+},
+{id:'kake',nm:'かけっこ',c:'var(--kake)',hex:'#3c9a5a',icon:'run',ds:'ゴールまで びゅーん！',
+ calm:'あしの はやさは、からだが そだつと どんどん かわるよ。きのうの じぶんより「きもちよく はしれた」が いちばん。',
+ checks:[
+  {id:'k1',t:'スタートで おくれる',s:['start','dash']},
+  {id:'k2',t:'うでを よこに ふる・あまり ふらない',s:['udefuri']},
+  {id:'k3',t:'あしが あがらない・ペタペタ はしる',s:['momo','dash']},
+  {id:'k4',t:'さいごに おそくなる・ゴールの まえで とまる',s:['goal']},
+  {id:'k5',t:'まっすぐ はしれない・よこを みちゃう',s:['mae']}
+ ],
+ steps:[
+  {id:'start',t:'スタートの しせい',a:'start',k:['あしを まえと うしろに ひらく。','「よーい」で まえの あしに たいじゅう。すこし まえかがみ。','「ドン」で うしろの あしから ぐっと ふみだす。'],m:'5かい',p:'前足に体重を乗せ、目線は2〜3m先。「よーい」で静止できるようにします。'},
+  {id:'udefuri',t:'うでふり',a:'udefuri',k:['ひじを まげて、てを かるく にぎる。','うしろに「ぐっ」と ひくよ。','その ばで 10かい × 2。'],m:'10かい × 2',p:'腕は「前に振る」より「後ろに引く」を意識すると、自然に前後へ大きく振れます。横振りになる子には、脇をしめる声かけを。'},
+  {id:'momo',t:'ももあげ',a:'momo',k:['その ばで、ももを たかく あげる。','つまさきで リズムよく。','10びょう × 2かい。'],m:'10びょう × 2',p:'地面をつま先寄りで軽く押す感覚づくり。高さより、リズムよく続けることを大切に。'},
+  {id:'dash',t:'10メートル ダッシュ',a:'run',k:['スタートから 3ぽは、こまかく はやく。','だんだん おおまたに。','あるいて もどって、やすんでから もう1かい。'],m:'3〜5ほん',p:'全力の距離は10〜20mで十分。1本ごとに歩いて戻り、しっかり休むと質の高い練習になります。'},
+  {id:'goal',t:'ゴールの むこうまで',a:'goal',k:['ゴールの 5メートル さきに めじるしを おく。','めじるしまで ぜんりょく！','ゴールで とまらないよ。'],m:'3ぼん',p:'「ゴールテープの先まで走ろう」が合言葉。ゴール手前での減速を防ぎます。'},
+  {id:'mae',t:'まっすぐ みて はしる',a:'mae',k:['ゴールの さきを みて はしる。','あごを ひいて、きょろきょろ しない。','ラインの うえを まっすぐ はしってみよう。'],m:'3ぼん',p:'地面の線やロープの上を走ると、まっすぐ走る感覚がつかみやすいです。'}
+ ],
+ shoe:'くつの ひとこと：かかとが ぴったり、ひもや マジックテープを「ぎゅっ」。サンダルや ぶかぶかの くつでは はしらないよ。',
+ tips:['速さより「正しい姿勢で気持ちよく走る」ことを大切に。短い距離を数本、間は歩いて休みます。','スタートは足を前後に開いて前足に体重、「よーい」で少し前かがみ。目線は2〜3m先。','腕振りは肘を軽く曲げて、後ろに引く意識で。','「ゴールの5m先まで」と声をかけると、最後まで走り切れます。','比べるなら過去の本人と。きょうだいや友達とは比べないようにしましょう。','靴はかかとが合い、つま先に少しゆとり（目安5〜10mm）があるものを。ひも・面ファスナーはしっかり締めます。'],
+ safe:['車や自転車が通らない、平らで広い場所で。','走る前に足首・ひざ・ももの準備運動を。','暑い日は日陰で短時間にし、こまめに水分をとります。'],
+ note:'足の速さは成長の時期によって大きく変わります。走り方のコツを知るだけでも走りやすさは変わるので、「前より腕が振れたね」など、できたことを具体的に伝えてあげてください。'
+},
+{id:'nawa',nm:'なわとび',c:'var(--nawa)',hex:'#3a74bd',icon:'maetobi',ds:'まえとび → にじゅうとび',
+ calm:'にじゅうとびは、こうがくねんでも れんしゅうちゅうの 子が たくさん いるよ。まえとびが 30かい つづいたら、つぎに すすもう。',
+ checks:[
+  {id:'n1',t:'なわが あしに ひっかかる',s:['nagasa','nashi']},
+  {id:'n2',t:'うでを おおきく まわしちゃう',s:['mae2']},
+  {id:'n3',t:'つづけて とべない',s:['nashi','mae2']},
+  {id:'n4',t:'あやとび・こうさとびで ひっかかる',s:['aya','kosa']},
+  {id:'n5',t:'にじゅうとびが できない',s:['clap','niju1']}
+ ],
+ steps:[
+  {id:'nagasa',t:'なわの ながさを あわせよう',a:'nagasa',k:['なわの まんなかを かたあしで ふむ。','もつところが「わきの下」くらいに くれば OK。','ながい ときは むすんで みじかく。'],m:'さいしょに 1かい',p:'片足でなわの真ん中を踏み、持ち手の付け根が胸〜わきの下あたりに来るのが目安。二重とびは少し短めでも回しやすくなります。'},
+  {id:'nashi',t:'なわなし リズムジャンプ',a:'nashi',k:['なわを もたずに、その ばで トン・トン。','つまさきで、ひくく ちいさく。','てくびを くるくる まわしながら とぼう。'],m:'20かい × 2',p:'「跳ぶ」と「回す」のリズムを合わせる準備。かかとをつけず、低く小さく跳びます。'},
+  {id:'mae2',t:'まえとび',a:'maetobi',k:['てを こしの よこに。わきを しめる。','てくびで まわすよ。','10かい → 30かい つづけよう。'],m:'30かい × 2',p:'腕全体でなく手首で回すのがコツ。手が体から離れたり上がったりすると引っかかりやすくなります。'},
+  {id:'aya',t:'あやとび',a:'aya',k:['まえとび 1かい → うでを クロスして 1かい。','クロスは おへその まえで。','ゆっくりで いいよ。'],m:'5かい × 2',p:'交差したら、腕をほどいて開くタイミングを声で「ひらいて・クロス」と伝えると合わせやすいです。'},
+  {id:'kosa',t:'こうさとび',a:'kosa',k:['うでを ふかく クロス。','てが からだの よこから でるくらい。','クロスの まま つづけて とぼう。'],m:'5かい × 2',p:'交差が浅いと輪が小さくなり引っかかります。おへその前で深く交差し、持ち手が体の外に出るくらいに。'},
+  {id:'clap',t:'てたたき ジャンプ',a:'clap',k:['ジャンプしている あいだに、てを「パン・パン」と 2かい たたく。','ももを 2かい たたくのも OK。','にじゅうとびの リズムだよ。'],m:'10かい × 2',p:'二重とびは「高く跳ぶ」より「速く回す」。まずは1回の跳躍で2回手を動かすリズムづくりから。'},
+  {id:'niju1',t:'にじゅうとび 1かい',a:'niju',k:['まえとび 3かい → にじゅうとび 1かい。','すこし たかく とんで、てくびを ヒュンヒュン。','からだは まっすぐ。'],m:'5かい チャレンジ',p:'前とびで勢いをつけてから1回だけ。体が「くの字」に曲がる子は、手たたきジャンプに戻って練習を。'},
+  {id:'niju2',t:'にじゅうとび れんぞく',a:'niju',k:['にじゅうとびを 2かい つづけて。','できたら 3かい、5かい…。','つかれたら やすもう。'],m:'3かい チャレンジ',p:'回数の記録をカレンダーと一緒につけておくと、伸びが見えて励みになります。'}
+ ],
+ tips:['長さは「片足で真ん中を踏み、持ち手の付け根が胸〜わきの下」が目安です。','回すのは手首。脇をしめ、手は腰の横あたりに。','つま先で、低く小さく跳びます。かかとはつけません。','交差とびは、おへその前で深く交差させます。','二重とびの前に、手たたきジャンプでリズムを。前とびが30回続いてからで十分です。','なわはビニール製など、ある程度重みのあるものが回しやすいです。'],
+ safe:['周りに人や物がない、平らな場所で跳びます。','硬いコンクリートの上で長時間跳ぶと、ひざ・足首に負担がかかります。土の上などで短時間に。','なわを人に向けて振り回さない、首にかけない。','必ず運動靴をはいて跳びます。'],
+ note:'なわとびは回数がはっきり出るので、つい「まだ○回？」と言いたくなりますが、「昨日より○回増えたね」と本人の伸びに目を向けると続けやすくなります。'
+}];
+const SP={};SPORTS.forEach(s=>SP[s.id]=s);
+
+/* ========== 画面 ========== */
+let view=(['saka','kake','nawa','cal'].includes(location.hash.slice(1))?location.hash.slice(1):'home'),calMonth=(()=>{const d=new Date();return {y:d.getFullYear(),m:d.getMonth()};})(),calSel=ymd(new Date());
+const app=document.getElementById('app');
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('on'),1600);}
+function stState(id){return (D.stickers[id]&&D.stickers[id].s)||0;}
+function doneCount(s){return s.steps.filter(x=>stState(x.id)===2).length;}
+function totalSeals(){return Object.values(D.stickers).filter(v=>v&&v.s===2).length;}
+function recoOf(s){
+  const ch=D.checks[s.id]||[],set=new Set();
+  s.checks.forEach(c=>{if(ch.includes(c.id))c.s.forEach(x=>set.add(x));});
+  let list=s.steps.filter(x=>set.has(x.id));
+  if(!list.length){const nx=s.steps.find(x=>stState(x.id)!==2);list=nx?[nx]:[];}
+  return list;
+}
+function tabsHTML(){
+  return `<div class="tabs" role="tablist"><button class="${view==='home'?'on':''}" data-go="home">ホーム</button>${SPORTS.map(s=>`<button class="${view===s.id?'on':''}" data-go="${s.id}" style="${view===s.id?'background:'+s.hex+';border-color:'+s.hex:'border-color:'+s.hex+';color:'+s.hex}">${s.nm}</button>`).join('')}<button class="${view==='cal'?'on':''}" data-go="cal">カレンダー</button></div>`;
+}
+function ctlHTML(){return `<div class="animctl"><button class="btn sm" data-act="pause">${paused?'▶ うごかす':'⏸ うごきを とめる'}</button></div>`;}
+
+function renderHome(){
+  const nm=D.name?esc(D.name)+'さんの':'';
+  app.innerHTML=tabsHTML()+`
+  <section class="card kid">
+    <h2>${nm}うんどう れんしゅう帳</h2>
+    <div class="row"><label for="nm" style="font-size:18px">なまえ</label><input type="text" id="nm" maxlength="12" value="${esc(D.name)}" placeholder="なまえ（なくてもOK）"></div>
+    <p style="margin:10px 0 0">あつめた シール：<b style="font-size:28px;color:#e0782f">◎ ${totalSeals()}</b> こ ／ れんしゅうした日：<b style="font-size:28px;color:var(--navy)">${Object.keys(D.cal).filter(k=>D.cal[k]&&D.cal[k].length).length}</b> 日</p>
+  </section>
+  <p class="kid" style="margin:6px 4px">れんしゅう したい うんどうを えらんでね。</p>
+  <div class="sports">${SPORTS.map(s=>`<button class="sport" data-go="${s.id}" style="--c:${s.hex}">
+    ${figHTML(s.icon)}
+    <div class="nm">${s.nm}</div><div class="ds">${s.ds}</div>
+    <div class="bar"><i style="width:${Math.round(doneCount(s)/s.steps.length*100)}%"></i></div>
+    <div style="font-size:16px">◎ ${doneCount(s)} / ${s.steps.length} ステップ</div></button>`).join('')}</div>
+  ${ctlHTML()}
+  <section class="card kid"><h2>がんばりカレンダー</h2>${calHTML()}</section>
+  <section class="parent">
+    <h2>おうちの方へ</h2>
+    <h3>使い方</h3>
+    <ul><li>種目を選び、「どこでつまずいてる？」で当てはまるものに印をつけると、おすすめのステップが光ります。</li>
+    <li>「きょうの5分メニュー」をやったら「れんしゅうした！」を押すと、カレンダーに印がつきます。</li>
+    <li>ステップのボタンは「○れんしゅうちゅう → ◎できた！」の順に変わります。◎がシールです。</li></ul>
+    <h3>焦らせない声かけのコツ</h3>
+    <ul><li>「できた・できない」より「やってみたね」「昨日より○○だったね」と、過程や伸びを言葉にしてあげてください。</li>
+    <li>できない日が続くときは、1つ前のやさしいステップに戻ってOK。楽しく終わることがいちばん大切です。</li>
+    <li>1日5分、短く。疲れや痛みがあるときは休みましょう。</li></ul>
+    <p class="small">内容は学校体育で一般的に行われている指導の流れをもとにしています。持病やけががある場合は医師の指示に従ってください。<br>記録（名前・シール・カレンダー）はこの端末の中だけに保存され、外部には送信されません。</p>
+    <button class="btn sm" data-act="reset">記録をすべて消す</button>
+  </section>`;
+  const inp=document.getElementById('nm');
+  inp.addEventListener('change',()=>{D.name=inp.value.trim().slice(0,12);save();renderHome();});
+}
+
+function renderSport(s){
+  const ch=D.checks[s.id]||[],reco=recoOf(s),recoIds=reco.map(x=>x.id);
+  const today=ymd(new Date()),didToday=(D.cal[today]||[]).includes(s.id);
+  const menu=[{t:'じゅんびうんどう（てくび・あしくび・かるく ジャンプ）',m:'1ぷん'}].concat(reco.slice(0,2).map(x=>({t:x.t+'（'+x.m+'）',m:'2ぷん'})));
+  if(menu.length===2)menu.push({t:'すきな ステップを もう1かい',m:'2ぷん'});
+  app.innerHTML=tabsHTML()+`
+  <div style="--c:${s.hex}">
+  <section class="card kid"><div class="hero">${figHTML(s.icon)}<div style="flex:1;min-width:200px"><h2 style="color:${s.hex};font-size:30px">${s.nm}</h2><div class="calm">${s.calm}</div></div></div></section>
+  <section class="card kid"><h2>① どこで つまずいてる？</h2><p style="margin:0 0 8px;font-size:17px">あてはまるものを おしてね（いくつでも）。</p>
+    <div class="chips">${s.checks.map(c=>`<button class="chip" data-chk="${c.id}" aria-pressed="${ch.includes(c.id)}">${c.t}</button>`).join('')}</div>
+    <div class="reco">おすすめ ステップ： ${reco.length?reco.map(x=>`<a href="#st_${x.id}" data-jump="${x.id}">${x.t}</a>`).join('、'):'ぜんぶ ◎！すごい！'}</div>
+  </section>
+  <section class="card kid"><h2>② きょうの 5ふん メニュー</h2>
+    <ul class="menu">${menu.map(x=>`<li><b class="min">${x.m}</b><span>${x.t}</span></li>`).join('')}</ul>
+    <div class="row" style="margin-top:12px"><button class="btn main" data-act="did" style="background:${s.hex};border-color:${s.hex}">${didToday?'✔ きょうは れんしゅう したよ':'きょう れんしゅう した！'}</button></div>
+  </section>
+  ${s.shoe?`<div class="shoe card"><svg viewBox="0 0 90 50" width="90" height="50"><path d="M6,36 Q6,18 22,16 L34,14 Q40,22 52,24 L78,30 Q86,32 86,40 L86,42 L6,42 Z" fill="#3c9a5a"/><path d="M6,42 h80" stroke="#1f3a5f" stroke-width="5" stroke-linecap="round"/><path d="M30,20 l8,8 M36,18 l8,8" stroke="#fff" stroke-width="2.5"/></svg><span>${s.shoe}</span></div>`:''}
+  <section class="card kid"><div class="row" style="justify-content:space-between"><h2 style="margin:0">③ ステップ ＆ シール</h2>${ctlHTML()}</div>
+    <p style="margin:4px 0 10px;font-size:17px">ボタンを おすと ○（れんしゅうちゅう）→ ◎（できた！）に なるよ。</p>
+    <div class="steps">${s.steps.map((x,i)=>{const st=stState(x.id),d=D.stickers[x.id];return `
+      <article class="step ${recoIds.includes(x.id)?'isreco':''}" id="st_${x.id}">
+        ${recoIds.includes(x.id)?'<span class="badge">おすすめ</span>':''}
+        <span class="no">ステップ ${i+1}</span>
+        <h3>${x.t}</h3>
+        ${figHTML(x.a)}
+        <ul>${x.k.map(l=>`<li>${l}</li>`).join('')}</ul>
+        <div class="mn">めやす：${x.m}</div>
+        <div class="sticker"><div class="seal s${st}">${st===2?'◎':st===1?'○':''}</div>
+          <button class="sbtn s${st}" data-stk="${x.id}">${st===2?'◎ できた！'+(d&&d.d?'（'+d.d.slice(5).replace('-','/')+'）':''):st===1?'○ れんしゅうちゅう':'まだ（おしてね）'}</button></div>
+        <div class="ptip"><b>おうちの方へ：</b>${x.p}</div>
+      </article>`;}).join('')}</div>
+  </section>
+  <section class="parent">
+    <h2>おうちの方へ｜${s.nm}の教え方のコツ</h2>
+    <ul>${s.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+    <div class="safe"><h3>安全のための注意</h3><ul>${s.safe.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+    <h3>焦らなくて大丈夫</h3><p style="margin:0">${s.note}</p>
+  </section></div>`;
+}
+
+function calHTML(){
+  const {y,m}=calMonth,first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),today=ymd(new Date());
+  let cells='';for(let i=0;i<first.getDay();i++)cells+='<div class="e"></div>';
+  for(let d=1;d<=days;d++){
+    const k=y+'-'+pad(m+1)+'-'+pad(d),arr=D.cal[k]||[];
+    cells+=`<button class="d ${k===today?'today':''} ${k===calSel?'sel':''} ${arr.length?'has':''}" data-day="${k}" aria-label="${m+1}がつ${d}にち ${arr.length?'れんしゅうした':''}">
+      <span>${d}</span>${arr.length?'<span class="st">★</span>':''}<span class="dots">${arr.map(id=>SP[id]?`<i style="background:${SP[id].hex}"></i>`:'').join('')}</span></button>`;
+  }
+  const sel=D.cal[calSel]||[],[sy,sm,sd]=calSel.split('-').map(Number);
+  const cnt=Object.keys(D.cal).filter(k=>k.startsWith(y+'-'+pad(m+1))&&D.cal[k].length).length;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:8px"><button class="btn sm" data-cal="-1">◀ まえ</button><b style="font-size:22px">${y}ねん ${m+1}がつ</b><button class="btn sm" data-cal="1">つぎ ▶</button></div>
+  <div class="cal">${['にち','げつ','か','すい','もく','きん','ど'].map(w=>`<div class="h">${w}</div>`).join('')}${cells}</div>
+  <p style="margin:8px 0 0;font-size:18px">この つきは <b>${cnt}</b> 日 れんしゅうしたよ。${SPORTS.map(s=>`<span style="white-space:nowrap"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.hex}"></i> ${s.nm}</span>`).join(' ')}</p>
+  <div class="daypanel"><b>${sm}がつ${sd}にち</b> に れんしゅうしたのは？（おすと しるしが つくよ）<br>${SPORTS.map(s=>`<button class="tg ${sel.includes(s.id)?'on':''}" style="--c:${s.hex}" data-tg="${s.id}">${sel.includes(s.id)?'✔ ':''}${s.nm}</button>`).join('')}</div>`;
+}
+function renderCal(){app.innerHTML=tabsHTML()+`<section class="card kid"><h2>がんばりカレンダー</h2>${calHTML()}</section>${ctlHTML()}`;}
+function render(){if(view==='home')renderHome();else if(view==='cal')renderCal();else renderSport(SP[view]);}
+function rerenderKeep(){const y=scrollY;render();scrollTo(0,y);}
+
+app.addEventListener('click',e=>{
+  const b=e.target.closest('[data-go],[data-act],[data-chk],[data-stk],[data-day],[data-cal],[data-tg],[data-jump]');if(!b)return;
+  if(b.dataset.go){view=b.dataset.go;render();scrollTo(0,0);return;}
+  if(b.dataset.jump){e.preventDefault();const el=document.getElementById('st_'+b.dataset.jump);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(b.dataset.chk){const a=D.checks[view]||(D.checks[view]=[]),i=a.indexOf(b.dataset.chk);if(i<0)a.push(b.dataset.chk);else a.splice(i,1);save();rerenderKeep();return;}
+  if(b.dataset.stk){const id=b.dataset.stk,st=(stState(id)+1)%3;if(st===0)delete D.stickers[id];else D.stickers[id]={s:st,d:ymd(new Date())};save();rerenderKeep();if(st===2)toast('◎ シールを はったよ！');else if(st===1)toast('○ れんしゅう ちゅう！');return;}
+  if(b.dataset.day){calSel=b.dataset.day;rerenderKeep();return;}
+  if(b.dataset.cal){calMonth.m+=Number(b.dataset.cal);if(calMonth.m<0){calMonth.m=11;calMonth.y--;}if(calMonth.m>11){calMonth.m=0;calMonth.y++;}rerenderKeep();return;}
+  if(b.dataset.tg){const a=D.cal[calSel]||(D.cal[calSel]=[]),i=a.indexOf(b.dataset.tg);if(i<0)a.push(b.dataset.tg);else a.splice(i,1);if(!a.length)delete D.cal[calSel];save();rerenderKeep();return;}
+  const act=b.dataset.act;
+  if(act==='pause'){paused=!paused;document.body.classList.toggle('paused',paused);rerenderKeep();}
+  else if(act==='did'){const t=ymd(new Date()),a=D.cal[t]||(D.cal[t]=[]);if(!a.includes(view)){a.push(view);save();toast('★ カレンダーに しるしを つけたよ');}else toast('きょうは もう ついてるよ');rerenderKeep();}
+  else if(act==='reset'){if(confirm('名前・シール・カレンダーの記録をすべて消します。よろしいですか？')){D={name:'',checks:{},stickers:{},cal:{}};save();render();}}
+});
+document.body.classList.toggle('paused',paused);
+render();
+</script>
+</body>
+</html>

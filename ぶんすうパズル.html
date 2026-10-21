@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ぶんすうパズル</title>
+<style>
+  :root{--bg:#fdf8ef;--ink:#3b3226;--sub:#8a7d6b;--line:#e8dcc8;--accent:#e2733b;--ok:#3a9a5b;--card:#fff}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","BIZ UDPGothic",sans-serif;
+    -webkit-user-select:none;user-select:none;overscroll-behavior:none;touch-action:manipulation}
+  .app{display:flex;flex-direction:column;height:100%;max-width:1400px;margin:0 auto;padding:10px 16px 12px;gap:8px}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  h1{font-size:22px;margin:0;letter-spacing:.05em}
+  .seg{display:flex;background:#efe6d6;border-radius:999px;padding:3px;gap:2px}
+  .seg button{border:none;background:none;border-radius:999px;padding:7px 13px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;line-height:1.1}
+  .seg button.on{background:var(--ink);color:#fff}
+  .seg .fr{display:inline-flex;flex-direction:column;align-items:center;font-weight:bold;font-size:14px;line-height:1}
+  .seg .fr i{font-style:normal;border-top:2px solid currentColor;padding:0 2px}
+  .score{margin-left:auto;font-size:18px;color:var(--accent);font-weight:bold}
+  .q{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:20px}
+  .q b{font-size:24px}
+  .found{font-size:16px;color:var(--sub)}
+  .found span{display:inline-block;min-width:30px;padding:2px 8px;margin-left:4px;border-radius:8px;background:#fff;border:2px dashed var(--line);text-align:center}
+  .found span.got{border:2px solid var(--ok);color:var(--ok);font-weight:bold}
+  .qbtns{margin-left:auto;display:flex;gap:8px}
+  .boardWrap{flex:1;min-height:0;position:relative;background:#fff;border:2px solid var(--line);border-radius:18px;overflow:hidden}
+  svg#board{width:100%;height:100%;display:block;touch-action:none}
+  .piece{cursor:grab}
+  .piece.sel{filter:drop-shadow(0 0 3px #1d6fd1) drop-shadow(0 0 3px #1d6fd1)}
+  .toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:#fff;border:3px solid var(--ink);border-radius:16px;
+    padding:12px 22px;font-size:22px;display:none;align-items:center;gap:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);max-width:94%;line-height:1.5}
+  .toast.show{display:flex}
+  .toast.ok{border-color:var(--ok)}
+  .toast.ng{border-color:var(--accent)}
+  .toast .big{font-size:40px}
+  .toast .btn{margin-top:6px}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 6px;line-height:1.05;font-weight:bold;font-size:28px}
+  .frac i{font-style:normal;display:block;width:100%;border-top:3px solid currentColor;text-align:center}
+  .q .frac{font-size:24px}
+  .bottom{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+  .tray{display:flex;gap:8px;flex:1 1 500px;min-width:0;overflow-x:auto;padding:2px}
+  .pc{flex:0 0 auto;width:96px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:6px 4px 4px;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+  .pc:active{transform:scale(.95)}
+  .pc svg{width:80px;height:62px;display:block;margin:0 auto}
+  .pc div{font-size:18px;font-weight:bold}
+  .pc.got{border-color:var(--ok);background:#f1faf3}
+  .tools{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .btn{border:none;border-radius:14px;padding:10px 16px;font:inherit;font-size:18px;background:#efe6d6;color:var(--ink);cursor:pointer;min-width:84px}
+  .btn:disabled{opacity:.35}
+  .btn.go{background:var(--accent);color:#fff;font-weight:bold;font-size:22px;padding:10px 24px}
+  .btn.next{background:var(--ok);color:#fff;font-weight:bold}
+  .btn.sm{font-size:15px;padding:8px 12px;min-width:0}
+  .help{font-size:14px;color:var(--sub)}
+  @media (max-width:700px){h1{font-size:18px}.q{font-size:16px}.q b{font-size:19px}.btn{font-size:15px;min-width:64px;padding:8px 10px}.btn.go{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🧩 ぶんすうパズル</h1>
+    <div class="seg" id="segMode">
+      <button data-v="shape">かたち</button>
+      <button data-v="dot">ドット</button>
+    </div>
+    <div class="seg" id="segFrac">
+      <button data-v="2"><span class="fr">1<i>2</i></span></button>
+      <button data-v="3"><span class="fr">1<i>3</i></span></button>
+      <button data-v="4"><span class="fr">1<i>4</i></span></button>
+      <button data-v="8"><span class="fr">1<i>8</i></span></button>
+      <button data-v="0">まぜる</button>
+    </div>
+    <div class="score" id="score"></div>
+  </header>
+  <div class="q">
+    <div id="qText"></div>
+    <div class="found" id="found"></div>
+    <div class="qbtns">
+      <button class="btn sm" id="bAns">こたえ</button>
+      <button class="btn sm next" id="bNext">つぎの もんだい ▶</button>
+    </div>
+  </div>
+  <div class="boardWrap">
+    <svg id="board" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+          <path id="gridPath" d="M25 0H0V25" fill="none" stroke="#f1ebe0" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="1000" height="560" fill="url(#grid)"/>
+      <g id="targetLayer"></g>
+      <g id="ansLayer"></g>
+      <g id="pieceLayer"></g>
+    </svg>
+    <div class="toast" id="toast"></div>
+  </div>
+  <div class="bottom">
+    <div class="tray" id="tray"></div>
+    <div class="tools">
+      <button class="btn" id="bRot">↻ まわす</button>
+      <button class="btn" id="bFlip">⇋ うらがえす</button>
+      <button class="btn" id="bDel">🗑 けす</button>
+      <button class="btn" id="bClear">ぜんぶけす</button>
+      <button class="btn go" id="bCheck">たしかめる</button>
+    </div>
+  </div>
+  <div class="help">ピースを タップすると でてくるよ。ゆびで うごかして、わくに ぴったり しきつめよう。おなじ ピース なんこで ぴったりかな？</div>
+</div>
+
+<script>
+const G = 25, DC = 50;          // かたち の 目もり / ドット 1マス
+const VW = 1000, VH = 560;
+const COLORS = ["#f2c230","#f39a6b","#8cc8ee","#9fd88a","#d7a6e8","#f5a3b5"];
+const LABELS = ["あ","い","う","え","お","か"];
+const rnd = n=>Math.floor(Math.random()*n), pick = a=>a[rnd(a.length)];
+const shuffle = a=>{ for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const F = n=>`<span class="frac">1<i>${n}</i></span>`;
+
+// ── 図形は「多角形の配列」であらわす（ドットのピースは 1マス=1つの四角）
+const rect = (w,h)=>[[[0,0],[w,0],[w,h],[0,h]]];
+const tri  = (w,h)=>[[[0,0],[w,0],[0,h]]];
+function circlePts(cx, cy, r, from, to, withCenter){
+  const p = [];
+  for(let k=from;k<=to;k++){ const a = k*Math.PI/24; p.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]); }
+  if(withCenter) p.push([cx,cy]);
+  return p;
+}
+const cellsToPolys = cells=>cells.map(([i,j])=>[[i*DC,j*DC],[(i+1)*DC,j*DC],[(i+1)*DC,(j+1)*DC],[i*DC,(j+1)*DC]]);
+function norm(polys){
+  const all = polys.flat();
+  const mx = Math.min(...all.map(p=>p[0])), my = Math.min(...all.map(p=>p[1]));
+  return polys.map(pl=>pl.map(p=>[Math.round((p[0]-mx)*1000)/1000, Math.round((p[1]-my)*1000)/1000]));
+}
+function orient(polys, rot, flip){
+  let s = polys.map(pl=>pl.map(([x,y])=>[flip?-x:x, y]));
+  for(let i=0;i<rot;i++) s = s.map(pl=>pl.map(([x,y])=>[-y, x]));
+  return norm(s);
+}
+const bboxS = polys=>{ const a = polys.flat(); return {w:Math.max(...a.map(p=>p[0])), h:Math.max(...a.map(p=>p[1]))}; };
+const areaP = pts=>Math.abs(pts.reduce((s,p,i)=>{const q=pts[(i+1)%pts.length]; return s+p[0]*q[1]-q[0]*p[1];},0))/2;
+const areaS = polys=>polys.reduce((s,p)=>s+areaP(p),0);
+function inPoly(x, y, pts){
+  let c = false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const [xi,yi]=pts[i],[xj,yj]=pts[j];
+    if((yi>y)!==(yj>y) && x < (xj-xi)*(y-yi)/(yj-yi)+xi) c=!c;
+  }
+  return c;
+}
+const inS = (x,y,polys)=>polys.some(p=>inPoly(x,y,p));
+const canon = s=>s.flat().map(p=>p.join(",")).sort().join(";");
+function keyS(polys){
+  let best = null;
+  for(let r=0;r<4;r++) for(const f of [false,true]){ const k = canon(orient(polys,r,f)); if(best===null||k<best) best=k; }
+  return best;
+}
+const ptsAttr = pts=>pts.map(p=>p.join(",")).join(" ");
+
+// ── しきつめ できるか しらべる（こたえ も つくる）
+function solve(tPolys, pPolys, N, S){
+  const tb = bboxS(tPolys), st = 12.5, ox = 4.3, oy = 7.9;
+  const nx = Math.ceil(tb.w/st), ny = Math.ceil(tb.h/st);
+  const idx = new Int32Array(nx*ny).fill(-1); let M = 0;
+  for(let j=0;j<ny;j++) for(let i=0;i<nx;i++){
+    const x = ox+i*st, y = oy+j*st;
+    if(x<tb.w && y<tb.h && inS(x,y,tPolys)) idx[j*nx+i] = M++;
+  }
+  const places = [], byS = Array.from({length:M},()=>[]), seen = new Set();
+  for(let rot=0;rot<4;rot++) for(const flip of [false,true]){
+    const sh = orient(pPolys,rot,flip), k = canon(sh);
+    if(seen.has(k)) continue; seen.add(k);
+    const b = bboxS(sh);
+    for(let px=0; px+b.w<=tb.w+0.01; px+=S) for(let py=0; py+b.h<=tb.h+0.01; py+=S){
+      const cov = []; let bad = false;
+      const i0 = Math.max(0,Math.ceil((px-ox)/st)), j0 = Math.max(0,Math.ceil((py-oy)/st));
+      for(let j=j0; j<ny && oy+j*st<py+b.h && !bad; j++) for(let i=i0; i<nx && ox+i*st<px+b.w; i++){
+        if(inS(ox+i*st-px, oy+j*st-py, sh)){ const id = idx[j*nx+i]; if(id<0){ bad=true; break; } cov.push(id); }
+      }
+      if(!bad && cov.length){ places.push({rot,flip,px,py,cov}); cov.forEach(id=>byS[id].push(places.length-1)); }
+    }
+  }
+  const used = new Uint8Array(M), sol = []; let nodes = 0;
+  function rec(d){
+    const s = used.indexOf(0);
+    if(s<0) return true;
+    if(d>=N || ++nodes>60000) return false;
+    for(const pi of byS[s]){
+      const p = places[pi];
+      if(p.cov.some(id=>used[id])) continue;
+      p.cov.forEach(id=>used[id]=1); sol.push(p);
+      if(rec(d+1)) return true;
+      sol.pop(); p.cov.forEach(id=>used[id]=0);
+    }
+    return false;
+  }
+  return M && rec(0) ? sol : null;
+}
+
+// ── もんだいを つくる
+function finish(prob, cands){
+  const A = areaS(prob.target), seen = new Set(), oks = [], others = [];
+  for(const polys0 of cands){
+    const polys = norm(polys0), b = bboxS(polys);
+    if(b.w<1 || b.h<1) continue;
+    const k = keyS(polys); if(seen.has(k)) continue; seen.add(k);
+    const ratio = A/areaS(polys);
+    if(ratio<1.4 || ratio>12.5) continue;
+    if(Math.abs(ratio-prob.N)<0.02){
+      const sol = solve(prob.target, polys, prob.N, prob.S);
+      if(sol) oks.push({polys, n:prob.N, sol});      // しきつめ られない 同じ大きさ は まぎらわしいので 出さない
+    } else {
+      others.push({polys, n:Math.abs(ratio-Math.round(ratio))<0.02 ? Math.round(ratio) : 0});
+    }
+  }
+  if(!oks.length) return null;
+  const okPick = shuffle(oks).slice(0, Math.min(3, oks.length));
+  const total = Math.min(5, okPick.length + others.length);
+  prob.pieces = shuffle(okPick.concat(shuffle(others).slice(0, total-okPick.length)))
+    .map((p,i)=>({...p, ok:!!p.sol, id:LABELS[i], color:COLORS[i]}));
+  prob.okCount = okPick.length;
+  const tb = bboxS(prob.target);
+  prob.tx = Math.max(prob.S, Math.round((520-tb.w)/2/prob.S)*prob.S);
+  prob.ty = Math.max(prob.S, Math.round((VH-tb.h)/2/prob.S)*prob.S);
+  return prob;
+}
+
+function genShape(N){
+  const type = pick((N===2||N===4) ? ["rect","rect","sq","tri","circle"] : ["rect","rect","sq"]);
+  const c = [];
+  if(type==="rect" || type==="sq"){
+    let W, H;
+    for(let t=0;t<200;t++){
+      if(type==="sq"){ W = H = pick([8,12,16]); }
+      else { W = pick([8,12,16,18]); H = pick([4,6,8,12]); if(W===H) continue; if(Math.random()<.35) [W,H] = [H,W]; }
+      if(W>18 || H>16 || (W*H)%N) continue;
+      break;
+    }
+    const R = (a,b)=>{ if(Number.isInteger(a)&&Number.isInteger(b)&&a>=1&&b>=1) c.push(rect(a*G,b*G)); };
+    const T = (a,b)=>{ if(Number.isInteger(a)&&Number.isInteger(b)&&a>=1&&b>=1) c.push(tri(a*G,b*G)); };
+    for(const k of [2,3,4,6,8]){ R(W/k,H); R(W,H/k); T(W/k,H); T(W,H/k); }
+    for(const a of [2,3,4]) for(const b of [2,3,4]) if(a*b<=12) R(W/a,H/b);
+    T(W,H); T(W/2,H/2);
+    if(W===H && W%2===0) c.push([[[0,0],[W*G,0],[W*G/2,W*G/2]]]);
+    // ちょっと ちがう ピース（まちがえ用）
+    R(W/2+1,H); R(W,H/2-1); R(Math.round(W*2/3),H); R(Math.round(W/N)+1,H); R(W,Math.round(H/N)+1);
+    return finish({mode:"shape", N, S:G, name: W===H ? "ましかく" : "ながしかく", target:rect(W*G,H*G)}, c);
+  }
+  if(type==="tri"){
+    const W = pick([8,12,16]), H = pick([6,8,12]), w = W*G, h = H*G;
+    c.push([[[0,0],[0,h],[w/2,h]]]);                                   // 半分（直角三角形）
+    c.push([[[w/4,0],[w/2,h/2],[0,h/2]]]);                             // 小さい三角
+    c.push([[[w/4,0],[w*3/4,0],[w,h/2],[0,h/2]]]);                     // 台形
+    c.push(tri(w/2,h/2)); c.push(tri(w/4,h)); c.push(rect(w/2,h/2)); c.push(rect(w/4,h/2));
+    return finish({mode:"shape", N, S:G, name:"さんかく", target:[[[w/2,0],[w,h],[0,h]]]}, c);
+  }
+  const R = pick([6,7]), r = R*G;
+  c.push([circlePts(r,r,r,24,48)]);              // 半円
+  c.push([circlePts(r,r,r,36,48,true)]);         // 四分円
+  c.push([circlePts(r,r,r,12,48,true)]);         // 4分の3
+  c.push([circlePts(r/2,r/2,r/2,0,47)]);         // 小さい円
+  c.push([circlePts(r,r,r,18,48,true)]);         // 半分より 小さい おうぎ
+  return finish({mode:"shape", N, S:G, name:"まる", target:[circlePts(r,r,r,0,47)]}, c);
+}
+
+function randomPoly(s, maxSide){
+  for(let t=0;t<50;t++){
+    const cells = [[0,0]], has = new Set(["0,0"]);
+    while(cells.length<s){
+      const [i,j] = pick(cells), [di,dj] = pick([[1,0],[-1,0],[0,1],[0,-1]]);
+      const k = (i+di)+","+(j+dj);
+      if(!has.has(k)){ has.add(k); cells.push([i+di,j+dj]); }
+    }
+    const b = bboxS(norm(cellsToPolys(cells)));
+    if(Math.max(b.w,b.h)<=maxSide*DC) return cellsToPolys(cells);
+  }
+  return null;
+}
+function genDot(N){
+  let r, c;
+  do{ r = 2+rnd(5); c = 2+rnd(5); } while((r*c)%N || r*c<4 || r*c>24 || r*c===N);
+  const T = r*c, k = T/N, cands = [];
+  const sizes = new Set([k, k+1, k-1]);
+  for(const m of [2,3,4,6,8]) if(T%m===0 && m!==N) sizes.add(T/m);
+  for(const s of sizes){
+    if(s<1 || s>=T) continue;
+    for(let a=1;a<=s;a++) if(s%a===0 && a<=6 && s/a<=6) cands.push(cellsToPolys([...Array(s)].map((_,x)=>[x%a, Math.floor(x/a)])));
+    const tries = s===k ? 30 : 6;
+    for(let t=0;t<tries;t++){ const p = randomPoly(s, Math.max(r,c)); if(p) cands.push(p); }
+  }
+  const cellsT = []; for(let j=0;j<r;j++) for(let i=0;i<c;i++) cellsT.push([i,j]);
+  return finish({mode:"dot", N, S:DC, T, name:"ドット", target:rect(c*DC, r*DC), dots:cellsT}, cands);
+}
+
+// ── 状態
+let set = {mode:"shape", frac:2};
+try{ Object.assign(set, JSON.parse(localStorage.getItem("bunsu-set")||"{}")); }catch(e){}
+let stars = 0; try{ stars = +localStorage.getItem("bunsu-stars")||0; }catch(e){}
+const saveLS = ()=>{ try{ localStorage.setItem("bunsu-set",JSON.stringify(set)); localStorage.setItem("bunsu-stars",stars); }catch(e){} };
+let prob = null, items = [], sel = null, found = new Set(), showAns = false;
+
+const $ = id=>document.getElementById(id);
+const svg = $("board"), NS = "http://www.w3.org/2000/svg";
+
+function newProblem(){
+  const N = set.frac || pick([2,2,3,3,4,4,8]);
+  for(let t=0;t<40 && !(prob = set.mode==="dot" ? genDot(N) : genShape(N));t++);
+  items = []; sel = null; found = new Set(); showAns = false; hideToast();
+  const S = prob.S;
+  $("grid").setAttribute("width",S); $("grid").setAttribute("height",S);
+  $("gridPath").setAttribute("d",`M${S} 0H0V${S}`);
+  renderAll();
+}
+function renderAll(){ renderHead(); renderTray(); renderTarget(); renderAns(); renderPieces(); }
+
+function renderHead(){
+  document.querySelectorAll("#segMode button").forEach(b=>b.classList.toggle("on", b.dataset.v===set.mode));
+  document.querySelectorAll("#segFrac button").forEach(b=>b.classList.toggle("on", +b.dataset.v===set.frac));
+  $("score").textContent = "★ " + stars;
+  $("qText").innerHTML = prob.mode==="dot"
+    ? `この <b>ドット</b> の ${F(prob.N)} に なる ピースは どれかな？`
+    : `この <b>${prob.name}</b> の ${F(prob.N)} に なる ピースは どれかな？`;
+  const got = prob.pieces.filter((p,i)=>found.has(i)).map(p=>p.id);
+  $("found").innerHTML = "みつけた：" + [...Array(Math.max(prob.okCount, got.length))]
+    .map((_,k)=>`<span class="${got[k]?"got":""}">${got[k]||"？"}</span>`).join("");
+  $("bAns").textContent = showAns ? "こたえを かくす" : "こたえ";
+}
+function drawPiece(p, polys, scale=1){
+  let s = polys.map(pl=>`<polygon points="${ptsAttr(pl.map(q=>[q[0]*scale,q[1]*scale]))}" fill="${prob.mode==="dot"?"#f2c230":p.color}" ${prob.mode==="dot"
+    ? `stroke="#f2c230" stroke-width="${1.5*scale}"` : `fill-opacity=".9" stroke="#5a4a32" stroke-width="${2.5*Math.max(scale,.6)}" stroke-linejoin="round"`}/>`).join("");
+  if(prob.mode==="dot") s += polys.map(pl=>{ const b = bboxS([pl.map(q=>[q[0],q[1]])]), x0 = Math.min(...pl.map(q=>q[0])), y0 = Math.min(...pl.map(q=>q[1]));
+    return `<circle cx="${(x0+b.w)/2*scale}" cy="${(y0+b.h)/2*scale}" r="${17*scale}" fill="#e2413f"/>`; }).join("");
+  return s;
+}
+function renderTray(){
+  $("tray").innerHTML = prob.pieces.map((pc,i)=>{
+    const b = bboxS(pc.polys), s = Math.min(70/b.w, 52/b.h);
+    return `<button class="pc ${found.has(i)?"got":""}" data-i="${i}">
+      <svg viewBox="-5 -5 80 62"><g transform="translate(${(70-b.w*s)/2},${(52-b.h*s)/2})">${drawPiece(pc, pc.polys, s)}</g></svg><div>${pc.id}</div></button>`;
+  }).join("");
+  $("tray").querySelectorAll(".pc").forEach(b=>b.onclick=()=>spawn(+b.dataset.i));
+}
+function renderTarget(){
+  const {tx,ty} = prob;
+  let s = prob.target.map(pl=>`<polygon points="${ptsAttr(pl.map(p=>[p[0]+tx,p[1]+ty]))}" fill="#fff" stroke="${prob.mode==="dot"?"#9a8f80":"#3b3226"}" stroke-width="${prob.mode==="dot"?2:4}" stroke-linejoin="round"/>`).join("");
+  if(prob.mode==="dot") s += prob.dots.map(([i,j])=>`<circle cx="${tx+(i+.5)*DC}" cy="${ty+(j+.5)*DC}" r="17" fill="#e2413f"/>`).join("");
+  $("targetLayer").innerHTML = s;
+}
+function renderAns(){
+  const L = $("ansLayer"); L.innerHTML = "";
+  if(!showAns) return;
+  const i = prob.pieces.findIndex((p,k)=>p.ok && !found.has(k));
+  const pc = prob.pieces[i>=0 ? i : prob.pieces.findIndex(p=>p.ok)];
+  pc.sol.forEach(pl=>{
+    const sh = orient(pc.polys, pl.rot, pl.flip);
+    L.innerHTML += sh.map(p=>`<polygon points="${ptsAttr(p.map(q=>[q[0]+prob.tx+pl.px, q[1]+prob.ty+pl.py]))}" fill="${pc.color}" fill-opacity=".25" stroke="#1d6fd1" stroke-width="3" stroke-dasharray="10 7"/>`).join("");
+  });
+  L.innerHTML += `<text x="${prob.tx}" y="${prob.ty-10}" font-size="22" fill="#1d6fd1">こたえの れい：${pc.id}</text>`;
+}
+function renderPieces(){
+  const L = $("pieceLayer"); L.innerHTML = "";
+  items.forEach(it=>{
+    const g = document.createElementNS(NS,"g");
+    g.setAttribute("class","piece"+(it===sel?" sel":""));
+    g.setAttribute("transform",`translate(${it.x},${it.y})`);
+    g.innerHTML = drawPiece(prob.pieces[it.pi], it.shape);
+    g.addEventListener("pointerdown", e=>startDrag(e, it));
+    L.appendChild(g);
+  });
+  ["bRot","bFlip","bDel"].forEach(id=>$(id).disabled = !sel);
+}
+function update(it){
+  const S = prob.S;
+  it.shape = orient(prob.pieces[it.pi].polys, it.rot, it.flip);
+  const b = bboxS(it.shape);
+  it.x = Math.max(0, Math.min(Math.floor((VW-b.w)/S)*S, Math.round(it.x/S)*S));
+  it.y = Math.max(0, Math.min(Math.floor((VH-b.h)/S)*S, Math.round(it.y/S)*S));
+}
+function spawn(pi){
+  const k = items.length % 5, S = prob.S;
+  const it = {pi, rot:0, flip:false, x:575+k*S, y:50+k*S};
+  update(it);
+  items.push(it); sel = it; hideToast(); renderPieces();
+}
+
+// ── ドラッグ
+function svgPt(e){
+  const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+let drag = null;
+function startDrag(e, it){
+  e.preventDefault(); e.stopPropagation();
+  sel = it; items = items.filter(x=>x!==it).concat(it);
+  const p = svgPt(e);
+  drag = {it, dx:p.x-it.x, dy:p.y-it.y, pid:e.pointerId};
+  hideToast(); renderPieces();
+}
+svg.addEventListener("pointermove", e=>{
+  if(!drag || e.pointerId!==drag.pid) return;
+  const p = svgPt(e), it = drag.it;
+  it.x = p.x-drag.dx; it.y = p.y-drag.dy;
+  const g = $("pieceLayer").lastChild; if(g) g.setAttribute("transform",`translate(${it.x},${it.y})`);
+});
+function endDrag(e){ if(!drag || e.pointerId!==drag.pid) return; update(drag.it); drag = null; renderPieces(); }
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+svg.addEventListener("pointerdown", ()=>{ if(sel){ sel = null; renderPieces(); } });
+
+$("bRot").onclick = ()=>{ if(!sel) return; sel.rot=(sel.rot+1)%4; update(sel); hideToast(); renderPieces(); };
+$("bFlip").onclick = ()=>{ if(!sel) return; sel.flip=!sel.flip; update(sel); hideToast(); renderPieces(); };
+$("bDel").onclick = ()=>{ items = items.filter(x=>x!==sel); sel=null; hideToast(); renderPieces(); };
+$("bClear").onclick = ()=>{ items=[]; sel=null; hideToast(); renderPieces(); };
+$("bNext").onclick = newProblem;
+$("bAns").onclick = ()=>{ showAns = !showAns; renderHead(); renderAns(); };
+document.querySelectorAll("#segMode button").forEach(b=>b.onclick=()=>{ set.mode=b.dataset.v; saveLS(); newProblem(); });
+document.querySelectorAll("#segFrac button").forEach(b=>b.onclick=()=>{ set.frac=+b.dataset.v; saveLS(); newProblem(); });
+
+// ── たしかめる
+function check(){
+  const T = prob.target.map(pl=>pl.map(p=>[p[0]+prob.tx, p[1]+prob.ty]));
+  const P = items.map(it=>it.shape.map(pl=>pl.map(p=>[p[0]+it.x, p[1]+it.y])));
+  const tb = bboxS(prob.target);
+  const x0t = prob.tx, y0t = prob.ty, x1t = prob.tx+tb.w, y1t = prob.ty+tb.h;
+  const step = 5, ox = 1.7, oy = 3.1;
+  const on = P.map(()=>0);
+  for(let x=x0t+ox;x<x1t;x+=step) for(let y=y0t+oy;y<y1t;y+=step){
+    if(!inS(x,y,T)) continue;
+    P.forEach((pp,i)=>{ if(inS(x,y,pp)) on[i]++; });
+  }
+  const idx = P.map((_,i)=>i).filter(i=>on[i]>0);
+  if(!idx.length) return show("ng","🧩","ピースを わくの なかに おいてみよう");
+  const all = idx.map(i=>P[i]).flat(2);
+  const x0 = Math.min(x0t, ...all.map(p=>p[0])), x1 = Math.max(x1t, ...all.map(p=>p[0]));
+  const y0 = Math.min(y0t, ...all.map(p=>p[1])), y1 = Math.max(y1t, ...all.map(p=>p[1]));
+  let tin=0, gap=0, over=0, out=0;
+  for(let x=x0+ox;x<x1;x+=step) for(let y=y0+oy;y<y1;y+=step){
+    const t = inS(x,y,T);
+    let c = 0; idx.forEach(i=>{ if(inS(x,y,P[i])) c++; });
+    if(t){ tin++; if(c===0) gap++; if(c>1) over++; }
+    else if(c>0) out++;
+  }
+  const tol = tin*0.025;
+  if(out>tol)  return show("ng","↔️","わくから はみだして いるよ");
+  if(over>tol) return show("ng","🔁","ピースが かさなって いるよ");
+  const types = [...new Set(idx.map(i=>items[i].pi))];
+  const n = idx.length, N = prob.N;
+  if(gap>tol){
+    const id = prob.pieces[types[0]].id;
+    if(types.length===1) return show("ng","🤔",`すきまが あるよ。<br>${id} を もっと おけるかな？ それとも ${id} では うまく いかない？`);
+    return show("ng","🤔","すきまが あるよ");
+  }
+  if(types.length>1) return show("ok","👀","ぴったり！ でも ちがう ピースが まざって いるよ。<br>おなじ ピース だけで しきつめて みよう");
+  const pi = types[0], pc = prob.pieces[pi];
+  const whole = prob.mode==="dot" ? `${prob.T}こ` : prob.name;
+  if(n===N){
+    const first = !found.has(pi);
+    if(first){ found.add(pi); stars++; saveLS(); }
+    renderHead(); renderTray();
+    const left = prob.pieces.filter((p,i)=>p.ok && !found.has(i)).length;
+    const msg = prob.mode==="dot"
+      ? `ぴったり！ ${pc.id} ${N}こで ぜんぶ うまった。<br>${prob.T}こ を ${N}つに わけた 1つ分 → ${prob.T}こ の ${F(N)} は <b>${prob.T/N}こ</b>`
+      : `ぴったり！ おなじ ${pc.id} ${N}こで ${whole} に なった。<br>${pc.id} は ${whole} の ${F(N)} だね！`;
+    const tail = !first ? "" : left
+      ? `<br><small>${F(N)} の ピースは まだ ${left}つ あるよ</small>`
+      : `<br><small>ぜんぶ みつけた！</small><br><button class="btn next" onclick="event.stopPropagation();newProblem()">つぎの もんだい ▶</button>`;
+    return show("ok","🎉", msg + tail);
+  }
+  const extra = prob.mode==="dot" ? `（${prob.T}こ の ${F(n)} は ${prob.T/n}こ）` : "";
+  return show("ok","✨",`ぴったり！ ${pc.id} ${n}こで ぜんぶ うまった。<br>${pc.id} は ${F(n)} だね。${extra}<br><small>${F(N)} を さがそう</small>`);
+}
+function show(kind, icon, html){
+  const t = $("toast"); t.className = "toast show "+kind;
+  t.innerHTML = `<span class="big">${icon}</span><div>${html}</div>`;
+}
+function hideToast(){ $("toast").className = "toast"; }
+$("toast").onclick = hideToast;
+$("bCheck").onclick = check;
+
+newProblem();
+</script>
+</body>
+</html>
