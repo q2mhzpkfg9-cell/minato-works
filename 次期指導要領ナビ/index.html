@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>次期指導要領ナビ</title>
+<meta name="description" content="次期学習指導要領の審議資料を、文部科学省・e-Govの一次情報だけで探せるリンク集">
+<style>
+:root{
+  --bg:#f7f5f0; --card:#fff; --ink:#23262b; --sub:#6b6f76; --line:#e4e0d6;
+  --accent:#1f5f8b; --accent-soft:#e6f0f7; --warn:#b4541a; --warn-soft:#fbeee4; --ok:#2f7a4b;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#16181b; --card:#202328; --ink:#e8e8e6; --sub:#9da1a8; --line:#33373d;
+    --accent:#7db5dc; --accent-soft:#1d2d3a; --warn:#f0a06a; --warn-soft:#3a2a1f; --ok:#7cc79a;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;line-height:1.7}
+a{color:var(--accent)}
+.wrap{max-width:920px;margin:0 auto;padding:24px 16px 64px}
+header h1{margin:0;font-size:1.6rem;letter-spacing:.02em}
+header p{margin:.3em 0 0;color:var(--sub);font-size:.92rem}
+.policy{display:inline-flex;gap:.4em;align-items:center;margin-top:10px;font-size:.8rem;
+  background:var(--accent-soft);color:var(--accent);padding:3px 10px;border-radius:99px}
+.now{margin:18px 0;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--warn);
+  border-radius:10px;padding:14px 16px}
+.now b{color:var(--warn)}
+.now .row{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.92rem}
+nav.tabs{display:flex;gap:6px;margin:18px 0 12px;overflow-x:auto}
+nav.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);
+  padding:8px 14px;border-radius:99px;font-size:.92rem;cursor:pointer;white-space:nowrap;font-family:inherit}
+nav.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.search{width:100%;padding:12px 14px;font-size:1rem;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);color:var(--ink);font-family:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.chips button{border:1px solid var(--line);background:transparent;color:var(--sub);font-size:.82rem;
+  padding:3px 10px;border-radius:99px;cursor:pointer;font-family:inherit}
+.chips button:hover{color:var(--accent);border-color:var(--accent)}
+.count{color:var(--sub);font-size:.85rem;margin:8px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:8px 0}
+.card h3{margin:0;font-size:1rem}
+.meta{color:var(--sub);font-size:.82rem}
+.tag{display:inline-block;font-size:.72rem;padding:0 7px;border-radius:5px;border:1px solid var(--line);color:var(--sub);margin-right:4px}
+.tag.pdf{color:var(--warn);border-color:var(--warn)}
+.links{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:.9rem}
+.dom{color:var(--sub);font-size:.72rem;margin-left:3px}
+/* 年表 */
+.tl{position:relative;margin-left:8px;padding-left:22px;border-left:2px solid var(--line)}
+.tl .item{position:relative;margin:0 0 14px}
+.tl .item::before{content:"";position:absolute;left:-29px;top:16px;width:12px;height:12px;border-radius:50%;
+  background:var(--card);border:2px solid var(--accent)}
+.tl .item.past::before{background:var(--accent)}
+.tl .item.future::before{border-style:dashed;border-color:var(--sub)}
+.tl .item.future .card{border-style:dashed}
+.tl .date{font-weight:700;font-size:.9rem;color:var(--accent)}
+.tl .item.future .date{color:var(--sub)}
+/* 会議 */
+.group-title{margin:20px 0 6px;font-size:.95rem;color:var(--sub)}
+.mtg{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:start}
+.mtg .latest{font-size:.82rem;text-align:right;white-space:nowrap}
+.next{color:var(--warn);font-size:.82rem}
+@media (max-width:560px){.mtg{grid-template-columns:1fr}.mtg .latest{text-align:left}}
+mark{background:#ffe9a8;color:inherit;border-radius:3px}
+@media (prefers-color-scheme: dark){mark{background:#6b5517}}
+footer{margin-top:40px;color:var(--sub);font-size:.8rem}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>次期指導要領ナビ</h1>
+    <p>次期学習指導要領の審議資料を、一次情報だけでたどれるリンク集</p>
+    <span class="policy">✓ リンク先は文部科学省（mext.go.jp）と e-Gov（e-gov.go.jp）だけ</span>
+  </header>
+
+  <div class="now" id="now"></div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="search" class="on">資料をさがす</button>
+    <button data-tab="timeline">年表</button>
+    <button data-tab="meetings">会議の入口</button>
+    <button data-tab="updates">更新履歴</button>
+  </nav>
+
+  <section id="tab-search">
+    <input id="q" class="search" type="search" placeholder="例：算数　／　時数　／　情報　AI　／　審議まとめ" autocomplete="off">
+    <div class="chips" id="chips"></div>
+    <div class="count" id="count"></div>
+    <div id="results"></div>
+  </section>
+
+  <section id="tab-timeline" class="hidden"><div class="tl" id="timeline"></div></section>
+  <section id="tab-meetings" class="hidden"><div id="meetings"></div></section>
+  <section id="tab-updates" class="hidden"><div id="updates"></div></section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.JIKI_DATA;
+const TODAY = new Date().toISOString().slice(0,10);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dom = u => { try { return new URL(u).hostname.replace(/^www\./,""); } catch { return ""; } };
+const jp = d => d ? d.replace(/^(\d{4})-(\d{2})-(\d{2})$/, (_,y,m,dd)=>`${y}年${+m}月${+dd}日`) : "";
+const link = (label,url) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a><span class="dom">${esc(dom(url))}</span>`;
+
+/* ふだんの言い方 → 資料の言い方 */
+const SYN = {
+  "算数":["算数・数学"], "数学":["算数・数学"], "社会":["社会・地理歴史・公民"],
+  "体育":["体育・保健体育"], "保健":["体育・保健体育","健康"], "音楽":["芸術"], "図工":["芸術"], "図画工作":["芸術"], "美術":["芸術"],
+  "生活":["生活、総合"], "総合":["総合的な学習"], "英語":["外国語"], "道徳":["道徳"], "特活":["特別活動"],
+  "家庭科":["家庭"], "技術":["情報・技術"], "プログラミング":["情報"], "ai":["情報","AI","生成AI"], "生成ai":["生成AI","情報"],
+  "時数":["時数","授業時数","調整授業時数","柔軟"], "授業時数":["時数"], "こま数":["時数"], "裁量":["時数","裁量","柔軟"],
+  "評価":["評価","総則・評価"], "総則":["総則"], "まとめ":["審議まとめ","取りまとめ"], "パブコメ":["パブリック・コメント","意見募集","パブコメ"],
+  "答申":["答申"], "諮問":["諮問"], "論点":["論点整理"], "スケジュール":["スケジュール","改訂"], "不登校":["不登校"], "特別支援":["特別支援"]
+};
+const CHIPS = ["審議まとめ","パブコメ","時数","評価","情報","算数","国語","外国語","特別支援","論点整理","諮問"];
+
+/* 検索用の行（資料＋会議＋年表）を1本にまとめる */
+const ROWS = [];
+D.documents.forEach(d => ROWS.push({type:"doc", date:d.date, title:d.title, sub:d.meeting, url:d.url, kind:d.kind,
+  text:[d.title,d.meeting,d.kind,...(d.keywords||[])].join(" ")}));
+D.meetings.forEach(m => ROWS.push({type:"mtg", date:m.latest?.date||"", title:m.name, sub:"会議の入口", url:m.url, kind:"会議",
+  extra:m, text:[m.name,m.parent,m.category,...(m.keywords||[])].join(" ")}));
+
+function expand(tok){
+  const t = tok.toLowerCase(); const out = new Set([tok]);
+  for (const k in SYN) if (t === k.toLowerCase() || t.includes(k.toLowerCase())) SYN[k].forEach(x=>out.add(x));
+  return [...out];
+}
+function search(q){
+  const toks = q.trim().split(/[\s　]+/).filter(Boolean);
+  if (!toks.length) return ROWS.filter(r=>r.type==="doc").sort((a,b)=>b.date.localeCompare(a.date)).map(r=>({r,s:0}));
+  const groups = toks.map(expand);
+  return ROWS.map(r => {
+    const T = r.text.toLowerCase(), TT = r.title.toLowerCase(); let s = 0;
+    for (const g of groups){
+      let hit = 0;
+      for (const w of g){ const lw=w.toLowerCase(); if (TT.includes(lw)) hit=Math.max(hit,3); else if (T.includes(lw)) hit=Math.max(hit,1); }
+      if (!hit) return null; s += hit;
+    }
+    if (r.type==="mtg") s += .5;
+    return {r,s};
+  }).filter(Boolean).sort((a,b)=> b.s-a.s || b.r.date.localeCompare(a.r.date));
+}
+function hl(text, q){
+  let h = esc(text);
+  const words = q.trim().split(/[\s　]+/).filter(Boolean).flatMap(expand).filter(w=>w.length>0).sort((a,b)=>b.length-a.length);
+  for (const w of words){ const re = new RegExp(esc(w).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi"); h = h.replace(re, m=>`<mark>${m}</mark>`); }
+  return h;
+}
+function renderSearch(){
+  const q = document.getElementById("q").value;
+  const res = search(q);
+  document.getElementById("count").textContent = q.trim() ? `${res.length}件` : `資料 ${res.length}件（新しい順）`;
+  document.getElementById("results").innerHTML = res.length ? res.map(({r}) => {
+    if (r.type==="mtg"){
+      const m = r.extra;
+      return `<div class="card"><span class="tag">会議</span><h3 style="display:inline">${hl(m.name,q)}</h3>
+        <div class="links">${link("会議トップ",m.url)}${m.giji_list?link("開催の一覧",m.giji_list):""}${m.latest?link(`直近：${m.latest.no}（${jp(m.latest.date)}）`,m.latest.url):""}</div></div>`;
+    }
+    return `<div class="card"><span class="tag ${r.kind==="PDF"?"pdf":""}">${esc(r.kind)}</span><a href="${esc(r.url)}" target="_blank" rel="noopener"><b>${hl(r.title,q)}</b></a>
+      <div class="meta">${jp(r.date)}　${esc(r.sub)}<span class="dom">${esc(dom(r.url))}</span></div></div>`;
+  }).join("") : `<div class="card">見つかりませんでした。言葉を短くするか、「会議の入口」から探してください。</div>`;
+}
+
+function renderNow(){
+  const tl = D.timeline;
+  const past = tl.filter(t=>t.date<=TODAY), fut = tl.filter(t=>t.date>TODAY);
+  const last = past[past.length-1], next = fut[0];
+  const pub = tl.find(t=>/パブ|意見募集/.test(t.title) && t.date>=TODAY);
+  document.getElementById("now").innerHTML = `
+    <div><b>いまの段階</b>　${last?esc(last.title)+"（"+jp(last.date)+"）":""}</div>
+    <div class="row">${next?`<span>次：${esc(next.title)}（${jp(next.date)}）</span>`:""}
+    ${pub?`<span>${pub.links.slice(0,1).map(l=>link("パブコメはこちら",l.url)).join("")}</span>`:""}</div>`;
+}
+function renderTimeline(){
+  document.getElementById("timeline").innerHTML = D.timeline.map(t => `
+    <div class="item ${t.date<=TODAY?"past":"future"}">
+      <div class="date">${jp(t.date)}${t.date>TODAY?"（予定）":""}</div>
+      <div class="card"><h3>${esc(t.title)}</h3><div class="meta">${esc(t.desc)}</div>
+        <div class="links">${(t.links||[]).map(l=>link(l.label,l.url)).join("")}</div></div>
+    </div>`).join("") + `
+    <div class="item future"><div class="date">令和8年度中（予定）</div><div class="card"><h3>中教審が答申</h3><div class="meta">その後、文科省が新しい学習指導要領を告示</div></div></div>
+    <div class="item future"><div class="date">2030年度〜（見込み）</div><div class="card"><h3>小学校で全面実施</h3><div class="meta">中学校2031年度、高校2032年度の見込み。正式な日程は告示で確定</div></div></div>`;
+}
+function renderMeetings(){
+  const order = ["総会","分科会","部会","特別部会","WG"];
+  const name = {総会:"中央教育審議会",分科会:"分科会",部会:"部会",特別部会:"特別部会（全体の方針を議論）",WG:"ワーキンググループ（教科などごとの議論）"};
+  document.getElementById("meetings").innerHTML = order.map(c => {
+    const ms = D.meetings.filter(m=>m.category===c); if(!ms.length) return "";
+    return `<div class="group-title">${name[c]}</div>` + ms.map(m => `
+      <div class="card mtg"><div><h3>${esc(m.name)}</h3>
+        <div class="links">${link("会議トップ",m.url)}${m.giji_list?link("開催の一覧",m.giji_list):""}</div></div>
+        <div class="latest">${m.latest?`直近 ${link(`${m.latest.no}（${jp(m.latest.date)}）`,m.latest.url)}`:""}
+        ${m.next?`<div class="next">次回 ${esc(m.next.no)} ${jp(m.next.date)} 予定</div>`:""}</div></div>`).join("");
+  }).join("") + (D.related_pages?.length ? `<div class="group-title">関連（文科省）</div><div class="card"><div class="links">${D.related_pages.map(p=>link(p.title,p.url)).join("")}</div></div>` : "");
+}
+function renderUpdates(){
+  document.getElementById("updates").innerHTML = [...D.updates].reverse().map(u =>
+    `<div class="card"><div class="date meta">${jp(u.date)}</div>${esc(u.text)}</div>`).join("");
+}
+
+document.getElementById("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("section[id^=tab-]").forEach(s=>s.classList.toggle("hidden", s.id!=="tab-"+b.dataset.tab));
+  history.replaceState(null,"","#"+b.dataset.tab);
+});
+document.getElementById("chips").innerHTML = CHIPS.map(c=>`<button>${c}</button>`).join("");
+document.getElementById("chips").addEventListener("click", e => { if(e.target.tagName==="BUTTON"){ q.value=e.target.textContent; renderSearch(); }});
+document.getElementById("q").addEventListener("input", renderSearch);
+document.getElementById("foot").textContent = `最終更新：${jp(D.updated)}　掲載URLはすべて実際に開いて確認済み。資料の正式な内容は必ずリンク先でご確認ください。`;
+
+renderNow(); renderSearch(); renderTimeline(); renderMeetings(); renderUpdates();
+const h = location.hash.slice(1); if (h) document.querySelector(`#tabs button[data-tab="${h}"]`)?.click();
+</script>
+</body>
+</html>

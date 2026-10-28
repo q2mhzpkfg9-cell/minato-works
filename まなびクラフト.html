@@ -131,6 +131,14 @@ h1,h2,h3{margin:0}
 .ent{position:absolute;bottom:22%;z-index:2}
 .ent canvas{animation:bob 1.6s ease-in-out infinite;transform-origin:50% 100%}
 #entPl{left:12%}
+#entPal{left:1%;transform:scaleX(-1)}
+#entPal canvas{animation-delay:-.5s}
+.card.pal{outline:4px solid #f2c14e}
+.card .pb{font-size:13px}
+.tro.off{opacity:.55;filter:grayscale(.8)}
+.tro .ic{font-size:40px;line-height:1}
+.tro .pg{width:100%;height:8px;background:#e8dcc4;border-radius:4px;overflow:hidden}.tro .pg i{display:block;height:100%;background:#f2c14e}
+.zkhead{grid-column:1/-1;font-weight:700;line-height:1.6;text-align:center}
 #entEn{right:10%}
 .plate{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center}
 .plate .tag{justify-content:center}
@@ -232,8 +240,10 @@ h1,h2,h3{margin:0}
     <div class="btnrow">
       <button class="btn grass" onclick="openMap()">ぼうけんへ</button>
       <button class="btn cream" onclick="openShop()">おみせ</button>
-      <button class="btn cream" onclick="openZukan()">ずかん</button>
+      <button class="btn cream" onclick="openZukan()">ずかん<small>なかま</small></button>
       <button class="btn cream" onclick="openNote()" id="hTrain">とっくん</button>
+      <button class="btn cream" onclick="openTower()" id="hTower">🗼 むげんの とう</button>
+      <button class="btn cream" onclick="openTrophy()" id="hTro">🏆 トロフィー</button>
       <button class="btn cream" onclick="openKise()">きせかえ</button>
       <button class="btn cream sm" onclick="openSet()">せってい</button>
     </div>
@@ -257,6 +267,7 @@ h1,h2,h3{margin:0}
       </div>
       <div class="tag" id="bInfo"></div>
     </div>
+    <div class="ent" id="entPal"><canvas id="cvPal"></canvas></div>
     <div class="ent" id="entPl"><canvas id="cvPl"></canvas></div>
     <div class="ent" id="entEn">
       <div class="plate"><div class="tag" id="enName"></div><div class="hpbar"><i id="enHp"></i></div><div class="tag weak" id="enWeak"></div></div>
@@ -273,7 +284,7 @@ h1,h2,h3{margin:0}
   <div class="grid" id="shopGrid"></div>
 </section>
 <section id="sZukan" class="screen sub-screen">
-  <div class="topbar"><button class="btn sm cream" onclick="goHome()">← むら</button><h2>モンスターずかん</h2><span class="tag" id="zkCount"></span></div>
+  <div class="topbar"><button class="btn sm cream" onclick="goHome()">← むら</button><h2>ずかん ＆ なかま</h2><span class="tag" id="zkCount"></span></div>
   <div class="grid" id="zkGrid"></div>
 </section>
 <section id="sNote" class="screen sub-screen">
@@ -283,6 +294,10 @@ h1,h2,h3{margin:0}
 <section id="sKise" class="screen sub-screen">
   <div class="topbar"><button class="btn sm cream" onclick="goHome()">← むら</button><h2>きせかえ</h2></div>
   <div class="kise"><div class="panel kprev"><canvas id="kCv"></canvas><b id="kName"></b><div class="btnrow"><button class="btn sm cream" onclick="randomLook()">🎲 おまかせ</button></div></div><div class="kopts" id="kOpts"></div></div>
+</section>
+<section id="sTrophy" class="screen sub-screen">
+  <div class="topbar"><button class="btn sm cream" onclick="goHome()">← むら</button><h2>トロフィー</h2><span class="tag" id="troCount"></span></div>
+  <div class="grid" id="troGrid"></div>
 </section>
 <section id="sTeacher" class="screen sub-screen">
   <div class="topbar"><button class="btn sm cream" onclick="leaveTeacher()">← もどる</button><h2>先生用 管理画面</h2></div>
@@ -2214,7 +2229,7 @@ function chooseChara(name){return new Promise(res=>{$('#ovBox').innerHTML=`<h2>�
 function startSlot(i){S.cur=i;save();goHome()}
 
 /* ---------- むら ---------- */
-function goHome(){const p=P();if(!p)return openTitle();show('sHome');homeScene.set('grass',todNow(),11);renderHome()}
+function goHome(){const p=P();if(!p)return openTitle();show('sHome');homeScene.set('grass',todNow(),11);renderHome();checkTrophies()}
 function renderHome(){const p=P(),lv=p.lv;
   $('#hName').innerHTML=`${esc(p.name)} <span class="lv">Lv.${lv}</span> ${TITLES[lv-1]}`;
   $('#hGem').innerHTML=`<img class="px" src="${ICON.gem}" style="height:20px"> ${p.gems}`;
@@ -2222,6 +2237,8 @@ function renderHome(){const p=P(),lv=p.lv;
   const lo=cum(lv),hi=cum(lv+1),span=hi-lo;
   const setBar=(el,v)=>{const r=lv>=MAXLV?1:Math.min(1,Math.max(0,(v-lo)/span));$(el+' i').style.width=(r*100)+'%';$(el).classList.toggle('full',r>=1)};
   setBar('#mK',p.k);setBar('#mS',p.s);
+  const tu=towerOpen(p);$('#hTower').className='btn '+(tu?'red':'cream');$('#hTower').innerHTML=tu?`🗼 とう${p.tower?`<small>${p.tower}かい</small>`:''}`:'🗼 とう<small>🔒</small>';
+  $('#hTro').innerHTML=`🏆<small>${troCount(p)}/${TROPHIES.length}</small>`;
   const ht=$('#hTrain');ht.className='btn '+(dailyDone()?'cream':'gold');ht.innerHTML=dailyDone()?'とっくん':'📅 きょうの とっくん';
   const kr=Math.max(0,Math.ceil((hi-p.k)/10)),sr=Math.max(0,Math.ceil((hi-p.s)/10));
   $('#mKt').textContent=lv>=MAXLV?'MAX':kr?`あと${kr}もん`:'OK!';$('#mSt').textContent=lv>=MAXLV?'MAX':sr?`あと${sr}もん`:'OK!';
@@ -2248,7 +2265,8 @@ function drawHouse(cv,p,tod){const W=160,H=50;cv.width=W;cv.height=H;const c=cv.
   const POS={well:2,mill:12,lantern:52,flower:104,chick:120,dog:128,cat:139,tree:149};
   const DP={flower:{p:'#f3a6c0',y:'#ffe27a',o:'#f08a3c',w:'#ffffff',g:'#5fa648'},lantern:{a:'#4a3628',y:'#ffd25a',o:night?'#fff3b0':'#f08a3c',b:'#7a5232'},chick:{r:'#e2674f',w:'#fffaf0',k:'#3b2a1e',o:'#f2a23c'},
     dog:{a:'#8a5a3b',b:'#d9a86a',k:'#3b2a1e',o:'#3b2a1e'},cat:{a:'#9a9aa6',k:'#ffe27a'},tree:{p:'#f6b8cc',w:'#fde3ec',b:'#8a5a3b'},well:{a:'#8a5a3b',b:'#7a5232',c:'#6b4226',s:'#a8a8a8',d:'#8a8a8a'},mill:{w:'#f3e2c4',a:'#7a5232',b:'#c08a55',d:'#6b4226'}};
-  p.deco.forEach(id=>{const rows=DECO_SPR[id];if(rows)paintRows(c,rows,DP[id],POS[id],gy-rows.length)})}
+  p.deco.forEach(id=>{const rows=DECO_SPR[id];if(rows)paintRows(c,rows,DP[id],POS[id],gy-rows.length)});
+  if(p.pal&&EN[p.pal]){const d=EN[p.pal],er=enemyRows(d),W=Math.max(...er.map(r=>r.length)),fl=er.map(r=>[...r.padEnd(W,'.')].reverse().join(''));paintRows(c,fl,Object.assign(enemyPal(d),{Y:'#f2c14e',R:'#e2674f'}),Math.max(0,cx-52-W),gy-fl.length)}}
 
 /* ---------- ちず ---------- */
 const areaOpen=(p,ai)=>ai===0||!!p.clr[`${ai-1}-${bossSt(ai-1)}`];
@@ -2276,16 +2294,16 @@ function openMap(){const p=P();show('sMap');bgScene.set('grass',todNow(),5);$('#
 /* ---------- バトル ---------- */
 let B=null;
 function layout(){const st=$('#bStage');if(st&&st.offsetParent){const H=st.clientHeight,W=st.clientWidth,u=Math.min(H*.42/16,W*.32/20);
-    const pc=$('#cvPl');pc.style.height=(pc.height*u)+'px';const ec=$('#cvEn');ec.style.height=Math.min(ec.height*u*(B&&B.en&&B.en.d.boss?1.45:1.15),H*.44)+'px'}
+    const pc=$('#cvPl');pc.style.height=(pc.height*u)+'px';const pp=$('#cvPal');pp.style.height=Math.min(pp.height*u*.75,H*.26)+'px';const ec=$('#cvEn');ec.style.height=Math.min(ec.height*u*(B&&B.en&&B.en.d.boss?1.45:1.15),H*.44)+'px'}
   const hs=$('#hStage');if(hs&&hs.offsetParent){const H=hs.clientHeight,W=hs.clientWidth,u=Math.min(H*.55/50,W*.98/160);$('#hHouse').style.height=(50*u)+'px'}}
 function startBattle(ai,st){$('#flee').textContent='にげる';const p=P(),A=AREAS[ai];const list=st===bossSt(ai)?[A.boss]:Array.from({length:st===1?2:3},()=>pick(A.en));
   B={ai,st,A,list,idx:0,hearts:maxH(p.lv),charge:0,last:null,miss:0,gain:{k:0,s:0,g:0},busy:false,en:null};
-  show('sBattle');battleScene.set(timeSky()?pick(BIOME_CYCLE):A.biome,null,timeSky()?ri(1,9999):ai*7+st);drawPlayer($('#cvPl'),p);updHud();nextEnemy()}
-function updHud(){const p=P();if(B.train){$('#bHearts').innerHTML=`🎯 とっくん`;$('#bInfo').innerHTML=`${B.cat}　${Math.min(B.n,B.total)} / ${B.total}もん　<span class="lv">せいかい ${B.ok}</span>`;return}$('#bHearts').innerHTML=heartsHTML(B.hearts,maxH(p.lv));$('#bInfo').innerHTML=`${B.A.name}・${B.st===bossSt(B.ai)?'ボス':'ステージ'+B.st}　<span class="lv">Lv.${p.lv}</span>`}
-function nextEnemy(){const id=B.list[B.idx],d=EN[id],hp=d.hits*(8+B.A.req*2);
+  show('sBattle');battleScene.set(timeSky()?pick(BIOME_CYCLE):A.biome,null,timeSky()?ri(1,9999):ai*7+st);drawPlayer($('#cvPl'),p);showPal();B.guard=1;updHud();nextEnemy()}
+function updHud(){const p=P();if(B.train){$('#bHearts').innerHTML=`🎯 とっくん`;$('#bInfo').innerHTML=`${B.cat}　${Math.min(B.n,B.total)} / ${B.total}もん　<span class="lv">せいかい ${B.ok}</span>`;return}$('#bHearts').innerHTML=heartsHTML(B.hearts,maxH(p.lv));if(B.tower){$('#bInfo').innerHTML=`🗼 むげんの とう <b>${B.floor}かい</b>　<span class="lv">Lv.${p.lv}</span>`;return}$('#bInfo').innerHTML=`${B.A.name}・${B.st===bossSt(B.ai)?'ボス':'ステージ'+B.st}　<span class="lv">Lv.${p.lv}</span>`}
+function nextEnemy(){const id=B.list[B.idx],d=EN[id],hp=B.tower?towerHP(d,B.floor):d.hits*(8+B.A.req*2);
   B.en={id,d,hp,max:hp,shield:d.boss?pick(['ken','maho']):null};P().seen[id]=1;save();
   drawEnemy($('#cvEn'),id);const ent=$('#entEn');ent.className='ent';void ent.offsetWidth;ent.classList.add('a-appear');layout();updEnemy();
-  if(d.boss)toast(`<b>${d.n}</b> が あらわれた！<br>バリアの いろを みて たたかおう`,2600);showCmd()}
+  if(d.boss)toast(`<b>${d.n}</b> が あらわれた！<br>バリアの いろを みて たたかおう`,2600);else if(B.tower)toast(`🗼 ${B.floor}かい`,900);showCmd()}
 function updEnemy(){const e=B.en,ent=$('#entEn');if(B.train){$('#enName').textContent=e.d.n;$('#enHp').style.width=(100-B.n/B.total*100)+'%';$('#enWeak').textContent=B.cat;return}$('#enName').textContent=e.d.n;$('#enHp').style.width=Math.max(0,e.hp/e.max*100)+'%';
   ent.classList.toggle('shield-ken',e.shield==='ken');ent.classList.toggle('shield-maho',e.shield==='maho');
   $('#enWeak').innerHTML=e.shield?(e.shield==='ken'?'🟥 あかい バリア：⚔けん で こわせる':'🟦 あおい バリア：✦まほう で こわせる'):e.d.weak?`にがて：${e.d.weak==='ken'?'⚔ けん':'✦ まほう'}`:'にがて：なし';}
@@ -2299,7 +2317,7 @@ function showCmd(){B.busy=false;const e=B.en,lag=behind();
    <div class="charge">バランスゲージ ${[0,1,2].map(i=>`<i class="${i<B.charge?'on':''}"></i>`).join('')} <span style="font-weight:700">（けん と まほうを かわりばんこに せいかいで たまる）</span></div>`;
   $('#cKen').onclick=()=>cmd('ken');$('#cMaho').onclick=()=>cmd('maho');if($('#cStar'))$('#cStar').onclick=()=>cmd('star');
   if(e.shield){(e.shield==='ken'?$('#cMaho'):$('#cKen')).disabled=true}}
-function cmd(type){if(B.busy)return;SFX.tap();const subj=type==='ken'?'s':type==='maho'?'k':(behind()||pick(['k','s']));B.mode=type;B.q=genQ(subj,B.ai);renderQ(B.q,type==='star'?'★ バランスわざ':'')}
+function cmd(type){if(B.busy)return;SFX.tap();const subj=type==='ken'?'s':type==='maho'?'k':(behind()||pick(['k','s']));B.mode=type;const tw=B.tower&&Math.random()<.3&&weakestOf(subj);B.q=tw?genCat(tw,subj,B.ai):genQ(subj,B.ai);renderQ(B.q,type==='star'?'★ バランスわざ':'')}
 function renderQ(q,tag){if(q.write)return renderWrite(q,tag,ok=>answer(ok?q.ans:'×',null));$('#bDock').innerHTML=`<div style="text-align:center"><span class="badge ${q.subj}">${q.subj==='s'?'⚔ さんすう':'✦ こくご'}・${q.cat}</span>${tag?` <span class="badge" style="background:#f2c14e;color:#3b2a1e">${tag}</span>`:''}</div>
    <div class="qtext">${q.text}</div><div class="choices"></div>`;
   const box=$('#bDock .choices');q.choices.forEach(ch=>{const b=document.createElement('button');b.className='btn cream';b.textContent=ch;b.onclick=()=>answer(ch,b);box.appendChild(b)});$('#bDock').scrollTop=0}
@@ -2322,7 +2340,7 @@ function particles(x,y,cols,n=14){const fx=$('#fx');for(let i=0;i<n;i++){const d
 function dmgText(x,y,html,blue){const d=document.createElement('div');d.className='dmg'+(blue?' blue':'');d.style.left=x+'px';d.style.top=(y-30)+'px';d.innerHTML=html;$('#fx').appendChild(d);setTimeout(()=>d.remove(),1000)}
 function anim(el,cls,ms){el.classList.remove('a-atkR','a-atkL','a-hurt','a-appear');void el.offsetWidth;el.classList.add(cls);return sleep(ms)}
 async function playerAttack(subj){const p=P(),e=B.en,ent=$('#entEn'),pl=$('#entPl');let dmg=atkOf(p.lv),label='';
-  if(B.mode==='star'){dmg*=3;label='バランスわざ！'}else if(!e.shield&&e.d.weak===(subj==='s'?'ken':'maho')){dmg*=2;label='こうかばつぐん！'}
+  if(B.mode==='star'){dmg*=3;label='バランスわざ！';p.bal=(p.bal||0)+1}else if(!e.shield&&e.d.weak===(subj==='s'?'ken':'maho')){dmg*=2;label='こうかばつぐん！'}
   if(B.last&&B.last!==subj&&B.mode!=='star')B.charge=Math.min(3,B.charge+1);if(B.mode==='star')B.charge=0;B.last=subj;
   anim(pl,'a-atkR',450);await sleep(200);const {x,y}=fxAt($('#cvEn'));
   if(subj==='s'&&B.mode!=='star'){SFX.hit();const s=document.createElement('div');s.className='slash';s.style.left=x+'px';s.style.top=y+'px';$('#fx').appendChild(s);setTimeout(()=>s.remove(),400);particles(x,y,['#fff','#ffe08a','#e2674f'])}
@@ -2330,22 +2348,26 @@ async function playerAttack(subj){const p=P(),e=B.en,ent=$('#entEn'),pl=$('#entP
   e.hp-=dmg;dmgText(x,y,`${label?`<small>${label}</small>`:''}${dmg}`,subj==='k');anim(ent,'a-hurt',500);
   if(e.shield&&e.hp>0){e.shield=e.shield==='ken'?'maho':'ken';setTimeout(()=>toast(e.shield==='ken'?'バリアが <b style="color:#c0503c">あか</b> に かわった！':'バリアが <b style="color:#2c5a9a">あお</b> に かわった！',1500),500)}
   updEnemy();await sleep(650)}
-async function enemyAttack(){const ent=$('#entEn'),pl=$('#entPl');anim(ent,'a-atkL',450);await sleep(220);SFX.hit();B.hearts--;updHud();const {x,y}=fxAt($('#cvPl'));particles(x,y,['#e2564a','#ffb3a8']);await anim(pl,'a-hurt',500)}
-async function defeat(){const e=B.en,p=P();const ent=$('#entEn');ent.classList.add('a-die');SFX.coin();const g=e.d.boss?8:1+(B.ai>=2?1:0);p.gems+=g;B.gain.g+=g;p.beat[e.id]=(p.beat[e.id]||0)+1;save();
+async function enemyAttack(){const ent=$('#entEn'),pl=$('#entPl');anim(ent,'a-atkL',450);await sleep(220);const pal=P().pal&&EN[P().pal];
+  if(pal&&B.guard>0){B.guard--;SFX.magic();const {x,y}=fxAt($('#cvPal'));particles(x,y,['#ffe08a','#fff','#7ad6e0'],16);toast(`🐾 <b>${pal.n}</b> が まもって くれた！`,1600);await sleep(500);return}
+  SFX.hit();B.hearts--;updHud();const {x,y}=fxAt($('#cvPl'));particles(x,y,['#e2564a','#ffb3a8']);await anim(pl,'a-hurt',500)}
+async function defeat(){const e=B.en,p=P();const ent=$('#entEn');ent.classList.add('a-die');SFX.coin();const g=B.tower?(e.d.boss?6:1)+Math.floor(B.floor/10):e.d.boss?8:1+(B.ai>=2?1:0);p.gems+=g;B.gain.g+=g;p.beat[e.id]=(p.beat[e.id]||0)+1;save();
   const {x,y}=fxAt($('#cvEn'));dmgText(x,y,`<small>${e.d.n}を たおした！</small>+${g}💎`);await sleep(900);ent.classList.remove('a-die');
+  await tryRecruit(e.id);
+  if(B.tower)return towerNext();
   B.idx++;if(B.idx<B.list.length)nextEnemy();else stageClear()}
 async function levelUp(old){const p=P();SFX.lv();B&&(B.hearts=maxH(p.lv));B&&updHud();const cv=document.createElement('canvas');drawPlayer(cv,p);
   const newTier=tierOf(p.lv).lv>old?`<p>⚔ <b>${tierOf(p.lv).n}</b> を てに いれた！</p>`:'';const newHouse=houseOf(p.lv)>houseOf(old)?`<p>🏠 むらの いえが <b>${HOUSE_NAME[houseOf(p.lv)]}</b> に なった！</p>`:'';
   const unlock=AREAS.findIndex(a=>a.bossLv<=p.lv&&a.bossLv>old);const ul=unlock>=0?`<p>👑 <b>${EN[AREAS[unlock].boss].n}</b> に いどめるように なった！</p>`:'';
   const pr=modal(`<h2 class="lvup">LEVEL UP!</h2><p>レベル <b>${p.lv}</b> に なった！<br>しょうごう：<b>${TITLES[p.lv-1]}</b></p><div id="lvCv"></div><p>♥ ハートが ${maxH(p.lv)}こに なった</p>${newTier}${newHouse}${ul}<p style="font-size:15px">こくご と さんすう を りょうほう がんばった しるし！</p>${unlockItems(old,p.lv)}`,[['やったー！','gold']]);const box=$('#lvCv');if(box)box.appendChild(cv);await pr}
 async function stageClear(){const p=P(),key=`${B.ai}-${B.st}`,stars=B.miss===0?3:B.miss<=2?2:1,first=!p.clr[key];p.clr[key]=Math.max(p.clr[key]||0,stars);
-  const bonus=2+(first?5:0);p.gems+=bonus;B.gain.g+=bonus;save();SFX.win();
+  const bonus=2+(first?5:0);p.gems+=bonus;B.gain.g+=bonus;if(B.st===bossSt(B.ai)&&B.miss===0)p.perfB=(p.perfB||0)+1;save();SFX.win();
   const bs=bossSt(B.ai),isB=B.st===bs;let extra='';if(isB&&first){const nx=AREAS[B.ai+1];extra=nx?`<p>🗺 <b>${nx.name}</b> へ いけるように なった！</p>`:'<p>🎉 すべての エリアを クリア！ でんせつの ぼうけんしゃだ！</p>'}
   const btns=[],last=B.st===bs-1;if(B.st<bs-1||(last&&bossReady(p,B.ai)))btns.push([last?'ボスに いどむ':'つぎの ステージへ',last?'red':'grass','next']);else if(last){extra+=`<p>👑 ボスは <b>Lv.${B.A.bossLv}</b> から！<br>ステージや とっくんで レベルを あげよう</p>`;btns.push(['🎯 とっくんへ','gold','train'])}btns.push(['ちずへ','cream','map'],['むらへ','cream','home']);
   const v=await modal(`<h2>${isB?'ボスを たおした！':'ステージ クリア！'}</h2><div class="stars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3-stars)}</span></div>
    <div class="gain"><span style="color:#2c5a9a">✦ こくご +${B.gain.k}</span><span style="color:#c0503c">⚔ さんすう +${B.gain.s}</span><span>💎 +${B.gain.g}</span></div>${first?'<p>はじめての クリア ボーナス！</p>':''}${extra}`,btns);
   if(v==='next')startBattle(B.ai,B.st+1);else if(v==='train')openNote();else if(v==='map')openMap();else goHome()}
-async function lose(){const v=await modal(`<h2>たおれて しまった…</h2><p>でも だいじょうぶ！<br>ここまでの けいけんちは ちゃんと のこって いるよ。</p><div class="gain"><span style="color:#2c5a9a">✦ こくご +${B.gain.k}</span><span style="color:#c0503c">⚔ さんすう +${B.gain.s}</span></div>`,[['もういちど','grass','re'],['むらで やすむ','cream','home']]);
+async function lose(){if(B.tower)return towerEnd(false);const v=await modal(`<h2>たおれて しまった…</h2><p>でも だいじょうぶ！<br>ここまでの けいけんちは ちゃんと のこって いるよ。</p><div class="gain"><span style="color:#2c5a9a">✦ こくご +${B.gain.k}</span><span style="color:#c0503c">⚔ さんすう +${B.gain.s}</span></div>`,[['もういちど','grass','re'],['むらで やすむ','cream','home']]);
   if(v==='re')startBattle(B.ai,B.st);else goHome()}
 
 /* ---------- とっくん ---------- */
@@ -2362,7 +2384,7 @@ function startDaily(w){w=w||weakest();if(!w)return;startTrain(w);B.daily=true}
 function startTrain(cat){if(!cat)return;const p=P();SFX.tap();
   B={train:true,cat,subj:cat===CUSTOM?(customs('s').length?'s':'k'):subjOfCat(cat),ai:maxArea(p),A:{name:'とっくんじょう',biome:'grass',req:1},n:0,total:10,ok:0,retry:[],isRetry:false,hearts:maxH(p.lv),gain:{k:0,s:0,g:0},busy:false,
     en:{id:'dummy',d:EN.dummy,hp:1,max:1,shield:null}};
-  show('sBattle');$('#flee').textContent='やめる';battleScene.set(timeSky()?pick(BIOME_CYCLE):'grass',null,ri(1,9999));drawPlayer($('#cvPl'),p);drawEnemy($('#cvEn'),'dummy');const ent=$('#entEn');ent.className='ent';layout();updHud();updEnemy();trainNext()}
+  show('sBattle');$('#flee').textContent='やめる';battleScene.set(timeSky()?pick(BIOME_CYCLE):'grass',null,ri(1,9999));drawPlayer($('#cvPl'),p);showPal();drawEnemy($('#cvEn'),'dummy');const ent=$('#entEn');ent.className='ent';layout();updHud();updEnemy();trainNext()}
 function trainNext(){B.busy=false;B.isRetry=false;
   if(B.n>=B.total){if(!B.retry.length)return trainEnd();B.q=B.retry.shift();B.q.choices=shuffle(B.q.choices);B.isRetry=true;renderQ(B.q,'もういちど！');return}
   B.q=genCat(B.cat,B.subj,B.ai);renderQ(B.q,'')}
@@ -2376,7 +2398,7 @@ async function trainAnswer(ch,btn){B.busy=true;const q=B.q,ok=ch===q.ans;rec(q.c
   else{SFX.ng();btn&&btn.classList.add('ngg');if(!B.isRetry)B.retry.push(q);updHud();updEnemy();await sleep(400);
     $('#bDock').innerHTML=`<div class="fb">おしい！ こたえは<br><span class="ans">${esc(q.ans)}</span><div class="ex">${esc(q.ex)}</div>${B.isRetry?'':'<div class="ex">この もんだいは さいごに もういちど でるよ</div>'}<button class="btn grass" id="fbOk">わかった</button></div>`;
     $('#fbOk').onclick=()=>{SFX.tap();trainNext()}}}
-async function trainEnd(){const p=P(),ok=B.ok,stars=ok>=10?3:ok>=8?2:1,g=ok>=10?3:ok>=8?2:0;p.gems+=g;B.gain.g+=g;
+async function trainEnd(){const p=P();p.trn=(p.trn||0)+1;const ok=B.ok,stars=ok>=10?3:ok>=8?2:1,g=ok>=10?3:ok>=8?2:0;p.gems+=g;B.gain.g+=g;
   let dl='';if(B.daily&&!dailyDone()){const y=new Date();y.setDate(y.getDate()-1);p.dstreak=p.daily===dayStr(y)?(p.dstreak||0)+1:1;p.daily=dayStr();const db=5+(p.dstreak%7===0?10:0);p.gems+=db;B.gain.g+=db;
     dl=`<p>📅 <b>きょうの とっくん</b> たっせい！ 💎+${db}<br>${p.dstreak}にち れんぞく${p.dstreak%7===0?'！ 7にちごとの ボーナス！':''}</p>`}
   save();SFX.win();
@@ -2384,7 +2406,8 @@ async function trainEnd(){const p=P(),ok=B.ok,stars=ok>=10?3:ok>=8?2:1,g=ok>=10?
    <div class="gain"><span style="color:${B.subj==='k'?'#2c5a9a':'#c0503c'}">${B.subj==='k'?'✦ こくご':'⚔ さんすう'} +${B.gain[B.subj]}</span>${g?`<span>💎 +${g}</span>`:''}</div>${dl}<p>${ok>=8?'すごい！ この ちょうしで ほかの ところも とっくんしよう！':'まちがえた ところは ノートで もういちど とっくん できるよ'}</p>`,
    [['もういちど','grass','re'],['ノートへ','cream','note'],['むらへ','cream','home']]);
   $('#flee').textContent='にげる';if(v==='re')startTrain(B.cat);else if(v==='note')openNote();else goHome()}
-async function flee(){if(B.busy)return;if(B.train){const v=await modal('<h2>とっくんを やめる？</h2><p>ここまでの けいけんちは のこるよ。</p>',[['つづける','grass',0],['やめる','cream',1]]);if(v)openNote();return}const v=await modal('<h2>にげる？</h2><p>ここまでの けいけんちは のこるよ。</p>',[['たたかう','grass',0],['にげる','cream',1]]);if(v)goHome()}
+async function flee(){if(B.busy)return;if(B.train){const v=await modal('<h2>とっくんを やめる？</h2><p>ここまでの けいけんちは のこるよ。</p>',[['つづける','grass',0],['やめる','cream',1]]);if(v)openNote();return}if(B.tower){const v=await modal(`<h2>とうから かえる？</h2><p>いまは <b>${B.floor}かい</b>。きろくと けいけんちは のこるよ。</p>`,[['のぼりつづける','grass',0],['かえる','cream',1]]);if(v)towerEnd(true);return}const v=await modal('<h2>にげる？</h2><p>ここまでの けいけんちは のこるよ。</p>',[['たたかう','grass',0],['にげる','cream',1]]);if(v)goHome()}
+
 
 /* ---------- おみせ・ずかん・ノート・せってい ---------- */
 const DECOS=[{id:'flower',n:'はなばたけ',price:5},{id:'lantern',n:'ランタン',price:8},{id:'chick',n:'にわとり',price:10},{id:'dog',n:'いぬ',price:15},{id:'cat',n:'ねこ',price:15},{id:'tree',n:'さくらの き',price:20},{id:'well',n:'いど',price:25},{id:'mill',n:'ふうしゃ',price:40}];
@@ -2396,8 +2419,14 @@ function renderShop(){const p=P();$('#shopGem').innerHTML=`<img class="px" src="
     const b=document.createElement('button');b.className='btn sm '+(has?'cream':'grass');b.textContent=has?'もってる':'かう';b.disabled=has||p.gems<d.price;
     b.onclick=()=>{p.gems-=d.price;p.deco.push(d.id);save();SFX.coin();toast(`${d.n} を むらに おいたよ！`);renderShop()};c.appendChild(b);g.appendChild(c)})}
 function openZukan(){show('sZukan');bgScene.set('forest',null,3);const p=P(),g=$('#zkGrid');g.innerHTML='';let n=0;
-  EN_ORDER.forEach(id=>{const seen=p.seen[id],d=EN[id];if(seen)n++;const c=document.createElement('div');c.className='card panel';c.innerHTML=`<canvas></canvas><div>${seen?d.n:'？？？'}</div><div class="t">${seen?`たおした かず：${p.beat[id]||0}${d.boss?'　👑ボス':''}`:'まだ あって いない'}</div>`;
-    drawEnemy(c.querySelector('canvas'),id,seen?null:'#5a4a40');g.appendChild(c)});$('#zkCount').textContent=`${n} / ${EN_ORDER.length}`}
+  const pals=p.pals||{},pn=Object.keys(pals).length;
+  const hd=document.createElement('div');hd.className='panel zkhead';hd.innerHTML=`🐾 たおした モンスターが ときどき <b>なかま</b> に なるよ。👑ボスは <b>3かい</b> たおすと なかまに！<br>つれていく なかまは、まちがえた とき <b>1かい だけ まもって</b> くれる。むらにも いっしょに いるよ。`;g.appendChild(hd);
+  EN_ORDER.forEach(id=>{const seen=p.seen[id],d=EN[id],isP=!!pals[id];if(seen)n++;const c=document.createElement('div');c.className='card panel'+(p.pal===id?' pal':'');
+    c.innerHTML=`<canvas></canvas><div>${seen?d.n:'？？？'}</div><div class="t">${seen?`たおした かず：${p.beat[id]||0}${d.boss?'　👑ボス':''}`:'まだ あって いない'}</div>`;
+    drawEnemy(c.querySelector('canvas'),id,seen?null:'#5a4a40');
+    if(isP){const b=document.createElement('button');const on=p.pal===id;b.className='btn sm '+(on?'gold':'grass');b.textContent=on?'🐾 いっしょ':'つれていく';b.onclick=()=>{p.pal=on?null:id;save();SFX.tap();toast(on?'なかまを むらで おるすばん させたよ':`${d.n} と いっしょに ぼうけん！`);openZukan()};c.appendChild(b)}
+    else if(seen){const t=document.createElement('div');t.className='pb';t.textContent=d.boss?`🐾 あと ${Math.max(0,3-(p.beat[id]||0))}かい`:'🐾 まだ なかまじゃない';c.appendChild(t)}
+    g.appendChild(c)});$('#zkCount').textContent=`ずかん ${n}/${EN_ORDER.length}・なかま ${pn}`}
 function openNote(){show('sNote');bgScene.set('grass',todNow(),8);const p=P(),av=availCats();const part=(title,cats,col)=>{let tc=0,tt=0;const rows=cats.map(c=>{const[a,t]=p.rec[c]||[0,0];tc+=a;tt+=t;const r=t?Math.round(a/t*100):0;
     return`<div class="row"><span>${c}</span><div class="bar"><i style="width:${r}%;${t&&r<60?'background:#f2a23c':''}"></i></div><span>${t?`${a}/${t}`:'−'}</span>${av.has(c)?`<button class="btn grass" onclick="startTrain('${c}')">とっくん</button>`:'<span class="lk">🔒 まだ</span>'}</div>`}).join('');
     return`<div class="panel"><h3 style="color:${col}">${title}</h3><p style="margin:.3em 0;font-weight:700">せいかい ${tc} / ${tt} もん${tt?`（${Math.round(tc/tt*100)}%）`:''}</p>${rows}</div>`};
@@ -2412,6 +2441,63 @@ function openSet(){show('sSet');bgScene.set('grass',todNow(),9);const box=$('#se
    <div class="panel"><h3>せんせいよう</h3><p style="margin:.4em 0">がくねん・もんだいの せってい、きろくの いちらんは せんせいが かくにんします。</p><div class="btnrow" style="justify-content:flex-start"><button class="btn sm cream" onclick="openTeacherGate()">🔑 せんせいよう がめん</button></div></div>`;
   $('#snd').onchange=e=>{S.sound=e.target.checked;save()};
   $('#skyT').onchange=e=>{S.sky=e.target.checked?'time':'area';save();scenes.forEach(s=>{if(s.w){s.w=0;s.resize()}})}}
+
+/* ---------- なかま ---------- */
+function showPal(){const p=P(),pe=$('#entPal');if(p.pal&&EN[p.pal]){drawEnemy($('#cvPal'),p.pal);pe.style.display=''}else pe.style.display='none';layout()}
+async function tryRecruit(id){const p=P(),d=EN[id];if(!d||id==='dummy')return;p.pals=p.pals||{};if(p.pals[id])return;
+  const ok=d.boss?(p.beat[id]||0)>=3:Math.random()<.2;if(!ok)return;p.pals[id]=1;const first=!p.pal;if(first){p.pal=id;if(B&&$('#sBattle').classList.contains('on'))showPal()}save();SFX.lv();
+  const cv=document.createElement('canvas');drawEnemy(cv,id);
+  const pr=modal(`<h2>🐾 なかまに なった！</h2><div id="rcCv"></div><p><b>${d.n}</b> が なかまに なりたそうに こちらを みている…<br>なかまに なった！</p><p style="font-size:15px">${first?'さっそく いっしょに ぼうけんするよ。まちがえた とき 1かい まもって くれる！':'「ずかん・なかま」で つれていく なかまを えらべるよ。'}</p>`,[['やったー！','gold']]);
+  const box=$('#rcCv');if(box)box.appendChild(cv);await pr}
+
+/* ---------- むげんの とう ---------- */
+const towerOpen=p=>!!p.clr[`9-${bossSt(9)}`];
+const NORMALS=AREAS.flatMap(a=>a.en),BOSSES=AREAS.map(a=>a.boss);
+function towerEnemy(f){if(f%5===0)return BOSSES[Math.min(9,Math.floor((f/5-1)%10))];const hi=Math.min(AREAS.length,2+Math.floor(f/4));return pick(AREAS.slice(Math.max(0,hi-4),hi).flatMap(a=>a.en))}
+function towerHP(d,f){const a=atkOf(P().lv);return Math.round(a*(d.boss?5.5+f*.06:2.5+f*.04))}
+async function openTower(){const p=P();SFX.tap();
+  if(!towerOpen(p)){await modal(`<h2>🗼 むげんの とう</h2><p>エリア10「にじの しんでん」の ボス<br><b>にじいろドラゴン</b> を たおすと ひらくよ。</p><p style="font-size:15px">どこまでも つづく とう。1かいに 1ぴき。<br>ハートは あまり かいふく しないから、<b>まちがえない ちから</b> が だいじ！</p>`,[['がんばる！','grass']]);return}
+  const best=p.tower||0,cp=Math.floor(best/10)*10;const btns=[['1かいから','grass',1]];if(cp>=10)btns.push([`${cp+1}かいから`,'red',cp+1]);btns.push(['やめる','cream',0]);
+  const v=await modal(`<h2>🗼 むげんの とう</h2><p>さいこう きろく：<b>${best}かい</b></p><p style="font-size:15px;text-align:left;line-height:1.7">・1かいに 1ぴき。のぼるほど つよく なる<br>・5かいごとに ボス。たおすと ハート ♥+2<br>・10かいごとに「つづきから」 はじめられる<br>・にがてな ところの もんだいも まざるよ</p>`,btns);
+  if(v)startTower(v)}
+function startTower(f){const p=P();$('#flee').textContent='かえる';
+  B={tower:true,floor:f,startF:f,ai:AREAS.length-1,st:0,A:{name:'むげんの とう',biome:'night',req:19},list:[towerEnemy(f)],idx:0,hearts:maxH(p.lv),charge:0,last:null,miss:0,gain:{k:0,s:0,g:0},busy:false,en:null,guard:1};
+  show('sBattle');towerScene();drawPlayer($('#cvPl'),p);showPal();updHud();nextEnemy()}
+function towerScene(){battleScene.set(BIOME_CYCLE[Math.floor((B.floor-1)/5)%BIOME_CYCLE.length],null,B.floor*13)}
+async function towerNext(){const p=P(),f=B.floor,wasBoss=f%5===0;if(f>(p.tower||0))p.tower=f;save();B.floor++;
+  if(wasBoss){B.hearts=Math.min(maxH(p.lv),B.hearts+2);B.guard=1;updHud();SFX.win();
+    const v=await modal(`<h2>🗼 ${f}かい とうは！</h2><p>ボスを たおした！ ♥ が 2こ かいふく。<br>なかまの まもりも もどったよ。</p><div class="gain"><span style="color:#2c5a9a">✦ こくご +${B.gain.k}</span><span style="color:#c0503c">⚔ さんすう +${B.gain.s}</span><span>💎 +${B.gain.g}</span></div><p>さいこう きろく：<b>${p.tower}かい</b></p>`,[['つぎの かいへ！','red',1],['ここで かえる','cream',0]]);
+    if(!v)return towerEnd(true);towerScene()}
+  B.list=[towerEnemy(B.floor)];B.idx=0;updHud();nextEnemy()}
+async function towerEnd(back){const p=P(),top=back?B.floor-1:B.floor;const done=Math.max(0,B.floor-B.startF);save();$('#flee').textContent='にげる';
+  const v=await modal(`<h2>${back?'🗼 とうから かえった':'たおれて しまった…'}</h2><p><b>${top}かい</b> まで のぼった！（こんかい ${done}かい ぶん）</p><p>さいこう きろく：<b>${p.tower||0}かい</b></p><div class="gain"><span style="color:#2c5a9a">✦ こくご +${B.gain.k}</span><span style="color:#c0503c">⚔ さんすう +${B.gain.s}</span><span>💎 +${B.gain.g}</span></div><p style="font-size:15px">けいけんちと ほうせきは ちゃんと のこって いるよ。</p>`,[['もういちど','red','re'],['むらへ','cream','home']]);
+  if(v==='re')openTower();else goHome()}
+
+/* ---------- トロフィー ---------- */
+const okSum=p=>Object.values(p.rec||{}).reduce((a,r)=>a+r[0],0);
+const star3=p=>Object.values(p.clr||{}).filter(v=>v>=3).length;
+const palN=p=>Object.keys(p.pals||{}).length;
+const TROPHIES=[
+ ['ok100','はじめの 100もん','せいかいを 100もん',5,okSum,100],['ok500','がんばり 500もん','せいかいを 500もん',10,okSum,500],['ok1000','まなびの たつじん','せいかいを 1000もん',20,okSum,1000],['ok3000','ちしきの やま','せいかいを 3000もん',40,okSum,3000],
+ ['lv10','レベル10','レベル10に なる',5,p=>p.lv,10],['lv20','レベル20','レベル20に なる',10,p=>p.lv,20],['lv30','レベル30','レベル30に なる',20,p=>p.lv,30],['lv40','レベル40','レベル40に なる',30,p=>p.lv,40],['lv50','まなびの かみさま','レベル50に なる',50,p=>p.lv,50],
+ ['clear','でんせつの ぼうけんしゃ','エリア10の ボスを たおす',20,p=>towerOpen(p)?1:0,1],
+ ['s20','ほし あつめ','ステージで ★3を 20こ',10,star3,20],['s60','ほしの コレクター','ステージで ★3を 60こ',30,star3,60],
+ ['perf','ノーミス ボス','ボスを まちがえ 0で たおす',10,p=>p.perfB||0,1],['perf5','かんぺき ハンター','ボスを まちがえ 0で 5かい たおす',20,p=>p.perfB||0,5],
+ ['bal30','バランスの たつじん','バランスわざを 30かい',10,p=>p.bal||0,30],
+ ['zk','モンスター はかせ','ずかんを ぜんぶ うめる',20,p=>EN_ORDER.filter(id=>p.seen[id]).length,EN_ORDER.length],
+ ['pal1','はじめての なかま','なかまを 1ぴき',5,palN,1],['pal10','なかまが いっぱい','なかまを 10ぴき',15,palN,10],['palB','ドラゴン つかい','ボスを なかまに する',15,p=>BOSSES.filter(id=>(p.pals||{})[id]).length,1],['palAll','なかま コンプリート','なかまを ぜんいん',50,palN,EN_ORDER.length],
+ ['t10','とうの たびびと','むげんの とう 10かい',10,p=>p.tower||0,10],['t30','とうの ゆうしゃ','むげんの とう 30かい',25,p=>p.tower||0,30],['t50','てんくうの とう','むげんの とう 50かい',40,p=>p.tower||0,50],['t100','むげんの はて','むげんの とう 100かい',80,p=>p.tower||0,100],
+ ['tr20','とっくん 20かい','とっくんを 20かい',10,p=>p.trn||0,20],['d7','7にち れんぞく','きょうの とっくん 7にち れんぞく',10,p=>p.dstreak||0,7],['d30','まいにちの ちから','きょうの とっくん 30にち れんぞく',40,p=>p.dstreak||0,30],
+ ['shop','むらの なまえぬし','おみせの かざりを ぜんぶ',15,p=>p.deco.length,DECOS.length],
+];
+const troCount=p=>TROPHIES.filter(t=>(p.troph||{})[t[0]]).length;
+function checkTrophies(){const p=P();if(!p)return;p.troph=p.troph||{};const got=TROPHIES.filter(t=>!p.troph[t[0]]&&t[4](p)>=t[5]);if(!got.length)return;
+  let g=0;got.forEach(t=>{p.troph[t[0]]=Date.now();g+=t[3]});p.gems+=g;save();renderHome();SFX.coin();
+  toast(`🏆 トロフィー ${got.length>1?got.length+'こ ':''}ゲット！<br><b>${got.slice(0,3).map(t=>t[1]).join('・')}${got.length>3?' …':''}</b><br>💎 +${g}`,3600)}
+function openTrophy(){checkTrophies();show('sTrophy');bgScene.set('crystal',null,4);const p=P(),g=$('#troGrid');g.innerHTML='';p.troph=p.troph||{};
+  TROPHIES.forEach(([id,n,d,gm,f,tg])=>{const has=!!p.troph[id],cur=Math.min(tg,f(p));const c=document.createElement('div');c.className='card panel tro'+(has?'':' off');
+    c.innerHTML=`<div class="ic">${has?'🏆':'🔒'}</div><div>${n}</div><div class="t">${d}</div>${has?`<div class="t">💎${gm} ゲットずみ</div>`:`<div class="pg"><i style="width:${cur/tg*100}%"></i></div><div class="t">${cur} / ${tg}　💎${gm}</div>`}`;g.appendChild(c)});
+  $('#troCount').textContent=`${troCount(p)} / ${TROPHIES.length}`}
 
 /* ---------- 先生用 管理画面 ---------- */
 async function openTeacherGate(){
